@@ -1,0 +1,50 @@
+export const STORAGE_KEY = 'bam.shop.v1';
+export const emptyShop = () => ({ cart: [], notifications: [] });
+const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 100;
+const validProduct = (p) => p && validId(p.id) && typeof p.name === 'string' && p.name.trim() && Number.isSafeInteger(p.price) && p.price >= 0 && p.price <= 1_000_000_000;
+
+export function normalizeShop(value) {
+  const result = emptyShop();
+  if (!value || typeof value !== 'object') return result;
+  const ids = new Set();
+  for (const item of Array.isArray(value.cart) ? value.cart : []) {
+    if (!validProduct(item) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99 || ids.has(item.id)) continue;
+    ids.add(item.id);
+    result.cart.push({ id: item.id, name: item.name.trim().slice(0, 200), price: item.price, quantity: item.quantity });
+    if (result.cart.length === 100) break;
+  }
+  ids.clear();
+  for (const item of Array.isArray(value.notifications) ? value.notifications : []) {
+    if (!item || !validId(item.id) || typeof item.title !== 'string' || typeof item.message !== 'string' || !Number.isFinite(item.createdAt) || !Number.isFinite(new Date(item.createdAt).getTime()) || ids.has(item.id)) continue;
+    ids.add(item.id);
+    result.notifications.push({ id: item.id, title: item.title.slice(0, 200), message: item.message.slice(0, 1000), createdAt: item.createdAt, read: item.read === true });
+    if (result.notifications.length === 100) break;
+  }
+  return result;
+}
+
+export function cartTotals(cart) {
+  return cart.reduce((total, item) => ({ quantity: total.quantity + item.quantity, subtotal: total.subtotal + item.price * item.quantity }), { quantity: 0, subtotal: 0 });
+}
+
+export function shopReducer(state, action) {
+  switch (action.type) {
+    case 'add': {
+      if (!validProduct(action.product)) return state;
+      const existing = state.cart.find((item) => item.id === action.product.id);
+      if (existing?.quantity >= 99 || (!existing && state.cart.length >= 100)) return state;
+      const cart = existing
+        ? state.cart.map((item) => item.id === existing.id ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...state.cart, { id: action.product.id, name: action.product.name.trim().slice(0, 200), price: action.product.price, quantity: 1 }];
+      return normalizeShop({ cart, notifications: [action.notification, ...state.notifications] });
+    }
+    case 'quantity':
+      if (!Number.isInteger(action.quantity) || action.quantity < 1 || action.quantity > 99) return state;
+      return { ...state, cart: state.cart.map((item) => item.id === action.id ? { ...item, quantity: action.quantity } : item) };
+    case 'remove': return { ...state, cart: state.cart.filter((item) => item.id !== action.id) };
+    case 'read': return { ...state, notifications: state.notifications.map((item) => item.id === action.id ? { ...item, read: true } : item) };
+    case 'readAll': return { ...state, notifications: state.notifications.map((item) => ({ ...item, read: true })) };
+    case 'removeNotification': return { ...state, notifications: state.notifications.filter((item) => item.id !== action.id) };
+    default: return state;
+  }
+}

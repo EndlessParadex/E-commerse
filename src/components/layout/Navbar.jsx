@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
+import ShopActions from '../shop/ShopActions';
+import { useDelivery } from '../../state/useDelivery';
+import { validateDelivery } from '../../state/deliveryModel';
+import { products } from '../../data/products';
 
 const Navbar = () => {
   // Mega Menu State
@@ -9,8 +13,20 @@ const Navbar = () => {
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const [namaToko, setNamaToko] = useState("");
   const [namaJalan, setNamaJalan] = useState("");
-  const [savedLocation, setSavedLocation] = useState(null);
+  const { savedLocation, saveLocation, storageError } = useDelivery();
+  const [addressErrors, setAddressErrors] = useState({});
   const deliverRef = useRef(null);
+  const searchRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const matchingProducts = products.filter((product) => !searchQuery.trim() || `${product.name} ${product.category}`.toLowerCase().includes(searchQuery.trim().toLowerCase())).slice(0, 8);
+  const formatPrice = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
+  const highlightQuery = (name) => {
+    const query = searchQuery.trim();
+    if (!query) return name;
+    const parts = name.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig'));
+    return parts.map((part, index) => part.toLowerCase() === query.toLowerCase() ? <strong key={`${part}-${index}`}>{part}</strong> : part);
+  };
 
   // Tutup popup jika klik di luar
   useEffect(() => {
@@ -21,15 +37,55 @@ const Navbar = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handleSearchOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearchSuggestions(false);
+    };
+    document.addEventListener('mousedown', handleSearchOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleSearchOutside);
+    };
   }, []);
 
-  const handleSaveLocation = () => {
-    if (namaToko.trim() || namaJalan.trim()) {
-      setSavedLocation({ namaToko, namaJalan });
-    }
+  // Sejajarkan panah dengan tombol, termasuk saat popup dipusatkan di ponsel.
+  useEffect(() => {
+    if (!showDeliverPopup) return;
 
-    setShowDeliverPopup(false);
+    const updateArrowPosition = () => {
+      const trigger = deliverRef.current;
+      const popup = trigger?.querySelector('.deliver-popup');
+      if (!popup) return;
+      const triggerRect = trigger.getBoundingClientRect();
+      const popupRect = popup.getBoundingClientRect();
+      const center = triggerRect.left + triggerRect.width / 2 - popupRect.left;
+      const arrowLeft = Math.max(20, Math.min(popupRect.width - 20, center));
+      popup.style.setProperty('--popup-arrow-left', `${arrowLeft}px`);
+    };
+
+    updateArrowPosition();
+    window.addEventListener('resize', updateArrowPosition);
+    return () => window.removeEventListener('resize', updateArrowPosition);
+  }, [showDeliverPopup, savedLocation]);
+
+  const toggleDeliveryPopup = () => {
+    if (!showDeliverPopup) {
+      setNamaToko(savedLocation?.namaToko || '');
+      setNamaJalan(savedLocation?.namaJalan || '');
+      setAddressErrors({});
+    }
+    setShowDeliverPopup((current) => !current);
+  };
+
+  const handleSaveLocation = () => {
+    const nextErrors = validateDelivery({ namaToko, namaJalan });
+    setAddressErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      deliverRef.current?.querySelector(nextErrors.namaToko ? '#delivery-name' : '#delivery-address')?.focus();
+      return;
+    }
+    saveLocation({ namaToko, namaJalan }).then((result) => {
+      if (result.persisted) setShowDeliverPopup(false);
+    });
   };
 
   const categoryData = {
@@ -228,6 +284,7 @@ const Navbar = () => {
   ];
 
   const currentMegaSub = categoryData[activeMegaCategory] || [];
+  const categoryHref = (category) => category === 'Categories for you' ? '#/' : `#/kategori/${encodeURIComponent(category)}`;
 
   return (
     <>
@@ -236,28 +293,15 @@ const Navbar = () => {
 
           {/* Kiri: Logo */}
           <div className="navbar-left">
-            <div className="navbar-logo">
-              <img
-                src="/logo-placeholder.png"
-                alt="Logo"
-                className="logo-image"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  document.getElementById('logo-text').style.display = 'block';
-                }}
-              />
-
-              <h1
-                id="logo-text"
-                style={{ display: 'none' }}
-              >
+            <a className="navbar-logo" href="#/" aria-label="BAM. Beranda">
+              <h1 id="logo-text">
                 BAM<span className="logo-accent">.</span>
               </h1>
-            </div>
+            </a>
           </div>
 
           {/* Tengah: Search */}
-          <div className="navbar-search">
+          <form className={`navbar-search${showSearchSuggestions ? ' is-active' : ''}`} ref={searchRef} onSubmit={(event) => { event.preventDefault(); setShowSearchSuggestions(false); }}>
             <div className="search-icon-left">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -282,13 +326,24 @@ const Navbar = () => {
 
             <input
               type="text"
-              placeholder="Cari kosmetik, snack, atau bumbu..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onFocus={() => setShowSearchSuggestions(true)}
+              placeholder="Cari di BAM."
+              aria-label="Cari produk"
             />
 
-            <button className="search-button">
-              Cari
-            </button>
-          </div>
+            {showSearchSuggestions && <div className="search-suggestions" role="listbox" aria-label="Saran pencarian">
+              <div className="search-suggestion-list">
+                {matchingProducts.map((product) => <button type="button" className="search-suggestion" key={product.id} onMouseDown={(event) => event.preventDefault()} onClick={() => { setSearchQuery(product.name); setShowSearchSuggestions(false); window.location.hash = `/produk/${product.id}`; }}>
+                  <svg className="suggestion-search-icon" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+                  <span className="suggestion-product"><span>{highlightQuery(product.name)}</span><small>{product.category} · {formatPrice(product.price)}</small></span>
+                </button>)}
+                {matchingProducts.length === 0 && <p className="search-no-result">Produk dengan kata “{searchQuery}” belum tersedia.</p>}
+              </div>
+              <div className="search-tip"><span className="search-tip-icon" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M8.5 14.5A6 6 0 1 1 15.6 14c-.9.7-1.4 1.4-1.6 2H10c-.2-.7-.7-1.2-1.5-1.5Z" /><path d="M12 2v1" /><path d="m4.9 4.9.7.7" /><path d="m19.1 4.9-.7.7" /></svg></span><span>Tips &amp; Trik Pencarian</span><button type="button" onClick={() => setShowSearchSuggestions(false)}>Pelajari</button></div>
+            </div>}
+          </form>
 
           {/* Kanan: Actions */}
           <div className="navbar-actions">
@@ -297,7 +352,7 @@ const Navbar = () => {
             <div
               className="deliver-to"
               ref={deliverRef}
-              onClick={() => setShowDeliverPopup(!showDeliverPopup)}
+              onClick={toggleDeliveryPopup}
             >
               <span className="deliver-label">
                 Kirim ke
@@ -306,10 +361,12 @@ const Navbar = () => {
               <div className="deliver-country">
                 <span>🇮🇩</span>
 
-                <span className="deliver-code">
+                <span className="deliver-code" title={savedLocation?.namaToko}>
                   {savedLocation?.namaToko || "ID"}
                 </span>
               </div>
+
+              {savedLocation && <span className="deliver-address" title={savedLocation.namaJalan}>{savedLocation.namaJalan}</span>}
 
               {/* Pop-up Kirim Ke */}
               {showDeliverPopup && (
@@ -317,135 +374,94 @@ const Navbar = () => {
                   className="deliver-popup"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="deliver-popup-title">
-                    Tentukan lokasi Anda
-                  </h3>
+                  <div className="deliver-popup-content">
+                    <h3 className="deliver-popup-title">
+                      Tentukan lokasi Anda
+                    </h3>
 
-                  <p className="deliver-popup-sub">
-                    Jasa pengiriman dan biaya kirim bervariasi sesuai lokasi Anda
-                  </p>
+                    <p className="deliver-popup-sub">
+                      Jasa pengiriman dan biaya kirim bervariasi sesuai lokasi Anda
+                    </p>
 
-                  {/* Tombol Masuk */}
-                  <button className="deliver-login-btn">
-                    Masuk untuk menambahkan alamat
-                  </button>
+                    {/* Tombol Masuk */}
+                    <a className="deliver-login-btn" href="#/login" onClick={() => setShowDeliverPopup(false)}>
+                      Masuk untuk menambahkan alamat
+                    </a>
 
-                  {/* Pemisah */}
-                  <div className="deliver-divider">
-                    Atau
-                  </div>
-
-                  {/* Baris negara - fixed Indonesia */}
-                  <div className="deliver-country-row">
-                    <div className="deliver-country-left">
-                      <span>🇮🇩</span>
-                      <span>Indonesia</span>
+                    {/* Pemisah */}
+                    <div className="deliver-divider">
+                      Atau
                     </div>
 
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#888"
-                      strokeWidth="2"
+                    {/* Baris negara - fixed Indonesia */}
+                    <div className="deliver-country-row">
+                      <div className="deliver-country-left">
+                        <span>🇮🇩</span>
+                        <span>Indonesia</span>
+                      </div>
+
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#888"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+
+                    {storageError && <p className="delivery-warning" role="status">Alamat diperbarui sementara. Penyimpanan browser gagal; perubahan dapat hilang setelah refresh.</p>}
+
+                    {/* Nama penerima dan alamat dari data pengiriman bersama. */}
+                    <div className="deliver-form">
+                      <label htmlFor="delivery-name">Nama penerima</label>
+                      <input
+                        id="delivery-name"
+                        type="text"
+                        autoComplete="shipping name"
+                        maxLength={100}
+                        aria-invalid={Boolean(addressErrors.namaToko)}
+                        aria-describedby={addressErrors.namaToko ? 'delivery-name-error' : undefined}
+                        placeholder="Nama Toko / Penerima"
+                        value={namaToko}
+                        onChange={(e) => { setNamaToko(e.target.value); setAddressErrors((current) => ({ ...current, namaToko: undefined })); }}
+                      />
+                      {addressErrors.namaToko && <p id="delivery-name-error" className="delivery-error">{addressErrors.namaToko}</p>}
+                    </div>
+
+                    <div className="deliver-form">
+                      <label htmlFor="delivery-address">Alamat lengkap</label>
+                      <textarea
+                        id="delivery-address"
+                        rows={3}
+                        autoComplete="shipping street-address"
+                        maxLength={500}
+                        aria-invalid={Boolean(addressErrors.namaJalan)}
+                        aria-describedby={addressErrors.namaJalan ? 'delivery-address-error' : undefined}
+                        placeholder="Nama Jalan / Alamat"
+                        value={namaJalan}
+                        onChange={(e) => { setNamaJalan(e.target.value); setAddressErrors((current) => ({ ...current, namaJalan: undefined })); }}
+                      />
+                      {addressErrors.namaJalan && <p id="delivery-address-error" className="delivery-error">{addressErrors.namaJalan}</p>}
+                    </div>
+
+                    <button
+                      className="deliver-save-btn"
+                      onClick={handleSaveLocation}
                     >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                      Simpan
+                    </button>
                   </div>
-
-                  {/* Input Nama Jalan */}
-                  <div className="deliver-form">
-                    <input
-                      type="text"
-                      placeholder="Nama Toko / Penerima"
-                      value={namaToko}
-                      onChange={(e) => setNamaToko(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="deliver-form">
-                    <input
-                      type="text"
-                      placeholder="Nama Jalan / Alamat"
-                      value={namaJalan}
-                      onChange={(e) => setNamaJalan(e.target.value)}
-                    />
-                  </div>
-
-                  <button
-                    className="deliver-save-btn"
-                    onClick={handleSaveLocation}
-                  >
-                    Simpan
-                  </button>
                 </div>
               )}
 
             </div>
 
-            <div className="icon-group">
+            <ShopActions onOpen={() => setShowDeliverPopup(false)} />
 
-              <div className="action-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="9" cy="21" r="1"></circle>
-                  <circle cx="20" cy="21" r="1"></circle>
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                </svg>
-              </div>
-
-              <div className="action-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-              </div>
-
-            </div>
-
-            <div className="divider"></div>
-
-            <div className="user-profile">
-              <div className="avatar">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-
-              <span>Log In</span>
-            </div>
 
           </div>
         </div>
@@ -515,6 +531,7 @@ const Navbar = () => {
                           onMouseEnter={() =>
                             setActiveMegaCategory(menu.id)
                           }
+                          onClick={() => { window.location.hash = categoryHref(menu.id); }}
                         >
                           <div
                             style={{
@@ -537,16 +554,17 @@ const Navbar = () => {
                     <div className="mega-content-header">
                       <h3>{activeMegaCategory}</h3>
 
-                      <span className="browse-all">
+                      <a className="browse-all" href={categoryHref(activeMegaCategory)}>
                         Lihat Semua
-                      </span>
+                      </a>
                     </div>
 
                     <div className="mega-grid">
                       {currentMegaSub.map((cat, idx) => (
-                        <div
+                        <a
                           className="mega-card"
                           key={idx}
+                          href={categoryHref(activeMegaCategory)}
                         >
                           <div className="mega-circle">
                             {cat.icon}
@@ -555,7 +573,7 @@ const Navbar = () => {
                           <span className="mega-name">
                             {cat.name}
                           </span>
-                        </div>
+                        </a>
                       ))}
                     </div>
 

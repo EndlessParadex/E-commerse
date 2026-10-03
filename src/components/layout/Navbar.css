@@ -21,15 +21,30 @@
 .logo-accent { color: var(--color-primary); }
 
 .navbar-search {
+  min-width: 0;
+  position: relative;
   flex: 1; display: flex; align-items: center; max-width: 650px;
-  border: 1px solid #CBD5E1; border-radius: 8px; overflow: hidden;
+  border: 1px solid #CBD5E1; border-radius: 8px;
   background-color: var(--color-surface); transition: border-color 0.2s, box-shadow 0.2s;
 }
-.navbar-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1); }
+.navbar-search:focus-within, .navbar-search.is-active { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); z-index: 310; }
 .search-icon-left { padding-left: 15px; display: flex; align-items: center; }
-.navbar-search input { flex: 1; border: none; padding: 10px 15px; font-size: 14px; outline: none; font-family: var(--font-main); color: var(--color-text); }
+.navbar-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 10px 15px; font-size: 16px; outline: none; font-family: var(--font-main); color: var(--color-text); }
 .navbar-search .search-button { background-color: var(--color-primary); color: white; border: none; padding: 0 20px; height: 42px; font-weight: 600; font-size: 14px; cursor: pointer; }
 .navbar-search .search-button:hover { background-color: var(--color-primary-dark); }
+.search-suggestions { position: absolute; top: calc(100% + 7px); left: -1px; right: -1px; background: white; border-radius: 0 0 12px 12px; box-shadow: 0 12px 28px rgba(15, 23, 42, .16); overflow: hidden; z-index: 310; }
+.search-suggestion-list { padding: 12px 0 10px; }
+.search-suggestion { display: flex; align-items: center; gap: 22px; width: 100%; border: 0; background: transparent; padding: 10px 27px; color: #111827; text-align: left; font: inherit; font-size: 16px; }
+.search-suggestion:hover { background: #f8fafc; }
+.suggestion-search-icon { color: #64748b; flex: 0 0 auto; }
+.suggestion-product { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.suggestion-product > span { font-size: 16px; }
+.suggestion-product strong { font-weight: 800; }
+.suggestion-product small { color: #64748b; font-size: 11px; }
+.search-no-result { padding: 24px 27px; color: #64748b; font-size: 14px; }
+.search-tip { display: flex; align-items: center; gap: 10px; margin: 14px 20px 20px; padding: 15px 20px; border: 1px solid #bfdbfe; border-radius: 10px; color: #334155; font-size: 15px; }
+.search-tip-icon { display: grid; place-items: center; width: 24px; height: 24px; color: #475569; font-size: 26px; }
+.search-tip button { margin-left: auto; border: 0; background: transparent; color: var(--color-primary-dark); font: inherit; font-weight: 700; }
 
 .navbar-actions { display: flex; align-items: center; gap: 12px; }
 
@@ -61,20 +76,37 @@
   font-weight: 700;
   color: var(--color-text);
 }
-.deliver-code { font-weight: 700; }
+.deliver-code { font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Pop-up Kirim Ke */
 .deliver-popup {
   position: absolute;
   top: calc(100% + 16px);
-  left: -8px;
+  right: 0;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
   width: 340px;
-  padding: 28px 24px 24px;
   z-index: 9999;
   animation: fadeIn 0.18s ease;
+}
+.deliver-popup::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: var(--popup-arrow-left, calc(100% - 28px));
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  border-top-left-radius: 2px;
+  pointer-events: none;
+}
+.deliver-popup-content {
+  position: relative;
+  padding: 28px 24px 24px;
+  border-radius: inherit;
+  background: #fff;
 }
 .deliver-popup-title {
   font-size: 17px;
@@ -145,7 +177,7 @@
   gap: 6px;
   margin-bottom: 14px;
 }
-.deliver-form input {
+.deliver-form input, .deliver-form textarea {
   border: 1px solid #CBD5E1;
   border-radius: 8px;
   padding: 11px 14px;
@@ -157,7 +189,7 @@
   width: 100%;
   box-sizing: border-box;
 }
-.deliver-form input:focus {
+.deliver-form input:focus, .deliver-form textarea:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
@@ -209,7 +241,7 @@
 
 /* MEGA MENU POPUP (Semua Kategori) */
 .mega-menu-popup {
-  width: 900px; /* Lebar Mega Menu sangat besar seperti Alibaba */
+  width: min(900px, calc(100vw - 40px));
   padding: 0;
   overflow: hidden;
   border-top-left-radius: 0;
@@ -220,6 +252,7 @@
 }
 
 .mega-menu-sidebar {
+  flex-shrink: 0;
   width: 260px;
   background-color: var(--color-surface);
   border-right: 1px solid #E2E8F0;
@@ -255,6 +288,8 @@
 .mega-menu-sidebar li.active { background-color: #F1F5F9; color: var(--color-text); font-weight: 600; border-left: 3px solid var(--color-primary); }
 
 .mega-menu-content {
+  min-width: 0;
+  overflow-y: auto;
   flex: 1;
   padding: 25px 35px;
   background-color: #FAFAFA;
@@ -279,7 +314,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.mega-card { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
+.mega-card { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; color: inherit; }
 .mega-circle {
   width: 80px; height: 80px; border-radius: 50%; background-color: white; border: 1px solid #E2E8F0;
   display: flex; align-items: center; justify-content: center; font-size: 35px;
@@ -289,3 +324,64 @@
   transform: translateY(-5px); box-shadow: 0 5px 15px rgba(14, 165, 233, 0.15); border-color: #bae6fd;
 }
 .mega-name { font-size: 12px; font-weight: 500; color: var(--color-text); text-align: center; }
+
+/* Tablet: pencarian memperoleh satu baris penuh. */
+@media (max-width: 960px) {
+  .navbar-container { flex-wrap: wrap; gap: 16px; }
+  .navbar-search { order: 3; flex-basis: 100%; max-width: none; }
+  .navbar-actions { margin-left: auto; }
+  .deliver-popup {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    right: auto;
+    translate: -50% 0;
+    width: min(340px, calc(100vw - 32px));
+  }
+  .deliver-popup-content {
+    max-height: calc(100dvh - 96px);
+    overflow-y: auto;
+  }
+  .mega-menu-sidebar { width: 210px; }
+  .mega-menu-content { padding: 20px; }
+  .mega-content-header { gap: 12px; flex-wrap: wrap; }
+}
+
+/* Ponsel: kategori disusun vertikal supaya konten tetap terbaca. */
+@media (max-width: 600px) {
+  .navbar-container { padding: 0 16px; gap: 12px; }
+  .navbar-actions { gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .navbar-logo h1 { font-size: 24px; }
+  .navbar-actions .divider { display: none; }
+  .deliver-to { padding: 4px; border: 0; }
+  .deliver-code { max-width: 64px; }
+  .icon-group { gap: 0; }
+  .action-icon { padding: 5px; }
+  .user-profile { padding: 4px; gap: 4px; }
+  .user-profile span { font-size: 12px; }
+  .avatar { width: 26px; height: 26px; }
+  .navbar-search input { font-size: 16px; padding: 10px; }
+  .navbar-search .search-button { padding: 0 16px; }
+  .secondary-navbar-container { padding: 0 16px; }
+  .secondary-nav-left, .secondary-nav-right { font-size: 12px; }
+  .mega-menu-popup { width: calc(100vw - 32px); }
+  .mega-menu-container {
+    flex-direction: column;
+    height: auto;
+    max-height: calc(100dvh - 180px);
+    overflow-y: auto;
+  }
+  .mega-menu-sidebar { width: 100%; max-height: 160px; border-right: 0; border-bottom: 1px solid #E2E8F0; }
+  .mega-menu-sidebar li { padding: 10px 16px; }
+  .mega-menu-content { flex: none; overflow-y: visible; padding: 16px; }
+  .mega-content-header h3 { font-size: 16px; }
+  .mega-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+  .deliver-form input, .deliver-form textarea { font-size: 16px; }
+}
+
+.deliver-address { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; color: var(--color-text-muted); }
+.deliver-form label { font-size: 12px; font-weight: 600; }
+.deliver-form textarea { resize: vertical; min-height: 88px; line-height: 1.5; }
+.delivery-error { color: #b91c1c; font-size: 12px; }
+.delivery-warning { padding: 10px; border-radius: 8px; color: #92400e; background: #fffbeb; font-size: 12px; margin-bottom: 12px; }
+@media (max-width: 600px) { .deliver-address { max-width: 64px; } }

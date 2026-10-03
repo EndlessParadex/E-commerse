@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useShop } from '../state/useShop';
 import { products } from '../data/products';
 import './Home.css';
+import PromoCarousel from '../components/shop/PromoCarousel';
 
 const categories = ['Semua', 'Snack & Makanan', 'Kosmetik & Beauty', 'Bumbu Masakan', 'Perlengkapan Rumah'];
 const categorySidebar = {
@@ -34,15 +35,7 @@ const Home = ({ initialCategory = 'Semua' }) => {
 
   return (
     <div className={`home-container${isCategoryPage ? ' category-page' : ''}`}>
-      {!isCategoryPage && <div className="main-banner">
-        <div className="banner-content">
-          <h1>Super September Sale!</h1>
-          <p>Diskon hingga 50% untuk produk Kosmetik & Snack</p>
-          <button className="btn-banner" type="button" onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}>Belanja Sekarang</button>
-        </div>
-        <div className="banner-orb banner-orb-one" />
-        <div className="banner-orb banner-orb-two" />
-      </div>}
+      {!isCategoryPage && <PromoCarousel />}
 
       <section className="catalog-section" id="catalog" aria-labelledby="catalog-title">
         {!isCategoryPage && <div className="section-heading"><div><span className="section-eyebrow">Pilihan terbaik untukmu</span><h2 id="catalog-title">Produk pilihan</h2></div><a href="#/" className="view-all-link">Lihat semua <span aria-hidden="true">→</span></a></div>}

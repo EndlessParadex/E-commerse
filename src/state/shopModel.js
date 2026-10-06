@@ -1,5 +1,5 @@
 export const STORAGE_KEY = 'bam.shop.v1';
-export const emptyShop = () => ({ cart: [], notifications: [] });
+export const emptyShop = () => ({ cart: [], notifications: [], favoriteIds: [] });
 const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 100;
 const validProduct = (p) => p && validId(p.id) && typeof p.name === 'string' && p.name.trim() && Number.isSafeInteger(p.price) && p.price >= 0 && p.price <= 1_000_000_000;
 
@@ -20,6 +20,11 @@ export function normalizeShop(value) {
     result.notifications.push({ id: item.id, title: item.title.slice(0, 200), message: item.message.slice(0, 1000), createdAt: item.createdAt, read: item.read === true });
     if (result.notifications.length === 100) break;
   }
+  for (const id of Array.isArray(value.favoriteIds) ? value.favoriteIds : []) {
+    if (!validId(id) || result.favoriteIds.includes(id)) continue;
+    result.favoriteIds.push(id);
+    if (result.favoriteIds.length === 100) break;
+  }
   return result;
 }
 
@@ -36,12 +41,20 @@ export function shopReducer(state, action) {
       const cart = existing
         ? state.cart.map((item) => item.id === existing.id ? { ...item, quantity: item.quantity + 1 } : item)
         : [...state.cart, { id: action.product.id, name: action.product.name.trim().slice(0, 200), price: action.product.price, quantity: 1 }];
-      return normalizeShop({ cart, notifications: [action.notification, ...state.notifications] });
+      return normalizeShop({ cart, notifications: [action.notification, ...state.notifications], favoriteIds: state.favoriteIds });
     }
     case 'quantity':
       if (!Number.isInteger(action.quantity) || action.quantity < 1 || action.quantity > 99) return state;
       return { ...state, cart: state.cart.map((item) => item.id === action.id ? { ...item, quantity: action.quantity } : item) };
     case 'remove': return { ...state, cart: state.cart.filter((item) => item.id !== action.id) };
+    case 'clearCart': return { ...state, cart: [] };
+    case 'toggleFavorite': {
+      if (!validId(action.id)) return state;
+      const favoriteIds = state.favoriteIds.includes(action.id)
+        ? state.favoriteIds.filter((id) => id !== action.id)
+        : state.favoriteIds.length >= 100 ? state.favoriteIds : [...state.favoriteIds, action.id];
+      return { ...state, favoriteIds };
+    }
     case 'read': return { ...state, notifications: state.notifications.map((item) => item.id === action.id ? { ...item, read: true } : item) };
     case 'readAll': return { ...state, notifications: state.notifications.map((item) => ({ ...item, read: true })) };
     case 'removeNotification': return { ...state, notifications: state.notifications.filter((item) => item.id !== action.id) };

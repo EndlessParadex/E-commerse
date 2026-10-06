@@ -27,6 +27,15 @@ test('hapus barang terakhir mengembalikan total ke nol tanpa menghapus riwayat',
   assert.equal(state.notifications.length, 1);
 });
 
+test('checkout dapat mengosongkan keranjang tanpa menghapus favorit atau notifikasi', () => {
+  let state = shopReducer(emptyShop(), add());
+  state = shopReducer(state, { type: 'toggleFavorite', id: 'snack' });
+  state = shopReducer(state, { type: 'clearCart' });
+  assert.deepEqual(state.cart, []);
+  assert.deepEqual(state.favoriteIds, ['snack']);
+  assert.equal(state.notifications.length, 1);
+});
+
 test('notifikasi dapat dibaca satu per satu, seluruhnya, dan dihapus', () => {
   let state = shopReducer(shopReducer(emptyShop(), add()), add('note-2'));
   state = shopReducer(state, { type: 'read', id: 'note-1' });
@@ -46,7 +55,7 @@ test('data rusak, duplikat, harga negatif dan tanggal tidak valid disaring', () 
   assert.deepEqual(normalizeShop(null), emptyShop());
   const validItem = { ...product, quantity: 1 };
   const state = normalizeShop({ cart: [null, validItem, validItem, { ...validItem, id: 'bad', price: -1 }], notifications: [null, { ...add().notification, createdAt: 1e30 }] });
-  assert.deepEqual(state, { cart: [validItem], notifications: [] });
+  assert.deepEqual(state, { cart: [validItem], notifications: [], favoriteIds: [] });
   assert.equal(shopReducer(emptyShop(), { type: 'add', product: { ...product, price: -1 } }).cart.length, 0);
 });
 
@@ -55,4 +64,13 @@ test('riwayat dibatasi 100 notifikasi terbaru', () => {
   const state = normalizeShop({ notifications });
   assert.equal(state.notifications.length, 100);
   assert.equal(state.notifications.at(-1).id, 'note-99');
+});
+
+test('favorit dapat ditambah, dihapus, disimpan, dan dibatasi', () => {
+  let state = shopReducer(emptyShop(), { type: 'toggleFavorite', id: product.id });
+  assert.deepEqual(state.favoriteIds, [product.id]);
+  state = shopReducer(state, { type: 'toggleFavorite', id: product.id });
+  assert.deepEqual(state.favoriteIds, []);
+  const saved = normalizeShop({ favoriteIds: [product.id, product.id, '', 'x'.repeat(101)] });
+  assert.deepEqual(saved.favoriteIds, [product.id]);
 });

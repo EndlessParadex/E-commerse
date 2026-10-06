@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { products } from '../../data/products';
 import './PromoCarousel.css';
+import ProductImage from './ProductImage';
 
 const slides = [
   { theme: 'snack', category: 'Snack & Makanan', label: 'TEMAN WAKTU SANTAI', title: 'Camilan favorit,\nharga lebih manis.', description: 'Dari pedas sampai manis, pilih teman ngemilmu hari ini.', ids: ['snack-pedas', 'cokelat-import'], cta: 'Jelajahi snack', decoration: '✦' },
@@ -45,7 +46,7 @@ export default function PromoCarousel() {
       <div className="bam-promo-products">
         <span className="bam-promo-spark" aria-hidden="true">{slide.decoration}</span>
         {featured.map((product) => <a className="bam-promo-product" href={`#/produk/${product.id}`} key={product.id}>
-          <span className="bam-promo-product-icon" aria-hidden="true">{product.icon}</span>
+          <ProductImage product={product} variant="promo" loading="eager" />
           <span className="bam-promo-product-name">{product.name}</span>
           <del>{rupiah(product.oldPrice)}</del><strong>{rupiah(product.price)}</strong>
         </a>)}

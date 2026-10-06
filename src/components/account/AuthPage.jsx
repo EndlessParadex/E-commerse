@@ -72,7 +72,7 @@ export default function AuthPage({ mode }) {
       </aside>
       <section className="auth-card" aria-labelledby="auth-title">
         <header><h1 id="auth-title">{isRegister ? 'Buat akun' : 'Masuk ke akun'}</h1><p>{isRegister ? 'Isi informasi berikut untuk mendaftar.' : 'Gunakan email dan kata sandi Anda.'}</p></header>
-        <p className="auth-preview-note">Pratinjau form — login dan pendaftaran belum aktif. Gunakan data contoh untuk mencoba.{isRegister && ' Nama dan alamat contoh akan disimpan di browser ini untuk mengisi “Kirim ke”.'}</p>
+        <p className="auth-preview-note">{isRegister ? 'Nama dan alamat akan digunakan untuk mengisi “Kirim ke” setelah akun berhasil dibuat.' : 'Masuk untuk menggunakan alamat akun pada “Kirim ke” dan checkout.'}</p>
         <form ref={formRef} onSubmit={submit} noValidate>
           {isRegister && field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
           {isRegister && <div className="auth-field">

@@ -1,5 +1,6 @@
 import { normalizeWhatsApp } from './whatsappModel.js';
 import { cartItemPresentation } from '../data/cartItemPresentation.js';
+import { snapshotImage } from '../data/productSnapshot.js';
 export const ORDER_STORAGE_KEY = 'bam.order.last.v1';
 export const ORDER_HISTORY_KEY = 'bam.orders.v1';
 export const ORDER_NOTE_MAX_LENGTH = 300;
@@ -16,7 +17,7 @@ export function createOrder({ cart, recipient, address, shipping, payment, whats
       quantity: item.quantity,
       details: {
         name: display.name, brand: display.brand, sizeLabel: display.sizeLabel,
-        image: typeof display.product.image === 'string' && display.product.image.length <= 2048 ? display.product.image : '',
+        image: snapshotImage(display.product.image),
         imageAlt: display.product.imageAlt || item.name, icon: display.product.icon || '📦', color: display.product.color || '',
       },
     };

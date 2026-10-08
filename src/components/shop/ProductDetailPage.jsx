@@ -26,7 +26,7 @@ export default function ProductDetailPage({ productId }) {
   const remaining = Math.max(0, 99 - (cartItem?.quantity || 0));
   const isFavorite = favoriteIds.includes(product.id);
   const supplier = suppliers.find((item) => item.productIds.includes(product.id));
-  const description = productDescriptions[product.groupId] || 'Informasi produk akan dilengkapi dari pemasok.';
+  const description = product.description || productDescriptions[product.groupId] || 'Informasi produk akan dilengkapi dari pemasok.';
   const subcategory = categoryBy(product.categoryId)?.children.find((sub) => sub.id === product.subcategoryId);
   const favoriteLabel = (isFavorite ? 'Hapus' : 'Tambah') + ' ' + product.name + ' ' + (isFavorite ? 'dari' : 'ke') + ' favorit';
 

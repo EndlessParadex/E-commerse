@@ -12,17 +12,23 @@ export default function DeliveryProvider({ children }) {
   const [savedLocation, setSavedLocation] = useState(initialLocation);
   const [storageError, setStorageError] = useState(false);
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const logoutPending = useRef(false);
 
   useEffect(() => {
     let active = true;
-    fetch('/api/auth/me', { credentials: 'include' }).then((response) => response.ok ? response.json() : null).then((payload) => {
+    fetch('/api/auth/me', { credentials: 'include' }).then((response) => {
+      if (response.status === 401) return null;
+      if (!response.ok) throw new Error('Session unavailable');
+      return response.json();
+    }).then((payload) => {
       if (!active || !payload?.user) return;
       setUser(payload.user);
       setSavedLocation(normalizeDelivery({ namaToko: payload.user.name, namaJalan: payload.user.address }));
-    }).catch(() => {});
+    }).catch(() => { if (active) setAuthError('Sesi belum dapat diperiksa. Periksa koneksi lalu muat ulang halaman.'); }).finally(() => { if (active) setAuthLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -58,7 +64,7 @@ export default function DeliveryProvider({ children }) {
     return ok;
   };
 
-  return <DeliveryContext.Provider value={{ savedLocation, saveLocation, storageError, user, setUser, logout, loggingOut, logoutError }}>
+  return <DeliveryContext.Provider value={{ savedLocation, saveLocation, storageError, user, setUser, authLoading, authError, logout, loggingOut, logoutError }}>
     {children}
   </DeliveryContext.Provider>;
 }

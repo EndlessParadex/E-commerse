@@ -3,6 +3,7 @@ import ProductImage from './ProductImage';
 import { rupiah } from './shopPresentation';
 import './ProductCard.css';
 import { productVariants } from '../../data/products';
+import { productColorStyle } from '../../data/catalogColors';
 
 export default function ProductCard({ product, onAdd, isFavorite = false, onToggleFavorite, showDiscount = false }) {
   const [added, setAdded] = useState(false);
@@ -26,8 +27,8 @@ export default function ProductCard({ product, onAdd, isFavorite = false, onTogg
   const favoriteLabel = (isFavorite ? 'Hapus' : 'Tambah') + ' ' + product.name + ' ' + (isFavorite ? 'dari' : 'ke') + ' favorit';
 
   return <article className="product-card">
-    <div className={'product-image-wrap ' + (product.color || '')}>
-      <a className={'product-image ' + (product.color || '')} href={'#/produk/' + product.id} aria-label={'Lihat detail ' + product.name}>
+    <div className={'product-image-wrap ' + (product.color || '')} style={productColorStyle(product.color)}>
+      <a className={'product-image ' + (product.color || '')} style={productColorStyle(product.color)} href={'#/produk/' + product.id} aria-label={'Lihat detail ' + product.name}>
         <ProductImage product={product} />
         {badge && <span className="product-tag">{badge}</span>}
       </a>

@@ -30,6 +30,83 @@
 .admin-panel-heading p { font-size: 12px; color: #64748b; margin-top: 5px; line-height: 1.6; }
 .admin-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 15px; border: 0; background: #0369a1; color: white; border-radius: 9px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .admin-primary:hover { background: #075985; }
+.admin-heading-actions, .admin-row-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.admin-row-actions { gap: 4px 12px; }
+.admin-master-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 22px; }
+.admin-master-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.admin-master-card-heading, .admin-master-sample { display: flex; gap: 13px; align-items: center; min-width: 0; }
+.admin-master-card-heading h3 { font-size: 14px; overflow-wrap: anywhere; line-height: 1.6; }
+.admin-master-card-heading p, .admin-master-detail, .admin-master-sample p { font-size: 12px; color: #64748b; line-height: 1.7; overflow-wrap: anywhere; }
+.admin-master-card > button { margin-top: auto; }
+.admin-master-card .admin-preview-sizes { margin: 0; }
+.admin-master-form { max-width: 900px; }
+.admin-master-sample { padding: 16px; border-radius: 12px; background: #f8fafc; }
+.admin-master-sample strong { font-size: 14px; overflow-wrap: anywhere; }
+.admin-master-choices { padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; min-width: 0; }
+.admin-master-choices legend { font-size: 13px; font-weight: 700; padding: 0 6px; }
+.admin-master-choices > p { font-size: 12px; line-height: 1.7; color: #64748b; margin-bottom: 12px; }
+.admin-master-choices label { display: flex; gap: 12px; align-items: center; min-height: 44px; padding: 8px 0; font-size: 13px; cursor: pointer; }
+.admin-master-choices input { width: 18px; height: 18px; flex-shrink: 0; accent-color: #0369a1; }
+.admin-master-choices[aria-invalid="true"] { border-color: #dc2626; }
+.admin-subcategory-list { display: grid; gap: 16px; }
+.admin-subcategory-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: end; }
+@media (max-width: 600px) { .admin-master-list { grid-template-columns: minmax(0, 1fr); padding: 14px; } .admin-master-card { padding: 16px; } }
+.admin-save-notice { padding: 15px 18px; border: 1px solid #86efac; background: #f0fdf4; color: #166534; border-radius: 10px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; }
+.admin-secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid #cbd5e1; background: white; border-radius: 9px; padding: 10px 14px; color: #075985; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.admin-secondary:hover { background: #f0f9ff; border-color: #7dd3fc; }
+.admin-shell button:disabled { opacity: .45; cursor: not-allowed; }
+.admin-next .admin-primary { margin-top: 16px; }
+.admin-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+.admin-editor-heading h2 { font-size: 26px; margin: 5px 0 10px; }
+.admin-editor-heading p, .admin-form-section > p, .admin-section-heading p { font-size: 12px; color: #64748b; line-height: 1.7; }
+.admin-editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; align-items: start; }
+.admin-editor-sections { display: grid; gap: 20px; min-width: 0; }
+.admin-form-section { background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; min-width: 0; }
+.admin-form-section h3 { font-size: 16px; margin-bottom: 18px; }
+.admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.admin-full { grid-column: 1 / -1; }
+.admin-field textarea { resize: vertical; width: 100%; min-height: 120px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font: inherit; font-size: 13px; line-height: 1.7; }
+.admin-field small, .admin-form-hint { color: #64748b; font-size: 11px; line-height: 1.7; }
+.admin-form-hint { margin-top: 10px; }
+.admin-field [aria-invalid="true"] { border-color: #dc2626; background: #fffafa; }
+.admin-field input[readonly] { background: #f1f5f9; color: #64748b; }
+.admin-error, .admin-field .admin-error { color: #b91c1c; font-size: 12px; line-height: 1.6; }
+.admin-form-alert { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 13px; line-height: 1.7; }
+.admin-photo-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin: 16px 0; }
+.admin-upload { position: relative; overflow: hidden; }
+.admin-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.admin-upload:focus-within { outline: 3px solid #0284c7; outline-offset: 3px; }
+.admin-section-heading, .admin-variant-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.admin-section-heading { margin-bottom: 20px; }
+.admin-section-heading h3 { margin-bottom: 6px; }
+.admin-variant-row { min-width: 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 18px 0 0; }
+.admin-variant-row legend { padding: 0 7px; font-size: 12px; font-weight: 700; color: #075985; }
+.admin-variant-heading > span { font-size: 12px; font-weight: 700; }
+.admin-variant-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.admin-sku { grid-column: 1 / -1; }
+.admin-form-preview { position: sticky; top: 22px; padding: 22px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; min-width: 0; }
+.admin-form-preview h3 { font-size: 13px; margin-bottom: 18px; }
+.admin-preview-image { background: #f0f9ff; border-radius: 12px; overflow: hidden; height: 190px; margin-bottom: 20px; }
+.admin-preview-image .bam-product-media { height: 100%; }
+.admin-form-preview h4 { font-size: 18px; line-height: 1.5; margin: 8px 0; overflow-wrap: anywhere; }
+.admin-form-preview p { font-size: 12px; color: #64748b; line-height: 1.7; overflow-wrap: anywhere; }
+.admin-form-preview > strong { display: block; font-size: 20px; color: #075985; margin: 15px 0; }
+.admin-preview-sizes { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 18px; }
+.admin-preview-description { white-space: pre-wrap; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+.admin-form-footer { margin-top: 22px; padding: 18px 22px; border: 1px solid #e2e8f0; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.admin-form-footer > p { font-size: 12px; color: #64748b; line-height: 1.7; }
+.admin-form-footer > div { display: flex; gap: 10px; flex-shrink: 0; }
+.admin-shell textarea:focus-visible { outline: 3px solid #0284c7; outline-offset: 3px; }
+@media (max-width: 1150px) { .admin-editor-grid { grid-template-columns: minmax(0, 1fr); } .admin-form-preview { position: static; max-width: 520px; width: 100%; } }
+@media (max-width: 600px) {
+ .admin-editor-heading { flex-direction: column; align-items: flex-start; }
+ .admin-form-section { padding: 18px; }
+ .admin-form-grid, .admin-variant-fields { grid-template-columns: minmax(0, 1fr); }
+ .admin-field textarea { font-size: 16px; }
+ .admin-form-footer { flex-direction: column; align-items: stretch; padding: 18px; }
+ .admin-form-footer > div { justify-content: flex-end; }
+ .admin-form-preview { max-width: none; }
+}
 .admin-suppliers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 22px; gap: 16px; }
 .admin-supplier { display: flex; align-items: center; gap: 13px; border: 1px solid #e2e8f0; padding: 17px; border-radius: 12px; min-width: 0; }
 .admin-supplier-avatar { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; background: #e0f2fe; color: #0369a1; border-radius: 10px; font-size: 14px; font-weight: 800; }
@@ -103,3 +180,5 @@
  .admin-mobile-products { padding: 0 14px 14px; }
  .admin-next { padding: 18px; }
 }
+.admin-submit-lock { border: 0; margin: 0; padding: 0; min-width: 0; }
+.admin-danger { min-height: 44px; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 9px; color: #b91c1c; background: #fff7f7; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; } .admin-danger:hover:not(:disabled) { background: #fee2e2; border-color: #f87171; } .admin-master-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }

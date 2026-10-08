@@ -32,3 +32,4 @@
 @media (max-width: 380px) { .product-detail-page { padding-left: 12px; padding-right: 12px; }.product-detail-card { padding: 12px; border-radius: 14px; }.detail-info h1 { font-size: 25px; }.detail-price strong { font-size: 26px; }.detail-actions { gap: 8px; }.detail-add, .detail-buy { padding: 12px 10px; font-size: 12px; } }
 
 .detail-image > .bam-product-media--detail { position: absolute; inset: 0; width: 100%; height: 100%; padding: clamp(20px, 3vw, 36px); }
+.detail-description > p { white-space: pre-wrap; }

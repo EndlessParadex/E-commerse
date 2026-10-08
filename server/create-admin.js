@@ -11,7 +11,7 @@ if (!emailArg || !nameArg || !addressArg || !password) throw new Error('Gunakan:
 const email = emailArg.trim().toLowerCase();
 const name = nameArg.trim();
 const address = addressArg.trim();
-if (password.length < 8 || name.length < 2 || address.length < 10) throw new Error('Nama/alamat tidak valid atau password kurang dari 8 karakter.');
+if (password.length < 8 || password.length > 128 || name.length < 2 || name.length > 100 || address.length < 10 || address.length > 500 || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Nama/alamat/email tidak valid; kata sandi harus 8–128 karakter.');
 const dbPath = resolve(process.env.BAM_DB_PATH || 'data/bam.sqlite');
 mkdirSync(dirname(dbPath), { recursive: true });
 const db = new DatabaseSync(dbPath);
@@ -22,5 +22,5 @@ const key = await scrypt(password, salt, 64);
 const hash = `${salt.toString('hex')}:${Buffer.from(key).toString('hex')}`;
 const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
 if (existing) db.prepare('UPDATE users SET name = ?, address = ?, password_hash = ?, role = \'admin\' WHERE id = ?').run(name, address, hash, existing.id);
-else db.prepare('INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), name, email, address, hash, new Date().toISOString(), 'admin');
-console.log(`Admin siap: ${email}`);
+else db.prepare('INSERT INTO users(id,name,email,address,password_hash,created_at,role) VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), name, email, address, hash, new Date().toISOString(), 'admin');
+db.close(); console.log(`Admin siap: ${email}`);

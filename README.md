@@ -1,16 +1,18 @@
-# React + Vite
+# BAM — E-commerce
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend React dan Vite dengan API Node.js serta database SQLite untuk akun dan katalog.
 
-Currently, two official plugins are available:
+Panduan pemasangan, pembuatan admin, impor data pratinjau, dan batas tahap ini ada di [BACKEND-TAHAP-1.md](./BACKEND-TAHAP-1.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```powershell
+npm ci
+npm run dev:full
+```
 
-## React Compiler
+```powershell
+npm test
+npm run lint
+npm run build
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Stok dan pesanan di database akan ditambahkan pada tahap berikutnya. Checkout saat ini masih simulasi.

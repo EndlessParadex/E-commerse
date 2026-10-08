@@ -41,7 +41,7 @@ export default function AuthPage({ mode }) {
       setUser(payload.user);
       await saveLocation({ namaToko: payload.user.name, namaJalan: payload.user.address });
       setNotice(isRegister ? 'Akun berhasil dibuat dan alamat sudah terhubung ke “Kirim ke”.' : 'Berhasil masuk. Alamat akun sudah terhubung ke “Kirim ke”.');
-      window.location.hash = '/';
+      window.location.hash = payload.user.role === 'admin' ? '/admin' : '/';
     } catch { setNotice('Server belum berjalan. Jalankan npm run dev:full lalu coba lagi.'); }
   };
 

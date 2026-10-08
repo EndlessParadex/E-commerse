@@ -34,12 +34,13 @@ export default function PromoCarousel() {
   const goTo = (next) => { setIndex((next + slides.length) % slides.length); setPaused(true); };
   const slide = slides[index];
   const featured = slide.ids.map((id) => products.find((product) => product.id === id)).filter(Boolean);
-  return <section className={`bam-promo bam-promo--${slide.theme}`} aria-label="Pilihan promo BAM" aria-roledescription="carousel"
+  return <section className={`bam-promo bam-promo--${slide.theme}`} aria-label="Pilihan promo CV. Belitung Arta Mandiri" aria-roledescription="carousel"
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onFocus={() => setFocused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <div className="bam-promo-slide" key={slide.theme} role="group" aria-roledescription="slide" aria-label={`${index + 1} dari ${slides.length}: ${slide.category}`} aria-live={playing ? 'off' : 'polite'}>
       <div className="bam-promo-copy">
-        <span className="bam-promo-eyebrow"><b>BAM.</b> / {slide.label}</span>
+        <div className="bam-promo-brand">CV. Belitung Arta Mandiri</div>
+        <span className="bam-promo-eyebrow">{slide.label}</span>
         <h1>{slide.title}</h1><p>{slide.description}</p>
         <a className="bam-promo-cta" href={`#/kategori/${encodeURIComponent(slide.category)}`}>{slide.cta}<span aria-hidden="true">↗</span></a>
       </div>

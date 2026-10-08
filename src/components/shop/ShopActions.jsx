@@ -2,12 +2,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import { useDelivery } from '../../state/useDelivery';
 import { ActionIcon } from './ShopIcon';
+import AccountMenu from '../account/AccountMenu';
 import { rupiah, dateLabel } from './shopPresentation';
 import './ShopActions.css';
 
 export default function ShopActions({ onOpen }) {
   const shop = useShop();
-  const { user, setUser } = useDelivery();
+  const { user } = useDelivery();
   const [active, setActive] = useState(null);
   const rootRef = useRef(null);
   const closeTimer = useRef(null);
@@ -70,7 +71,7 @@ export default function ShopActions({ onOpen }) {
       const isAccount = kind === 'account';
       const count = isAccount ? 0 : isCart ? shop.quantity : shop.unreadCount;
       const title = isAccount ? 'Akun saya' : isCart ? 'Keranjang' : 'Notifikasi';
-      const href = isAccount ? (user ? '#/akun' : '#/login') : isCart ? '#/keranjang' : '#/notifikasi';
+      const href = isAccount ? '#/akun' : isCart ? '#/keranjang' : '#/notifikasi';
       const expanded = active === kind;
       return <div className="shop-hover-target" data-kind={kind} key={kind}
         onPointerEnter={(event) => { if (event.pointerType !== 'touch') open(kind); }}
@@ -80,15 +81,17 @@ export default function ShopActions({ onOpen }) {
         onKeyDown={(event) => { if (event.key === 'Escape') { close(); event.stopPropagation(); } }}>
         <a className={isAccount ? "user-profile account-trigger" : "action-icon shop-action"} href={href} aria-label={isAccount ? (user ? 'Akun saya, ' + user.name : 'Akun saya, masuk') : isCart ? 'Keranjang, ' + count + ' barang' : 'Notifikasi, ' + count + ' belum dibaca'} aria-expanded={expanded} aria-controls={'preview-' + kind} onClick={close}>
           <ActionIcon notification={!isCart && !isAccount} account={isAccount} />
-          {isAccount && <span>Masuk</span>}
+          {isAccount && <span>{user ? 'Akun Saya' : 'Masuk / Daftar'}</span>}
           {count > 0 && <span className="shop-badge" aria-hidden="true">{count > 99 ? '99+' : count}</span>}
         </a>
         {expanded && <section className="shop-preview" id={`preview-${kind}`} aria-label={`Ringkasan ${title.toLowerCase()}`}>
           <div className="shop-preview-inner">
             <header className="shop-preview-header"><h2>{title}</h2><span>{!isAccount && <>{count} {isCart ? 'barang' : 'belum dibaca'}</>}</span></header>
+            {!isCart && !isAccount && shop.notifications.length > 0 && <div className="preview-notification-toolbar"><button type="button" className="shop-text-button" disabled={shop.unreadCount === 0} onClick={() => shop.dispatch({ type: 'readAll' })}>Tandai semua sudah dibaca</button></div>}
             {isAccount ? <div className="account-preview-body">
               <div className="account-preview-avatar"><ActionIcon account /></div>
-              {user ? <><h3>Halo, {user.name}</h3><p>{user.email}<br />Alamat pengiriman Anda tersimpan.</p><a className="shop-primary" href="#/akun" onClick={close}>Kelola akun</a><button type="button" className="account-secondary account-logout" onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } finally { setUser(null); close(); window.location.hash = '/'; } }}>Keluar</button></> : <><h3>Selamat datang di BAM.</h3><p>Masuk atau buat akun untuk pengalaman belanja Anda.</p><a className="shop-primary" href="#/login" onClick={close}>Masuk</a><a className="account-secondary" href="#/daftar" onClick={close}>Daftar akun baru</a></>}
+              {user ? <><h3>Halo, {user.name}</h3><p>{user.email}</p></> : <><h3>Selamat datang di BAM.</h3><p>Masuk atau buat akun untuk pengalaman belanja Anda.</p><a className="shop-primary" href="#/login" onClick={close}>Masuk</a><a className="account-secondary" href="#/daftar" onClick={close}>Daftar akun baru</a></>}
+              <div className="account-preview-menu"><AccountMenu onNavigate={close} /></div>
             </div> : isCart ? <>
               {shop.cart.length === 0 ? <p className="shop-preview-empty">Keranjang masih kosong.</p> : <ul className="shop-preview-list">
                 {shop.cart.slice(0, 4).map((item) => <li key={item.id}><div><strong>{item.name}</strong><p>{item.quantity} × {rupiah(item.price)}</p></div><span>{rupiah(item.price * item.quantity)}</span></li>)}
@@ -97,9 +100,9 @@ export default function ShopActions({ onOpen }) {
               {shop.cart.length > 0 && <div className="shop-preview-total"><span>Subtotal</span><strong>{rupiah(shop.subtotal)}</strong></div>}
             </> : <>
               {shop.notifications.length === 0 ? <p className="shop-preview-empty">Belum ada notifikasi.</p> : <ul className="shop-preview-list">
-                {shop.notifications.slice(0, 4).map((item) => <li key={item.id} className={item.read ? '' : 'preview-unread'}><div><strong>{!item.read && <span className="unread-dot" aria-label="Belum dibaca" />}{item.title}</strong><p>{item.message}</p><time dateTime={new Date(item.createdAt).toISOString()}>{dateLabel(item.createdAt)}</time></div></li>)}
+                {shop.notifications.slice(0, 3).map((item) => <li key={item.id} className={item.read ? '' : 'preview-unread'}><div><strong>{!item.read && <span className="unread-dot" aria-label="Belum dibaca" />}{item.title}</strong><p>{item.message}</p><time dateTime={new Date(item.createdAt).toISOString()}>{dateLabel(item.createdAt)}</time>{item.kind === 'orderCreated' && <div className="notification-order-link"><span className="notification-simulation">Simulasi</span><a className="shop-text-button" href={'#/pesanan/' + encodeURIComponent(item.orderId)} onClick={() => { shop.dispatch({ type: 'read', id: item.id }); close(); }}>Lihat detail pesanan →</a></div>}</div></li>)}
               </ul>}
-              {shop.notifications.length > 4 && <p className="shop-preview-more">+{shop.notifications.length - 4} notifikasi lainnya</p>}
+              {shop.notifications.length > 3 && <p className="shop-preview-more">+{shop.notifications.length - 3} notifikasi lainnya</p>}
             </>}
             {!isAccount && <footer className="shop-preview-footer"><a className="shop-primary" href={href} onClick={close}>{isCart ? 'Lihat keranjang' : 'Lihat semua notifikasi'} <span aria-hidden="true">→</span></a></footer>}
           </div>

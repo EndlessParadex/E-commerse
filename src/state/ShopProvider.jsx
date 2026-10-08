@@ -20,12 +20,9 @@ export default function ShopProvider({ children }) {
     } catch { setStorageError(true); }
   }, [state]);
 
-  const addItem = (product) => dispatch({
-    type: 'add', product,
-    notification: { id: crypto.randomUUID(), title: 'Ditambahkan ke keranjang', message: `${product.name} ditambahkan ke keranjang Anda.`, createdAt: Date.now(), read: false },
-  });
+  const addItem = (product) => dispatch({ type: 'add', product });
 
-  return <ShopContext.Provider value={{ ...state, ...cartTotals(state.cart), unreadCount: state.notifications.filter((item) => !item.read).length, storageError, addItem, clearCart: () => dispatch({ type: 'clearCart' }), toggleFavorite: (id) => dispatch({ type: 'toggleFavorite', id }), dispatch }}>
+  return <ShopContext.Provider value={{ ...state, ...cartTotals(state.cart), unreadCount: state.notifications.filter((item) => !item.read).length, storageError, addItem, completeOrder: (order) => dispatch({ type: 'completeOrder', order }), clearCart: () => dispatch({ type: 'clearCart' }), toggleFavorite: (id) => dispatch({ type: 'toggleFavorite', id }), dispatch }}>
     {children}
   </ShopContext.Provider>;
 }

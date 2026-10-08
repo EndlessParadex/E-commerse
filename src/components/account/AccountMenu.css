@@ -1,0 +1,10 @@
+.account-menu { display: grid; gap: 8px; text-align: left; }
+.account-menu a, .account-menu button { display: grid; gap: 4px; min-height: 60px; min-width: 0; width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; color: #0f172a; font: inherit; text-align: left; cursor: pointer; }
+.account-menu strong { font-size: 14px; }
+.account-menu small { font-size: 11px; line-height: 1.5; color: #64748b; }
+.account-menu a:hover, .account-menu button:hover { background: #f0f9ff; border-color: #bae6fd; }
+.account-menu a[aria-current="page"] { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+.account-menu button strong { color: #b91c1c; }
+.account-menu button:disabled { opacity: .65; cursor: wait; }
+.account-menu a:focus-visible, .account-menu button:focus-visible { outline: 3px solid #0284c7; outline-offset: 3px; }
+.account-menu-error { background: #fef2f2; color: #b91c1c; padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6; margin-top: 12px; text-align: left; }

@@ -2,20 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Navbar.css';
 import ShopActions from '../shop/ShopActions';
 import { useDelivery } from '../../state/useDelivery';
-import { validateDelivery } from '../../state/deliveryModel';
-import { availableCategories, categoryHref, filterProducts, searchHref } from '../../data/catalog';
+import { normalizeDelivery } from '../../state/deliveryModel';
+import { availableBrands, filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
+import { suppliers, supplierHref } from '../../data/suppliers';
 
 const Navbar = () => {
   // Mega Menu State
-  const [activeMegaCategory, setActiveMegaCategory] = useState("snack");
+  const [activeMegaSupplier, setActiveMegaSupplier] = useState(suppliers[0]?.id || '');
 
   // Deliver To State
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
-  const [namaToko, setNamaToko] = useState("");
-  const [namaJalan, setNamaJalan] = useState("");
-  const { savedLocation, saveLocation, storageError } = useDelivery();
-  const [addressErrors, setAddressErrors] = useState({});
+  const { user } = useDelivery();
+  const accountLocation = user ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address }) : null;
   const deliverRef = useRef(null);
+  const [compactDelivery, setCompactDelivery] = useState(() => window.matchMedia('(max-width: 600px)').matches);
   const searchRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
@@ -28,6 +28,31 @@ const Navbar = () => {
     return parts.map((part, index) => part.toLowerCase() === query.toLowerCase() ? <strong key={`${part}-${index}`}>{part}</strong> : part);
   };
 
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 600px)');
+    const update = () => setCompactDelivery(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!showDeliverPopup || !compactDelivery) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const popup = deliverRef.current?.querySelector('.deliver-popup');
+    popup?.querySelector('.delivery-close')?.focus();
+    const trapFocus = (event) => {
+      if (event.key !== 'Tab') return;
+      const elements = Array.from(popup?.querySelectorAll('a[href], button:not(:disabled), input, textarea') || []);
+      const first = elements[0];
+      const last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    popup?.addEventListener('keydown', trapFocus);
+    return () => { document.body.style.overflow = previousOverflow; popup?.removeEventListener('keydown', trapFocus); };
+  }, [showDeliverPopup, compactDelivery]);
+
   // Tutup popup jika klik di luar
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -36,14 +61,14 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
     const handleSearchOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearchSuggestions(false);
     };
-    document.addEventListener('mousedown', handleSearchOutside);
+    document.addEventListener('pointerdown', handleSearchOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('mousedown', handleSearchOutside);
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleSearchOutside);
     };
   }, []);
 
@@ -65,36 +90,17 @@ const Navbar = () => {
     updateArrowPosition();
     window.addEventListener('resize', updateArrowPosition);
     return () => window.removeEventListener('resize', updateArrowPosition);
-  }, [showDeliverPopup, savedLocation]);
+  }, [showDeliverPopup, user]);
 
-  const toggleDeliveryPopup = () => {
-    if (!showDeliverPopup) {
-      setNamaToko(savedLocation?.namaToko || '');
-      setNamaJalan(savedLocation?.namaJalan || '');
-      setAddressErrors({});
-    }
-    setShowDeliverPopup((current) => !current);
-  };
+  const toggleDeliveryPopup = () => setShowDeliverPopup((current) => !current);
 
-  const handleSaveLocation = () => {
-    const nextErrors = validateDelivery({ namaToko, namaJalan });
-    setAddressErrors(nextErrors);
-    if (Object.keys(nextErrors).length) {
-      deliverRef.current?.querySelector(nextErrors.namaToko ? '#delivery-name' : '#delivery-address')?.focus();
-      return;
-    }
-    saveLocation({ namaToko, namaJalan }).then((result) => {
-      if (result.persisted) setShowDeliverPopup(false);
-    });
-  };
-
-  const menuCategories = availableCategories();
-  const selectedCategory = menuCategories.find((item) => item.id === activeMegaCategory) || menuCategories[0];
+  const selectedSupplier = suppliers.find((item) => item.id === activeMegaSupplier) || suppliers[0];
+  const supplierBrands = availableBrands(selectedSupplier?.id);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
     const close = (event) => { if (!menuRef.current?.contains(event.target)) setMenuOpen(false); };
-    const routeClose = () => { setMenuOpen(false); setShowSearchSuggestions(false); };
+    const routeClose = () => { setMenuOpen(false); setShowSearchSuggestions(false); setShowDeliverPopup(false); };
     document.addEventListener('pointerdown', close);
     window.addEventListener('hashchange', routeClose);
     return () => { document.removeEventListener('pointerdown', close); window.removeEventListener('hashchange', routeClose); };
@@ -145,6 +151,7 @@ const Navbar = () => {
               onFocus={() => setShowSearchSuggestions(true)}
               placeholder="Cari di BAM."
               aria-label="Cari produk"
+              onKeyDown={(event) => { if (event.key === 'Escape') setShowSearchSuggestions(false); }}
             />
 
             {showSearchSuggestions && <div className="search-suggestions" aria-label="Saran pencarian">
@@ -166,8 +173,10 @@ const Navbar = () => {
             <div
               className="deliver-to"
               ref={deliverRef}
-              onClick={toggleDeliveryPopup}
+              onKeyDown={(event) => { if (event.key === 'Escape') { setShowDeliverPopup(false); deliverRef.current?.querySelector('.delivery-trigger')?.focus(); } }}
+              onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setShowDeliverPopup(false); }}
             >
+              <button type="button" className="delivery-trigger" onClick={toggleDeliveryPopup} aria-expanded={showDeliverPopup} aria-controls={showDeliverPopup ? 'delivery-popup' : undefined} aria-label={'Kirim ke, ' + (accountLocation?.namaToko || (user ? 'lengkapi alamat akun' : 'masuk untuk memakai alamat akun'))}>
               <span className="deliver-label">
                 Kirim ke
               </span>
@@ -175,101 +184,44 @@ const Navbar = () => {
               <div className="deliver-country">
                 <span>🇮🇩</span>
 
-                <span className="deliver-code" title={savedLocation?.namaToko}>
-                  {savedLocation?.namaToko || "ID"}
+                <span className="deliver-code" title={accountLocation?.namaToko || user?.name}>
+                  {accountLocation?.namaToko || user?.name || "Masuk"}
                 </span>
               </div>
 
-              {savedLocation && <span className="deliver-address" title={savedLocation.namaJalan}>{savedLocation.namaJalan}</span>}
+              {accountLocation && <span className="deliver-address" title={accountLocation.namaJalan}>{accountLocation.namaJalan}</span>}
+              </button>
 
               {/* Pop-up Kirim Ke */}
               {showDeliverPopup && (
+                <>
+                {compactDelivery && <button type="button" className="delivery-backdrop" tabIndex={-1} aria-label="Tutup pilihan alamat" onClick={() => { setShowDeliverPopup(false); deliverRef.current?.querySelector('.delivery-trigger')?.focus(); }} />}
                 <div
                   className="deliver-popup"
+                  id="delivery-popup"
+                  role="dialog"
+                  aria-modal={compactDelivery || undefined}
+                  aria-labelledby="delivery-popup-title"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="deliver-popup-content">
-                    <h3 className="deliver-popup-title">
-                      Tentukan lokasi Anda
+                    <button type="button" className="delivery-close" aria-label="Tutup pilihan alamat" onClick={() => { setShowDeliverPopup(false); deliverRef.current?.querySelector('.delivery-trigger')?.focus(); }}>×</button>
+                    <h3 className="deliver-popup-title" id="delivery-popup-title">
+                      Alamat pengiriman
                     </h3>
 
-                    <p className="deliver-popup-sub">
-                      Jasa pengiriman dan biaya kirim bervariasi sesuai lokasi Anda
-                    </p>
+                    <p className="deliver-popup-sub">{user ? 'Alamat pengiriman mengikuti data akun Anda.' : 'Masuk untuk melihat alamat pengiriman akun Anda.'}</p>
+                    {user ? <>
+                      {accountLocation ? <div className="delivery-account-preview"><span className="delivery-account-label">Alamat utama</span><strong>{accountLocation.namaToko}</strong><p>{accountLocation.namaJalan}</p><span className="delivery-account-country">🇮🇩 Indonesia</span></div> : <div className="delivery-account-empty"><strong>Alamat akun belum lengkap</strong><p>Lengkapi nama penerima dan alamat melalui halaman akun.</p></div>}
+                      <a className="deliver-login-btn" href="#/akun" onClick={() => setShowDeliverPopup(false)}>{accountLocation ? 'Kelola alamat di akun' : 'Lengkapi alamat'}</a>
+                    </> : <>
+                      <a className="deliver-login-btn" href="#/login" onClick={() => setShowDeliverPopup(false)}>Masuk untuk memakai alamat akun</a>
+                      <a className="delivery-register-link" href="#/daftar" onClick={() => setShowDeliverPopup(false)}>Belum punya akun? Daftar</a>
+                    </>}
 
-                    {/* Tombol Masuk */}
-                    <a className="deliver-login-btn" href="#/login" onClick={() => setShowDeliverPopup(false)}>
-                      Masuk untuk menambahkan alamat
-                    </a>
-
-                    {/* Pemisah */}
-                    <div className="deliver-divider">
-                      Atau
-                    </div>
-
-                    {/* Baris negara - fixed Indonesia */}
-                    <div className="deliver-country-row">
-                      <div className="deliver-country-left">
-                        <span>🇮🇩</span>
-                        <span>Indonesia</span>
-                      </div>
-
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#888"
-                        strokeWidth="2"
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-
-                    {storageError && <p className="delivery-warning" role="status">Alamat diperbarui sementara. Penyimpanan browser gagal; perubahan dapat hilang setelah refresh.</p>}
-
-                    {/* Nama penerima dan alamat dari data pengiriman bersama. */}
-                    <div className="deliver-form">
-                      <label htmlFor="delivery-name">Nama penerima</label>
-                      <input
-                        id="delivery-name"
-                        type="text"
-                        autoComplete="shipping name"
-                        maxLength={100}
-                        aria-invalid={Boolean(addressErrors.namaToko)}
-                        aria-describedby={addressErrors.namaToko ? 'delivery-name-error' : undefined}
-                        placeholder="Nama Toko / Penerima"
-                        value={namaToko}
-                        onChange={(e) => { setNamaToko(e.target.value); setAddressErrors((current) => ({ ...current, namaToko: undefined })); }}
-                      />
-                      {addressErrors.namaToko && <p id="delivery-name-error" className="delivery-error">{addressErrors.namaToko}</p>}
-                    </div>
-
-                    <div className="deliver-form">
-                      <label htmlFor="delivery-address">Alamat lengkap</label>
-                      <textarea
-                        id="delivery-address"
-                        rows={3}
-                        autoComplete="shipping street-address"
-                        maxLength={500}
-                        aria-invalid={Boolean(addressErrors.namaJalan)}
-                        aria-describedby={addressErrors.namaJalan ? 'delivery-address-error' : undefined}
-                        placeholder="Nama Jalan / Alamat"
-                        value={namaJalan}
-                        onChange={(e) => { setNamaJalan(e.target.value); setAddressErrors((current) => ({ ...current, namaJalan: undefined })); }}
-                      />
-                      {addressErrors.namaJalan && <p id="delivery-address-error" className="delivery-error">{addressErrors.namaJalan}</p>}
-                    </div>
-
-                    <button
-                      className="deliver-save-btn"
-                      onClick={handleSaveLocation}
-                    >
-                      Simpan
-                    </button>
                   </div>
                 </div>
+                </>
               )}
 
             </div>
@@ -287,23 +239,27 @@ const Navbar = () => {
 
           <div className="secondary-nav-left">
 
-            <div className="bam-category-menu" ref={menuRef} onMouseEnter={() => setMenuOpen(true)} onMouseLeave={() => setMenuOpen(false)}
+            <div className="bam-category-menu" ref={menuRef} onPointerEnter={(event) => { if (event.pointerType === 'mouse') setMenuOpen(true); }} onPointerLeave={(event) => { if (event.pointerType === 'mouse') setMenuOpen(false); }}
               onKeyDown={(event) => { if (event.key === 'Escape') { setMenuOpen(false); menuRef.current?.querySelector('button')?.focus(); } }}
               onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setMenuOpen(false); }}>
               <button type="button" className="bam-category-trigger" aria-expanded={menuOpen} aria-controls="bam-category-panel" onClick={() => setMenuOpen((value) => !value)}>☰ Semua Kategori</button>
               {menuOpen && <div className="bam-category-panel" id="bam-category-panel">
-                <div className="bam-category-sidebar" aria-label="Pilih kategori">
-                  {menuCategories.map((item) => <button type="button" key={item.id} aria-pressed={selectedCategory?.id === item.id} onMouseEnter={() => setActiveMegaCategory(item.id)} onFocus={() => setActiveMegaCategory(item.id)} onClick={() => setActiveMegaCategory(item.id)}><span aria-hidden="true">{item.icon}</span>{item.name}<span aria-hidden="true">›</span></button>)}
+                <div className="bam-category-sidebar" aria-label="Pilih PT pemasok">
+                  <p className="bam-menu-supplier-label">PT pemasok · Data contoh</p>
+                  {suppliers.map((item) => <button type="button" key={item.id} aria-pressed={selectedSupplier?.id === item.id} onMouseEnter={() => setActiveMegaSupplier(item.id)} onFocus={() => setActiveMegaSupplier(item.id)} onClick={() => setActiveMegaSupplier(item.id)}><span className="bam-menu-supplier-initials" aria-hidden="true">{item.initials}</span><span className="bam-menu-supplier-name">{item.name}</span><span aria-hidden="true">›</span></button>)}
+                  <a className="bam-menu-all-suppliers" href={searchHref('')} onClick={() => setMenuOpen(false)}>Semua pemasok dan produk →</a>
                 </div>
-                {selectedCategory && <div className="bam-category-content">
-                  <header><div><small>PILIHAN BAM.</small><h2>{selectedCategory.icon} {selectedCategory.name}</h2></div><a href={categoryHref(selectedCategory.id)} onClick={() => setMenuOpen(false)}>Lihat semua →</a></header>
-                  <div className="bam-subcategory-grid">{selectedCategory.children.map((sub) => <a key={sub.id} href={categoryHref(selectedCategory.id, sub.id)} onClick={() => setMenuOpen(false)}><strong>{sub.name}</strong><span>{filterProducts({ categoryId: selectedCategory.id, subcategoryId: sub.id }).length} produk tersedia <b aria-hidden="true">↗</b></span></a>)}</div>
+                {selectedSupplier && <div className="bam-category-content">
+                  <header><div><small>KATALOG PEMASOK · CONTOH</small><h2>{selectedSupplier.name}</h2></div><a href={supplierHref(selectedSupplier.id)} onClick={() => setMenuOpen(false)}>Semua produk PT ini →</a></header>
+                  <div className="bam-subcategory-grid">{supplierBrands.map((brand) => <div className="bam-menu-supplier-category" key={brand.id}><a href={supplierHref(selectedSupplier.id, { brandId: brand.id })} onClick={() => setMenuOpen(false)}><strong>{brand.name}</strong><span>{filterProducts({ supplierId: selectedSupplier.id, brandId: brand.id }).length} pilihan produk <b aria-hidden="true">↗</b></span></a></div>)}</div>
+                  {!supplierBrands.length && <p>Belum ada produk untuk pemasok ini.</p>}
                 </div>}
               </div>}
             </div>
           </div>
 
           <div className="secondary-nav-right">
+            <a className="navbar-orders-link" href="#/pesanan">Pesanan saya</a>
 
             <div className="dropdown-container">
 

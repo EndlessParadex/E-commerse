@@ -3,6 +3,8 @@
 .bam-product-media--card { height: 190px; padding: 22px; }
 .bam-product-media--detail { height: 480px; padding: 36px; }
 .bam-product-media--promo { height: 94px; padding: 4px; margin-bottom: 12px; }
+.bam-product-media--thumbnail { height: 100%; padding: 6px; margin: 0; }
+.bam-product-media.bam-product-media--thumbnail .bam-product-fallback { font-size: 28px; line-height: 1; filter: drop-shadow(0 2px 2px #0f172a18); }
 .bam-product-fallback { font-size: 76px; line-height: 1.2; filter: drop-shadow(0 10px 9px #0f172a26); }
 .bam-product-media--detail .bam-product-fallback { font-size: 150px; }
 .bam-product-media--promo .bam-product-fallback { font-size: 68px; }

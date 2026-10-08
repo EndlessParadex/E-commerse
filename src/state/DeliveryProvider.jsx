@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DeliveryContext } from './useDelivery';
 import { normalizeDelivery, readDelivery, writeDelivery } from './deliveryModel';
+import { requestLogout } from '../components/account/accountSession';
 
 function initialLocation() {
   try { return readDelivery(window.localStorage); }
@@ -11,6 +12,9 @@ export default function DeliveryProvider({ children }) {
   const [savedLocation, setSavedLocation] = useState(initialLocation);
   const [storageError, setStorageError] = useState(false);
   const [user, setUser] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+  const logoutPending = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -41,7 +45,20 @@ export default function DeliveryProvider({ children }) {
     return { ok: true, persisted };
   };
 
-  return <DeliveryContext.Provider value={{ savedLocation, saveLocation, storageError, user, setUser }}>
+  const logout = async () => {
+    if (logoutPending.current) return false;
+    logoutPending.current = true;
+    setLoggingOut(true);
+    setLogoutError('');
+    const ok = await requestLogout();
+    if (ok) setUser(null);
+    else setLogoutError('Belum berhasil keluar. Periksa koneksi server lalu coba lagi.');
+    logoutPending.current = false;
+    setLoggingOut(false);
+    return ok;
+  };
+
+  return <DeliveryContext.Provider value={{ savedLocation, saveLocation, storageError, user, setUser, logout, loggingOut, logoutError }}>
     {children}
   </DeliveryContext.Provider>;
 }

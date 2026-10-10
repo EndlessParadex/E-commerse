@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import { Window } from 'happy-dom';
 import { createServer } from 'vite';
 import { act, createElement } from 'react';
+import { readFile } from 'node:fs/promises';
 
 test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/merek baru tersedia dan SKU baru tidak terkunci', async () => {
   const dom = new Window({ url: 'http://localhost/#/admin' });
+  const themeStyle = dom.document.createElement('style');
+  themeStyle.textContent = (await Promise.all(['../styles/themes.css', '../styles/global.css', './AdminPage.css'].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))).join('\n');
+  dom.document.head.append(themeStyle);
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
   const module = await server.ssrLoadModule('/src/pages/AdminPage.jsx').catch(async (error) => { await server.close(); throw error; });
   globalThis.window = dom; globalThis.document = dom.document; Object.defineProperty(globalThis, 'navigator', { value: dom.navigator, configurable: true });
@@ -46,7 +50,12 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     const newSupplier = supplierModule.suppliers.find((entry) => entry.name === 'PT UI Uji');
     await click(container.querySelector(`button[aria-label="Edit ${newSupplier.name}"]`));
     await fill('#master-color', 'rose');
-    assert.equal(container.querySelector('.admin-master-sample').style.background, '#fdf2f8');
+    const sample = container.querySelector('.admin-master-sample');
+    assert.equal(dom.getComputedStyle(sample).backgroundColor, '#fdf2f8');
+    dom.document.documentElement.dataset.theme = 'dark';
+    assert.equal(dom.getComputedStyle(sample).backgroundColor, '#321f2c');
+    assert.equal(dom.getComputedStyle(sample.querySelector('p')).color, '#c1cfdf');
+    dom.document.documentElement.dataset.theme = 'light';
     await click(button('Simpan PT pemasok'));
     assert.equal(supplierModule.suppliers.find((entry) => entry.id === newSupplier.id).color, 'rose');
     await render('brands'); await click(button('+ Tambah merek')); await fill('#master-name', 'Merek UI Uji');

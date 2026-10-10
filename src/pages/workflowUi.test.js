@@ -123,7 +123,7 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await navigate('/produk/%broken'); assert.match(container.querySelector('h1').textContent, /Produk tidak ditemukan/);
     await navigate('/pesanan/%broken/pembayaran'); assert.match(container.querySelector('h1').textContent, /Pesanan tidak ditemukan/);
     await navigate('/tidak-ada'); assert.match(container.querySelector('h1').textContent, /Halaman tidak ditemukan/);
-    await navigate('/akun'); await fill('#account-name', 'Nama baru'); await fill('#account-address', 'Alamat baru untuk pengujian');
+    await navigate('/akun'); await click(container.querySelector('#account-tab-address')); await fill('#account-name', 'Nama baru'); await fill('#account-address', 'Alamat baru untuk pengujian');
     dom.confirm = () => false;
     await navigate('/cari?q=balado'); assert.equal(dom.location.hash, '#/akun'); assert.equal(container.querySelector('#account-name').value, 'Nama baru');
     await click(container.querySelector('.skip-to-content')); assert.equal(dom.location.hash, '#/akun');

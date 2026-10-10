@@ -1,17 +1,17 @@
-.bam-confirm-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; border: 1px solid #dbe5ef; border-radius: 20px; color: #0f172a; background: white; overflow: auto; box-shadow: 0 24px 80px #0f172a33; }
+.bam-confirm-dialog { width: min(480px, calc(100% - 32px)); max-height: calc(100dvh - 48px); margin: auto; padding: 0; border: 1px solid var(--color-border-store); border-radius: 20px; color: var(--color-text); background: var(--color-surface); overflow: auto; box-shadow: 0 24px 80px #0f172a33; }
 .bam-confirm-dialog::backdrop { background: #0f172a80; }
 .bam-dialog-content { padding: 28px; }
 .bam-dialog-content h2 { font-size: 24px; line-height: 1.3; margin: 8px 0 14px; }
-.bam-dialog-content p { font-size: 14px; line-height: 1.65; color: #475569; margin-bottom: 14px; }
+.bam-dialog-content p { font-size: 14px; line-height: 1.65; color: var(--color-text-secondary); margin-bottom: 14px; }
 .bam-dialog-content label { display: grid; gap: 8px; font-size: 14px; line-height: 1.5; margin: 14px 0; }
-.bam-dialog-content select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font: inherit; }
+.bam-dialog-content select { width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--color-input-border); border-radius: 8px; background: var(--color-surface); font: inherit; }
 .bam-dialog-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .bam-dialog-actions button { flex: 1; }
-.bam-button-secondary, .bam-button-danger { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 10px; background: white; color: #075985; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
-.bam-button-danger { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
-.bam-button-danger:hover { background: #fee2e2; }
-.bam-button-secondary:hover { background: #f0f9ff; }
+.bam-button-secondary, .bam-button-danger { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid var(--color-input-border); border-radius: 10px; background: var(--color-surface); color: var(--color-info-text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.bam-button-danger { color: var(--color-danger-text); border-color: var(--color-danger-border); background: var(--color-danger-subtle); }
+.bam-button-danger:hover { background: var(--color-danger-pill); }
+.bam-button-secondary:hover { background: var(--color-surface-hover); }
 .bam-button-secondary:disabled, .bam-button-danger:disabled { cursor: wait; opacity: .6; }
-.bam-dialog-content .bam-cancel-choice { display: flex; align-items: start; gap: 10px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
-.bam-cancel-choice input { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; accent-color: #0284c7; }
+.bam-dialog-content .bam-cancel-choice { display: flex; align-items: start; gap: 10px; border: 1px solid var(--color-border); border-radius: 10px; padding: 12px; }
+.bam-cancel-choice input { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; accent-color: var(--color-link-bright); }
 @media (max-width: 600px) { .bam-dialog-content { padding: 22px; }.bam-dialog-content h2 { font-size: 21px; }.bam-dialog-content select { font-size: 16px; } }

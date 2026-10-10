@@ -7,6 +7,7 @@ import ShopProvider from './state/ShopProvider';
 import ShopPage from './components/shop/ShopPage';
 import AuthPage from './components/account/AuthPage';
 import DeliveryProvider from './state/DeliveryProvider';
+import AppearanceProvider from './state/AppearanceProvider';
 import ProductDetailPage from './components/shop/ProductDetailPage';
 import FavoritesPage from './pages/FavoritesPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -58,14 +59,14 @@ function App() {
   }, [route, title, restoreY]);
 
   if (catalogState !== 'ready') return <main className="shop-page" role="status"><h1>{catalogState === 'loading' ? 'Memuat katalog…' : 'Katalog belum dapat dimuat'}</h1>{catalogState === 'error' && <><p>Periksa koneksi dan pastikan server BAM sudah berjalan.</p><button className="shop-primary" onClick={() => { setCatalogState('loading'); setLoadAttempt((value) => value + 1); }}>Coba lagi</button></>}</main>;
-  return <ShopProvider><DeliveryProvider>
+  return <ShopProvider><DeliveryProvider><AppearanceProvider>
     {!isAdmin && <Navbar />}
     <a className="skip-to-content" href="#main-content" onClick={(event) => { event.preventDefault(); contentRef.current?.focus(); }}>Lewati ke isi halaman</a>
     <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
       {isAdmin ? <AdminAccess><AdminPage view={adminView} /></AdminAccess> : infoPage ? <StoreInfoPage page={infoPage} /> : route === '/pesanan' ? <OrdersPage /> : route === '/keranjang' ? <ShopPage type="cart" /> : route === '/checkout' ? <CheckoutPage /> : route === '/notifikasi' ? <ShopPage type="notifications" /> : route === '/favorit' ? <FavoritesPage /> : route === '/akun' ? <AccountPage /> : route === '/login' ? <AuthPage key="login" mode="login" /> : route === '/daftar' ? <AuthPage key="register" mode="register" /> : paymentMatch ? <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} /> : orderMatch ? <OrderConfirmationPage orderId={decodeId(orderMatch[1])} key={orderMatch[1]} /> : productMatch ? <ProductDetailPage productId={decodeId(productMatch[1])} returnTo={productReturnTo} key={productMatch[1]} /> : catalog && catalog.kind !== 'invalid' ? <Home key={catalogNavigationKey(route)} catalog={catalog} /> : route === '/' ? <Home /> : <div className="shop-page"><h1>Halaman tidak ditemukan</h1><a href="#/">Kembali ke beranda</a></div>}
     </main>
     {!isAdmin && <StoreFooter />}
-  </DeliveryProvider></ShopProvider>;
+  </AppearanceProvider></DeliveryProvider></ShopProvider>;
 }
 
 export default App;

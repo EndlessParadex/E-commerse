@@ -1,5 +1,19 @@
-.store-footer { background: white; border-top: 1px solid #e2e8f0; margin-top: 48px; }
-.store-footer-inner { max-width: 1200px; margin: auto; padding: 38px 20px; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 28px; }
-.store-footer-inner > * { min-width: 0; }.store-footer-brand { color: #0f172a; font-size: 30px; font-weight: 800; }.store-footer-brand span { color: #0284c7; }.store-footer h2 { font-size: 14px; margin-bottom: 14px; }.store-footer p { font-size: 12px; color: #64748b; line-height: 1.8; margin: 8px 0; }.store-footer nav a { display: flex; align-items: center; min-height: 36px; font-size: 12px; color: #475569; }.store-footer a:hover { color: #0369a1; }.store-footer-inner > div > a:not(.store-footer-brand) { display: inline-flex; min-height: 44px; align-items: center; font-size: 12px; font-weight: 700; color: #0369a1; }.store-footer-bottom { max-width: 1160px; margin: auto; padding: 18px 0; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: #64748b; }
-@media (max-width: 800px) { .store-footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }.store-footer-bottom { margin: 0 20px; } }
-@media (max-width: 600px) { .store-footer { margin-top: 24px; }.store-footer-inner { padding: 28px 16px; gap: 24px 18px; }.store-footer-inner > div:first-child { grid-column: 1 / -1; }.store-footer nav a { min-height: 44px; }.store-footer-bottom { margin: 0 16px; flex-direction: column; gap: 5px; }.store-footer p { font-size: 13px; } }
+.store-footer { background: linear-gradient(180deg, var(--color-footer-start), var(--color-surface)); border-top: 1px solid var(--color-border-info); margin-top: 48px; }
+.store-footer-inner { max-width: 1200px; margin: auto; padding: 32px 20px 24px; display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr)); gap: 48px; }
+.store-footer-inner > * { min-width: 0; }
+.store-footer-brand { color: var(--color-text); font-size: 32px; font-weight: 800; }
+.store-footer-brand span { color: var(--color-link-bright); }
+.store-footer h2 { font-size: 14px; margin-bottom: 10px; }
+.store-footer p { font-size: 13px; color: var(--color-text-muted); line-height: 1.75; margin: 8px 0; overflow-wrap: anywhere; }
+.store-footer .store-footer-company { color: var(--color-text-strong); font-size: 16px; font-weight: 600; }
+.store-footer nav a { display: flex; align-items: center; min-height: 44px; width: fit-content; font-size: 13px; color: var(--color-text-secondary); }
+.store-footer a:hover { color: var(--color-link); }
+.store-footer-bottom { max-width: 1160px; margin: auto; padding: 10px 0; border-top: 1px solid var(--color-border-store); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; font-size: 12px; color: var(--color-text-muted); }
+.store-footer-credit { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; min-width: 0; }
+.store-footer-creator { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.store-footer-creator button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 3px; border: 0; border-radius: 5px; background: transparent; color: var(--color-link); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: #b3d8ed; }
+.store-footer-creator button:hover { color: var(--color-info-text); text-decoration-color: currentColor; }
+.store-footer a:focus-visible, .store-footer-creator button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.store-footer-simulation { font-size: 11px; overflow-wrap: anywhere; }
+@media (max-width: 800px) { .store-footer-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; }.store-footer-identity { grid-column: 1 / -1; max-width: 480px; }.store-footer-bottom { margin: 0 20px; } }
+@media (max-width: 600px) { .store-footer { margin-top: 24px; }.store-footer-inner { padding: 28px 16px 20px; gap: 24px 18px; }.store-footer-brand { font-size: 30px; }.store-footer-bottom { margin: 0 16px; align-items: flex-start; flex-direction: column; gap: 2px; padding: 12px 0 20px; } }

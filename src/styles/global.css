@@ -24,6 +24,7 @@
 
 html {
   overflow-x: hidden;
+  scroll-padding-top: calc(var(--store-navigation-height, 0px) + 16px);
 }
 
 body {
@@ -42,10 +43,11 @@ body {
 
 a {
   text-decoration: none;
-  color: var(--color-primary);
+  color: var(--color-link-bright);
 }
 
 button {
+  color: inherit;
   font-family: var(--font-main);
   cursor: pointer;
   touch-action: manipulation;

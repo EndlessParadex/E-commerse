@@ -1,49 +1,49 @@
 .workflow-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); gap: 16px; padding: 20px; }
-.workflow-preview { margin: 20px; padding: 14px 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; color: #075985; font-size: 13px; line-height: 1.7; }
-.workflow-notice { margin: 16px 20px; padding: 14px 16px; background: #f0fdf4; color: #166534; border: 1px solid #86efac; border-radius: 10px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
-.workflow-error { color: #b91c1c; }
+.workflow-preview { margin: 20px; padding: 14px 16px; background: var(--color-surface-hover); border: 1px solid var(--color-border-info-strong); border-radius: 10px; color: var(--color-info-text); font-size: 13px; line-height: 1.7; }
+.workflow-notice { margin: 16px 20px; padding: 14px 16px; background: var(--color-success-soft); color: var(--color-success-text); border: 1px solid var(--color-success-border); border-radius: 10px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.workflow-error { color: var(--color-danger-text); }
 .workflow-order-list, .workflow-stock-list { list-style: none; display: grid; gap: 18px; padding: 20px; }
 .workflow-stock-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.workflow-order-card, .workflow-stock-card { min-width: 0; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+.workflow-order-card, .workflow-stock-card { min-width: 0; border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; }
 .workflow-order-card header, .workflow-stock-card header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .workflow-order-card h3, .workflow-stock-card h3 { font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
-.workflow-order-card p, .workflow-stock-card p, .workflow-order-summary { color: #64748b; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
-.workflow-badge { display: inline-flex; padding: 7px 12px; border-radius: 999px; background: #e0f2fe; color: #075985; font-size: 12px; font-weight: 700; }
-.workflow-badge.status-cancelled { background: #f1f5f9; color: #475569; }
-.workflow-badge.status-expired, .orders-status.status-expired { background: #fee2e2; color: #991b1b; }
-.workflow-badge.status-awaiting_payment { background: #fef3c7; color: #92400e; }
-.workflow-badge.status-completed, .orders-status.status-completed { background: #dcfce7; color: #166534; }
+.workflow-order-card p, .workflow-stock-card p, .workflow-order-summary { color: var(--color-text-muted); font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.workflow-badge { display: inline-flex; padding: 7px 12px; border-radius: 999px; background: var(--color-info-soft); color: var(--color-info-text); font-size: 12px; font-weight: 700; }
+.workflow-badge.status-cancelled { background: var(--color-surface-muted); color: var(--color-text-secondary); }
+.workflow-badge.status-expired, .orders-status.status-expired { background: var(--color-danger-pill); color: var(--color-danger-strong); }
+.workflow-badge.status-awaiting_payment { background: var(--color-warning-pill); color: var(--color-warning-text); }
+.workflow-badge.status-completed, .orders-status.status-completed { background: var(--color-success-pill); color: var(--color-success-text); }
 .workflow-order-summary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
-.workflow-order-summary strong { color: #0f172a; }
+.workflow-order-summary strong { color: var(--color-text); }
 .workflow-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 .workflow-actions > *, .payment-continue { min-height: 44px; }
-.workflow-order-details { border-top: 1px solid #e2e8f0; padding-top: 8px; }
-.workflow-order-details summary { min-height: 44px; cursor: pointer; padding: 12px 0; color: #0369a1; font-size: 13px; font-weight: 700; }
+.workflow-order-details { border-top: 1px solid var(--color-border); padding-top: 8px; }
+.workflow-order-details summary { min-height: 44px; cursor: pointer; padding: 12px 0; color: var(--color-link); font-size: 13px; font-weight: 700; }
 .workflow-order-details > ul { list-style: none; display: grid; gap: 18px; margin: 12px 0; }
 .workflow-order-details > ul > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 16px; align-items: start; font-size: 13px; }
 .workflow-order-details .bam-product-media { width: 72px; height: 80px; margin: 0; }
 .workflow-order-details li > div { min-width: 0; display: grid; gap: 5px; overflow-wrap: anywhere; }
-.workflow-order-details small, .workflow-stock-card small { display: block; color: #64748b; font-size: 11px; overflow-wrap: anywhere; }
-.workflow-stock-card .workflow-stock-amount { margin: 20px 0; color: #075985; }
+.workflow-order-details small, .workflow-stock-card small { display: block; color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
+.workflow-stock-card .workflow-stock-amount { margin: 20px 0; color: var(--color-info-text); }
 .workflow-stock-amount strong { font-size: 30px; }
-.workflow-stock-card > ul { list-style: none; display: grid; gap: 12px; padding: 12px 0; border-top: 1px solid #e2e8f0; }
+.workflow-stock-card > ul { list-style: none; display: grid; gap: 12px; padding: 12px 0; border-top: 1px solid var(--color-border); }
 .workflow-stock-card > ul > li { display: flex; align-items: start; justify-content: space-between; gap: 14px; font-size: 12px; }
 .workflow-stock-card > ul > li > div { min-width: 0; }
 .workflow-stock-card > button { margin-top: 16px; }
 .workflow-payment-page { max-width: 760px; }
 .workflow-order-id { overflow-wrap: anywhere; }
 .workflow-payment-page > .confirmation-card, .workflow-payment-page > .confirmation-home { margin-bottom: 20px; }
-.workflow-payment-demo > p { color: #64748b; font-size: 13px; line-height: 1.7; margin: 12px 0 20px; }
+.workflow-payment-demo > p { color: var(--color-text-muted); font-size: 13px; line-height: 1.7; margin: 12px 0 20px; }
 .workflow-payment-page .workflow-notice { margin-inline: 0; }
 .payment-continue { display: flex; margin-top: 18px; }
 .workflow-shipment dl { display: grid; gap: 12px; margin: 18px 0; font-size: 13px; }
-.workflow-shipment dt { color: #64748b; margin-bottom: 4px; }
+.workflow-shipment dt { color: var(--color-text-muted); margin-bottom: 4px; }
 .workflow-shipment dd { font-weight: 700; overflow-wrap: anywhere; }
-.workflow-shipment > p { color: #64748b; font-size: 12px; line-height: 1.7; }
+.workflow-shipment > p { color: var(--color-text-muted); font-size: 12px; line-height: 1.7; }
 .account-profile-heading > div { min-width: 0; }
 .account-profile-heading h1, .account-profile-heading p { overflow-wrap: anywhere; }
 .admin-sidebar { overflow-y: auto; }
 @media (max-width: 600px) { .account-field input, .account-field textarea { font-size: 16px; } }
-.bam-confirm-dialog input:not([type="checkbox"]):not([type="radio"]) { width: 100%; min-height: 44px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; color: #0f172a; background: white; font: inherit; }
+.bam-confirm-dialog input:not([type="checkbox"]):not([type="radio"]) { width: 100%; min-height: 44px; padding: 12px; border: 1px solid var(--color-input-border); border-radius: 8px; color: var(--color-text); background: var(--color-surface); font: inherit; }
 .add-product-button:disabled, .detail-actions button:disabled { opacity: .6; cursor: not-allowed; }
 @media (max-width: 700px) { .workflow-filters, .workflow-stock-list { grid-template-columns: minmax(0, 1fr); }.workflow-filters, .workflow-order-list, .workflow-stock-list { padding: 14px; }.workflow-preview { margin: 14px; }.workflow-order-card, .workflow-stock-card { padding: 16px; }.workflow-actions > * { flex: 1 1 180px; text-align: center; }.workflow-order-details > ul > li { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }.workflow-order-details .bam-product-media { width: 64px; height: 72px; }.bam-confirm-dialog input:not([type="checkbox"]):not([type="radio"]) { font-size: 16px; } }

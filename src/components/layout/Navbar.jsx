@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import './Navbar.css';
 import ShopActions from '../shop/ShopActions';
 import { useDelivery } from '../../state/useDelivery';
@@ -8,6 +8,25 @@ import CatalogMenu from './CatalogMenu';
 import { productVariants } from '../../data/products';
 
 const Navbar = () => {
+  const navigationRef = useRef(null);
+  useLayoutEffect(() => {
+    const navigation = navigationRef.current;
+    const page = document.documentElement;
+    const property = '--store-navigation-height';
+    const previous = page.style.getPropertyValue(property);
+    const priority = page.style.getPropertyPriority(property);
+    const updateHeight = () => page.style.setProperty(property, `${Math.ceil(navigation.getBoundingClientRect().height)}px`);
+    updateHeight();
+    const observer = window.ResizeObserver ? new window.ResizeObserver(updateHeight) : null;
+    observer?.observe(navigation);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateHeight);
+      if (previous) page.style.setProperty(property, previous, priority);
+      else page.style.removeProperty(property);
+    };
+  }, []);
   // Deliver To State
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
@@ -99,7 +118,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <>
+    <div className="store-navigation" ref={navigationRef}>
       <header className="navbar">
         <div className="navbar-container">
 
@@ -121,7 +140,7 @@ const Navbar = () => {
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#64748B"
+                stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -226,7 +245,7 @@ const Navbar = () => {
       </header>
 
       {/* Secondary Navbar */}
-      <div className="secondary-navbar">
+      <nav className="secondary-navbar" aria-label="Navigasi belanja">
         <div className="secondary-navbar-container">
 
           <div className="secondary-nav-left">
@@ -242,8 +261,8 @@ const Navbar = () => {
           </div>
 
         </div>
-      </div>
-    </>
+      </nav>
+    </div>
   );
 };
 

@@ -13,5 +13,12 @@ export const catalogColors = [
 export const validCatalogColor = (id) => catalogColors.some((color) => color.id === id);
 export const catalogColor = (id) => catalogColors.find((color) => color.id === id) || catalogColors[0];
 export const productColorStyle = (id) => { const color = catalogColor(id); return { background: `linear-gradient(145deg, ${color.from}, ${color.to})` }; };
-export const supplierColorStyle = (id) => { const color = catalogColor(id); return { background: color.tint, borderColor: color.border }; };
+export const supplierColorStyle = (id) => {
+  const color = catalogColor(id);
+  return {
+    background: `var(--catalog-tint-${color.id}, ${color.tint})`,
+    borderColor: `var(--catalog-border-${color.id}, ${color.border})`,
+    '--color-text-muted': 'var(--color-text-secondary)',
+  };
+};
 export const avatarColorStyle = (id) => { const color = catalogColor(id); return { background: color.border, color: color.ink }; };

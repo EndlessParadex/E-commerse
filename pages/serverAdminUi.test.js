@@ -1,0 +1,61 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { Window } from 'happy-dom';
+import { createServer } from 'vite';
+import { act, createElement } from 'react';
+import { createApp } from '../../server/app.js';
+
+test('akses admin dan form server: selama menyimpan terkunci; kegagalan mempertahankan isian', async () => {
+  const app = createApp({ dbPath: ':memory:' }); const seed = JSON.parse(JSON.stringify(app.catalog.snapshot())); app.db.close();
+  const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
+  const modules = await Promise.all(['/src/pages/AdminPage.jsx', '/src/components/account/AdminAccess.jsx', '/src/state/useDelivery.js', '/src/data/adminStore.js'].map((path) => server.ssrLoadModule(path)));
+  const [{ default: AdminPage }, { default: AdminAccess }, { DeliveryContext }, store] = modules;
+  const dom = new Window({ url: 'http://localhost/#/admin/produk' });
+  globalThis.window = dom; globalThis.document = dom.document; globalThis.HTMLElement = dom.HTMLElement;
+  Object.defineProperty(globalThis, 'navigator', { value: dom.navigator, configurable: true });
+  Object.defineProperty(globalThis, 'localStorage', { value: dom.localStorage, configurable: true });
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true; dom.scrollTo = () => {}; dom.confirm = () => true;
+  let release; let sent; let writes = 0;
+  await store.initializeCatalog(async (_url, options) => {
+    if (options.method !== 'PUT') return new Response(JSON.stringify(seed));
+    writes += 1; sent = JSON.parse(options.body); return new Promise((resolve) => { release = resolve; });
+  });
+  const { createRoot } = await import('react-dom/client'); const container = dom.document.createElement('div'); dom.document.body.append(container); const root = createRoot(container);
+  const render = (value) => act(async () => root.render(createElement(DeliveryContext.Provider, { value }, createElement(AdminAccess, null, createElement(AdminPage, { view: 'products' })))));
+  const click = (element) => act(async () => element.click());
+  const button = (text) => [...container.querySelectorAll('button')].find((entry) => entry.textContent === text);
+  try {
+    await render({ authLoading: true, user: null }); assert.match(container.textContent, /Memeriksa akses/);
+    await render({ authLoading: false, user: null }); assert.match(container.textContent, /Masuk sebagai admin/); assert.equal(button('+ Tambah produk'), undefined);
+    await render({ authLoading: false, user: { role: 'user' } }); assert.match(container.textContent, /Akses admin diperlukan/);
+    await render({ authLoading: false, user: { role: 'admin' } }); assert.ok(button('+ Tambah produk'));
+    await click(container.querySelector('.admin-row-actions button'));
+    const input = container.querySelector('#product-baseName');
+    await act(async () => { Object.getOwnPropertyDescriptor(dom.HTMLInputElement.prototype, 'value').set.call(input, 'Nama belum tersimpan'); input.dispatchEvent(new dom.Event('input', { bubbles: true })); });
+    const color = container.querySelector('#product-color');
+    assert.equal(color.options.length, 11);
+    await act(async () => { Object.getOwnPropertyDescriptor(dom.HTMLSelectElement.prototype, 'value').set.call(color, 'mint'); color.dispatchEvent(new dom.Event('change', { bubbles: true })); });
+    assert.match(container.querySelector('.admin-preview-image').style.background, /linear-gradient/);
+    await click(button('Simpan produk'));
+    assert.ok(sent.edits.some((entry) => entry.baseName === 'Nama belum tersimpan'));
+    const savedGroup = sent.edits.find((entry) => entry.baseName === 'Nama belum tersimpan'); assert.equal(savedGroup.color, 'mint');
+    assert.equal(container.querySelector('.admin-submit-lock').disabled, true); assert.ok(button('Menyimpan…'));
+    await click(container.querySelector('nav a[href="#/admin"]')); assert.ok(container.querySelector('#product-baseName'));
+    await act(async () => { release(new Response(JSON.stringify({ errors: { form: 'Server gagal menyimpan.' } }), { status: 500 })); });
+    assert.equal(container.querySelector('#product-baseName').value, 'Nama belum tersimpan'); assert.equal(container.querySelector('.admin-submit-lock').disabled, false);
+    assert.match(container.querySelector('[role="alert"]').textContent, /Server gagal/);
+    await click(button('Simpan produk'));
+    await act(async () => { release(new Response(JSON.stringify({ ...sent, revision: 1 }))); });
+    assert.equal(container.querySelector('.admin-editor'), null); assert.match(container.textContent, /berhasil disimpan ke database/);
+    assert.match(container.querySelector('.admin-product-image').style.background, /linear-gradient/);
+    const deleteButton = container.querySelector('button[aria-label="Hapus produk Nama belum tersimpan beserta semua SKU"]');
+    dom.confirm = () => false; const countBefore = writes; await click(deleteButton); assert.equal(writes, countBefore);
+    dom.confirm = () => true; await click(deleteButton); assert.equal(writes, countBefore + 1); assert.ok(!sent.edits.some((entry) => entry.groupId === savedGroup.groupId));
+    assert.equal(deleteButton.disabled, true);
+    await act(async () => { release(new Response(JSON.stringify({ errors: { form: 'Tidak dapat menghapus.' } }), { status: 500 })); });
+    assert.ok(container.querySelector('button[aria-label="Hapus produk Nama belum tersimpan beserta semua SKU"]')); assert.match(container.textContent, /Tidak dapat menghapus/);
+    await click(container.querySelector('button[aria-label="Hapus produk Nama belum tersimpan beserta semua SKU"]'));
+    await act(async () => { release(new Response(JSON.stringify({ ...sent, revision: 2 }))); });
+    assert.equal(container.querySelector('button[aria-label="Hapus produk Nama belum tersimpan beserta semua SKU"]'), null); assert.match(container.textContent, /SKU berhasil dihapus/);
+  } finally { await act(async () => root.unmount()); await server.close(); dom.happyDOM.abort(); }
+});

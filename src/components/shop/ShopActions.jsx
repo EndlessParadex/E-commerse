@@ -3,8 +3,10 @@ import { useShop } from '../../state/useShop';
 import { useDelivery } from '../../state/useDelivery';
 import { ActionIcon } from './ShopIcon';
 import AccountMenu from '../account/AccountMenu';
-import { rupiah, dateLabel } from './shopPresentation';
+import { rupiah } from './shopPresentation';
+import NotificationItem from './NotificationItem';
 import './ShopActions.css';
+import './Notifications.css';
 
 export default function ShopActions({ onOpen }) {
   const shop = useShop();
@@ -99,8 +101,9 @@ export default function ShopActions({ onOpen }) {
               {shop.cart.length > 4 && <p className="shop-preview-more">+{shop.cart.length - 4} produk lainnya</p>}
               {shop.cart.length > 0 && <div className="shop-preview-total"><span>Subtotal</span><strong>{rupiah(shop.subtotal)}</strong></div>}
             </> : <>
+              <p className="notification-preview-context">Pembaruan pesanan percobaan · Simulasi</p>
               {shop.notifications.length === 0 ? <p className="shop-preview-empty">Belum ada notifikasi.</p> : <ul className="shop-preview-list">
-                {shop.notifications.slice(0, 3).map((item) => <li key={item.id} className={item.read ? '' : 'preview-unread'}><div><strong>{!item.read && <span className="unread-dot" aria-label="Belum dibaca" />}{item.title}</strong><p>{item.message}</p><time dateTime={new Date(item.createdAt).toISOString()}>{dateLabel(item.createdAt)}</time>{item.kind === 'orderCreated' && <div className="notification-order-link"><span className="notification-simulation">Simulasi</span><a className="shop-text-button" href={'#/pesanan/' + encodeURIComponent(item.orderId)} onClick={() => { shop.dispatch({ type: 'read', id: item.id }); close(); }}>Lihat detail pesanan →</a></div>}</div></li>)}
+                {shop.notifications.slice(0, 3).map((item) => <NotificationItem key={item.id} item={item} compact onRead={(id) => shop.dispatch({ type: 'read', id })} onNavigate={close} orderLinkStatus={shop.orderLinkStatus(item.orderId)} />)}
               </ul>}
               {shop.notifications.length > 3 && <p className="shop-preview-more">+{shop.notifications.length - 3} notifikasi lainnya</p>}
             </>}

@@ -2,6 +2,7 @@ import { products } from '../src/data/products.js';
 import { productDraft, slug } from '../src/data/adminEditor.js';
 import { masterSnapshot } from '../src/data/catalogMasters.js';
 import { validCatalogColor } from '../src/data/catalogColors.js';
+import { packagingValues, packagingErrors, variantKey } from '../src/data/productPackaging.js';
 
 export class CatalogError extends Error {
   constructor(message, status = 422, code = 'validation_error') { super(message); this.status = status; this.code = code; }
@@ -63,17 +64,24 @@ export function normalizeCatalog(input, current = null) {
       const category = categories.find((entry) => entry.id === draft.categoryId);
       if (!supplierIds.has(draft.supplierId) || !brand?.supplierIds.includes(draft.supplierId)) fail('Hubungan PT dan merek produk tidak valid.');
       if (!category?.children.some((child) => child.id === draft.subcategoryId)) fail('Kategori/subkategori produk tidak valid.');
-      if (!Array.isArray(draft.variants) || !draft.variants.length || draft.variants.length > 20) fail('Produk harus memiliki 1–20 ukuran.');
+      if (!Array.isArray(draft.variants) || !draft.variants.length || draft.variants.length > 20) fail('Produk harus memiliki 1–20 varian.');
       const sizes = new Set();
       const variants = draft.variants.map((variant) => {
         if (!variant || typeof variant.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(variant.id) || skus.has(variant.id.toLowerCase())) fail('SKU tidak valid atau sudah digunakan.');
         skus.set(variant.id.toLowerCase(), { groupId: draft.groupId, id: variant.id });
         const sizeValue = Number(variant.sizeValue); const price = Number(variant.price); const oldPrice = Number(variant.oldPrice || 0);
         if (!Number.isFinite(sizeValue) || sizeValue <= 0 || sizeValue > 1000000 || !['g', 'ml', 'pcs'].includes(variant.sizeUnit)) fail('Ukuran produk tidak valid.');
-        const sizeKey = `${sizeValue}${variant.sizeUnit}`;
-        if (sizes.has(sizeKey)) fail('Ukuran produk duplikat.'); sizes.add(sizeKey);
+        // Older clients omit packaging fields. Preserve already saved contents
+        // rather than converting an existing pack/dus back into a single unit.
+        const previous = current?.edits.find((entry) => entry.groupId === draft.groupId)?.variants.find((entry) => entry.id === variant.id);
+        const packageInput = { packagingType: variant.packagingType ?? previous?.packagingType,
+          unitsPerPackage: variant.unitsPerPackage ?? previous?.unitsPerPackage, packsPerBox: variant.packsPerBox ?? previous?.packsPerBox };
+        const packaging = packagingValues(packageInput); const errors = packagingErrors(packageInput);
+        if (Object.keys(errors).length) fail(Object.values(errors)[0]);
+        const combination = variantKey({ ...variant, ...packaging });
+        if (sizes.has(combination)) fail('Kombinasi ukuran dan kemasan produk duplikat.'); sizes.add(combination);
         if (!Number.isSafeInteger(price) || price <= 0 || price > 1000000000 || !Number.isSafeInteger(oldPrice) || oldPrice < 0 || oldPrice > 1000000000 || (oldPrice && oldPrice <= price)) fail('Harga produk tidak valid.');
-        return { id: variant.id, sizeValue: String(sizeValue), sizeUnit: variant.sizeUnit, price: String(price), oldPrice: oldPrice ? String(oldPrice) : '' };
+        return { id: variant.id, sizeValue: String(sizeValue), sizeUnit: variant.sizeUnit, ...packaging, unitsPerPackage: String(packaging.unitsPerPackage), packsPerBox: packaging.packsPerBox ? String(packaging.packsPerBox) : '', price: String(price), oldPrice: oldPrice ? String(oldPrice) : '' };
       });
       const color = draft.color || current?.edits.find((entry) => entry.groupId === draft.groupId)?.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky';
       if (!validCatalogColor(color)) fail('Warna kartu produk tidak valid.');
@@ -108,6 +116,25 @@ export class CatalogRepository {
       CREATE TABLE IF NOT EXISTS catalog_subcategories (category_id TEXT REFERENCES catalog_categories(id), id TEXT NOT NULL, name TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(category_id,id));
       CREATE TABLE IF NOT EXISTS catalog_products (id TEXT PRIMARY KEY, supplier_id TEXT REFERENCES catalog_suppliers(id), brand_id TEXT REFERENCES catalog_brands(id), category_id TEXT, subcategory_id TEXT, data TEXT NOT NULL, position INTEGER NOT NULL, FOREIGN KEY(category_id,subcategory_id) REFERENCES catalog_subcategories(category_id,id));
       CREATE TABLE IF NOT EXISTS catalog_variants (id TEXT PRIMARY KEY COLLATE NOCASE, product_id TEXT REFERENCES catalog_products(id), size_value REAL NOT NULL, size_unit TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>0), old_price INTEGER NOT NULL CHECK(old_price>=0), position INTEGER NOT NULL, UNIQUE(product_id,size_value,size_unit));`);
+    // Rebuild the legacy size-only constraint transactionally. Existing IDs, prices,
+    // order and catalog revision are retained; their packaging defaults to Satuan.
+    if (!db.prepare('PRAGMA table_info(catalog_variants)').all().some((column) => column.name === 'packaging_type')) {
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        db.exec(`CREATE TABLE catalog_variants_packaging (
+          id TEXT PRIMARY KEY COLLATE NOCASE, product_id TEXT REFERENCES catalog_products(id),
+          size_value REAL NOT NULL, size_unit TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>0),
+          old_price INTEGER NOT NULL CHECK(old_price>=0), position INTEGER NOT NULL,
+          packaging_type TEXT NOT NULL CHECK(packaging_type IN ('satuan','pack','dus')),
+          units_per_package INTEGER NOT NULL CHECK(units_per_package BETWEEN 1 AND 1000000 AND (packaging_type!='satuan' OR units_per_package=1) AND (packaging_type='satuan' OR units_per_package>=2)),
+          packs_per_box INTEGER NOT NULL CHECK(packs_per_box>=0 AND (packs_per_box=0 OR (packaging_type='dus' AND packs_per_box>=2 AND units_per_package%packs_per_box=0 AND units_per_package/packs_per_box>=2))),
+          UNIQUE(product_id,size_value,size_unit,packaging_type,units_per_package));
+          INSERT INTO catalog_variants_packaging SELECT id,product_id,size_value,size_unit,price,old_price,position,'satuan',1,0 FROM catalog_variants;
+          DROP TABLE catalog_variants;
+          ALTER TABLE catalog_variants_packaging RENAME TO catalog_variants;`);
+        db.exec('COMMIT');
+      } catch (error) { db.exec('ROLLBACK'); throw error; }
+    }
     if (!db.prepare('SELECT id FROM catalog_meta WHERE id=1').get()) {
       const seed = normalizeCatalog({ version: 1, masters: masterSnapshot(), edits: [...new Set(products.map((product) => product.groupId))].map((groupId) => productDraft(groupId)) });
       db.exec('BEGIN IMMEDIATE');
@@ -121,9 +148,9 @@ export class CatalogRepository {
     const categories = db.prepare('SELECT id,name,icon FROM catalog_categories ORDER BY position').all().map((entry) => ({ ...entry, children: db.prepare('SELECT id,name FROM catalog_subcategories WHERE category_id=? ORDER BY position').all(entry.id).map((child) => ({ ...child })) }));
     const edits = db.prepare('SELECT data FROM catalog_products ORDER BY position').all().map((row) => {
       const draft = JSON.parse(row.data); const brand = brands.find((entry) => entry.id === draft.brandId);
-      return { ...draft, color: draft.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky', brand: brand.name, variants: db.prepare('SELECT id,size_value,size_unit,price,old_price FROM catalog_variants WHERE product_id=? ORDER BY position').all(draft.groupId).map((variant) => ({ id: variant.id, sizeValue: String(variant.size_value), sizeUnit: variant.size_unit, price: String(variant.price), oldPrice: variant.old_price ? String(variant.old_price) : '' })) };
+      return { ...draft, color: draft.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky', brand: brand.name, variants: db.prepare('SELECT * FROM catalog_variants WHERE product_id=? ORDER BY position').all(draft.groupId).map((variant) => ({ id: variant.id, sizeValue: String(variant.size_value), sizeUnit: variant.size_unit, packagingType: variant.packaging_type, unitsPerPackage: String(variant.units_per_package), packsPerBox: variant.packs_per_box ? String(variant.packs_per_box) : '', price: String(variant.price), oldPrice: variant.old_price ? String(variant.old_price) : '' })) };
     });
-    return { version: 1, revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
+    return { version: 1, capabilities: { packaging: true }, revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
   }
   write(value) {
     const db = this.db;
@@ -140,7 +167,7 @@ export class CatalogRepository {
     value.edits.forEach((draft, index) => {
       const { variants, ...data } = draft;
       db.prepare('INSERT INTO catalog_products VALUES(?,?,?,?,?,?,?)').run(draft.groupId, draft.supplierId, draft.brandId, draft.categoryId, draft.subcategoryId, JSON.stringify(data), index);
-      variants.forEach((variant, position) => db.prepare('INSERT INTO catalog_variants VALUES(?,?,?,?,?,?,?)').run(variant.id, draft.groupId, Number(variant.sizeValue), variant.sizeUnit, Number(variant.price), Number(variant.oldPrice || 0), position));
+      variants.forEach((variant, position) => { const pack = packagingValues(variant); db.prepare('INSERT INTO catalog_variants VALUES(?,?,?,?,?,?,?,?,?,?)').run(variant.id, draft.groupId, Number(variant.sizeValue), variant.sizeUnit, Number(variant.price), Number(variant.oldPrice || 0), position, pack.packagingType, pack.unitsPerPackage, pack.packsPerBox); });
     });
   }
   save(input) {

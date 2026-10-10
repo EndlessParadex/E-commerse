@@ -1,0 +1,3 @@
+.purchase-packaging { display: grid; gap: 3px; margin: 5px 0; font-size: 12px; line-height: 1.5; color: #475569; overflow-wrap: anywhere; }
+.purchase-packaging > span { display: block; }
+.purchase-packaging .purchase-packaging-total, .orders-products .purchase-packaging .purchase-packaging-total, .checkout-item-copy .purchase-packaging .purchase-packaging-total { color: #075985; font-weight: 600; }

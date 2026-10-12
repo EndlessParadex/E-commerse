@@ -3,6 +3,7 @@ import { productDraft, slug } from '../src/data/adminEditor.js';
 import { masterSnapshot } from '../src/data/catalogMasters.js';
 import { validCatalogColor } from '../src/data/catalogColors.js';
 import { packagingValues, packagingErrors, variantKey } from '../src/data/productPackaging.js';
+import { MAX_PRODUCT_PHOTOS } from '../src/data/productPhotos.js';
 
 export class CatalogError extends Error {
   constructor(message, status = 422, code = 'validation_error') { super(message); this.status = status; this.code = code; }
@@ -26,6 +27,13 @@ function photo(value) {
       : bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP';
   if (!valid) fail('Format foto tidak sesuai dengan isi file.');
   return value;
+}
+function gallery(value) {
+  if (!Array.isArray(value) || value.length > MAX_PRODUCT_PHOTOS) fail(`Maksimal ${MAX_PRODUCT_PHOTOS} foto per produk.`);
+  return value.map((entry) => {
+    if (!entry || !entry.src) fail('Data foto tidak valid.');
+    return { src: photo(entry.src), alt: text(entry.alt || '', 160, 'Keterangan foto', true) };
+  });
 }
 function entries(value, maximum, label, allowEmpty = false) {
   if (!Array.isArray(value) || (!allowEmpty && !value.length) || value.length > maximum) fail(`${label} tidak valid.`);
@@ -65,6 +73,11 @@ export function normalizeCatalog(input, current = null) {
       if (!supplierIds.has(draft.supplierId) || !brand?.supplierIds.includes(draft.supplierId)) fail('Hubungan PT dan merek produk tidak valid.');
       if (!category?.children.some((child) => child.id === draft.subcategoryId)) fail('Kategori/subkategori produk tidak valid.');
       if (!Array.isArray(draft.variants) || !draft.variants.length || draft.variants.length > 20) fail('Produk harus memiliki 1–20 varian.');
+      const previousDraft = current?.edits.find((entry) => entry.groupId === draft.groupId);
+      const image = photo(draft.image || '');
+      // An older client can still edit prices without erasing saved photos.
+      const nextGallery = gallery(draft.gallery ?? (image === (previousDraft?.image || '') ? previousDraft?.gallery || [] : []));
+      const samePhotos = image === (previousDraft?.image || '') && JSON.stringify(nextGallery) === JSON.stringify(previousDraft?.gallery || []);
       const sizes = new Set();
       const variants = draft.variants.map((variant) => {
         if (!variant || typeof variant.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(variant.id) || skus.has(variant.id.toLowerCase())) fail('SKU tidak valid atau sudah digunakan.');
@@ -73,7 +86,8 @@ export function normalizeCatalog(input, current = null) {
         if (!Number.isFinite(sizeValue) || sizeValue <= 0 || sizeValue > 1000000 || !['g', 'ml', 'pcs'].includes(variant.sizeUnit)) fail('Ukuran produk tidak valid.');
         // Older clients omit packaging fields. Preserve already saved contents
         // rather than converting an existing pack/dus back into a single unit.
-        const previous = current?.edits.find((entry) => entry.groupId === draft.groupId)?.variants.find((entry) => entry.id === variant.id);
+        const previous = previousDraft?.variants.find((entry) => entry.id === variant.id);
+        const ownGallery = variant.gallery === null ? undefined : variant.gallery ?? (samePhotos ? previous?.gallery : undefined);
         const packageInput = { packagingType: variant.packagingType ?? previous?.packagingType,
           unitsPerPackage: variant.unitsPerPackage ?? previous?.unitsPerPackage, packsPerBox: variant.packsPerBox ?? previous?.packsPerBox };
         const packaging = packagingValues(packageInput); const errors = packagingErrors(packageInput);
@@ -81,13 +95,13 @@ export function normalizeCatalog(input, current = null) {
         const combination = variantKey({ ...variant, ...packaging });
         if (sizes.has(combination)) fail('Kombinasi ukuran dan kemasan produk duplikat.'); sizes.add(combination);
         if (!Number.isSafeInteger(price) || price <= 0 || price > 1000000000 || !Number.isSafeInteger(oldPrice) || oldPrice < 0 || oldPrice > 1000000000 || (oldPrice && oldPrice <= price)) fail('Harga produk tidak valid.');
-        return { id: variant.id, sizeValue: String(sizeValue), sizeUnit: variant.sizeUnit, ...packaging, unitsPerPackage: String(packaging.unitsPerPackage), packsPerBox: packaging.packsPerBox ? String(packaging.packsPerBox) : '', price: String(price), oldPrice: oldPrice ? String(oldPrice) : '' };
+        return { id: variant.id, sizeValue: String(sizeValue), sizeUnit: variant.sizeUnit, ...packaging, unitsPerPackage: String(packaging.unitsPerPackage), packsPerBox: packaging.packsPerBox ? String(packaging.packsPerBox) : '', price: String(price), oldPrice: oldPrice ? String(oldPrice) : '', ...(ownGallery !== undefined ? { gallery: gallery(ownGallery) } : {}) };
       });
       const color = draft.color || current?.edits.find((entry) => entry.groupId === draft.groupId)?.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky';
       if (!validCatalogColor(color)) fail('Warna kartu produk tidak valid.');
       return { groupId: draft.groupId, baseName: text(draft.baseName, 120, 'Nama produk'), brandId, brand: brand.name, supplierId: draft.supplierId, color,
         categoryId: draft.categoryId, subcategoryId: draft.subcategoryId, description: text(draft.description, 3000, 'Deskripsi'),
-        image: photo(draft.image || ''), imageAlt: text(draft.imageAlt || '', 160, 'Keterangan foto', true), variants };
+        image, imageAlt: text(draft.imageAlt || '', 160, 'Keterangan foto', true), gallery: nextGallery, variants };
     });
     if (current) {
       for (const draft of current.edits) {
@@ -147,10 +161,10 @@ export class CatalogRepository {
     const brands = db.prepare('SELECT id,name FROM catalog_brands ORDER BY position').all().map((entry) => ({ ...entry, supplierIds: db.prepare('SELECT supplier_id FROM catalog_brand_suppliers WHERE brand_id=? ORDER BY supplier_id').all(entry.id).map((row) => row.supplier_id) }));
     const categories = db.prepare('SELECT id,name,icon FROM catalog_categories ORDER BY position').all().map((entry) => ({ ...entry, children: db.prepare('SELECT id,name FROM catalog_subcategories WHERE category_id=? ORDER BY position').all(entry.id).map((child) => ({ ...child })) }));
     const edits = db.prepare('SELECT data FROM catalog_products ORDER BY position').all().map((row) => {
-      const draft = JSON.parse(row.data); const brand = brands.find((entry) => entry.id === draft.brandId);
-      return { ...draft, color: draft.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky', brand: brand.name, variants: db.prepare('SELECT * FROM catalog_variants WHERE product_id=? ORDER BY position').all(draft.groupId).map((variant) => ({ id: variant.id, sizeValue: String(variant.size_value), sizeUnit: variant.size_unit, packagingType: variant.packaging_type, unitsPerPackage: String(variant.units_per_package), packsPerBox: variant.packs_per_box ? String(variant.packs_per_box) : '', price: String(variant.price), oldPrice: variant.old_price ? String(variant.old_price) : '' })) };
+      const { variantPhotos = {}, ...draft } = JSON.parse(row.data); const brand = brands.find((entry) => entry.id === draft.brandId);
+      return { ...draft, color: draft.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky', brand: brand.name, variants: db.prepare('SELECT * FROM catalog_variants WHERE product_id=? ORDER BY position').all(draft.groupId).map((variant) => ({ id: variant.id, sizeValue: String(variant.size_value), sizeUnit: variant.size_unit, packagingType: variant.packaging_type, unitsPerPackage: String(variant.units_per_package), packsPerBox: variant.packs_per_box ? String(variant.packs_per_box) : '', price: String(variant.price), oldPrice: variant.old_price ? String(variant.old_price) : '', ...(Array.isArray(variantPhotos[variant.id]) ? { gallery: variantPhotos[variant.id] } : {}) })) };
     });
-    return { version: 1, capabilities: { packaging: true }, revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
+    return { version: 1, capabilities: { packaging: true, gallery: true }, revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
   }
   write(value) {
     const db = this.db;
@@ -166,6 +180,7 @@ export class CatalogRepository {
     });
     value.edits.forEach((draft, index) => {
       const { variants, ...data } = draft;
+      data.variantPhotos = Object.fromEntries(variants.filter((variant) => Array.isArray(variant.gallery)).map((variant) => [variant.id, variant.gallery]));
       db.prepare('INSERT INTO catalog_products VALUES(?,?,?,?,?,?,?)').run(draft.groupId, draft.supplierId, draft.brandId, draft.categoryId, draft.subcategoryId, JSON.stringify(data), index);
       variants.forEach((variant, position) => { const pack = packagingValues(variant); db.prepare('INSERT INTO catalog_variants VALUES(?,?,?,?,?,?,?,?,?,?)').run(variant.id, draft.groupId, Number(variant.sizeValue), variant.sizeUnit, Number(variant.price), Number(variant.oldPrice || 0), position, pack.packagingType, pack.unitsPerPackage, pack.packsPerBox); });
     });

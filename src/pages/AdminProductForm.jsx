@@ -10,6 +10,7 @@ import { brandsForSupplier } from '../data/catalogMasters';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { catalogColors, productColorStyle } from '../data/catalogColors';
 import { packagingTypes, packagingLabel, packagingContents } from '../data/productPackaging';
+import { MAX_PRODUCT_PHOTOS, MAX_PRODUCT_PHOTO_BYTES } from '../data/productPhotos';
 
 export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate }) {
   const [initial] = useState(() => productDraft(groupId));
@@ -39,16 +40,29 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     return <div className="admin-field"><label htmlFor={id}>{label}</label><input id={id} type="number" step="1" min="2" max="1000000" value={variant[name]} onChange={(event) => updateVariant(index, name, event.target.value)} placeholder={optional ? 'Opsional' : 'Contoh: 6'} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined} />{error && <small className="admin-error" id={`${id}-error`}>{error}</small>}</div>;
   };
   const cancel = () => { if (!dirty || window.confirm('Buang perubahan yang belum disimpan?')) onClose(); };
+  const updatePhotos = (gallery) => {
+    setDraft((current) => ({ ...current, gallery, image: gallery[0]?.src || '', imageAlt: gallery[0]?.alt || '',
+      // Photos edited here apply to all sizes and packaging of this product.
+      variants: current.variants.map((variant) => ({ ...variant, gallery: null })),
+    }));
+    setErrors({}); setStorageError(''); setPhotoError('');
+  };
   const upload = async (event) => {
-    const file = event.target.files?.[0]; event.target.value = '';
-    if (!file) return;
+    const files = Array.from(event.target.files || []); event.target.value = '';
+    if (!files.length || uploading) return;
     setPhotoError('');
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 1024 * 1024) { setPhotoError('Pilih JPG, PNG, atau WebP dengan ukuran maksimal 1 MB.'); return; }
+    if (draft.gallery.length + files.length > MAX_PRODUCT_PHOTOS) { setPhotoError(`Maksimal ${MAX_PRODUCT_PHOTOS} foto per produk. Hapus foto yang tidak diperlukan sebelum menambahkan lagi.`); return; }
+    if (files.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > MAX_PRODUCT_PHOTO_BYTES)) { setPhotoError('Pilih JPG, PNG, atau WebP dengan ukuran maksimal 1 MB per foto.'); return; }
     const request = ++photoRequest.current; setUploading(true);
     try {
-      const image = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-      await new Promise((resolve, reject) => { const photo = new Image(); photo.onload = resolve; photo.onerror = reject; photo.src = image; });
-      if (request === photoRequest.current) update('image', image);
+      const photos = [];
+      for (const file of files) {
+        const src = await new Promise((resolve, reject) => { const reader = new window.FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.onabort = reject; reader.readAsDataURL(file); });
+        await new Promise((resolve, reject) => { const photo = new window.Image(); photo.onload = resolve; photo.onerror = reject; photo.src = src; });
+        if (request !== photoRequest.current) return;
+        photos.push({ src, alt: '' });
+      }
+      if (request === photoRequest.current) updatePhotos([...draft.gallery, ...photos]);
     } catch { if (request === photoRequest.current) setPhotoError('Foto tidak dapat dibaca. Pilih file gambar lain.'); }
     finally { if (request === photoRequest.current) setUploading(false); }
   };
@@ -78,7 +92,15 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
         {select('color', 'Warna kartu *', catalogColors)}
         <div className="admin-field admin-full"><label htmlFor="product-description">Deskripsi *</label><textarea id="product-description" rows={5} maxLength={3000} value={draft.description} onChange={(event) => update('description', event.target.value)} aria-invalid={Boolean(errors.description)} aria-describedby={errors.description ? 'error-description' : undefined} placeholder="Jelaskan produk, isi kemasan, dan informasi penggunaannya." />{errors.description && <small id="error-description" className="admin-error">{errors.description}</small>}<small>{draft.description.length}/3.000 karakter</small></div>
       </div></section>
-      <section className="admin-form-section"><h3>02 · Foto produk</h3><p>Foto utama digunakan pada semua ukuran produk. JPG, PNG, atau WebP, maksimal 1 MB.</p><div className="admin-photo-controls"><label className="admin-secondary admin-upload">{uploading ? 'Membaca foto…' : draft.image ? 'Ganti foto' : 'Pilih foto'}<input aria-label="Pilih foto produk" type="file" accept="image/jpeg,image/png,image/webp" onChange={upload} disabled={uploading} /></label>{draft.image && <button type="button" className="admin-text-button" onClick={() => { update('image', ''); setPhotoError(''); }}>Hapus foto</button>}</div>{(photoError || errors.image) && <p className="admin-error" role="alert">{photoError || errors.image}</p>}{field('imageAlt', 'Keterangan foto', { maxLength: 160, placeholder: 'Contoh: Kemasan tampak depan' })}<p className="admin-form-hint">Tanpa foto, ilustrasi produk akan ditampilkan.</p></section>
+      <section className="admin-form-section admin-product-photos" aria-busy={uploading}><h3>02 · Foto produk</h3><p>Tambahkan hingga {MAX_PRODUCT_PHOTOS} foto. JPG, PNG, atau WebP, maksimal 1 MB per foto. Foto digunakan pada semua ukuran dan kemasan.</p>
+        <div className="admin-photo-controls"><label className={'admin-secondary admin-upload' + (uploading || draft.gallery.length >= MAX_PRODUCT_PHOTOS ? ' is-disabled' : '')}>{uploading ? 'Membaca foto…' : 'Tambah foto'}<input aria-label="Tambah foto produk" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={upload} disabled={uploading || draft.gallery.length >= MAX_PRODUCT_PHOTOS} /></label><span className="admin-photo-count" role="status">{draft.gallery.length}/{MAX_PRODUCT_PHOTOS} foto</span></div>
+        {(photoError || errors.gallery || errors.image) && <p className="admin-error" role="alert">{photoError || errors.gallery || errors.image}</p>}
+        {!!draft.gallery.length && <ul className="admin-photo-list" aria-label="Foto produk">{draft.gallery.map((photo, index) => <li key={index} className="admin-photo-item">
+          <div className="admin-photo-image"><ProductImage product={{ name: draft.baseName || 'Produk', image: photo.src, imageAlt: photo.alt || `Foto ${index + 1}` }} variant="thumbnail" />{index === 0 && <span className="admin-photo-primary">Foto utama</span>}</div>
+          <div className="admin-photo-actions">{index > 0 && <button type="button" className="admin-text-button" disabled={uploading} aria-label={`Jadikan foto ${index + 1} sebagai foto utama`} onClick={() => updatePhotos([photo, ...draft.gallery.filter((_, row) => row !== index)])}>Jadikan utama</button>}<button type="button" className="admin-text-button admin-photo-remove" disabled={uploading} aria-label={`Hapus foto ${index + 1}`} onClick={() => updatePhotos(draft.gallery.filter((_, row) => row !== index))}>Hapus</button></div>
+        </li>)}</ul>}
+        <p className="admin-form-hint">Foto pertama menjadi foto utama. Tanpa foto, ilustrasi produk akan ditampilkan.</p>
+      </section>
       <section className="admin-form-section"><div className="admin-section-heading"><div><h3>03 · Ukuran, kemasan, dan harga</h3><p>Tambahkan Satuan, Pack, dan Dus sebagai varian pada produk ini agar pembeli memilih kemasan di bawah gramasi. Setiap kombinasi ukuran dan kemasan memiliki SKU serta harga sendiri. Ukuran diisi per satuan, harga diisi per kemasan yang dijual.</p></div><button className="admin-secondary" type="button" disabled={draft.variants.length >= 20} onClick={() => { setDraft((current) => ({ ...current, variants: [...current.variants, emptyVariant()] })); setErrors({}); }}>+ Tambah varian</button></div>
         {errors.variants && <p className="admin-error" role="alert">{errors.variants}</p>}
         {draft.variants.map((variant, index) => <fieldset className="admin-variant-row" key={index}><legend>Varian {index + 1}</legend><div className="admin-variant-heading"><span>{variant.sizeValue ? `${variant.sizeValue} ${variant.sizeUnit} · ${packagingLabel(variant)}` : 'Varian baru'}</span><button type="button" className="admin-text-button" disabled={draft.variants.length === 1 || fixedIds.has(initial.variants[index]?.id)} onClick={() => { setDraft((current) => ({ ...current, variants: current.variants.filter((_, row) => row !== index) })); setErrors({}); }} aria-label={`Hapus varian ${index + 1}`}>Hapus varian</button></div><div className="admin-variant-fields">

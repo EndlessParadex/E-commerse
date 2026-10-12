@@ -5,13 +5,14 @@ import ProductCard from '../components/shop/ProductCard';
 import PromoCarousel from '../components/shop/PromoCarousel';
 import PromotionSection from '../components/shop/PromotionSection';
 import SupplierSection from '../components/shop/SupplierSection';
+import CategoryShortcuts from '../components/shop/CategoryShortcuts';
 import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite } = useShop();
   const [filterOpen, setFilterOpen] = useState(false);
-  if (!catalog) return <div className="home-container"><PromoCarousel /><PromotionSection /><SupplierSection /></div>;
+  if (!catalog) return <div className="home-container"><PromoCarousel /><PromotionSection /><CategoryShortcuts /><SupplierSection /></div>;
   const category = categoryBy(catalog.categoryId);
   const sub = category?.children.find((item) => item.id === catalog.subcategoryId);
   const query = catalog.query || '';

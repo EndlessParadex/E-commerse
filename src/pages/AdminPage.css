@@ -76,6 +76,16 @@
 .admin-upload { position: relative; overflow: hidden; }
 .admin-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
 .admin-upload:focus-within { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.admin-upload.is-disabled { opacity: .55; cursor: default; }
+.admin-photo-count { color: var(--color-text-secondary); font-size: 12px; }
+.admin-photo-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 135px), 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
+.admin-photo-item { min-width: 0; border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; }
+.admin-photo-image { position: relative; aspect-ratio: 1; background: var(--color-surface-muted); }
+.admin-photo-image .bam-product-media { width: 100%; height: 100%; padding: 12px; }
+.admin-photo-primary { position: absolute; left: 7px; bottom: 7px; border: 1px solid var(--color-border-info); border-radius: 6px; background: var(--color-info-soft); color: var(--color-info-text); padding: 4px 7px; font-size: 11px; font-weight: 700; }
+.admin-photo-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 8px; padding: 3px 6px; border-top: 1px solid var(--color-border); }
+.admin-photo-actions .admin-text-button { font-size: 11px; }
+.admin-photo-remove { color: var(--color-danger-text); }
 .admin-section-heading, .admin-variant-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
 .admin-section-heading { margin-bottom: 20px; }
 .admin-section-heading h3 { margin-bottom: 6px; }

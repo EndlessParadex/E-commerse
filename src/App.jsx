@@ -20,6 +20,7 @@ import AdminAccess from './components/account/AdminAccess';
 import StoreFooter from './components/layout/StoreFooter';
 import StoreInfoPage from './pages/StoreInfoPage';
 import PaymentPage from './pages/PaymentPage';
+import CatalogStatus from './components/shop/CatalogStatus';
 import { subscribeShopRoute, shopRouteSnapshot } from './state/shopNavigation';
 import './styles/storefront.css';
 import './styles/workflow.css';
@@ -58,7 +59,7 @@ function App() {
     }
   }, [route, title, restoreY]);
 
-  if (catalogState !== 'ready') return <main className="shop-page" role="status"><h1>{catalogState === 'loading' ? 'Memuat katalog…' : 'Katalog belum dapat dimuat'}</h1>{catalogState === 'error' && <><p>Periksa koneksi dan pastikan server BAM sudah berjalan.</p><button className="shop-primary" onClick={() => { setCatalogState('loading'); setLoadAttempt((value) => value + 1); }}>Coba lagi</button></>}</main>;
+  if (catalogState !== 'ready') return <CatalogStatus error={catalogState === 'error'} onRetry={() => { setCatalogState('loading'); setLoadAttempt((value) => value + 1); }} />;
   return <ShopProvider><DeliveryProvider><AppearanceProvider>
     {!isAdmin && <Navbar />}
     <a className="skip-to-content" href="#main-content" onClick={(event) => { event.preventDefault(); contentRef.current?.focus(); }}>Lewati ke isi halaman</a>

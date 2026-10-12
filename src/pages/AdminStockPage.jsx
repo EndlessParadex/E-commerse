@@ -1,10 +1,33 @@
 import { useState } from 'react';
 import { products } from '../data/products';
 import { availableStock, setAvailableStock, stockKey, DEMO_STOCK } from '../state/frontendWorkflow';
-import { packagingLabel, packagingValues } from '../data/productPackaging';
+import { packagingTypes, packagingValues } from '../data/productPackaging';
 import useWorkflow from '../state/useWorkflow';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
+import ProductImage from '../components/shop/ProductImage';
+import { savedProductPhotos } from '../data/productPhotos';
+import { productColorStyle } from '../data/catalogColors';
 import '../styles/workflow.css';
+
+function StockProductIdentity({ product, variants }) {
+  // A shared stock row may represent several packs of the same product size.
+  const source = savedProductPhotos(product).length ? product : variants.find((variant) => savedProductPhotos(variant).length) || product;
+  const photo = savedProductPhotos(source)[0];
+  const preview = { ...product, image: photo?.src || '', imageAlt: photo?.alt || `${product.baseName} ${product.sizeLabel}` };
+  return <div className="workflow-stock-identity">
+    <div className="workflow-stock-photo" style={productColorStyle(source.color)}><ProductImage product={preview} variant="thumbnail" /></div>
+    <div className="workflow-stock-name"><h3>{product.baseName}</h3><p>{product.brand} · {product.sizeLabel} per satuan</p></div>
+  </div>;
+}
+
+function StockPackagingRow({ variant, available }) {
+  const { packagingType, unitsPerPackage } = packagingValues(variant);
+  const name = packagingTypes.find((entry) => entry.id === packagingType)?.name || 'Satuan';
+  const label = packagingType === 'satuan' ? name : `${name} (${unitsPerPackage.toLocaleString('id-ID')})`;
+  return <li><div><strong className="workflow-stock-packaging-label" title={packagingType === 'satuan' ? 'Dijual per satuan' : `Isi ${unitsPerPackage.toLocaleString('id-ID')} satuan per ${packagingType}`}>{label}</strong><small>{variant.id}</small></div>
+    <span className="workflow-stock-package-count">{Math.floor(available / unitsPerPackage).toLocaleString('id-ID')} {packagingType}</span>
+  </li>;
+}
 
 export default function AdminStockPage() {
   const { orders, failed } = useWorkflow();
@@ -27,7 +50,13 @@ export default function AdminStockPage() {
     <p className="workflow-preview">Stok simulasi awal {DEMO_STOCK} satuan per ukuran. Nilai tersimpan di tab ini dan belum terhubung ke gudang. Checkout menahan stok; pembatalan atau pembayaran kedaluwarsa melepasnya.</p>
     <div className="workflow-filters"><div className="admin-field"><label htmlFor="admin-stock-search">Cari produk atau SKU</label><input id="admin-stock-search" type="search" maxLength={200} value={query} onChange={(event) => setQuery(event.target.value)} /></div><div className="admin-field"><label htmlFor="admin-stock-status">Ketersediaan</label><select id="admin-stock-status" value={filter} onChange={(event) => setFilter(event.target.value)}><option value="all">Semua stok</option><option value="empty">Stok habis</option><option value="low">Stok menipis (1–12 satuan)</option></select></div></div>
     {notice && <p className="workflow-notice" role="status">{notice}</p>}
-    {stockFailed ? <div className="admin-empty" role="alert"><h3>Stok belum dapat dibuka</h3><p>Data penyimpanan browser tidak tersedia atau tidak dapat dibaca. Coba muat ulang halaman.</p></div> : !visible.length ? <div className="admin-empty"><h3>Produk tidak ditemukan</h3><button className="admin-secondary" onClick={() => { setQuery(''); setFilter('all'); }}>Reset filter</button></div> : <ul className="workflow-stock-list">{visible.map((row) => <li className="workflow-stock-card" key={stockKey(row.product)}><header><div><h3>{row.product.baseName}</h3><p>{row.product.brand} · {row.product.sizeLabel} per satuan</p></div><span className={'workflow-badge' + (!row.available ? ' status-expired' : row.available <= 12 ? ' status-awaiting_payment' : '')}>{row.available ? row.available <= 12 ? 'Menipis' : 'Tersedia' : 'Habis'}</span></header><p className="workflow-stock-amount"><strong>{row.available.toLocaleString('id-ID')}</strong> satuan tersedia</p><ul>{row.variants.map((variant) => <li key={variant.id}><div><strong>{packagingLabel(variant)}</strong><small>{variant.id}</small></div><span>{Math.floor(row.available / packagingValues(variant).unitsPerPackage).toLocaleString('id-ID')} kemasan</span></li>)}</ul><button className="admin-secondary" onClick={() => { setTarget(row); setAmount(String(row.available)); setError(''); }} aria-label={`Ubah stok ${row.product.baseName} ${row.product.sizeLabel}`}>Ubah stok tersedia</button></li>)}</ul>}
-    {target && <ConfirmDialog danger={false} title="Ubah stok simulasi" confirmLabel="Simpan stok" onConfirm={save} onClose={() => setTarget(null)} error={error}><p>{target.product.baseName} · {target.product.sizeLabel} per satuan. Isi jumlah satuan yang tersedia untuk pembelian baru. Stok pesanan yang sudah dibuat tetap dipertahankan.</p><label htmlFor="stock-available">Stok tersedia (satuan)<input id="stock-available" type="number" inputMode="numeric" min="0" max="1000000000" step="1" value={amount} aria-invalid={Boolean(error)} onChange={(event) => { setAmount(event.target.value); setError(''); }} /></label></ConfirmDialog>}
+    {stockFailed ? <div className="admin-empty" role="alert"><h3>Stok belum dapat dibuka</h3><p>Data penyimpanan browser tidak tersedia atau tidak dapat dibaca. Coba muat ulang halaman.</p></div> : !visible.length ? <div className="admin-empty"><h3>Produk tidak ditemukan</h3><button className="admin-secondary" onClick={() => { setQuery(''); setFilter('all'); }}>Reset filter</button></div> : <ul className="workflow-stock-list">{visible.map((row) => <li className="workflow-stock-card" key={stockKey(row.product)}>
+      <header><StockProductIdentity product={row.product} variants={row.variants} /><span className={'workflow-badge' + (!row.available ? ' status-expired' : row.available <= 12 ? ' status-awaiting_payment' : '')}>{row.available ? row.available <= 12 ? 'Menipis' : 'Tersedia' : 'Habis'}</span></header>
+      <p className="workflow-stock-amount"><strong>{row.available.toLocaleString('id-ID')}</strong> satuan tersedia</p>
+      <p className="workflow-stock-hint">Pilihan dari stok yang sama. Angka dalam kurung menunjukkan isi per kemasan.</p>
+      <ul>{row.variants.map((variant) => <StockPackagingRow key={variant.id} variant={variant} available={row.available} />)}</ul>
+      <button className="admin-secondary" onClick={() => { setTarget(row); setAmount(String(row.available)); setError(''); }} aria-label={`Ubah stok ${row.product.baseName} ${row.product.sizeLabel}`}>Ubah stok tersedia</button>
+    </li>)}</ul>}
+    {target && <ConfirmDialog danger={false} title="Ubah stok simulasi" confirmLabel="Simpan stok" onConfirm={save} onClose={() => setTarget(null)} error={error}><div className="workflow-stock-dialog-product"><StockProductIdentity product={target.product} variants={target.variants} /></div><p>Isi jumlah satuan yang tersedia untuk pembelian baru. Stok pesanan yang sudah dibuat tetap dipertahankan.</p><label htmlFor="stock-available">Stok tersedia (satuan)<input id="stock-available" type="number" inputMode="numeric" min="0" max="1000000000" step="1" value={amount} aria-invalid={Boolean(error)} onChange={(event) => { setAmount(event.target.value); setError(''); }} /></label></ConfirmDialog>}
   </section>;
 }

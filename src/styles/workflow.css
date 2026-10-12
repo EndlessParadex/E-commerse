@@ -24,12 +24,25 @@
 .workflow-order-details .bam-product-media { width: 72px; height: 80px; margin: 0; }
 .workflow-order-details li > div { min-width: 0; display: grid; gap: 5px; overflow-wrap: anywhere; }
 .workflow-order-details small, .workflow-stock-card small { display: block; color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
-.workflow-stock-card .workflow-stock-amount { margin: 20px 0; color: var(--color-info-text); }
+.workflow-stock-card .workflow-stock-amount { margin: 20px 0 4px; color: var(--color-info-text); }
+.workflow-stock-card .workflow-stock-hint { margin: 0 0 16px; color: var(--color-text-secondary); font-size: 12px; }
 .workflow-stock-amount strong { font-size: 30px; }
 .workflow-stock-card > ul { list-style: none; display: grid; gap: 12px; padding: 12px 0; border-top: 1px solid var(--color-border); }
 .workflow-stock-card > ul > li { display: flex; align-items: start; justify-content: space-between; gap: 14px; font-size: 12px; }
 .workflow-stock-card > ul > li > div { min-width: 0; }
+.workflow-stock-packaging-label { display: block; color: var(--color-text); font-size: 18px; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
+.workflow-stock-packaging-label + small { margin-top: 4px; }
+.workflow-stock-package-count { flex-shrink: 0; font-weight: 600; }
 .workflow-stock-card > button { margin-top: 16px; }
+.workflow-stock-identity { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 220px; }
+.workflow-stock-photo { flex: 0 0 76px; width: 76px; height: 76px; border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; background: var(--color-surface-muted); }
+.workflow-stock-photo .bam-product-media { height: 100%; padding: 8px; }
+.workflow-stock-name { min-width: 0; }
+.workflow-stock-card header > .workflow-badge { flex-shrink: 0; }
+.workflow-stock-dialog-product { padding: 14px; margin: 0 0 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-soft); }
+.workflow-stock-dialog-product h3 { font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.workflow-stock-dialog-product .workflow-stock-name p { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .workflow-stock-identity { gap: 12px; flex-basis: 180px; }.workflow-stock-photo { flex-basis: 64px; width: 64px; height: 64px; border-radius: 10px; } }
 .workflow-payment-page { max-width: 760px; }
 .workflow-order-id { overflow-wrap: anywhere; }
 .workflow-payment-page > .confirmation-card, .workflow-payment-page > .confirmation-home { margin-bottom: 20px; }

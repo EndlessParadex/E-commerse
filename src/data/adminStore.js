@@ -4,6 +4,7 @@ import { adminProducts } from './adminCatalog.js';
 import { CATALOG_STORAGE_KEY, validateDraft, buildVariants, slug, productDraft } from './adminEditor.js';
 import { masterSnapshot, validateMaster, applyMasters, validMasterSnapshot } from './catalogMasters.js';
 import { packagingValues } from './productPackaging.js';
+import { draftProductPhotos } from './productPhotos.js';
 
 let revision = 0;
 let edits = [];
@@ -19,6 +20,7 @@ let localBackup = null;
 let localChecked = false;
 let initialization = null;
 let serverSupportsPackaging = false;
+let serverSupportsGallery = false;
 const listeners = new Set();
 export const subscribeCatalog = (listener) => { listeners.add(listener); return () => listeners.delete(listener); };
 export const catalogRevision = () => revision;
@@ -47,6 +49,7 @@ function applyServerCatalog(value) {
   edits = clone(value.edits); serverRevision = value.revision;
   const variants = value.edits.flatMap((draft) => draft.variants);
   serverSupportsPackaging = value.capabilities?.packaging === true || (variants.length > 0 && variants.every((variant) => Object.hasOwn(variant, 'packagingType') && Object.hasOwn(variant, 'unitsPerPackage')));
+  serverSupportsGallery = value.capabilities?.gallery === true;
   announce();
 }
 const catalogDrafts = () => [...new Set(products.map((product) => product.groupId))].map((groupId) => productDraft(groupId));
@@ -96,6 +99,9 @@ async function loadServerCatalog(request) {
   pendingLocalImport = Boolean(localBackup && serverRevision === 0);
 }
 async function persistServer(masters, nextEdits, result) {
+  if (!serverSupportsGallery && nextEdits.some((draft) => draftProductPhotos(draft).length > 1 || draft.variants.some((variant) => variant.gallery != null))) {
+    return { storageError: 'Server yang berjalan belum mendukung beberapa foto produk. Jalankan ulang server dari folder proyek yang sudah diperbarui, lalu muat ulang halaman. Foto belum dikirim; simpan file foto Anda sebelum memuat ulang.' };
+  }
   if (!serverSupportsPackaging && nextEdits.some((draft) => draft.variants.some((variant) => packagingValues(variant).packagingType !== 'satuan'))) {
     return { storageError: 'Server yang berjalan belum mendukung Pack/Dus. Hentikan terminal npm run server dengan Ctrl+C, jalankan npm run server kembali dari folder proyek yang sudah diperbarui, lalu muat ulang halaman. Pilihan kemasan belum dikirim; salin isian yang diperlukan sebelum memuat ulang.' };
   }
@@ -111,6 +117,12 @@ async function persistServer(masters, nextEdits, result) {
       return saved && JSON.stringify(packagingValues(variant)) === JSON.stringify(packagingValues(saved));
     }));
     if (!packagingSaved) return { storageError: 'Server membalas informasi kemasan yang berbeda dari isian. Hasil penyimpanan perlu diperiksa; isian form tetap tersedia. Pastikan server terbaru sudah dijalankan ulang, salin isian yang diperlukan, lalu muat ulang halaman dan periksa produk sebelum menyimpan kembali.' };
+    const photosSaved = nextEdits.every((draft) => draft.variants.every((variant) => {
+      const savedDraft = payload.edits?.find((entry) => entry.groupId === draft.groupId);
+      const savedVariant = savedDraft?.variants?.find((entry) => entry.id === variant.id);
+      return savedVariant && JSON.stringify(draftProductPhotos(draft, variant).map((photo) => photo.src)) === JSON.stringify(draftProductPhotos(savedDraft, savedVariant).map((photo) => photo.src));
+    }));
+    if (!photosSaved) return { storageError: 'Server membalas foto produk yang berbeda dari isian. Hasil penyimpanan perlu diperiksa; isian form tetap tersedia. Jalankan ulang server terbaru dan periksa produk sebelum menyimpan kembali.' };
     applyServerCatalog(payload); pendingLocalImport = false;
     return result;
   } catch (error) { return { storageError: error?.name === 'TimeoutError' ? 'Server belum membalas. Hasil penyimpanan perlu diperiksa; salin isian, muat ulang, dan periksa katalog sebelum mengulang penyimpanan.' : 'Perubahan belum dapat dikonfirmasi. Periksa koneksi dan hasil penyimpanan pada katalog sebelum mencoba lagi; isian tetap tersedia.' }; }

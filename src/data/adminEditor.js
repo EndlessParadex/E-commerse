@@ -5,6 +5,7 @@ import { productDescriptions } from './productDescriptions.js';
 import { brands } from './catalogMasters.js';
 import { validCatalogColor } from './catalogColors.js';
 import { packagingValues, packagingErrors, packagingLabel, variantKey } from './productPackaging.js';
+import { savedProductPhotos, galleryError, MAX_PRODUCT_PHOTO_LENGTH } from './productPhotos.js';
 
 export const CATALOG_STORAGE_KEY = 'bam.admin.catalog.v1';
 export const slug = (value) => value.trim().toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -16,9 +17,14 @@ export function productDraft(groupId, items = products) {
     groupId, baseName: first.baseName, brand: first.brand, brandId: first.brandId, supplierId: suppliers.find((supplier) => supplier.productIds.includes(first.id))?.id || '',
     categoryId: first.categoryId, subcategoryId: first.subcategoryId,
     description: first.description ?? productDescriptions[groupId] ?? '',
-    image: first.image || '', imageAlt: first.imageAlt || '', color: first.color || 'sky',
-    variants: variants.map((variant) => { const { id, sizeValue, sizeUnit, price, oldPrice } = variant; const pack = packagingValues(variant); return { id, sizeValue: String(sizeValue), sizeUnit, ...pack, unitsPerPackage: String(pack.unitsPerPackage), packsPerBox: pack.packsPerBox ? String(pack.packsPerBox) : '', price: String(price), oldPrice: oldPrice ? String(oldPrice) : '' }; }),
-  } : { groupId: '', baseName: '', brand: '', brandId: '', supplierId: '', categoryId: '', subcategoryId: '', description: '', image: '', imageAlt: '', color: 'sky', variants: [emptyVariant()] };
+    image: first.image || '', imageAlt: first.imageAlt || '', gallery: savedProductPhotos(first), color: first.color || 'sky',
+    variants: variants.map((variant) => {
+      const { id, sizeValue, sizeUnit, price, oldPrice } = variant; const pack = packagingValues(variant);
+      const gallery = savedProductPhotos(variant);
+      const ownPhotos = JSON.stringify(gallery) !== JSON.stringify(savedProductPhotos(first)) ? { gallery } : {};
+      return { id, sizeValue: String(sizeValue), sizeUnit, ...pack, unitsPerPackage: String(pack.unitsPerPackage), packsPerBox: pack.packsPerBox ? String(pack.packsPerBox) : '', price: String(price), oldPrice: oldPrice ? String(oldPrice) : '', ...ownPhotos };
+    }),
+  } : { groupId: '', baseName: '', brand: '', brandId: '', supplierId: '', categoryId: '', subcategoryId: '', description: '', image: '', imageAlt: '', gallery: [], color: 'sky', variants: [emptyVariant()] };
 }
 export function validateDraft(draft, items = products) {
   const errors = {};
@@ -31,13 +37,15 @@ export function validateDraft(draft, items = products) {
   if (!category) errors.categoryId = 'Pilih kategori.';
   if (!category?.children.some((entry) => entry.id === draft.subcategoryId)) errors.subcategoryId = 'Pilih subkategori.';
   if (!draft.description.trim() || draft.description.length > 3000) errors.description = 'Isi deskripsi produk, maksimal 3.000 karakter.';
-  if (draft.image && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(draft.image)) errors.image = 'Gunakan foto JPG, PNG, atau WebP.';
+  if (draft.image && (draft.image.length > MAX_PRODUCT_PHOTO_LENGTH || !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(draft.image))) errors.image = 'Gunakan foto JPG, PNG, atau WebP, maksimal 1 MB.';
+  if (draft.gallery !== undefined && galleryError(draft.gallery)) errors.gallery = galleryError(draft.gallery);
   if (!draft.variants.length) errors.variants = 'Tambahkan minimal satu varian.';
   if (draft.variants.length > 20) errors.variants = 'Maksimal 20 varian per produk.';
   if (items.some((item) => item.groupId === draft.groupId && !draft.variants.some((variant) => variant.id === item.id))) errors.variants = 'SKU yang sudah ada harus dipertahankan.';
   const seenIds = new Set(); const seenSizes = new Set();
   draft.variants.forEach((variant, index) => {
     const key = `variants.${index}`;
+    if (variant.gallery != null && galleryError(variant.gallery)) errors[`${key}.gallery`] = galleryError(variant.gallery);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(variant.id)) errors[`${key}.id`] = 'SKU wajib diisi, maksimal 64 karakter: huruf, angka, - atau _.';
     else if (seenIds.has(variant.id.toLowerCase()) || items.some((item) => item.groupId !== draft.groupId && item.id.toLowerCase() === variant.id.toLowerCase())) errors[`${key}.id`] = 'SKU sudah digunakan.';
     seenIds.add(variant.id.toLowerCase());
@@ -61,10 +69,12 @@ export function buildVariants(draft, items = products) {
     const original = existing.find((item) => item.id === variant.id) || existing[0] || {};
     const sizeValue = Number(variant.sizeValue); const sizeLabel = `${sizeValue}${variant.sizeUnit}`;
     const changedImage = draft.image !== (existing[0]?.image || '');
+    const gallery = Array.isArray(variant.gallery) ? variant.gallery : Array.isArray(draft.gallery) ? draft.gallery : changedImage ? [] : (original.gallery || []);
+    const image = gallery[0]?.src || (Array.isArray(variant.gallery) ? '' : draft.image);
     const packaging = packagingValues(variant);
     return { ...original, id: variant.id, groupId, baseName: draft.baseName.trim(), name: `${draft.baseName.trim()} ${sizeLabel}${packaging.packagingType === 'satuan' ? '' : ` · ${packagingLabel(variant)}`}`,
       brand: brands.find((brand) => brand.id === draft.brandId)?.name || draft.brand.trim(), brandId: draft.brandId || slug(draft.brand), categoryId: draft.categoryId, subcategoryId: draft.subcategoryId, category: category.name,
-      description: draft.description.trim(), image: draft.image, imageAlt: draft.imageAlt.trim() || draft.baseName.trim(), gallery: changedImage ? [] : (original.gallery || []),
+      description: draft.description.trim(), image, imageAlt: gallery[0]?.alt || draft.imageAlt.trim() || draft.baseName.trim(), gallery: gallery.map((entry) => ({ ...entry })),
       sizeValue, sizeUnit: variant.sizeUnit, sizeLabel, ...packaging, grams: variant.sizeUnit === 'g' ? sizeValue : null,
       price: Number(variant.price), oldPrice: Number(variant.oldPrice) || 0, rating: original.rating ?? 0, sold: original.sold ?? '0', icon: original.icon || '📦', color: draft.color || original.color || 'sky', tag: original.tag || '',
     };

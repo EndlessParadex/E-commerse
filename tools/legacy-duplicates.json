@@ -1,0 +1,542 @@
+{
+  "version": 1,
+  "commit": "6e6332a22f15fc242633d7b5f5028fccb27c0b9e",
+  "files": [
+    {
+      "path": "App.jsx",
+      "sha": "d5e5fc3def460dad436ee1fbff2b2eceb8aecc58"
+    },
+    {
+      "path": "assets/hero.png",
+      "sha": "02251f4b956c55af2d76fd0788124d7eee2b45eb"
+    },
+    {
+      "path": "assets/react.svg",
+      "sha": "6c87de9bb3358469122cc991d5cf578927246184"
+    },
+    {
+      "path": "assets/vite.svg",
+      "sha": "5101b674df391399da71c767aa5c976426c9dc7a"
+    },
+    {
+      "path": "components/account/AccountMenu.css",
+      "sha": "ece52e7fb41a00d82dc0accce6b84dd9d345793e"
+    },
+    {
+      "path": "components/account/AccountMenu.jsx",
+      "sha": "0e5def5116d475d8b62cac0067f2593b0521b0d1"
+    },
+    {
+      "path": "components/account/AdminAccess.jsx",
+      "sha": "6e6b884b5fcd3419c957a35a0b6625c63e0ea4fd"
+    },
+    {
+      "path": "components/account/AuthPage.css",
+      "sha": "d935935597955fc4eb7abc1f027d8c9617865f07"
+    },
+    {
+      "path": "components/account/AuthPage.jsx",
+      "sha": "2f35a127509e816afe43092b6d5f2e9a43feaa35"
+    },
+    {
+      "path": "components/account/accountSession.js",
+      "sha": "a24f93493de778b48b7fcd6babd2b744a5a4e8d2"
+    },
+    {
+      "path": "components/account/accountSession.test.js",
+      "sha": "ede058e44a32bfc5909f071d2748e9f35fa30cdf"
+    },
+    {
+      "path": "components/account/authValidation.js",
+      "sha": "64980a116707f08f7df330f488673d4e1ea64339"
+    },
+    {
+      "path": "components/account/authValidation.test.js",
+      "sha": "f10f826bb2fcac2c1992c0e50c49be08b9e1c0ec"
+    },
+    {
+      "path": "components/layout/CatalogMenu.css",
+      "sha": "5ab85549082d30ad358a15d8c26f7cd894dca243"
+    },
+    {
+      "path": "components/layout/CatalogMenu.jsx",
+      "sha": "19406bf091c5c8da9f42ded5a7cd9a18b4a8209a"
+    },
+    {
+      "path": "components/layout/Navbar.css",
+      "sha": "c6e32093714f2e3644583bb80177e44377aa7402"
+    },
+    {
+      "path": "components/layout/Navbar.jsx",
+      "sha": "7a322b5d2837c1b887bb78eb387bbd4a89963e71"
+    },
+    {
+      "path": "components/layout/StoreFooter.css",
+      "sha": "9d6ba42ff72b6888dbde1cb8d76ead36eaec4703"
+    },
+    {
+      "path": "components/layout/StoreFooter.jsx",
+      "sha": "0452f77a15bbb7346674f1ef7f133ea8e7ede184"
+    },
+    {
+      "path": "components/shop/CancelOrderDialog.jsx",
+      "sha": "bc0172796556443cb4d86894d6f18c86dfbd03f8"
+    },
+    {
+      "path": "components/shop/CancelShoppingDialog.jsx",
+      "sha": "b2b0122d571d426c526e4db010a4e7dccf7e7746"
+    },
+    {
+      "path": "components/shop/CartPage.css",
+      "sha": "617c8a385e54b10d191733ef1103a2539bf5988d"
+    },
+    {
+      "path": "components/shop/CartReview.jsx",
+      "sha": "aa6f7e5ca8c9c3d4d120ddb65c8a068eac454fb5"
+    },
+    {
+      "path": "components/shop/ConfirmDialog.css",
+      "sha": "ebbb4ea71a195860c597d36f73a751464c6bb21b"
+    },
+    {
+      "path": "components/shop/ConfirmDialog.jsx",
+      "sha": "04e7b0121a2ec8b17c466cb68a54f2ea33ec615b"
+    },
+    {
+      "path": "components/shop/OrderItem.css",
+      "sha": "ae523550bc0a103ca04270110db451949f8410e1"
+    },
+    {
+      "path": "components/shop/OrderTracking.css",
+      "sha": "a1e5fbe35ea42ca4496de6bd3183d43e94f55df2"
+    },
+    {
+      "path": "components/shop/OrderTracking.jsx",
+      "sha": "7cc13ff9e11dd54f6870054a115d4d47586e363a"
+    },
+    {
+      "path": "components/shop/PackagingSummary.css",
+      "sha": "f1f03ed6d7611624f2ef92526b230e5d49dc2939"
+    },
+    {
+      "path": "components/shop/PackagingSummary.jsx",
+      "sha": "c2cb2ddea4d609cc001ca1e054cad5af4b571f8d"
+    },
+    {
+      "path": "components/shop/PaymentDetails.jsx",
+      "sha": "f7d1c24d3511429b8d7433320394905f6b3c51e0"
+    },
+    {
+      "path": "components/shop/PaymentPicker.css",
+      "sha": "bfe5ac31e4296adfa6ca5a4f09dcb8e916648e53"
+    },
+    {
+      "path": "components/shop/PaymentPicker.jsx",
+      "sha": "546ca504369db39415ae867e50ac113bc2e49e88"
+    },
+    {
+      "path": "components/shop/ProductCard.css",
+      "sha": "af533d85ae9dd0ddfcaa360b8553629e23d66405"
+    },
+    {
+      "path": "components/shop/ProductCard.jsx",
+      "sha": "67ea68c1f71dacc75ae4e29c14a415e0c8ea3467"
+    },
+    {
+      "path": "components/shop/ProductDetailPage.css",
+      "sha": "2458bc5b834e029a9f17b8a7c6c4769e19337df2"
+    },
+    {
+      "path": "components/shop/ProductDetailPage.jsx",
+      "sha": "75378047cf897c0bd8f32399fc0fd8a66c2c50a8"
+    },
+    {
+      "path": "components/shop/ProductGallery.css",
+      "sha": "d4830a1d68b0866a029dd574518d35ee45468480"
+    },
+    {
+      "path": "components/shop/ProductGallery.jsx",
+      "sha": "a9389de32b87ae380eecceaa132d9fb7a6a605ed"
+    },
+    {
+      "path": "components/shop/ProductImage.css",
+      "sha": "b78c48f949a7454902cbddb901b9bce9a212a667"
+    },
+    {
+      "path": "components/shop/ProductImage.jsx",
+      "sha": "011cfa41141a197d0fbf1a0cbb1f9ff8c89eadb8"
+    },
+    {
+      "path": "components/shop/PromoCarousel.css",
+      "sha": "426f0d64ffc8abf71b1930f5df190353ef1fc812"
+    },
+    {
+      "path": "components/shop/PromoCarousel.jsx",
+      "sha": "8bd8186a9e1178aefc1fcc5fd64250990aaeb64b"
+    },
+    {
+      "path": "components/shop/PromotionSection.css",
+      "sha": "7c9c8956d38efa12809c25c108b4fc3f35836c58"
+    },
+    {
+      "path": "components/shop/PromotionSection.jsx",
+      "sha": "27bb326aa7a0290d09d1db72fd080ff9b333f31c"
+    },
+    {
+      "path": "components/shop/ShopActions.css",
+      "sha": "1ad9d8846ce06910125c86215e2e1b185b13e762"
+    },
+    {
+      "path": "components/shop/ShopActions.jsx",
+      "sha": "4453c6f7ed6440152656d8123a3820b34e39147b"
+    },
+    {
+      "path": "components/shop/ShopIcon.jsx",
+      "sha": "08dedbc51dd756518e09c00fcc27bed2b08a5bd3"
+    },
+    {
+      "path": "components/shop/ShopPage.jsx",
+      "sha": "2b6042d24d4427d95edc6d4ae66b2276e775ad41"
+    },
+    {
+      "path": "components/shop/SupplierSection.css",
+      "sha": "687b7d6c2934532c75a50671b3cdc7ce3b753d1f"
+    },
+    {
+      "path": "components/shop/SupplierSection.jsx",
+      "sha": "d46a6dc27cde00fba5533d15fb1a72bd3d73fa75"
+    },
+    {
+      "path": "components/shop/shopPresentation.js",
+      "sha": "6295610ad921344bd8cdb1071faa05c3f752102e"
+    },
+    {
+      "path": "data/adminCatalog.js",
+      "sha": "dea25f340a4e7a1ed0b8d27bff1382ec59c3e308"
+    },
+    {
+      "path": "data/adminCatalog.test.js",
+      "sha": "96a4612f3b6fa0304a944361772981424c081154"
+    },
+    {
+      "path": "data/adminEditor.js",
+      "sha": "f511c6b0437d161371514af3528a6a4cce8cc962"
+    },
+    {
+      "path": "data/adminEditor.test.js",
+      "sha": "75f1f93669b218d0123c7c9123d5156e6c949db1"
+    },
+    {
+      "path": "data/adminStore.js",
+      "sha": "09f3f144f2ec23f23e16b19fd473aa4690286e2d"
+    },
+    {
+      "path": "data/cartItemPresentation.js",
+      "sha": "375fa158f86093ce635ecd5456b0f85ab7772da9"
+    },
+    {
+      "path": "data/cartItemPresentation.test.js",
+      "sha": "7beba3004f239aabcf743c383862a887e275d2f7"
+    },
+    {
+      "path": "data/cartValidation.js",
+      "sha": "9d03ef515a167c7a053f18590da3bde39143764d"
+    },
+    {
+      "path": "data/catalog.js",
+      "sha": "97c368ae9ef938c54c94a7e7a1d3ceaef130574b"
+    },
+    {
+      "path": "data/catalog.test.js",
+      "sha": "c5587b46b17646de20210d1cf55f8f78f211e5fa"
+    },
+    {
+      "path": "data/catalogColors.js",
+      "sha": "3e15160138b47b2051d2fc59538f6fcb656505fc"
+    },
+    {
+      "path": "data/catalogDelete.test.js",
+      "sha": "50dfda3175211b7c7a48018c1c41d6f3dffd2372"
+    },
+    {
+      "path": "data/catalogMasters.js",
+      "sha": "e2e2ee1582c6a0f33f2055835915472ce5bb61fa"
+    },
+    {
+      "path": "data/catalogMasters.test.js",
+      "sha": "ea8e21a5016806d963c57bf3622f69a175b35634"
+    },
+    {
+      "path": "data/catalogNavigation.js",
+      "sha": "5adbf31cd441c858de50d158368d37aa2de88c7f"
+    },
+    {
+      "path": "data/catalogNavigation.test.js",
+      "sha": "9fb1dcc4e1f08283fc169505a51ab52561a9ee3f"
+    },
+    {
+      "path": "data/orderItemPresentation.js",
+      "sha": "c3cd271429f8267ede51619b3c5e2d97f984b252"
+    },
+    {
+      "path": "data/packagingServerCompatibility.test.js",
+      "sha": "3c0ddf90395c6613357f33ca59d778e84da51544"
+    },
+    {
+      "path": "data/productDescriptions.js",
+      "sha": "d74d6bdbd0607b3b5a4ceffd28c79130d7d58741"
+    },
+    {
+      "path": "data/productGallery.js",
+      "sha": "6cacc8b526f91663eaaedaa0aff01b7e81a8fc4e"
+    },
+    {
+      "path": "data/productGallery.test.js",
+      "sha": "99d4c2f4cbb82e0bae5552ecdcf3fdc48cc80e31"
+    },
+    {
+      "path": "data/productPackaging.js",
+      "sha": "a820d1a1461dd25574759b47900b9c06e72894e1"
+    },
+    {
+      "path": "data/productPackaging.test.js",
+      "sha": "8a1cb93908e7fd070c783d9b4c9e1c9289099b0a"
+    },
+    {
+      "path": "data/productSnapshot.js",
+      "sha": "9f8b7c005dfc5354d3dfe740acbd335b81736437"
+    },
+    {
+      "path": "data/productSnapshot.test.js",
+      "sha": "fa0411a00e4e7f723ff53178a4a50590cbeaaddb"
+    },
+    {
+      "path": "data/products.js",
+      "sha": "02828e57e09e912dbf724d84dbcb073a5642524e"
+    },
+    {
+      "path": "data/promoSlides.js",
+      "sha": "96599d16c55051ae466ba1a2b214036bd621f6b7"
+    },
+    {
+      "path": "data/serverCatalog.test.js",
+      "sha": "63ddd684667e4c0904337b05533fab62f7562ccf"
+    },
+    {
+      "path": "data/suppliers.js",
+      "sha": "f111958e9f17d65b8b449446b84cbf01a8818e3a"
+    },
+    {
+      "path": "main.jsx",
+      "sha": "51844ea76aaabc666453ad679022c3c3c34da20c"
+    },
+    {
+      "path": "pages/AccountPage.css",
+      "sha": "33f43f77906faba461d18699f92140858801c238"
+    },
+    {
+      "path": "pages/AccountPage.jsx",
+      "sha": "27ef15507383a47357438b917fbbe3033f37e601"
+    },
+    {
+      "path": "pages/AdminMasterPage.jsx",
+      "sha": "13a996746ce2a463bb460dbc8884daa2cff0f4fe"
+    },
+    {
+      "path": "pages/AdminOrdersPage.jsx",
+      "sha": "3c9e821707b472276416e109e05469724d9df25c"
+    },
+    {
+      "path": "pages/AdminPage.css",
+      "sha": "c854aaa5cc043100640d516afd580b4f9e5311e9"
+    },
+    {
+      "path": "pages/AdminPage.jsx",
+      "sha": "307be36a8357e7da9a19fae25d20629b4d42bb2c"
+    },
+    {
+      "path": "pages/AdminProductForm.jsx",
+      "sha": "4babb5911724da993c1ad33909267fd64ab96ac8"
+    },
+    {
+      "path": "pages/AdminStockPage.jsx",
+      "sha": "e647781d62ee21e1e9e25466826304071625834e"
+    },
+    {
+      "path": "pages/CheckoutPage.css",
+      "sha": "32633a8abd9d72306ee157c767e45726bddab8c4"
+    },
+    {
+      "path": "pages/CheckoutPage.jsx",
+      "sha": "888cdcf1f1fc644d4649f60d4dc09542714559a5"
+    },
+    {
+      "path": "pages/FavoritesPage.jsx",
+      "sha": "3cfe547b39f6a02e93071727eba603581d28188b"
+    },
+    {
+      "path": "pages/Home.css",
+      "sha": "0dac5498f5e909dda0a31acdd85ce9232360a646"
+    },
+    {
+      "path": "pages/Home.jsx",
+      "sha": "f79f3f4299318e8d65a3d02fc357bb0cd159a065"
+    },
+    {
+      "path": "pages/OrderConfirmationPage.css",
+      "sha": "2b47bb55c56c762eafc08fea8822cd73fd73c9e2"
+    },
+    {
+      "path": "pages/OrderConfirmationPage.jsx",
+      "sha": "3b0002237084c6bc2ed218e9ef090e5b71580cc8"
+    },
+    {
+      "path": "pages/OrdersPage.css",
+      "sha": "f398c970e5edb260524ca65ffdeedec80b4b5b57"
+    },
+    {
+      "path": "pages/OrdersPage.jsx",
+      "sha": "39094a6bf8e1949cb6f1b8da3db0604428198dba"
+    },
+    {
+      "path": "pages/PaymentPage.jsx",
+      "sha": "5a0c011cc023b7976980eff32bae7d1fbeae8bf1"
+    },
+    {
+      "path": "pages/StoreInfoPage.css",
+      "sha": "32def5014c51b22f26d6abd89cd9dcff395ceb9b"
+    },
+    {
+      "path": "pages/StoreInfoPage.jsx",
+      "sha": "57ac964406bb1c806be04dd78070de978749b6e8"
+    },
+    {
+      "path": "pages/adminUi.test.js",
+      "sha": "16e00184343c19ca1f54f7f52cbb88e2683cbd97"
+    },
+    {
+      "path": "pages/buyerUi.test.js",
+      "sha": "b49cd4024872847b0609892bc3455e462207893d"
+    },
+    {
+      "path": "pages/packagingUi.test.js",
+      "sha": "6c45f93baafc04bc00d7d09692540a05228ebd75"
+    },
+    {
+      "path": "pages/serverAdminUi.test.js",
+      "sha": "b4be5839b7d4e4c5ebb34cd207620c5af3853f2e"
+    },
+    {
+      "path": "pages/workflowUi.test.js",
+      "sha": "1c8ca21d401ea72200adf9f145deeff320392930"
+    },
+    {
+      "path": "state/DeliveryProvider.jsx",
+      "sha": "88ae4b67b33657a46501d277fc358623fcf0f83b"
+    },
+    {
+      "path": "state/ShopProvider.jsx",
+      "sha": "b8356675e8f4346a3548a356ec33f8285f6d0ce7"
+    },
+    {
+      "path": "state/buyerFlow.test.js",
+      "sha": "1bc6682f818c31e1ab9fb9a2d72c34e68310803b"
+    },
+    {
+      "path": "state/deliveryModel.js",
+      "sha": "a904b3fa14a49bae70fa88564747fd90d5039cef"
+    },
+    {
+      "path": "state/deliveryModel.test.js",
+      "sha": "ef467db3ddf3a546a96bd951fda1d9bd02001682"
+    },
+    {
+      "path": "state/frontendWorkflow.js",
+      "sha": "845162fe9b13197a99ab65bf1587308f045361c1"
+    },
+    {
+      "path": "state/frontendWorkflow.test.js",
+      "sha": "9e707120f89c893358ef45931f1873e403ca3922"
+    },
+    {
+      "path": "state/orderModel.js",
+      "sha": "1e3ff6772aa2d7664f94961dc3678ea7224ecced"
+    },
+    {
+      "path": "state/orderModel.test.js",
+      "sha": "b4946fde8b2a6e25b5c3e9dc28b762700982f96c"
+    },
+    {
+      "path": "state/orderTrackingModel.js",
+      "sha": "c21d984c1ae426c32423712bbf6d84320084d392"
+    },
+    {
+      "path": "state/orderTrackingModel.test.js",
+      "sha": "e68ce42d98e1abf79ad870dbdedd9b4ed68bf693"
+    },
+    {
+      "path": "state/paymentMethods.js",
+      "sha": "1a7acde678a9319f32b0ee7d362a1b21e53dbf30"
+    },
+    {
+      "path": "state/purchaseFlow.test.js",
+      "sha": "604c0f125c8e1294aa69166f919fe91f04dfdf95"
+    },
+    {
+      "path": "state/routeGuards.js",
+      "sha": "4d49b0c9bc68cc91b973d482376222b0d92f1572"
+    },
+    {
+      "path": "state/shopModel.js",
+      "sha": "b856981931b17f7b82e0a278b7dff4ee265a9cd9"
+    },
+    {
+      "path": "state/shopModel.test.js",
+      "sha": "c792145a84fcf4865afefbe660ecb941245e8f21"
+    },
+    {
+      "path": "state/shopNavigation.js",
+      "sha": "498f3b7548a276be4c38da50414c5fae3b0d5700"
+    },
+    {
+      "path": "state/useDelivery.js",
+      "sha": "f4807a6f847fad800a7e139022a494e28948012e"
+    },
+    {
+      "path": "state/useShop.js",
+      "sha": "6e2deda6d753b41adf1b62a4dfcf9e2278f29a68"
+    },
+    {
+      "path": "state/useUnsavedChanges.js",
+      "sha": "30701841d35588deaabe65e93bc1790604f4d85d"
+    },
+    {
+      "path": "state/useWorkflow.js",
+      "sha": "2f23ee648ccc6b391644808faf3eed99fbb2c9cf"
+    },
+    {
+      "path": "state/whatsappModel.js",
+      "sha": "036b14b7d130c71afdf50b04922ccdb9a092a740"
+    },
+    {
+      "path": "state/whatsappModel.test.js",
+      "sha": "3d295cfbbaeb5a6df2767960a94d048025e0924d"
+    },
+    {
+      "path": "state/workflowEvents.js",
+      "sha": "7f1fc5d421729452815c2a2a9de2ce9f6a6337cc"
+    },
+    {
+      "path": "styles/global.css",
+      "sha": "0cd469c790ac0c29c34737db5537bfd1f59e71cd"
+    },
+    {
+      "path": "styles/storefront.css",
+      "sha": "fbb1550ca7c07ee117816c41cc3bc14920a72470"
+    },
+    {
+      "path": "styles/workflow.css",
+      "sha": "a2411b4184d224a77bd448801a9e16643f5b391b"
+    }
+  ]
+}

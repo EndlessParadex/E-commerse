@@ -11,7 +11,8 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "cleanup": "node tools/rapikan-proyek.cjs"
   },
   "dependencies": {
     "react": "^19.2.8",

@@ -15,7 +15,7 @@ const text = (value, limit, label, optional = false) => {
   if (typeof value !== 'string' || value.length > limit || (!optional && !value.trim())) fail(`${label} tidak valid.`);
   return value.trim();
 };
-function photo(value) {
+export function photo(value) {
   if (value === '') return '';
   if (typeof value !== 'string' || value.length > 1400000) fail('Foto maksimal 1 MB.');
   const match = value.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
@@ -120,8 +120,8 @@ export function normalizeCatalog(input, current = null) {
 }
 
 export class CatalogRepository {
-  constructor(db) {
-    this.db = db;
+  constructor(db, { seedDemo = true, companySnapshot } = {}) {
+    this.db = db; this.companySnapshot = companySnapshot;
     db.exec(`CREATE TABLE IF NOT EXISTS catalog_meta (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS catalog_suppliers (id TEXT PRIMARY KEY, data TEXT NOT NULL, position INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS catalog_brands (id TEXT PRIMARY KEY, name TEXT NOT NULL, position INTEGER NOT NULL);
@@ -150,7 +150,7 @@ export class CatalogRepository {
       } catch (error) { db.exec('ROLLBACK'); throw error; }
     }
     if (!db.prepare('SELECT id FROM catalog_meta WHERE id=1').get()) {
-      const seed = normalizeCatalog({ version: 1, masters: masterSnapshot(), edits: [...new Set(products.map((product) => product.groupId))].map((groupId) => productDraft(groupId)) });
+      const seed = normalizeCatalog(seedDemo ? { version: 1, masters: masterSnapshot(), edits: [...new Set(products.map((product) => product.groupId))].map((groupId) => productDraft(groupId)) } : { version: 1, masters: { suppliers: [], brands: [], categories: [] }, edits: [] });
       db.exec('BEGIN IMMEDIATE');
       try { this.write(seed); db.prepare('INSERT INTO catalog_meta VALUES(1,0)').run(); db.exec('COMMIT'); } catch (error) { db.exec('ROLLBACK'); throw error; }
     }
@@ -164,7 +164,7 @@ export class CatalogRepository {
       const { variantPhotos = {}, ...draft } = JSON.parse(row.data); const brand = brands.find((entry) => entry.id === draft.brandId);
       return { ...draft, color: draft.color || products.find((entry) => entry.groupId === draft.groupId)?.color || 'sky', brand: brand.name, variants: db.prepare('SELECT * FROM catalog_variants WHERE product_id=? ORDER BY position').all(draft.groupId).map((variant) => ({ id: variant.id, sizeValue: String(variant.size_value), sizeUnit: variant.size_unit, packagingType: variant.packaging_type, unitsPerPackage: String(variant.units_per_package), packsPerBox: variant.packs_per_box ? String(variant.packs_per_box) : '', price: String(variant.price), oldPrice: variant.old_price ? String(variant.old_price) : '', ...(Array.isArray(variantPhotos[variant.id]) ? { gallery: variantPhotos[variant.id] } : {}) })) };
     });
-    return { version: 1, capabilities: { packaging: true, gallery: true }, revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
+    return { version: 1, capabilities: { packaging: true, gallery: true, workflow: this.workflowEnabled === true }, ...(this.companySnapshot ? { company: this.companySnapshot() } : {}), revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision, masters: { suppliers, brands, categories }, edits };
   }
   write(value) {
     const db = this.db;

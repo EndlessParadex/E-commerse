@@ -6,7 +6,8 @@ import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 
 test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembatalan tersimpan, dan harga baru', async () => {
-  const api = createApp({ dbPath: ':memory:' }); const seed = JSON.parse(JSON.stringify(api.catalog.snapshot())); api.db.close();
+  const api = createApp({ dbPath: ':memory:' }); api.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+ const seed = JSON.parse(JSON.stringify(api.catalog.snapshot())); api.db.close();
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
   const [{ default: App }, orders] = await Promise.all(['/src/App.jsx', '/src/state/orderModel.js'].map((path) => server.ssrLoadModule(path)));
   const start = '/pemasok/demo-pangan?q=balado&merek=rasa-contoh&urut=low&kategori=snack&sub=keripik';

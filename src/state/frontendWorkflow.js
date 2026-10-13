@@ -1,29 +1,41 @@
+import { companyStorageKey, companySnapshot } from '../data/companyStore.js';
 import { products } from '../data/products.js';
 import { packagingValues, sizeKey } from '../data/productPackaging.js';
 import { createCheckoutOrder, readOrders, saveOrder } from './orderModel.js';
 import { notifyWorkflow } from './workflowEvents.js';
 import { paymentMethod } from './paymentMethods.js';
 import { withNotificationEvent } from './orderNotifications.js';
+import { workflowUsesServer } from '../data/adminStore.js';
+import { serverStock } from './serverWorkflow.js';
 
 export const STOCK_KEY = 'bam.stock.preview.v1';
 export const DEMO_STOCK = 120;
+export const initialStock = () => companySnapshot().mode === 'company' ? 0 : DEMO_STOCK;
 export const PAYMENT_WINDOW = 24 * 60 * 60 * 1000;
 export const stockKey = (product) => `${product.groupId || product.id}:${sizeKey(product)}`;
 export const isCOD = (order) => order.payment?.groupId === 'cod' || /^(cod|bayar di tempat)$/i.test(order.payment?.label || '');
 
 function readStock(storage) {
-  const raw = storage.getItem(STOCK_KEY);
+  const raw = storage.getItem(companyStorageKey(STOCK_KEY));
   if (raw === null) return {};
   const value = JSON.parse(raw);
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.values(value).some((amount) => !Number.isSafeInteger(amount) || amount < 0)) throw new Error('Data stok pratinjau tidak dapat dibaca.');
   return value;
 }
+export function previewStockForImport(storage) {
+  const stock = readStock(storage); const orders = readOrders(storage);
+  return [...new Map(products.map((product) => [stockKey(product), product])).values()].flatMap((product) => {
+    const key = stockKey(product);
+    return Object.hasOwn(stock, key) ? [{ key, available: Math.max(0, stock[key] - usedStock(key, orders)), revision: 0, name: product.baseName + ' ' + product.sizeLabel }] : [];
+  });
+}
 export function usedStock(key, orders) {
   return orders.filter((order) => !['cancelled', 'expired'].includes(order.status)).reduce((sum, order) => sum + (order.inventory || []).filter((row) => row.key === key).reduce((amount, row) => amount + row.units, 0), 0);
 }
 export function availableStock(product, storage, orders = readOrders(storage)) {
+  if (workflowUsesServer) return serverStock(product).available;
   const key = stockKey(product);
-  return Math.max(0, (readStock(storage)[key] ?? DEMO_STOCK) - usedStock(key, orders));
+  return Math.max(0, (readStock(storage)[key] ?? initialStock()) - usedStock(key, orders));
 }
 export function cartStockLimit(product, cart, storage, orders = readOrders(storage)) {
   const key = stockKey(product);
@@ -48,7 +60,7 @@ export function setAvailableStock(product, amount, storage) {
     const stock = readStock(storage);
     // Existing orders retain their allocation; changing availability does not undo them.
     stock[key] = amount + usedStock(key, readOrders(storage));
-    storage.setItem(STOCK_KEY, JSON.stringify(stock)); notifyWorkflow();
+    storage.setItem(companyStorageKey(STOCK_KEY), JSON.stringify(stock)); notifyWorkflow();
     return { saved: true };
   } catch { return { error: 'Stok belum tersimpan. Periksa penyimpanan browser dan coba lagi.' }; }
 }

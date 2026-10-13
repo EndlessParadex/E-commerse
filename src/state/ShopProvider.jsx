@@ -1,18 +1,29 @@
-import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
+import { companyStorageKey } from '../data/companyStore.js';
+import { useContext, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { ShopContext } from './useShop';
 import { STORAGE_KEY, emptyShop, normalizeShop, shopReducer, cartTotals } from './shopModel';
 import { reviewCart, updateCartPrices } from '../data/cartValidation';
 import { availableStock, cartStockLimit, reviewStock } from './frontendWorkflow';
 import useWorkflow from './useWorkflow';
 import { notifyWorkflow } from './workflowEvents';
+import { workflowUsesServer } from '../data/adminStore';
+import { DeliveryContext } from './useDelivery';
+import { clearCompletedCheckoutRequest } from './serverWorkflow';
 
-function loadShop() {
-  try { return normalizeShop(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+function loadShop(key) {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored !== null || !workflowUsesServer) return normalizeShop(JSON.parse(stored));
+    const guest = JSON.parse(localStorage.getItem(companyStorageKey(STORAGE_KEY + '.account.guest')) || localStorage.getItem(companyStorageKey(STORAGE_KEY)));
+    return normalizeShop({ cart: guest?.cart, favoriteIds: guest?.favoriteIds });
+  }
   catch { return emptyShop(); }
 }
 
 export default function ShopProvider({ children }) {
-  const [state, rawDispatch] = useReducer(shopReducer, undefined, loadShop);
+  const delivery = useContext(DeliveryContext);
+  const storageKey = companyStorageKey(STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''));
+  const [state, rawDispatch] = useReducer(shopReducer, storageKey, loadShop);
   const stateRef = useRef(state);
   useLayoutEffect(() => { stateRef.current = state; }, [state]);
   const workflow = useWorkflow();
@@ -33,27 +44,28 @@ export default function ShopProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(storageKey, JSON.stringify(state));
       // This state reflects the result of synchronizing with browser storage.
       // oxlint-disable-next-line react/set-state-in-effect
       setStorageError(false);
     } catch { setStorageError(true); }
-  }, [state]);
+  }, [state, storageKey]);
 
   const dispatch = (action) => {
     const previous = stateRef.current;
     const next = shopReducer(previous, action);
     if (action.type === 'add' || (action.type === 'quantity' && action.quantity > (previous.cart.find((item) => item.id === action.id)?.quantity || 0))) {
-      if (workflow.failed) return false;
+      if (workflow.failed || workflow.loading) return false;
       try { if (reviewStock(next.cart, window.sessionStorage, workflow.orders).length) return false; }
       catch { return false; }
     }
     if (next === previous) return false;
+    if (workflowUsesServer && ['add', 'quantity', 'remove', 'clearCart'].includes(action.type)) clearCompletedCheckoutRequest();
     stateRef.current = next; rawDispatch(action); return true;
   };
   const addItem = (product, quantity = 1) => dispatch({ type: 'add', product, quantity });
   const stockFor = (product) => {
-    try { return { available: availableStock(product, window.sessionStorage, workflow.orders), maximum: cartStockLimit(product, state.cart, window.sessionStorage, workflow.orders), failed: workflow.failed }; }
+    try { return { available: availableStock(product, window.sessionStorage, workflow.orders), maximum: cartStockLimit(product, state.cart, window.sessionStorage, workflow.orders), failed: workflow.failed || workflow.loading }; }
     catch { return { available: 0, maximum: 0, failed: true }; }
   };
   const review = reviewCart(state.cart);
@@ -62,7 +74,7 @@ export default function ShopProvider({ children }) {
   if (workflow.failed && !review.issues.some((issue) => issue.type === 'stock_error')) review.issues.push({ id: 'stock-storage', type: 'stock_error' });
   review.ready = state.cart.length > 0 && review.issues.length === 0;
 
-  return <ShopContext.Provider value={{ ...state, ...cartTotals(state.cart), cartReview: review, stockFor, orderLinkStatus: (id) => workflow.failed ? 'unavailable' : workflow.orders.some((order) => order.id === id) ? 'available' : 'missing', updateCart: () => dispatch({ type: 'updateCart', cart: updateCartPrices(state.cart) }), unreadCount: state.notifications.filter((item) => !item.read).length, storageError, addItem, completeOrder: (order) => dispatch({ type: 'completeOrder', order }), clearCart: () => dispatch({ type: 'clearCart' }), toggleFavorite: (id) => dispatch({ type: 'toggleFavorite', id }), dispatch }}>
+  return <ShopContext.Provider value={{ ...state, ...cartTotals(state.cart), cartReview: review, stockFor, orderLinkStatus: (id) => workflow.failed ? 'unavailable' : workflow.server || workflow.orders.some((order) => order.id === id) ? 'available' : 'missing', updateCart: () => dispatch({ type: 'updateCart', cart: updateCartPrices(state.cart) }), unreadCount: state.notifications.filter((item) => !item.read).length, storageError, addItem, completeOrder: (order) => dispatch({ type: 'completeOrder', order }), clearCart: () => dispatch({ type: 'clearCart' }), toggleFavorite: (id) => dispatch({ type: 'toggleFavorite', id }), dispatch }}>
     {children}
   </ShopContext.Provider>;
 }

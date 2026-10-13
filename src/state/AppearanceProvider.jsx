@@ -3,6 +3,7 @@ import { useDelivery } from './useDelivery';
 import { AppearanceContext } from './useAppearance';
 import { appearanceOwner, appearanceStorageKey, defaultAppearance, normalizeAppearance, readAppearance, resolveAppearanceMode, writeAppearance } from './appearanceModel';
 import '../styles/themes.css';
+import '../styles/preferences.css';
 
 function browserStorage() { try { return window.localStorage; } catch { return null; } }
 const systemSnapshot = () => window.matchMedia?.('(prefers-color-scheme: dark)')?.matches || false;
@@ -34,15 +35,15 @@ export default function AppearanceProvider({ children }) {
 
   useLayoutEffect(() => {
     const page = document.documentElement;
-    const previousTheme = page.getAttribute('data-theme');
-    const previousBackground = page.getAttribute('data-background');
-    page.setAttribute('data-theme', effectiveMode);
-    page.setAttribute('data-background', preferences.background);
+    const attributes = { 'data-theme': effectiveMode, 'data-background': preferences.background, 'data-text-size': preferences.textSize, 'data-accent': preferences.accent };
+    const previous = Object.fromEntries(Object.keys(attributes).map((name) => [name, page.getAttribute(name)]));
+    for (const [name, value] of Object.entries(attributes)) page.setAttribute(name, value);
     return () => {
-      if (previousTheme === null) page.removeAttribute('data-theme'); else page.setAttribute('data-theme', previousTheme);
-      if (previousBackground === null) page.removeAttribute('data-background'); else page.setAttribute('data-background', previousBackground);
+      for (const [name, value] of Object.entries(previous)) {
+        if (value === null) page.removeAttribute(name); else page.setAttribute(name, value);
+      }
     };
-  }, [effectiveMode, preferences.background]);
+  }, [effectiveMode, preferences.background, preferences.textSize, preferences.accent]);
 
   useEffect(() => {
     const sync = (event) => {

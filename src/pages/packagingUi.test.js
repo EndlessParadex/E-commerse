@@ -7,7 +7,8 @@ import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 
 test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia sampai checkout dan riwayat', async () => {
-  const api = createApp({ dbPath: ':memory:' });
+  const api = createApp({ dbPath: ':memory:' }); api.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+
   api.db.prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)').run('pack-admin', 'Admin Uji', 'pack@test.id', 'Alamat admin uji', 'fixture', '2026-10-09', 'admin');
   // The API uses hashed cookie tokens; a fixture session avoids testing login again.
   const { createHash } = await import('node:crypto');
@@ -68,6 +69,13 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     assert.equal(choices.querySelectorAll('fieldset').length, 2);
     assert.ok(choices.querySelector('.detail-sizes').compareDocumentPosition(choices.querySelector('.detail-packages')) & dom.Node.DOCUMENT_POSITION_FOLLOWING, 'packaging is directly below size in the same selection section');
     assert.ok(container.querySelector('.shop-breadcrumb').compareDocumentPosition(container.querySelector('.product-back-link')) & dom.Node.DOCUMENT_POSITION_FOLLOWING);
+    const detailTab = container.querySelector('#product-tab-detail'); const specsTab = container.querySelector('#product-tab-specifications');
+    assert.equal(detailTab.getAttribute('aria-selected'), 'true');
+    assert.equal(container.querySelector('#product-panel-specifications').hidden, true);
+    await click(specsTab);
+    assert.equal(container.querySelector('#product-panel-specifications').hidden, false);
+    assert.equal(container.querySelector('.detail-meta-size').textContent, '180g');
+    assert.ok(container.querySelector('.detail-supplier-summary a[href^="#/pemasok/"]'));
     await click(container.querySelector('input[name="product-packaging"][value="UI-PACK-180"]'));
     assert.match(container.querySelector('.detail-price').textContent, /90.000/);
     assert.equal(container.querySelector('#product-detail-title').textContent, 'Keripik Singkong Balado 180g · 1 pack');
@@ -76,6 +84,8 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     assert.doesNotMatch(container.querySelector('.detail-info').textContent, /isi \d+ satuan| = /i);
     await click(container.querySelector('button[aria-label="Tambah jumlah"]'));
     assert.equal(container.querySelector('.detail-package-total').textContent, '2 pack');
+    assert.match(container.querySelector('.detail-purchase-panel .detail-subtotal').textContent, /180.000/);
+    assert.match(container.querySelector('.detail-mobile-purchase').textContent, /180.000/);
     const small = [...container.querySelectorAll('input[name="product-size"]')].find((input) => input.parentElement.textContent === '23g');
     await click(small);
     assert.equal(container.querySelectorAll('input[name="product-packaging"]').length, 1, 'unavailable pack/dus are absent');
@@ -83,6 +93,14 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     assert.equal(container.querySelector('input[name="product-packaging"]').parentElement.textContent, 'Satuan');
     assert.match(container.querySelector('.detail-price').textContent, /3.500/);
     assert.equal(container.querySelector('.detail-quantity output').textContent, '1');
+    assert.match(container.querySelector('.detail-purchase-panel .detail-subtotal').textContent, /3.500/);
+    assert.match(container.querySelector('.detail-purchase-product').textContent, /23g/);
+    assert.equal(specsTab.getAttribute('aria-selected'), 'true', 'tab spesifikasi tetap terbuka saat ukuran diganti');
+    assert.equal(container.querySelector('.detail-meta-size').textContent, '23g');
+    assert.equal(container.querySelector('.detail-meta-packaging').textContent, '1 buah');
+    await act(async () => { specsTab.focus(); specsTab.dispatchEvent(new dom.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true })); });
+    assert.equal(dom.document.activeElement, detailTab); assert.equal(detailTab.getAttribute('aria-selected'), 'true');
+    assert.equal(container.querySelector('#product-panel-detail').hidden, false);
     const large = [...container.querySelectorAll('input[name="product-size"]')].find((input) => input.parentElement.textContent === '180g'); await click(large);
     await click(container.querySelector('input[name="product-packaging"][value="UI-PACK-180"]'));
     await click(container.querySelector('button[aria-label="Tambah jumlah"]')); await click(button('Tambah ke keranjang'));

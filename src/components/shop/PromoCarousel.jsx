@@ -1,6 +1,9 @@
+import useCompany from '../../state/useCompany';
 import { useEffect, useState } from 'react';
 import { promoSlides } from '../../data/promoSlides';
 import './PromoCarousel.css';
+import CompanyBrand from '../layout/CompanyBrand';
+import { companySnapshot } from '../../data/companyStore';
 import ProductImage from './ProductImage';
 import { productVariants } from '../../data/products';
 import { packagingOptionLabel } from '../../data/packagingPresentation';
@@ -20,6 +23,7 @@ function Arrow({ back = false }) {
 }
 
 export default function PromoCarousel({ catalog, categoryList } = {}) {
+  const { profile: companyProfile } = useCompany();
   const slides = promoSlides(catalog, categoryList);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -46,12 +50,12 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
   // Give uploaded photos the spotlight, while retaining the actual featured SKUs.
   const featured = [...slide.featured].sort((a, b) => Number(Boolean(firstPhoto(b))) - Number(Boolean(firstPhoto(a))));
   const titleLines = slide.title.split('\n');
-  return <section className={`bam-promo bam-promo--${slide.theme}`} aria-label="Pilihan katalog CV. Belitung Arta Mandiri" aria-roledescription="carousel"
+  return <section className={`bam-promo bam-promo--${slide.theme}`} aria-label={`Pilihan katalog ${companyProfile.legalName}`} aria-roledescription="carousel"
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onFocusCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(true); }}>
     <div className="bam-promo-slide" key={slide.id} role="group" aria-roledescription="slide" aria-label={`${currentIndex + 1} dari ${slides.length}: ${slide.category}`} aria-live={playing ? 'off' : 'polite'}>
       <div className="bam-promo-copy">
-        <div className="bam-promo-brand"><span aria-hidden="true">BAM<span className="bam-promo-brand-dot">.</span></span><span>CV. Belitung Arta Mandiri</span></div>
+        <div className="bam-promo-brand"><CompanyBrand /><span>{companyProfile.legalName}</span></div>
         <span className="bam-promo-eyebrow"><span aria-hidden="true" />{slide.category}</span>
         <h1>{titleLines.map((line, i) => <span key={i}>{line}{i < titleLines.length - 1 && <br />}</span>)}</h1><p>{slide.description}</p>
         <div className="bam-promo-copy-actions"><a className="bam-promo-cta" href={slide.href}>{slide.cta}<Arrow /></a><a className="bam-promo-all" href="#/cari?q=">Lihat semua produk <Arrow /></a></div>
@@ -65,7 +69,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
             const discounted = product.oldPrice > product.price;
             const saving = discounted ? Math.round((product.oldPrice - product.price) / product.oldPrice * 100) : 0;
             const photo = firstPhoto(product);
-            const artwork = i === 0 && !photo ? categoryArtwork[slide.id] : null;
+            const artwork = companySnapshot().mode === 'demo' && i === 0 && !photo ? categoryArtwork[slide.id] : null;
             return <a className={'bam-promo-product' + (i === 0 ? ' is-spotlight' : ' is-secondary')} href={`#/produk/${encodeURIComponent(product.id)}`} key={product.id} aria-label={`Lihat ${name}${product.sizeLabel ? ', ' + product.sizeLabel : ''}, ${packaging}, ${rupiah(product.price)}${artwork ? '. Gambar adalah ilustrasi kategori' : ''}`}>
               <div className={'bam-promo-product-visual' + (photo ? ' has-photo' : '')}>
                 {i === 0 && <div className="bam-promo-stage-decoration" aria-hidden="true"><span className="bam-promo-orbit" /><span className="bam-promo-star">✦</span><span className="bam-promo-spark">✧</span></div>}
@@ -78,7 +82,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
               </div>
             </a>;
           })}
-        </div>{categoryArtwork[slide.id] && !firstPhoto(featured[0]) && <p className="bam-promo-artwork-note">Gambar contoh kategori</p>}</> : <div className="bam-promo-empty"><span aria-hidden="true">BAM<span>.</span></span><p>Pilihan produk akan hadir di sini.</p></div>}
+        </div>{companySnapshot().mode === 'demo' && categoryArtwork[slide.id] && !firstPhoto(featured[0]) && <p className="bam-promo-artwork-note">Gambar contoh kategori</p>}</> : <div className="bam-promo-empty"><span aria-hidden="true">{companyProfile.shortName}</span><p>Pilihan produk akan hadir di sini.</p></div>}
       </div>
     </div>
     {slides.length > 1 && <footer className="bam-promo-footer"><div className="bam-promo-controls"><button type="button" className="bam-promo-arrow" aria-label="Pilihan sebelumnya" onClick={() => goTo(currentIndex - 1)}><Arrow back /></button><div className="bam-promo-dots" role="group" aria-label="Pilih kategori banner">{slides.map((item, i) => <button type="button" key={item.id} aria-label={`Tampilkan pilihan ${item.category}`} aria-current={i === currentIndex ? 'true' : undefined} onClick={() => goTo(i)}><span /></button>)}</div><button type="button" className="bam-promo-arrow" aria-label="Pilihan berikutnya" onClick={() => goTo(currentIndex + 1)}><Arrow /></button></div>

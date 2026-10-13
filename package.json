@@ -12,7 +12,10 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "node --test",
-    "cleanup": "node tools/rapikan-proyek.cjs"
+    "cleanup": "node tools/rapikan-proyek.cjs",
+    "dev:company": "node tools/company-command.cjs dev",
+    "server:company": "node tools/company-command.cjs server",
+    "create-admin:company": "node tools/company-command.cjs admin"
   },
   "dependencies": {
     "react": "^19.2.8",

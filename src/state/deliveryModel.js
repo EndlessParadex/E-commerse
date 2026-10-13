@@ -1,3 +1,4 @@
+import { companyStorageKey } from '../data/companyStore.js';
 export const DELIVERY_STORAGE_KEY = 'bam.delivery.v1';
 
 export function validateDelivery(value) {
@@ -16,13 +17,13 @@ export function normalizeDelivery(value) {
 }
 
 export function readDelivery(storage) {
-  try { return normalizeDelivery(JSON.parse(storage.getItem(DELIVERY_STORAGE_KEY))); }
+  try { return normalizeDelivery(JSON.parse(storage.getItem(companyStorageKey(DELIVERY_STORAGE_KEY)))); }
   catch { return null; }
 }
 
 export function writeDelivery(value, storage) {
   const normalized = normalizeDelivery(value);
   if (!normalized) return false;
-  try { storage.setItem(DELIVERY_STORAGE_KEY, JSON.stringify(normalized)); return true; }
+  try { storage.setItem(companyStorageKey(DELIVERY_STORAGE_KEY), JSON.stringify(normalized)); return true; }
   catch { return false; }
 }

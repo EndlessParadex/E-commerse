@@ -1,5 +1,6 @@
 const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 100;
 const validTime = (time) => Number.isFinite(time) && Math.abs(time) <= 8.64e15;
+import { companySnapshot } from '../data/companyStore.js';
 export const shortOrderId = (id) => String(id).replace(/^BAM-/i, '').slice(-8).toUpperCase();
 
 export const notificationKinds = {
@@ -19,7 +20,7 @@ export function notificationMessage(kind, orderId) {
     orderCreated: `Pesanan ${number} berhasil dibuat. Lihat detail pesanan Anda.`,
     orderCancelled: 'Pesanan telah dibatalkan. Lihat detail untuk informasi pembatalan.',
     orderShipped: `Pesanan ${number} telah dikirim. Lihat kurir dan nomor resi pada detail pesanan.`,
-    orderCompleted: `Pesanan ${number} telah selesai. Terima kasih sudah berbelanja di BAM.`,
+    orderCompleted: `Pesanan ${number} telah selesai. Terima kasih sudah berbelanja di ${companySnapshot().profile.shortName}.`,
     paymentReceived: `Pembayaran pesanan ${number} tercatat. Pesanan sedang diproses.`,
     paymentFailed: `Pembayaran pesanan ${number} belum berhasil. Buka detail pesanan untuk mencoba kembali.`,
     paymentExpired: `Batas pembayaran pesanan ${number} telah berakhir. Silakan buat pesanan baru jika ingin melanjutkan belanja.`,

@@ -1,3 +1,4 @@
+import useCompany from '../../state/useCompany';
 import { useState } from 'react';
 import { productGallery } from '../../data/productGallery';
 import ProductImage from './ProductImage';
@@ -6,10 +7,11 @@ import { productColorStyle } from '../../data/catalogColors';
 import { purchaseProductName } from '../../data/packagingPresentation';
 
 function GalleryMedia({ product, entry, thumbnail = false }) {
+  const { profile: companyProfile } = useCompany();
   if (!entry.demo) return <ProductImage product={{ ...product, image: entry.src, imageAlt: entry.alt }} variant={thumbnail ? 'thumbnail' : 'detail'} loading={thumbnail ? 'lazy' : 'eager'} />;
   return <div className={`gallery-demo gallery-demo--${entry.view}${thumbnail ? ' gallery-demo--thumbnail' : ''}`} aria-hidden="true">
     <div className="gallery-demo-package">
-      {entry.view === 'back' ? <><span className="gallery-demo-brand">BAM</span><div className="gallery-demo-lines"><i /><i /><i /></div><div className="gallery-demo-barcode" /></> : <><span className="gallery-demo-icon">{product.icon || '📦'}</span>{!thumbnail && <span className="gallery-demo-name">{product.baseName}</span>}</>}
+      {entry.view === 'back' ? <><span className="gallery-demo-brand">{companyProfile.shortName}</span><div className="gallery-demo-lines"><i /><i /><i /></div><div className="gallery-demo-barcode" /></> : <><span className="gallery-demo-icon">{product.icon || '📦'}</span>{!thumbnail && <span className="gallery-demo-name">{product.baseName}</span>}</>}
       <span className="gallery-demo-size">{product.sizeLabel}</span>
     </div>
   </div>;

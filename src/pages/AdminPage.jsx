@@ -1,3 +1,4 @@
+import useCompany from '../state/useCompany';
 import { useRef, useState } from 'react';
 import { suppliers } from '../data/suppliers';
 import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCatalog';
@@ -5,13 +6,15 @@ import { rupiah } from '../components/shop/shopPresentation';
 import ProductImage from '../components/shop/ProductImage';
 import './AdminPage.css';
 import AdminProductForm from './AdminProductForm';
-import { catalogLoadError, catalogUsesServer, pendingLocalImport, importLocalCatalog, deleteProduct } from '../data/adminStore';
+import { catalogLoadError, catalogUsesServer, workflowUsesServer, pendingLocalImport, importLocalCatalog, deleteProduct } from '../data/adminStore';
 import { brands as managedBrands } from '../data/catalogMasters';
 import AdminMasterPage from './AdminMasterPage';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { packagingLabel } from '../data/productPackaging';
 import { productColorStyle, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
 import AdminOrdersPage from './AdminOrdersPage';
+import AdminCompanyPage from './AdminCompanyPage';
+import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
 import { approveNextRoute } from '../state/routeGuards';
 
@@ -27,6 +30,7 @@ function ProductIdentity({ product }) {
 }
 
 export default function AdminPage({ view = 'overview' }) {
+  const { profile: companyProfile } = useCompany();
   const [query, setQuery] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
@@ -65,7 +69,7 @@ export default function AdminPage({ view = 'overview' }) {
   const isProducts = view === 'products';
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
   const workflowView = view === 'orders' || view === 'stock';
-  const pageTitle = { overview: 'Ringkasan katalog', products: 'Daftar produk', suppliers: 'PT pemasok', brands: 'Merek', categories: 'Kategori & subkategori', orders: 'Pesanan toko', stock: 'Stok produk' }[view];
+  const pageTitle = { overview: 'Ringkasan katalog', products: 'Daftar produk', suppliers: 'PT pemasok', brands: 'Merek', categories: 'Kategori & subkategori', orders: 'Pesanan toko', stock: 'Stok produk', company: 'Pengaturan perusahaan' }[view];
   // The form's capture listener confirms unsaved changes before this handler runs.
   // Close explicitly even when the selected link points to the current hash.
   const leaveEditor = () => { setEditor(null); setMenuOpen(false); };
@@ -81,7 +85,7 @@ export default function AdminPage({ view = 'overview' }) {
 
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <a className="admin-logo" href="#/admin" aria-label="Dashboard admin BAM" onClick={leaveEditor}>BAM<span>.</span><small>Ruang admin</small></a>
+      <a className="admin-logo" href="#/admin" aria-label={`Dashboard admin ${companyProfile.shortName}`} onClick={leaveEditor}><CompanyBrand /><small>Ruang admin</small></a>
       <button className="admin-menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="admin-navigation" onClick={() => setMenuOpen(!menuOpen)}>Menu admin <span aria-hidden="true">{menuOpen ? '−' : '+'}</span></button>
       <nav id="admin-navigation" className={'admin-navigation' + (menuOpen ? ' is-open' : '')} aria-label="Navigasi admin">
         <a href="#/admin" aria-current={view === 'overview' ? 'page' : undefined} onClick={leaveEditor}><span aria-hidden="true">▦</span>Ringkasan</a>
@@ -91,19 +95,21 @@ export default function AdminPage({ view = 'overview' }) {
         <a href="#/admin/pemasok" aria-current={view === 'suppliers' ? 'page' : undefined} onClick={leaveEditor}><span aria-hidden="true">▣</span>PT pemasok</a>
         <a href="#/admin/merek" aria-current={view === 'brands' ? 'page' : undefined} onClick={leaveEditor}><span aria-hidden="true">◇</span>Merek</a>
         <a href="#/admin/kategori" aria-current={view === 'categories' ? 'page' : undefined} onClick={leaveEditor}><span aria-hidden="true">≡</span>Kategori</a>
+        <a href="#/admin/perusahaan" aria-current={view === 'company' ? 'page' : undefined} onClick={leaveEditor}><span aria-hidden="true">⚙</span>Pengaturan perusahaan</a>
         <a className="admin-store-link" href="#/" onClick={leaveEditor}><span aria-hidden="true">↗</span>Lihat toko</a>
       </nav>
-      <p className="admin-sidebar-caption">CV. Belitung Arta Mandiri</p>
+      <p className="admin-sidebar-caption">{companyProfile.legalName}</p>
     </aside>
     <div className="admin-content">
-      <header className="admin-header"><div><span className="admin-eyebrow">BAM · Pengelolaan katalog</span><h1>{pageTitle}</h1><p>{workflowView ? 'Kelola alur pesanan dan persediaan pada pratinjau frontend.' : isProducts ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.' : 'Gambaran produk dan pemasok dalam katalog BAM.'}</p></div><span className="admin-demo-badge">{workflowView ? 'Pratinjau · Simulasi' : catalogUsesServer ? 'Katalog · Database' : 'Pratinjau · Data dummy'}</span></header>
-      <p className="admin-preview-notice">{workflowView ? 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.' : catalogUsesServer ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.' : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}</p>
+      <header className="admin-header"><div><span className="admin-eyebrow">{companyProfile.shortName} · Pengelolaan katalog</span><h1>{pageTitle}</h1><p>{workflowView ? workflowUsesServer ? 'Kelola pesanan dan persediaan yang tersimpan di database.' : 'Kelola alur pesanan dan persediaan pada pratinjau frontend.' : isProducts ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.' : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`}</p></div><span className="admin-demo-badge">{workflowView ? workflowUsesServer ? 'Pesanan & stok · Database' : 'Pratinjau · Simulasi' : catalogUsesServer ? 'Katalog · Database' : 'Pratinjau · Data dummy'}</span></header>
+      <p className="admin-preview-notice">{workflowView ? workflowUsesServer ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.' : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.' : catalogUsesServer ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.' : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}</p>
       {pendingLocalImport && view === 'overview' && !editor && <section className="admin-next"><h2>Data pratinjau sebelumnya ditemukan</h2><p>Database masih berisi katalog awal. Anda dapat mengimpor katalog dari browser ini, termasuk foto dan produk uji. Salinan di browser tetap tersimpan.</p><button className="admin-primary" type="button" disabled={importing} onClick={importPreview}>{importing ? 'Mengimpor…' : 'Impor katalog dari browser'}</button></section>}
       {importError && <p className="admin-form-alert" role="alert">{importError}</p>}
       {deleteError && <p className="admin-form-alert" role="alert">{deleteError}</p>}
       {catalogLoadError && <p className="admin-form-alert" role="alert">{catalogLoadError}</p>}
       {notice && <p className="admin-save-notice" role="status">✓ {notice}</p>}
-      {editor ? <AdminProductForm key={editor.groupId || 'new'} groupId={editor.groupId} onNavigate={leaveEditor} onClose={() => { leaveEditor(); window.location.hash = '/admin/produk'; }} onSaved={finishEdit} /> : view === 'orders' ? <AdminOrdersPage /> : view === 'stock' ? <AdminStockPage /> : masterType ? <AdminMasterPage key={masterType} type={masterType} /> : !isProducts ? <>
+      {editor ? <AdminProductForm key={editor.groupId || 'new'} groupId={editor.groupId} onNavigate={leaveEditor} onClose={() => { leaveEditor(); window.location.hash = '/admin/produk'; }} onSaved={finishEdit} /> : view === 'company' ? <AdminCompanyPage /> : view === 'orders' ? <AdminOrdersPage /> : view === 'stock' ? <AdminStockPage /> : masterType ? <AdminMasterPage key={masterType} type={masterType} /> : !isProducts ? <>
+        {!adminProducts.length && <section className="admin-next company-onboarding"><h2>Siapkan katalog perusahaan Anda</h2><p>Mulai dari identitas toko, lalu tambahkan data milik perusahaan.</p><ol><li><a href="#/admin/perusahaan">Isi identitas dan kontak perusahaan</a></li><li><a href="#/admin/pemasok">Tambahkan PT pemasok</a></li><li><a href="#/admin/kategori">Tambahkan kategori dan subkategori</a></li><li><a href="#/admin/merek">Tambahkan merek dan hubungkan ke pemasok</a></li><li><a href="#/admin/produk">Tambahkan produk, foto, ukuran, dan harga</a></li></ol><p>{workflowUsesServer ? 'Stok awal perusahaan adalah 0. Isi stok sebelum menerima pesanan.' : 'Stok dan pesanan masih simulasi. Stok awal pada instalasi perusahaan adalah 0.'}</p></section>}
         <section className="admin-metrics" aria-label="Ringkasan katalog">{metrics.map((metric) => <article className="admin-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><p>{metric.hint}</p></article>)}</section>
         <section className="admin-panel"><div className="admin-panel-heading"><div><h2>PT pemasok</h2><p>Sebaran produk utama dan varian pada setiap pemasok.</p></div><a className="admin-primary" href="#/admin/pemasok">Kelola PT pemasok →</a></div><div className="admin-suppliers">{suppliers.map((supplier) => { const items = adminProducts.filter((product) => product.supplier?.id === supplier.id); return <article className="admin-supplier" key={supplier.id} style={supplierColorStyle(supplier.color)}><span className="admin-supplier-avatar" style={avatarColorStyle(supplier.color)} aria-hidden="true">{supplier.initials}</span><div><h3>{supplier.name}</h3><p>{new Set(items.map((product) => product.groupId)).size} produk utama · {items.length} varian produk</p></div></article>; })}</div></section>
         <section className="admin-next"><h2>Kelola katalog produk</h2><p>Tambahkan produk baru atau perbarui foto, informasi, dan harga setiap ukuran.</p><button type="button" className="admin-primary" disabled={Boolean(deleting || importing)} onClick={() => startEdit()}>+ Tambah produk</button></section>

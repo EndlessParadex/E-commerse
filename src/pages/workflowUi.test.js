@@ -6,13 +6,15 @@ import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 
 test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa, akses, dan halaman error', async () => {
-  const api = createApp({ dbPath: ':memory:' }); const seed = JSON.parse(JSON.stringify(api.catalog.snapshot())); api.db.close();
+  const api = createApp({ dbPath: ':memory:' }); api.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+ const seed = JSON.parse(JSON.stringify(api.catalog.snapshot())); api.db.close();
   const group = seed.edits.find((entry) => entry.groupId === 'snack-pedas');
   const stockPhoto = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
   group.gallery = [{ src: stockPhoto, alt: 'Foto utama Balado' }];
   group.variants.find((entry) => entry.sizeValue === '62').gallery = [];
   const original = group.variants.find((entry) => entry.id === 'snack-pedas');
   group.variants.push({ ...original, id: 'QA-PACK', packagingType: 'pack', unitsPerPackage: '6', price: '90000', oldPrice: '' });
+  group.variants.push({ ...original, id: 'QA-PACK-10', packagingType: 'pack', unitsPerPackage: '10', price: '150000', oldPrice: '' });
   group.variants.push({ ...original, id: 'QA-DUS', packagingType: 'dus', unitsPerPackage: '24', packsPerBox: '4', price: '350000', oldPrice: '' });
   group.variants.push({ ...original, id: 'QA-DUS-PLAIN', packagingType: 'dus', unitsPerPackage: '40', packsPerBox: '', price: '500000', oldPrice: '' });
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
@@ -48,7 +50,7 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     assert.match(container.querySelector('h1').textContent, /belum dapat dimuat/);
     catalogFailed = false; await click(button('Coba lagi')); assert.ok(stockCard());
     assert.equal(stockCard().querySelector('.workflow-stock-photo img').src, stockPhoto);
-    const packagingRow = (sku) => [...stockCard().querySelectorAll(':scope > ul > li')].find((row) => row.querySelector('small').textContent === sku);
+    const packagingRow = (sku) => [...stockCard().querySelectorAll('.workflow-stock-packages > li')].find((row) => row.querySelector('small').textContent === sku);
     assert.equal(packagingRow('snack-pedas').querySelector('.workflow-stock-package-count').textContent, '120 satuan');
     assert.equal(packagingRow('QA-PACK').querySelector('.workflow-stock-package-count').textContent, '20 pack');
     assert.equal(packagingRow('QA-DUS').querySelector('.workflow-stock-package-count').textContent, '5 dus');
@@ -57,6 +59,15 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     assert.equal(packagingRow('QA-DUS').querySelector('strong').textContent, 'Dus (24)');
     assert.equal(packagingRow('QA-DUS-PLAIN').querySelector('strong').textContent, 'Dus (40)');
     assert.equal(packagingRow('QA-DUS-PLAIN').querySelector('.workflow-stock-package-count').textContent, '3 dus');
+    const breakdownCounts = () => [...stockCard().querySelectorAll('.workflow-stock-stat dd > strong')].map((element) => element.textContent);
+    assert.deepEqual(breakdownCounts(), ['3', '0', '0']);
+    await click(stockCard().querySelector('button')); await fill('#stock-available', '119'); await click(button('Simpan stok'));
+    assert.deepEqual(breakdownCounts(), ['2', '3', '9'], 'summary divides shared stock, instead of showing three independent balances');
+    assert.match(stockCard().querySelector('.workflow-stock-amount').textContent, /119/);
+    assert.equal(packagingRow('QA-PACK-10').querySelector('.workflow-stock-package-count').textContent, '11 pack', 'sale capacity is different from remaining packs in the breakdown');
+    assert.equal(packagingRow('QA-DUS-PLAIN').querySelector('.workflow-stock-package-count').textContent, '2 dus');
+    assert.equal(packagingRow('snack-pedas').querySelector('.workflow-stock-package-count').textContent, '119 satuan');
+    await click(stockCard().querySelector('button')); await fill('#stock-available', '120'); await click(button('Simpan stok'));
     const noPhotoCard = [...container.querySelectorAll('.workflow-stock-card')].find((card) => /Keripik Singkong Balado/.test(card.textContent) && /62g per satuan/.test(card.textContent));
     assert.ok(!noPhotoCard.querySelector('.workflow-stock-photo img'), 'missing size photo never borrows a different size photo');
     assert.ok(noPhotoCard.querySelector('.bam-product-fallback'));
@@ -65,10 +76,12 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     assert.equal(stockCard().querySelector('.workflow-stock-photo img').src, stockPhoto);
     await fill('#admin-stock-search', '');
     await click(stockCard().querySelector('button'));
-    assert.equal(container.querySelector('.workflow-stock-dialog-product img').src, stockPhoto);
+    assert.equal(container.querySelector('#stock-available').closest('.workflow-stock-card').querySelector('.workflow-stock-photo img').src, stockPhoto);
+    assert.equal(container.querySelector('dialog'), null, 'stok diubah langsung pada baris produk');
     await fill('#stock-available', '10'); await click(button('Simpan stok'));
     assert.equal(packagingRow('QA-PACK').querySelector('.workflow-stock-package-count').textContent, '1 pack');
     assert.equal(packagingRow('QA-DUS').querySelector('.workflow-stock-package-count').textContent, '0 dus');
+    assert.deepEqual(breakdownCounts(), ['0', '1', '0']);
     await navigate('/produk/QA-PACK'); assert.match(container.querySelector('.detail-stock').textContent, /1 pack/);
     assert.equal(container.querySelector('button[aria-label="Tambah jumlah"]').disabled, true);
     await click(button('Beli sekarang'));

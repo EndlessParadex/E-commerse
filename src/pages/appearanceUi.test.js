@@ -5,7 +5,7 @@ import { Window } from 'happy-dom';
 import { createServer } from 'vite';
 import { act, createElement, StrictMode } from 'react';
 import postcss from 'postcss';
-import { appearanceStorageKey } from '../state/appearanceModel.js';
+import { appearanceAccents, appearanceBackgrounds, appearanceTextSizes, appearanceStorageKey, defaultAppearance } from '../state/appearanceModel.js';
 
 test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergantian akun, reset, dan form alamat tetap terjaga', async () => {
   const dom = new Window({ url: 'http://localhost/#/akun' });
@@ -17,6 +17,7 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
   dom.matchMedia = () => media;
   const page = dom.document.documentElement;
   page.setAttribute('data-theme', 'previous-theme'); page.setAttribute('data-background', 'previous-background');
+  page.setAttribute('data-text-size', 'previous-size'); page.setAttribute('data-accent', 'previous-accent');
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
   const [{ default: AppearanceProvider }, { default: AccountPage }, { DeliveryContext }] = await Promise.all(['/src/state/AppearanceProvider.jsx', '/src/pages/AccountPage.jsx', '/src/state/useDelivery.js'].map((path) => server.ssrLoadModule(path)));
   const { createRoot } = await import('react-dom/client');
@@ -30,10 +31,12 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
   const choose = async (name, value) => { await openTab('appearance'); await act(async () => { const radio = container.querySelector(`input[name="${name}"][value="${value}"]`); assert.ok(radio); radio.click(); await settle(); assert.equal(radio.checked, true); }); };
   const changedSystem = (dark) => act(async () => { media.matches = dark; listeners.forEach((listener) => listener()); await settle(); });
   const current = () => ({ mode: page.getAttribute('data-theme'), background: page.getAttribute('data-background') });
+  const details = () => ({ textSize: page.getAttribute('data-text-size'), accent: page.getAttribute('data-accent') });
   const saved = (owner) => JSON.parse(dom.localStorage.getItem(appearanceStorageKey(owner)));
   try {
     await render();
     assert.deepEqual(current(), { mode: 'light', background: 'default' });
+    assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' });
     assert.equal(container.querySelector('.account-page-avatar').textContent, 'A');
     assert.equal(container.querySelector('.account-avatar-large').textContent, 'A');
     assert.equal(container.querySelector('#account-tab-profile').getAttribute('aria-selected'), 'true');
@@ -47,14 +50,21 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       assert.equal(container.querySelector(`#account-panel-${id}`).hidden, false);
     }
     assert.equal(container.querySelector('input[type="file"]'), null, 'the profile remains a plain initial');
-    assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 2);
+    assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 4);
+    await choose('appearance-text-size', 'large');
+    assert.equal(details().textSize, 'large'); assert.equal(container.querySelector('.appearance-reset').disabled, false);
+    await act(async () => { container.querySelector('.appearance-reset').click(); await settle(); });
+    assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' });
     assert.ok(container.querySelector('input[value="dark"]').closest('label').textContent.includes('Gelap'));
     await openTab('address');
     const address = container.querySelector('#account-address');
     await act(async () => { const setter = Object.getOwnPropertyDescriptor(dom.HTMLTextAreaElement.prototype, 'value').set; setter.call(address, 'Alamat baru belum disimpan'); address.dispatchEvent(new dom.Event('input', { bubbles: true })); await settle(); });
     await choose('appearance-mode', 'dark'); await choose('appearance-background', 'lavender');
+    await choose('appearance-text-size', 'xlarge'); await choose('appearance-accent', 'violet');
     assert.deepEqual(current(), { mode: 'dark', background: 'lavender' });
-    assert.deepEqual(saved('user:first'), { mode: 'dark', background: 'lavender' });
+    assert.deepEqual(details(), { textSize: 'xlarge', accent: 'violet' });
+    assert.ok(container.querySelector('.appearance-preview-stock'));
+    assert.deepEqual(saved('user:first'), { ...defaultAppearance, mode: 'dark', background: 'lavender', textSize: 'xlarge', accent: 'violet' });
     assert.equal(address.value, 'Alamat baru belum disimpan'); assert.equal(saves, 0);
     assert.ok(container.querySelector('#account-tab-address .account-draft-dot'));
     await openTab('profile'); await openTab('address');
@@ -75,29 +85,35 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     await choose('appearance-mode', 'dark');
     await act(async () => root.unmount());
     assert.deepEqual(current(), { mode: 'previous-theme', background: 'previous-background' });
+    assert.deepEqual(details(), { textSize: 'previous-size', accent: 'previous-accent' });
     assert.equal(listeners.size, 0);
     root = createRoot(container); await render();
     assert.deepEqual(current(), { mode: 'dark', background: 'lavender' }, 'saved choice survives a remount');
+    assert.deepEqual(details(), { textSize: 'xlarge', accent: 'violet' });
     assert.equal(container.querySelector('#account-address').value, 'Alamat pertama');
 
     user = { id: 'second', name: 'Budi', email: 'second@example.com', address: 'Alamat kedua' }; await render();
     assert.deepEqual(current(), { mode: 'light', background: 'default' });
+    assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' });
     assert.equal(container.querySelector('.appearance-notice'), null);
     await choose('appearance-background', 'mint');
-    assert.deepEqual(saved('user:second'), { mode: 'light', background: 'mint' });
+    assert.deepEqual(saved('user:second'), { ...defaultAppearance, background: 'mint' });
     user = null; await render();
     assert.deepEqual(current(), { mode: 'light', background: 'default' });
     assert.equal(container.querySelector('.appearance-settings'), null);
     user = { id: 'first', name: 'Akun Pertama', email: 'first@example.com', address: 'Alamat pertama' }; await render();
     assert.deepEqual(current(), { mode: 'dark', background: 'lavender' });
+    assert.deepEqual(details(), { textSize: 'xlarge', accent: 'violet' });
     dom.localStorage.setItem(appearanceStorageKey('user:second'), JSON.stringify({ mode: 'dark', background: 'sky' }));
     await act(async () => { dom.dispatchEvent(new dom.StorageEvent('storage', { key: appearanceStorageKey('user:second'), storageArea: dom.localStorage })); await settle(); });
     assert.deepEqual(current(), { mode: 'dark', background: 'lavender' }, 'another account cannot change the current appearance');
     dom.localStorage.setItem(appearanceStorageKey('user:first'), JSON.stringify({ mode: 'system', background: 'sky' }));
     await act(async () => { dom.dispatchEvent(new dom.StorageEvent('storage', { key: appearanceStorageKey('user:first'), storageArea: dom.localStorage })); await settle(); });
     assert.deepEqual(current(), { mode: 'dark', background: 'sky' }, 'a same-account change in another tab is applied');
+    assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' }, 'legacy preferences from another tab use safe defaults');
     await act(async () => { container.querySelector('.appearance-reset').click(); await settle(); });
     assert.deepEqual(current(), { mode: 'light', background: 'default' });
+    assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' });
     assert.deepEqual(saved('user:second'), { mode: 'dark', background: 'sky' }, 'reset affects only this account');
     assert.equal(container.querySelector('.appearance-reset').disabled, true);
 
@@ -106,7 +122,7 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     await choose('appearance-mode', 'dark');
     assert.equal(current().mode, 'dark');
     assert.match(container.querySelector('.appearance-notice').textContent, /belum tersimpan/);
-    assert.deepEqual(JSON.parse(storage.getItem(appearanceStorageKey('user:first'))), { mode: 'light', background: 'default' });
+    assert.deepEqual(JSON.parse(storage.getItem(appearanceStorageKey('user:first'))), defaultAppearance);
     Object.defineProperty(dom, 'localStorage', { configurable: true, value: storage });
   } finally {
     await act(async () => root.unmount()); await server.close(); dom.happyDOM.abort();
@@ -125,4 +141,41 @@ test('tema gelap: teks utama, pendukung, tautan dan status tetap kontras pada la
     for (const name of ['--color-text', '--color-text-muted', '--color-text-secondary', '--color-link', '--color-info-text']) assert.ok(contrast(resolve(name), background) >= 4.5, `${name} on ${background} must remain legible`);
   }
   for (const status of ['info', 'notice', 'success', 'warning', 'danger']) assert.ok(contrast(resolve(`--color-${status}-text`), resolve(`--color-${status}-soft`)) >= 4.5, `${status} status must remain legible`);
+});
+
+test('seluruh warna aksen dan ukuran teks menjaga kontras stok, pilihan pengaturan, tautan, dan tombol utama', async () => {
+  const dom = new Window({ width: 375, height: 812 });
+  const styles = dom.document.createElement('style');
+  styles.textContent = (await Promise.all(['../styles/themes.css', '../styles/preferences.css', '../styles/workflow.css', '../components/shop/ShopActions.css', '../components/shop/ProductDetailPage.css', './CheckoutPage.css', './AdminPage.css', '../components/account/AppearanceSettings.css', '../styles/global.css'].map(file => readFile(new URL(file, import.meta.url), 'utf8')))).join('\n');
+  // Happy DOM caches ancestor rem measurements; verify the scalable declaration
+  // together with the changing root size instead of treating it as browser layout.
+  const parsed = postcss.parse(styles.textContent);
+  for (const selector of ['.workflow-stock-packaging-label', '.workflow-stock-package-count']) {
+    const rule = parsed.nodes.find(node => node.type === 'rule' && node.selector === selector);
+    assert.equal(rule.nodes.find(node => node.prop === 'font-size').value, '1.125rem');
+  }
+  dom.document.head.append(styles);
+  dom.document.body.innerHTML = '<div class="workflow-stock-card"><strong class="workflow-stock-packaging-label">Pack (10)</strong><strong class="workflow-stock-package-count">11 pack</strong><div class="workflow-stock-stat"><dt>Dus</dt><dd><strong>2</strong><small>Isi 40 satuan</small></dd></div></div><label class="appearance-option"><input type="radio" checked><small>Lebih besar 30%</small></label><a class="shop-primary">Checkout</a><button class="checkout-submit">Buat pesanan</button><button class="detail-buy">Beli sekarang</button><button class="admin-primary">Simpan</button><a class="appearance-preview-label">Pratinjau</a>';
+  const get = selector => dom.getComputedStyle(dom.document.querySelector(selector));
+  const luminance = color => {
+    color = color === 'white' ? '#ffffff' : color;
+    return color.slice(1, 7).match(/../g).map(value => parseInt(value, 16) / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+  };
+  const ratio = (a, b) => { const levels = [luminance(a), luminance(b)].sort((a, b) => b - a); return (levels[0] + .05) / (levels[1] + .05); };
+  try {
+    for (const mode of ['light', 'dark']) for (const background of appearanceBackgrounds) for (const accent of appearanceAccents) for (const size of appearanceTextSizes) {
+      Object.assign(dom.document.documentElement.dataset, { theme: mode, background: background.id, accent: accent.id, textSize: size.id });
+      const context = `${mode}/${background.id}/${accent.id}/${size.id}`;
+      assert.ok(Math.abs(parseFloat(dom.getComputedStyle(dom.document.documentElement).fontSize) - 16 * size.scale) < .001, context);
+      for (const selector of ['.shop-primary', '.checkout-submit', '.detail-buy', '.admin-primary']) {
+        assert.equal(get(selector).backgroundColor, accent.light, `${context} ${selector} uses the chosen solid accent`);
+        assert.ok(ratio(get(selector).color, get(selector).backgroundColor) >= 4.5, `${context} ${selector} remains readable`);
+      }
+      const backgroundColor = get('.workflow-stock-card').backgroundColor;
+      for (const selector of ['.workflow-stock-packaging-label', '.workflow-stock-package-count']) assert.ok(ratio(get(selector).color, backgroundColor) >= 4.5, `${context}: stock labels`);
+      const statBackground = get('.workflow-stock-stat').backgroundColor;
+      for (const selector of ['.workflow-stock-stat dt', '.workflow-stock-stat dd strong', '.workflow-stock-stat dd small']) assert.ok(ratio(get(selector).color, statBackground) >= 4.5, `${context}: breakdown`);
+      assert.ok(ratio(get('.appearance-option small').color, get('.appearance-option').backgroundColor) >= 4.5, `${context}: selected setting description`);
+    }
+  } finally { dom.happyDOM.abort(); }
 });

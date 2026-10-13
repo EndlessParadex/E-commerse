@@ -1,13 +1,16 @@
+import useCompany from '../../state/useCompany';
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import './Navbar.css';
 import ShopActions from '../shop/ShopActions';
 import { useDelivery } from '../../state/useDelivery';
 import { normalizeDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
+import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
 import { productVariants } from '../../data/products';
 
 const Navbar = () => {
+  const { profile: companyProfile } = useCompany();
   const navigationRef = useRef(null);
   useLayoutEffect(() => {
     const navigation = navigationRef.current;
@@ -124,9 +127,9 @@ const Navbar = () => {
 
           {/* Kiri: Logo */}
           <div className="navbar-left">
-            <a className="navbar-logo" href="#/" aria-label="BAM. Beranda">
+            <a className="navbar-logo" href="#/" aria-label={`${companyProfile.shortName}. Beranda`}>
               <span id="logo-text">
-                BAM<span className="logo-accent">.</span>
+                <CompanyBrand />
               </span>
             </a>
           </div>
@@ -160,7 +163,7 @@ const Navbar = () => {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               onFocus={() => setShowSearchSuggestions(true)}
-              placeholder="Cari di BAM."
+              placeholder={`Cari di ${companyProfile.shortName}.`}
               aria-label="Cari produk"
               onKeyDown={(event) => { if (event.key === 'Escape') setShowSearchSuggestions(false); }}
             />
@@ -256,7 +259,7 @@ const Navbar = () => {
           <div className="secondary-nav-right">
             <a className="navbar-orders-link" href="#/pesanan">Pesanan saya</a>
 
-            <a className="navbar-about-link" href="#/tentang">Tentang BAM</a>
+            <a className="navbar-about-link" href="#/tentang">Tentang {companyProfile.shortName}</a>
 
           </div>
 

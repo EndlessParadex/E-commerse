@@ -14,7 +14,8 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
   style.textContent = (await Promise.all(['../styles/themes.css', './AdminPage.css', '../components/shop/ProductGallery.css'].map((path) => readFile(new URL(path, import.meta.url), 'utf8')))).join('\n');
   dom.document.head.append(style);
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
-  const api = createApp({ dbPath: ':memory:' });
+  const api = createApp({ dbPath: ':memory:' }); api.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+
   const [{ default: Form }, { default: Gallery }, store, catalog] = await Promise.all(['/src/pages/AdminProductForm.jsx', '/src/components/shop/ProductGallery.jsx', '/src/data/adminStore.js', '/src/data/products.js'].map((path) => server.ssrLoadModule(path)));
   globalThis.window = dom; globalThis.document = dom.document; globalThis.HTMLElement = dom.HTMLElement;
   Object.defineProperty(globalThis, 'navigator', { value: dom.navigator, configurable: true });

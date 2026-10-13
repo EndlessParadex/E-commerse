@@ -80,7 +80,8 @@ test('beranda: kategori admin menghitung produk, foto tetap dalam kategori/SKU, 
 });
 
 test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba lagi, dan sukses menampilkan beranda', async () => {
-  const api = createApp({ dbPath: ':memory:' }); const seed = api.catalog.snapshot(); api.db.close();
+  const api = createApp({ dbPath: ':memory:' }); api.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+ const seed = api.catalog.snapshot(); api.db.close();
   const dom = useDOM(); const previousFetch = globalThis.fetch; const server = await makeServer();
   const pending = []; let requests = 0;
   globalThis.fetch = async (url) => {

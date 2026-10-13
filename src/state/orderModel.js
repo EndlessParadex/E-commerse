@@ -1,3 +1,4 @@
+import { companyStorageKey } from '../data/companyStore.js';
 import { normalizeWhatsApp } from './whatsappModel.js';
 import { cartItemPresentation } from '../data/cartItemPresentation.js';
 import { snapshotImage } from '../data/productSnapshot.js';
@@ -77,7 +78,7 @@ export function cancelOrder(id, reason, storage) {
     if (blocked) return { error: blocked };
     const cancelledAt = Date.now();
     const cancelled = withNotificationEvent({ ...existing, status: 'cancelled', cancelledAt, cancellationReason: String(reason || 'Berubah pikiran').trim().slice(0, 200), payment: { ...existing.payment, status: 'cancelled' } }, 'orderCancelled', cancelledAt);
-    storage.setItem(ORDER_HISTORY_KEY, JSON.stringify(orders.map((order) => order.id === id ? cancelled : order)));
+    storage.setItem(companyStorageKey(ORDER_HISTORY_KEY), JSON.stringify(orders.map((order) => order.id === id ? cancelled : order)));
     notifyWorkflow();
     return { order: cancelled };
   } catch { return { error: 'Pembatalan belum tersimpan. Penyimpanan browser tidak tersedia atau penuh. Coba lagi.' }; }
@@ -87,7 +88,7 @@ export function saveOrder(order, storage) {
   try {
     if (!validOrder(order)) return false;
     const orders = readOrders(storage).filter((entry) => entry.id !== order.id);
-    storage.setItem(ORDER_HISTORY_KEY, JSON.stringify([order, ...orders]));
+    storage.setItem(companyStorageKey(ORDER_HISTORY_KEY), JSON.stringify([order, ...orders]));
     notifyWorkflow();
     return true;
   } catch {
@@ -103,7 +104,7 @@ export function readOrder(id, storage) {
   }
 }
 
-const validOrder = (order) => order && typeof order.id === 'string' && order.id.length > 0
+export const validOrder = (order) => order && typeof order.id === 'string' && order.id.length > 0
   && Number.isFinite(order.createdAt) && Math.abs(order.createdAt) <= 8.64e15
   && typeof order.recipient === 'string' && typeof order.address === 'string'
   && (order.status === undefined || ['awaiting_payment', 'processing', 'shipped', 'completed', 'cancelled', 'expired'].includes(order.status))
@@ -127,8 +128,8 @@ function parseStored(value) {
 // Import the legacy last order until the first history is saved.
 // Storage errors propagate to prevent checkout from overwriting unreadable history.
 export function readOrders(storage, now = Date.now()) {
-  const history = storage.getItem(ORDER_HISTORY_KEY);
-  const value = history === null ? [parseStored(storage.getItem(ORDER_STORAGE_KEY))] : parseStored(history);
+  const history = storage.getItem(companyStorageKey(ORDER_HISTORY_KEY));
+  const value = history === null ? [parseStored(storage.getItem(companyStorageKey(ORDER_STORAGE_KEY)))] : parseStored(history);
   const seen = new Set();
   return (Array.isArray(value) ? value : []).filter((order) => {
     if (!validOrder(order) || seen.has(order.id)) return false;

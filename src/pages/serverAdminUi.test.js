@@ -6,7 +6,8 @@ import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 
 test('akses admin dan form server: selama menyimpan terkunci; kegagalan mempertahankan isian', async () => {
-  const app = createApp({ dbPath: ':memory:' }); const seed = JSON.parse(JSON.stringify(app.catalog.snapshot())); app.db.close();
+  const app = createApp({ dbPath: ':memory:' }); app.catalog.workflowEnabled = false; // Exercise compatibility with the earlier catalog-only API.
+ const seed = JSON.parse(JSON.stringify(app.catalog.snapshot())); app.db.close();
   const server = await createServer({ configFile: false, resolve: { preserveSymlinks: true }, oxc: { jsx: { runtime: 'automatic' } }, optimizeDeps: { noDiscovery: true }, server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] } });
   const modules = await Promise.all(['/src/pages/AdminPage.jsx', '/src/components/account/AdminAccess.jsx', '/src/state/useDelivery.js', '/src/data/adminStore.js'].map((path) => server.ssrLoadModule(path)));
   const [{ default: AdminPage }, { default: AdminAccess }, { DeliveryContext }, store] = modules;

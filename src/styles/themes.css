@@ -41,6 +41,9 @@
   --color-overlay-surface: #ffffffed;
   --color-overlay-soft: #ffffffb3;
   --color-focus: #0284c7;
+  --color-action: #0369a1;
+  --color-action-hover: #075985;
+  --color-on-action: #ffffff;
   --color-admin-background: var(--color-background);
   --color-border-store: #dbe5ef;
   --color-surface-promo: #eff8ff;

@@ -1,10 +1,10 @@
 .account-menu { display: grid; gap: 8px; text-align: left; }
 .account-menu a, .account-menu button { display: grid; gap: 4px; min-height: 60px; min-width: 0; width: 100%; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface); color: var(--color-text); font: inherit; text-align: left; cursor: pointer; }
-.account-menu strong { font-size: 14px; }
-.account-menu small { font-size: 11px; line-height: 1.5; color: var(--color-text-muted); }
+.account-menu strong { font-size: 0.875rem; }
+.account-menu small { font-size: 0.6875rem; line-height: 1.5; color: var(--color-text-muted); }
 .account-menu a:hover, .account-menu button:hover { background: var(--color-surface-hover); border-color: var(--color-border-info-strong); }
 .account-menu a[aria-current="page"] { background: var(--color-notice-soft); border-color: var(--color-border-info-strong); color: var(--color-notice-text); }
 .account-menu button strong { color: var(--color-danger-text); }
 .account-menu button:disabled { opacity: .65; cursor: wait; }
 .account-menu a:focus-visible, .account-menu button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
-.account-menu-error { background: var(--color-danger-soft); color: var(--color-danger-text); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.6; margin-top: 12px; text-align: left; }
+.account-menu-error { background: var(--color-danger-soft); color: var(--color-danger-text); padding: 12px; border-radius: 8px; font-size: 0.8125rem; line-height: 1.6; margin-top: 12px; text-align: left; }

@@ -1,3 +1,4 @@
+import useCompany from '../../state/useCompany';
 import { useEffect, useId, useRef, useState } from 'react';
 import { creatorProfile } from '../../data/creatorProfile';
 import './CreatorProfileDialog.css';
@@ -8,6 +9,7 @@ function outsideDialog(event) {
 }
 
 export default function CreatorProfileDialog({ id, onClose, returnFocusRef }) {
+  const { profile } = useCompany();
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const backdropStart = useRef(false);
@@ -47,10 +49,10 @@ export default function CreatorProfileDialog({ id, onClose, returnFocusRef }) {
           : <img src={creatorProfile.avatar} alt={`Avatar pilihan ${creatorProfile.name}`} loading="eager" decoding="async" onError={() => setAvatarFailed(true)} />}
       </div>
       <div className="creator-profile-copy">
-        <span className="creator-profile-eyebrow">Di balik BAM.</span>
+        <span className="creator-profile-eyebrow">Di balik {profile.shortName}.</span>
         <h2 id={titleId}>{creatorProfile.name}</h2>
-        <p className="creator-profile-role">{creatorProfile.role}</p>
-        <p id={descriptionId} className="creator-profile-message">{creatorProfile.message}</p>
+        <p className="creator-profile-role">{creatorProfile.role.replace('BAM', profile.shortName)}</p>
+        <p id={descriptionId} className="creator-profile-message">{creatorProfile.message.replace('BAM', profile.shortName)}</p>
         <button type="button" className="creator-profile-done" onClick={onClose}>Tutup profil</button>
       </div>
     </div>

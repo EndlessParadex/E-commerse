@@ -1,3 +1,4 @@
+import { applyCompany, validateCompany, companySnapshot, companyStorageKey } from './companyStore.js';
 import { products } from './products.js';
 import { suppliers } from './suppliers.js';
 import { adminProducts } from './adminCatalog.js';
@@ -15,6 +16,7 @@ const originalMasters = clone(masterSnapshot());
 let serverRevision = 0;
 let transport = (...args) => globalThis.fetch(...args);
 export let catalogUsesServer = false;
+export let workflowUsesServer = false;
 export let pendingLocalImport = false;
 let localBackup = null;
 let localChecked = false;
@@ -28,6 +30,7 @@ const refreshAdmin = () => adminProducts.splice(0, adminProducts.length, ...prod
 const announce = () => { revision += 1; listeners.forEach((listener) => listener()); };
 function applyServerCatalog(value) {
   if (value?.version !== 1 || !Number.isSafeInteger(value.revision) || !Array.isArray(value.edits) || !value.masters) throw new Error('Invalid server catalog');
+  if (value.company) validateCompany(value.company);
   const previousProducts = clone(products); const previousSuppliers = clone(suppliers); const previousMasters = masterSnapshot();
   // Rebuild from the original seed so browser preview entries cannot leak into the server catalog.
   try {
@@ -46,15 +49,18 @@ function applyServerCatalog(value) {
     products.splice(0, products.length, ...previousProducts); suppliers.splice(0, suppliers.length, ...previousSuppliers);
     applyMasters(previousMasters); refreshAdmin(); throw error;
   }
+  if (value.company) applyCompany(value.company);
   edits = clone(value.edits); serverRevision = value.revision;
   const variants = value.edits.flatMap((draft) => draft.variants);
   serverSupportsPackaging = value.capabilities?.packaging === true || (variants.length > 0 && variants.every((variant) => Object.hasOwn(variant, 'packagingType') && Object.hasOwn(variant, 'unitsPerPackage')));
   serverSupportsGallery = value.capabilities?.gallery === true;
+  workflowUsesServer = value.capabilities?.workflow === true;
+  refreshAdmin();
   announce();
 }
 const catalogDrafts = () => [...new Set(products.map((product) => product.groupId))].map((groupId) => productDraft(groupId));
 function persistLocal(masters, nextEdits, result, storage) {
-  try { storage.setItem(CATALOG_STORAGE_KEY, JSON.stringify({ version: 2, masters, edits: nextEdits })); }
+  try { storage.setItem(companyStorageKey(CATALOG_STORAGE_KEY), JSON.stringify({ version: 2, masters, edits: nextEdits })); }
   catch { return { storageError: 'Perubahan belum tersimpan. Penyimpanan browser penuh atau tidak tersedia; isian tetap tersedia.' }; }
   applyServerCatalog({ version: 1, revision: serverRevision, masters, edits: nextEdits });
   return result;
@@ -96,7 +102,7 @@ async function loadServerCatalog(request) {
   const response = await transport('/api/catalog', { credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error('Katalog belum dapat dimuat dari server.');
   applyServerCatalog(await response.json());
-  pendingLocalImport = Boolean(localBackup && serverRevision === 0);
+  pendingLocalImport = Boolean(companySnapshot().mode !== 'company' && localBackup && serverRevision === 0);
 }
 async function persistServer(masters, nextEdits, result) {
   if (!serverSupportsGallery && nextEdits.some((draft) => draftProductPhotos(draft).length > 1 || draft.variants.some((variant) => variant.gallery != null))) {
@@ -128,7 +134,7 @@ async function persistServer(masters, nextEdits, result) {
   } catch (error) { return { storageError: error?.name === 'TimeoutError' ? 'Server belum membalas. Hasil penyimpanan perlu diperiksa; salin isian, muat ulang, dan periksa katalog sebelum mengulang penyimpanan.' : 'Perubahan belum dapat dikonfirmasi. Periksa koneksi dan hasil penyimpanan pada katalog sebelum mencoba lagi; isian tetap tersedia.' }; }
 }
 export async function importLocalCatalog() {
-  if (!localBackup || serverRevision !== 0) return { storageError: 'Impor hanya tersedia saat database katalog masih awal.' };
+  if (companySnapshot().mode === 'company' || !localBackup || serverRevision !== 0) return { storageError: 'Impor hanya tersedia saat database katalog masih awal.' };
   return persistServer(localBackup.masters, localBackup.edits, { imported: true });
 }
 function withDraftBrand(snapshot, draft) {
@@ -191,7 +197,7 @@ export function saveMaster(type, draft, storage = globalThis.localStorage) {
 export let catalogLoadError = '';
 if (typeof window !== 'undefined') {
   try {
-    const raw = window.localStorage.getItem(CATALOG_STORAGE_KEY);
+    const raw = window.localStorage.getItem(companyStorageKey(CATALOG_STORAGE_KEY));
     if (raw) {
       const stored = JSON.parse(raw);
       if (![1, 2].includes(stored.version) || !Array.isArray(stored.edits)) throw new Error('Invalid catalog');

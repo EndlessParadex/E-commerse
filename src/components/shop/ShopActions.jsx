@@ -1,3 +1,5 @@
+import { workflowUsesServer } from '../../data/adminStore';
+import useCompany from '../../state/useCompany';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import { useDelivery } from '../../state/useDelivery';
@@ -9,6 +11,7 @@ import './ShopActions.css';
 import './Notifications.css';
 
 export default function ShopActions({ onOpen }) {
+  const { profile: companyProfile } = useCompany();
   const shop = useShop();
   const { user } = useDelivery();
   const [active, setActive] = useState(null);
@@ -92,7 +95,7 @@ export default function ShopActions({ onOpen }) {
             {!isCart && !isAccount && shop.notifications.length > 0 && <div className="preview-notification-toolbar"><button type="button" className="shop-text-button" disabled={shop.unreadCount === 0} onClick={() => shop.dispatch({ type: 'readAll' })}>Tandai semua sudah dibaca</button></div>}
             {isAccount ? <div className="account-preview-body">
               <div className="account-preview-avatar"><ActionIcon account /></div>
-              {user ? <><h3>Halo, {user.name}</h3><p>{user.email}</p></> : <><h3>Selamat datang di BAM.</h3><p>Masuk atau buat akun untuk pengalaman belanja Anda.</p><a className="shop-primary" href="#/login" onClick={close}>Masuk</a><a className="account-secondary" href="#/daftar" onClick={close}>Daftar akun baru</a></>}
+              {user ? <><h3>Halo, {user.name}</h3><p>{user.email}</p></> : <><h3>Selamat datang di {companyProfile.shortName}.</h3><p>Masuk atau buat akun untuk pengalaman belanja Anda.</p><a className="shop-primary" href="#/login" onClick={close}>Masuk</a><a className="account-secondary" href="#/daftar" onClick={close}>Daftar akun baru</a></>}
               <div className="account-preview-menu"><AccountMenu onNavigate={close} /></div>
             </div> : isCart ? <>
               {shop.cart.length === 0 ? <p className="shop-preview-empty">Keranjang masih kosong.</p> : <ul className="shop-preview-list">
@@ -101,7 +104,7 @@ export default function ShopActions({ onOpen }) {
               {shop.cart.length > 4 && <p className="shop-preview-more">+{shop.cart.length - 4} produk lainnya</p>}
               {shop.cart.length > 0 && <div className="shop-preview-total"><span>Subtotal</span><strong>{rupiah(shop.subtotal)}</strong></div>}
             </> : <>
-              <p className="notification-preview-context">Pembaruan pesanan percobaan · Simulasi</p>
+              <p className="notification-preview-context">{workflowUsesServer ? 'Pembaruan pesanan akun Anda' : 'Pembaruan pesanan percobaan · Simulasi'}</p>
               {shop.notifications.length === 0 ? <p className="shop-preview-empty">Belum ada notifikasi.</p> : <ul className="shop-preview-list">
                 {shop.notifications.slice(0, 3).map((item) => <NotificationItem key={item.id} item={item} compact onRead={(id) => shop.dispatch({ type: 'read', id })} onNavigate={close} orderLinkStatus={shop.orderLinkStatus(item.orderId)} />)}
               </ul>}

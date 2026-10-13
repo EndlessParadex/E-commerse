@@ -5,6 +5,8 @@ import { createHash, randomBytes, randomUUID, scrypt as scryptCallback, timingSa
 import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
 import { CatalogRepository, CatalogError } from './catalog.js';
+import { CompanyRepository } from './company.js';
+import { WorkflowRepository } from './workflow.js';
 
 const scrypt = promisify(scryptCallback);
 const digest = (token) => createHash('sha256').update(token).digest('hex');
@@ -38,7 +40,7 @@ async function verifyPassword(password, encoded) {
 }
 const userView = (user) => ({ id: user.id, name: user.name, email: user.email, address: user.address, role: user.role || 'user' });
 
-export function createApp({ dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite', appOrigin = process.env.BAM_APP_ORIGIN || '', secureCookies = process.env.NODE_ENV === 'production' } = {}) {
+export function createApp({ dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite', appOrigin = process.env.BAM_APP_ORIGIN || '', secureCookies = process.env.NODE_ENV === 'production', installMode = process.env.BAM_INSTALL_MODE || 'demo', now = () => Date.now() } = {}) {
   const filename = dbPath === ':memory:' ? dbPath : resolve(dbPath);
   if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);
@@ -46,7 +48,9 @@ export function createApp({ dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, address TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);`);
   if (!db.prepare('PRAGMA table_info(users)').all().some((entry) => entry.name === 'role')) db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
-  const catalog = new CatalogRepository(db); const attempts = new Map();
+  const company = new CompanyRepository(db, installMode);
+  const catalog = new CatalogRepository(db, { seedDemo: company.snapshot().mode === 'demo', companySnapshot: () => company.snapshot() }); const attempts = new Map();
+  const workflow = new WorkflowRepository(db, catalog, company, now); catalog.workflowEnabled = true;
   const token = (req) => req.headers.cookie?.match(/(?:^|;\s*)bam_session=([A-Za-z0-9_-]{43})(?:;|$)/)?.[1];
   const currentUser = (req) => {
     const value = token(req); if (!value) return null;
@@ -69,6 +73,29 @@ export function createApp({ dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite
       const mutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
       if (mutation && !checkOrigin(req)) return sendError(res, 403, 'invalid_origin', { form: 'Permintaan berasal dari situs yang tidak diizinkan.' });
       if (mutation && path !== '/api/auth/logout' && !/^application\/json(?:;|$)/i.test(req.headers['content-type'] || '')) return sendError(res, 415, 'unsupported_media_type');
+      if (req.method === 'GET' && path === '/api/inventory') return json(res, 200, workflow.stock());
+      if (path === '/api/orders' || path.startsWith('/api/orders/') || path === '/api/admin/orders' || path === '/api/admin/inventory' || path === '/api/admin/inventory/import') {
+        const user = currentUser(req); if (!user) return sendError(res, 401, 'unauthorized');
+        if (path.startsWith('/api/admin/') && user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (path === '/api/admin/inventory/import' && req.method === 'POST') return json(res, 200, workflow.importStock(user, await readBody(req, 500000)));
+        if (path === '/api/admin/inventory' && req.method === 'PUT') return json(res, 200, workflow.setStock(user, await readBody(req)));
+        if (req.method === 'GET' && ['/api/orders', '/api/admin/orders'].includes(path)) return json(res, 200, workflow.list(user, { admin: path === '/api/admin/orders', before: new URL(req.url, 'http://bam.local').searchParams.get('before') || '' }));
+        if (req.method === 'POST' && path === '/api/orders') return json(res, 201, { order: workflow.create(user, await readBody(req)) });
+        const imageMatch = path.match(/^\/api\/orders\/([^/]+)\/images\/(\d+)$/);
+        if (imageMatch && req.method === 'GET') {
+          const picture = workflow.image(user, decodeURIComponent(imageMatch[1]), Number(imageMatch[2]));
+          res.writeHead(200, { 'content-type': picture.contentType, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff' }); res.end(picture.bytes); return;
+        }
+        const orderMatch = path.match(/^\/api\/orders\/([^/]+)$/);
+        if (orderMatch && req.method === 'GET') return json(res, 200, { order: workflow.get(user, decodeURIComponent(orderMatch[1])) });
+        if (orderMatch && req.method === 'PUT') return json(res, 200, { order: workflow.update(user, decodeURIComponent(orderMatch[1]), await readBody(req)) });
+        return sendError(res, 404, 'not_found');
+      }
+      if (req.method === 'GET' && path === '/api/company') return json(res, 200, company.snapshot());
+      if (path === '/api/admin/company' && req.method === 'PUT') {
+        const user = currentUser(req); if (!user) return sendError(res, 401, 'unauthorized'); if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        return json(res, 200, company.save(await readBody(req, 1500000)));
+      }
       if (req.method === 'GET' && path === '/api/catalog') return json(res, 200, catalog.snapshot());
       if (path === '/api/admin/catalog' && req.method === 'PUT') {
         const user = currentUser(req); if (!user) return sendError(res, 401, 'unauthorized'); if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
@@ -113,5 +140,5 @@ export function createApp({ dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite
       return sendError(res, 500, 'server_error', { form: 'Server belum dapat menyimpan perubahan. Coba kembali.' });
     }
   };
-  return { server: createServer(handler), handler, db, catalog };
+  return { server: createServer(handler), handler, db, catalog, company, workflow };
 }

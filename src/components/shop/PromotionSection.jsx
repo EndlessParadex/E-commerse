@@ -1,3 +1,4 @@
+import useCompany from '../../state/useCompany';
 import { useEffect, useRef, useState } from 'react';
 import { products, groupProducts } from '../../data/products';
 import { useShop } from '../../state/useShop';
@@ -5,6 +6,7 @@ import ProductCard from './ProductCard';
 import './PromotionSection.css';
 
 export default function PromotionSection() {
+  const { profile: companyProfile } = useCompany();
   const { addItem, favoriteIds, toggleFavorite } = useShop();
   const track = useRef(null);
   const [canPrevious, setCanPrevious] = useState(false);
@@ -35,14 +37,14 @@ export default function PromotionSection() {
 
   if (!promos.length) return null;
   return <section className="bam-promotions" aria-labelledby="bam-promotions-title">
-    <header className="bam-promotions-heading"><div><span className="section-eyebrow">Pilihan hemat untukmu</span><h2 id="bam-promotions-title">Promo pilihan BAM</h2></div><span className="bam-promotions-count">{promos.length} produk promo</span></header>
+    <header className="bam-promotions-heading"><div><span className="section-eyebrow">Pilihan hemat untukmu</span><h2 id="bam-promotions-title">Promo pilihan {companyProfile.shortName}</h2></div><span className="bam-promotions-count">{promos.length} produk promo</span></header>
     <div className="bam-promotions-layout">
       <aside className="bam-promotions-intro">
         <span className="bam-promotions-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h8l10 10-8 8L3 11Z" /><circle cx="7.5" cy="7.5" r="1" /><path d="m11 15 4-4" /></svg></span>
         <span className="bam-promotions-kicker">Harga pilihan</span>
         <h3>Belanja hemat,<br />pilihan lengkap.</h3>
         <p className="bam-promotions-saving">Hemat hingga <strong>{maximumDiscount}%</strong></p>
-        <p>Temukan pilihan promo dari produk yang tersedia di katalog BAM.</p>
+        <p>Temukan pilihan promo dari produk yang tersedia di katalog {companyProfile.shortName}.</p>
         <a href="#catalog" onClick={(event) => { event.preventDefault(); document.getElementById('catalog')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); }}>Jelajahi katalog <span aria-hidden="true">→</span></a>
       </aside>
       <div className="bam-promotions-products">

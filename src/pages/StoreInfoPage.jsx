@@ -1,3 +1,5 @@
+import { workflowUsesServer } from '../data/adminStore';
+import useCompany from '../state/useCompany';
 import './StoreInfoPage.css';
 
 const pages = {
@@ -34,6 +36,18 @@ const pages = {
   ] },
 };
 export default function StoreInfoPage({ page }) {
-  const content = pages[page] || pages.bantuan;
-  return <div className="store-info-page"><nav className="shop-breadcrumb" aria-label="Breadcrumb"><a href="#/">Beranda</a><span aria-hidden="true">/</span><span aria-current="page">{content.title}</span></nav><header className="store-info-heading"><span className="section-eyebrow">Informasi BAM</span><h1>{content.title}</h1><p>{content.intro}</p></header><div className="store-info-layout"><nav className="store-info-nav" aria-label="Halaman informasi">{Object.entries(pages).map(([id, item]) => <a key={id} href={'#/' + id} aria-current={id === page ? 'page' : undefined}>{item.title}</a>)}</nav><div className="store-info-content">{content.sections.map((section) => <section key={section.title}><h2>{section.title}</h2><p>{section.text}</p></section>)}<a className="bam-button-secondary" href="#/cari?q=">Kembali ke katalog →</a></div></div></div>;
+  const { profile: companyProfile } = useCompany();
+  const configured = Object.fromEntries(Object.entries(pages).map(([key, entry]) => [key, { ...entry, title: entry.title.replace('BAM', companyProfile.shortName), intro: entry.intro.replace('BAM', companyProfile.shortName), sections: entry.sections.map((section) => ({ title: section.title.replace('CV. Belitung Arta Mandiri', companyProfile.legalName), text: section.text.replaceAll('BAM', companyProfile.shortName) })) }]));
+  configured.tentang.sections[0] = { title: companyProfile.legalName, text: companyProfile.description || 'Jelajahi produk yang tersedia dalam katalog kami.' };
+  const contacts = [companyProfile.address, companyProfile.phone, companyProfile.email].filter(Boolean);
+  if (contacts.length) configured.tentang.sections[1] = { title: 'Informasi toko', text: contacts.join(' · ') };
+  if (workflowUsesServer) {
+    configured.tentang.sections[2] = { title: 'Belanja dan pembayaran', text: 'Produk, pesanan, dan stok dikelola melalui server. Pesanan terhubung ke akun pelanggan. Aplikasi belum memproses pembayaran atau menghubungi kurir secara otomatis.' };
+    configured.privasi.sections[1] = { title: 'Data pesanan dan browser', text: 'Pesanan, catatan, pilihan WhatsApp, dan stok tersimpan di database server. Keranjang, favorit, preferensi tampilan, dan tanda baca notifikasi masih disimpan pada browser. Riwayat pesanan akun tetap tersedia dari perangkat lain setelah masuk.' };
+    configured.pengiriman.sections[2] = { title: 'Status pengiriman', text: 'Admin mencatat kurir dan nomor resi setelah memeriksa pengiriman. Status diperbarui pada server dan dapat dibaca pelanggan. Pelacakan kurir serta perhitungan ongkir otomatis belum terhubung; biaya pengiriman saat ini memakai tarif contoh.' };
+    configured.bantuan.sections[3] = { title: 'Memilih pembayaran', text: 'Pilih metode pembayaran untuk dicatat bersama pesanan. Integrasi pembayaran belum aktif. Gunakan hanya instruksi pembayaran resmi yang telah dikonfirmasi oleh pengelola toko.' };
+    configured.bantuan.sections[4] = { title: 'Melanjutkan pembayaran', text: 'Pesanan menunggu pembayaran selama 24 jam. Server mengembalikan stok jika batas pembayaran berakhir. Admin mencatat pembayaran setelah diperiksa. Pelanggan tidak dapat mengubah pesanan menjadi sudah dibayar.' };
+  }
+  const content = configured[page] || configured.bantuan;
+  return <div className="store-info-page"><nav className="shop-breadcrumb" aria-label="Breadcrumb"><a href="#/">Beranda</a><span aria-hidden="true">/</span><span aria-current="page">{content.title}</span></nav><header className="store-info-heading"><span className="section-eyebrow">Informasi {companyProfile.shortName}</span><h1>{content.title}</h1><p>{content.intro}</p></header><div className="store-info-layout"><nav className="store-info-nav" aria-label="Halaman informasi">{Object.entries(configured).map(([id, item]) => <a key={id} href={'#/' + id} aria-current={id === page ? 'page' : undefined}>{item.title}</a>)}</nav><div className="store-info-content">{content.sections.map((section) => <section key={section.title}><h2>{section.title}</h2><p>{section.text}</p></section>)}<a className="bam-button-secondary" href="#/cari?q=">Kembali ke katalog →</a></div></div></div>;
 }

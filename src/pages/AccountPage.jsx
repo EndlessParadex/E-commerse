@@ -1,3 +1,4 @@
+import useCompany from '../state/useCompany';
 import { useEffect, useRef, useState } from 'react';
 import { validateDelivery } from '../state/deliveryModel';
 import { useDelivery } from '../state/useDelivery';
@@ -10,6 +11,7 @@ import './AccountPage.css';
 const tabs = [{ id: 'profile', label: 'Profil' }, { id: 'address', label: 'Alamat' }, { id: 'appearance', label: 'Tampilan' }];
 
 export default function AccountPage() {
+  const { profile: companyProfile } = useCompany();
   const { user, savedLocation, saveLocation, authLoading, authError } = useDelivery();
   const [activeTab, setActiveTab] = useState('profile');
   const [values, setValues] = useState(() => user ? { namaToko: user.name, namaJalan: user.address } : { namaToko: '', namaJalan: '' });
@@ -76,12 +78,12 @@ export default function AccountPage() {
     {authError && <p className="shop-warning" role="alert">{authError}</p>}
     {!user ? <>
       <section className="account-navigation-card" aria-label="Navigasi akun"><AccountMenu /></section>
-      <section className="account-guest-card"><div className="account-page-icon" aria-hidden="true"><ActionIcon account /></div><h1>Masuk untuk mengelola akun</h1><p>Setelah masuk, Anda dapat mengatur nama, alamat pengiriman, dan tampilan BAM.</p><div className="account-page-actions"><a className="shop-primary" href="#/login">Masuk</a><a className="account-page-secondary" href="#/daftar">Daftar akun baru</a></div></section>
+      <section className="account-guest-card"><div className="account-page-icon" aria-hidden="true"><ActionIcon account /></div><h1>Masuk untuk mengelola akun</h1><p>Setelah masuk, Anda dapat mengatur nama, alamat pengiriman, dan tampilan {companyProfile.shortName}.</p><div className="account-page-actions"><a className="shop-primary" href="#/login">Masuk</a><a className="account-page-secondary" href="#/daftar">Daftar akun baru</a></div></section>
     </> : <>
       <header className="account-page-heading"><span className="section-eyebrow">Ruang pribadi Anda</span><h1>Akun saya</h1><p>Kelola profil, alamat pengiriman, dan kenyamanan tampilan.</p></header>
       <div className="account-workspace">
         <aside className="account-sidebar" aria-label="Navigasi akun">
-          <div className="account-sidebar-identity"><div className="account-page-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</div><div><strong>{user.name}</strong><span>{user.role === 'admin' ? 'Admin BAM' : 'Pelanggan BAM'}</span></div></div>
+          <div className="account-sidebar-identity"><div className="account-page-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</div><div><strong>{user.name}</strong><span>{user.role === 'admin' ? `Admin ${companyProfile.shortName}` : `Pelanggan ${companyProfile.shortName}`}</span></div></div>
           <AccountMenu profileActive />
         </aside>
         <div className="account-content">
@@ -90,7 +92,7 @@ export default function AccountPage() {
             <div className="account-panel-heading"><h2>Profil pengguna</h2><p>Informasi akun yang Anda gunakan untuk berbelanja.</p></div>
             <div className="account-profile-layout">
               <div className="account-avatar-card"><div className="account-avatar-large" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</div><strong>Avatar inisial</strong><p>Profil memakai inisial nama Anda.</p></div>
-              <div className="account-profile-details"><dl className="account-biodata"><div><dt>Nama</dt><dd>{user.name}</dd></div><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Jenis akun</dt><dd>{user.role === 'admin' ? 'Admin BAM' : 'Pelanggan BAM'}</dd></div></dl><button type="button" className="account-page-secondary" onClick={() => selectTab('address', true)}>Ubah nama dan alamat <span aria-hidden="true">→</span></button><p className="account-profile-help">Email digunakan untuk masuk ke akun Anda.</p></div>
+              <div className="account-profile-details"><dl className="account-biodata"><div><dt>Nama</dt><dd>{user.name}</dd></div><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Jenis akun</dt><dd>{user.role === 'admin' ? `Admin ${companyProfile.shortName}` : `Pelanggan ${companyProfile.shortName}`}</dd></div></dl><button type="button" className="account-page-secondary" onClick={() => selectTab('address', true)}>Ubah nama dan alamat <span aria-hidden="true">→</span></button><p className="account-profile-help">Email digunakan untuk masuk ke akun Anda.</p></div>
             </div>
             <div className="account-address-preview"><div><span>Alamat pengiriman utama</span><p>{savedLocation?.namaJalan || user.address || 'Alamat belum ditambahkan.'}</p></div><button type="button" onClick={() => selectTab('address', true)}>Kelola alamat <span aria-hidden="true">→</span></button></div>
           </section>

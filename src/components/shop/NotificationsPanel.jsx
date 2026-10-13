@@ -1,3 +1,4 @@
+import { workflowUsesServer } from '../../data/adminStore';
 import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import { notificationKind, shortOrderId } from '../../state/orderNotifications';
@@ -58,7 +59,7 @@ export default function NotificationsPanel() {
   const reset = () => { setFilter('all'); setQuery(''); setLimit(10); };
 
   return <section className="notifications-panel" aria-label="Daftar notifikasi">
-    <p className="notifications-context"><span className="notification-simulation">Simulasi</span><span>Pembaruan pesanan dan pembayaran percobaan Anda.</span></p>
+    <p className="notifications-context"><span className="notification-simulation">{workflowUsesServer ? 'Pesanan' : 'Simulasi'}</span><span>{workflowUsesServer ? 'Pembaruan status pesanan dan catatan pembayaran akun Anda.' : 'Pembaruan pesanan dan pembayaran percobaan Anda.'}</span></p>
     <div className="notifications-controls">
       <div className="notification-filters" role="group" aria-label="Filter notifikasi" ref={filterRef}>{filters.map((item) => <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => { setFilter(item.id); setLimit(10); }}><span>{item.label}</span><span className="notification-filter-count">{item.count}</span></button>)}</div>
       <label className="notification-search">Cari notifikasi<input type="search" value={query} maxLength={200} placeholder="Nomor pesanan atau isi notifikasi" onChange={(event) => { setQuery(event.target.value); setLimit(10); }} /></label>

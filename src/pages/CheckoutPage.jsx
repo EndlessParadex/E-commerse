@@ -15,18 +15,16 @@ import CancelShoppingDialog from '../components/shop/CancelShoppingDialog';
 import CartReview from '../components/shop/CartReview';
 import { initializeCatalog, catalogUsesServer } from '../data/adminStore';
 import { reviewCart } from '../data/cartValidation';
+import { workflowUsesServer } from '../data/adminStore';
+import { createServerOrder } from '../state/serverWorkflow';
+import { shippingOptions } from '../data/shippingOptions';
 import './CheckoutPage.css';
-
-const shippingOptions = [
-  { id: 'regular', label: 'Reguler', description: '2–4 hari kerja', cost: 10000 },
-  { id: 'express', label: 'Express', description: '1–2 hari kerja', cost: 20000 },
-];
 
 const emptyForm = { namaToko: '', namaJalan: '' };
 
 export default function CheckoutPage() {
   const shop = useShop();
-  const { savedLocation } = useDelivery();
+  const { savedLocation, user, authLoading } = useDelivery();
   const [form, setForm] = useState(() => savedLocation || emptyForm);
   const [addressEditing, setAddressEditing] = useState(() => Object.keys(validateDelivery(savedLocation || emptyForm)).length > 0);
   const nameRef = useRef(null);
@@ -60,6 +58,8 @@ export default function CheckoutPage() {
   const itemProducts = shop.cart.map((item) => ({ item, display: cartItemPresentation(item) }));
 
   if (!shop.cart.length) return <div className="checkout-page"><nav className="shop-breadcrumb" aria-label="Breadcrumb"><a href="#/">Beranda</a><span aria-hidden="true">/</span><span aria-current="page">Checkout</span></nav><div className="checkout-empty"><span aria-hidden="true">🛍️</span><h1>Belum ada produk untuk checkout</h1><p>Tambahkan produk ke keranjang sebelum melanjutkan.</p><a className="shop-primary" href="#/">Kembali ke katalog</a></div></div>;
+  if (workflowUsesServer && authLoading) return <div className="checkout-page" role="status">Memeriksa akun untuk checkout…</div>;
+  if (workflowUsesServer && !user) return <div className="checkout-page"><h1>Masuk sebelum membuat pesanan</h1><p>Pesanan akan tersimpan pada akun Anda dan dapat dibuka dari perangkat lain. Barang tetap tersedia di keranjang.</p><a className="shop-primary" href="#/login">Masuk ke akun</a><a className="checkout-back" href="#/keranjang">Kembali ke keranjang</a></div>;
 
   const updateField = (field, value) => {
     setEdited(true);
@@ -90,12 +90,14 @@ export default function CheckoutPage() {
       if (catalogUsesServer) await initializeCatalog();
       if (!active.current) return;
       if (!reviewCart(shop.cart).ready) { setSubmitError('Katalog telah berubah. Periksa barang dan gunakan harga terbaru sebelum membuat pesanan.'); window.requestAnimationFrame(() => submitErrorRef.current?.focus()); return; }
-      const order = placePreviewOrder({ cart: shop.cart, recipient: form.namaToko, address: form.namaJalan, shipping, payment, whatsappNumber, whatsappOptIn, note: orderNote }, window.sessionStorage);
+      const input = { cart: shop.cart, recipient: form.namaToko, address: form.namaJalan, shipping, payment, whatsappNumber, whatsappOptIn, note: orderNote };
+      const order = workflowUsesServer ? await createServerOrder(input) : placePreviewOrder(input, window.sessionStorage);
+      if (!active.current) return;
       shop.completeOrder(order);
       window.location.assign('#/pesanan/' + encodeURIComponent(order.id));
     } catch (error) {
       if (!active.current) return;
-      setSubmitError(error instanceof Error && /Stok|Pesanan belum tersimpan/.test(error.message) ? error.message : 'Pesanan belum dibuat. Pastikan server dapat dihubungi dan penyimpanan browser tersedia, lalu coba lagi.');
+      setSubmitError(error instanceof Error && (workflowUsesServer || /Stok|Pesanan belum tersimpan/.test(error.message)) ? error.message : 'Pesanan belum dibuat. Pastikan server dapat dihubungi dan penyimpanan browser tersedia, lalu coba lagi.');
       window.requestAnimationFrame(() => submitErrorRef.current?.focus());
     } finally {
       submitLock.current = false;
@@ -151,7 +153,7 @@ export default function CheckoutPage() {
           <h2 id="whatsapp-title">Pembaruan melalui WhatsApp</h2>
           <label className="checkout-whatsapp-consent"><input type="checkbox" checked={whatsappOptIn} onChange={(event) => { setWhatsAppOptIn(event.target.checked); setErrors((current) => ({ ...current, whatsapp: undefined })); }} /><span>Saya ingin menerima pembaruan pesanan ini melalui WhatsApp.</span></label>
           {whatsappOptIn && <div className="checkout-field"><label htmlFor="checkout-whatsapp">Nomor WhatsApp</label><input id="checkout-whatsapp" ref={whatsappRef} type="tel" inputMode="tel" autoComplete="tel" maxLength={25} value={whatsappNumber} onChange={(event) => { setWhatsAppNumber(event.target.value); setErrors((current) => ({ ...current, whatsapp: undefined })); }} placeholder="081234567890" aria-invalid={Boolean(errors.whatsapp)} aria-describedby={'whatsapp-hint' + (errors.whatsapp ? ' whatsapp-error' : '')} />{errors.whatsapp && <p id="whatsapp-error" className="checkout-error" role="alert">{errors.whatsapp}</p>}</div>}
-          <p id="whatsapp-hint" className="checkout-note">Opsional dan hanya untuk pesanan ini, bukan promosi. Ini masih simulasi: nomor disimpan sementara di tab browser, tidak dikirim ke WhatsApp.</p>
+          <p id="whatsapp-hint" className="checkout-note">{workflowUsesServer ? 'Opsional dan hanya untuk pesanan ini. Nomor dicatat bersama pesanan di server; belum ada pesan WhatsApp otomatis.' : 'Opsional dan hanya untuk pesanan ini, bukan promosi. Ini masih simulasi: nomor disimpan sementara di tab browser, tidak dikirim ke WhatsApp.'}</p>
         </section>
 
       </fieldset>
@@ -164,7 +166,7 @@ export default function CheckoutPage() {
         {submitError && <p className="checkout-submit-error" ref={submitErrorRef} tabIndex={-1} role="alert">{submitError}</p>}
         <button type="submit" className="checkout-submit checkout-desktop-submit" disabled={busy || !shop.cartReview.ready}>{busy ? 'Memeriksa pesanan…' : `Buat pesanan · ${rupiah(total)}`}</button>
         {!shop.cartReview.ready && <p className="checkout-note" role="status">Perbaiki barang pada keranjang untuk melanjutkan.</p>}
-        <p className="checkout-note">Pesanan dan pembayaran masih simulasi. Tidak ada pembayaran yang diproses.</p>
+        <p className="checkout-note">{workflowUsesServer ? 'Pesanan tersimpan di akun Anda pada server. Pembayaran dan layanan kurir belum terhubung otomatis; ongkir mengikuti tarif contoh yang ditampilkan.' : 'Pesanan dan pembayaran masih simulasi. Tidak ada pembayaran yang diproses.'}</p>
       </aside>
       <div className="checkout-action-bar"><div className="checkout-action-total"><span>Total pembayaran</span><strong aria-live="polite">{rupiah(total)}</strong><small>Termasuk ongkir</small></div><button type="submit" className="checkout-submit" disabled={busy || !shop.cartReview.ready}>{busy ? 'Memeriksa…' : 'Buat pesanan'}</button></div>
     </form>

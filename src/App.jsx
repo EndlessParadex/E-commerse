@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import useCompany from './state/useCompany';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import { parseCatalogRoute } from './data/catalog';
 import { catalogNavigationKey, shouldResetRouteScroll } from './data/catalogNavigation';
 import ShopProvider from './state/ShopProvider';
+import WorkflowProvider from './state/WorkflowProvider';
 import ShopPage from './components/shop/ShopPage';
 import AuthPage from './components/account/AuthPage';
 import DeliveryProvider from './state/DeliveryProvider';
@@ -28,6 +30,7 @@ import './styles/workflow.css';
 const decodeId = (value) => { try { return decodeURIComponent(value); } catch { return ''; } };
 
 function App() {
+  const { profile: companyProfile } = useCompany();
   const [catalogState, setCatalogState] = useState('loading');
   const [loadAttempt, setLoadAttempt] = useState(0);
   useEffect(() => {
@@ -39,17 +42,17 @@ function App() {
   const { route, productReturnTo, restoreY } = useSyncExternalStore(subscribeShopRoute, shopRouteSnapshot, shopRouteSnapshot);
   const contentRef = useRef(null);
   const previousRoute = useRef(route);
-  const adminView = { '/admin': 'overview', '/admin/produk': 'products', '/admin/pemasok': 'suppliers', '/admin/merek': 'brands', '/admin/kategori': 'categories', '/admin/pesanan': 'orders', '/admin/stok': 'stock' }[route];
+  const adminView = { '/admin': 'overview', '/admin/produk': 'products', '/admin/pemasok': 'suppliers', '/admin/merek': 'brands', '/admin/kategori': 'categories', '/admin/pesanan': 'orders', '/admin/stok': 'stock', '/admin/perusahaan': 'company' }[route];
   const isAdmin = Boolean(adminView);
   const productMatch = route.match(/^\/produk\/([^/?#]+)$/);
   const orderMatch = route.match(/^\/pesanan\/([^/?#]+)$/);
   const paymentMatch = route.match(/^\/pesanan\/([^/?#]+)\/pembayaran$/);
   const catalog = parseCatalogRoute(route);
   const infoPage = { '/tentang': 'tentang', '/privasi': 'privasi', '/pengiriman': 'pengiriman', '/pembatalan': 'pembatalan', '/bantuan': 'bantuan' }[route];
-  const title = isAdmin ? ({ overview: 'Admin · Ringkasan', products: 'Admin · Daftar Produk', suppliers: 'Admin · PT Pemasok', brands: 'Admin · Merek', categories: 'Admin · Kategori', orders: 'Admin · Pesanan', stock: 'Admin · Stok' }[adminView]) : paymentMatch ? 'Pembayaran Pesanan' : productMatch ? 'Detail Produk' : orderMatch ? 'Detail Pesanan' : catalog ? 'Katalog' : { '/': 'Beranda', '/pesanan': 'Pesanan Saya', '/keranjang': 'Keranjang', '/checkout': 'Checkout', '/notifikasi': 'Notifikasi', '/favorit': 'Favorit Saya', '/akun': 'Akun Saya', '/login': 'Masuk', '/daftar': 'Daftar', '/tentang': 'Tentang BAM', '/privasi': 'Informasi Privasi', '/pengiriman': 'Pengiriman', '/pembatalan': 'Pembatalan dan Retur', '/bantuan': 'Pusat Bantuan' }[route] || 'Halaman tidak ditemukan';
+  const title = isAdmin ? ({ overview: 'Admin · Ringkasan', products: 'Admin · Daftar Produk', suppliers: 'Admin · PT Pemasok', brands: 'Admin · Merek', categories: 'Admin · Kategori', orders: 'Admin · Pesanan', stock: 'Admin · Stok', company: 'Admin · Pengaturan Perusahaan' }[adminView]) : paymentMatch ? 'Pembayaran Pesanan' : productMatch ? 'Detail Produk' : orderMatch ? 'Detail Pesanan' : catalog ? 'Katalog' : { '/': 'Beranda', '/pesanan': 'Pesanan Saya', '/keranjang': 'Keranjang', '/checkout': 'Checkout', '/notifikasi': 'Notifikasi', '/favorit': 'Favorit Saya', '/akun': 'Akun Saya', '/login': 'Masuk', '/daftar': 'Daftar', '/tentang': `Tentang ${companyProfile.shortName}`, '/privasi': 'Informasi Privasi', '/pengiriman': 'Pengiriman', '/pembatalan': 'Pembatalan dan Retur', '/bantuan': 'Pusat Bantuan' }[route] || 'Halaman tidak ditemukan';
 
   useEffect(() => {
-    document.title = `${title} | BAM.`;
+    document.title = `${title} | ${companyProfile.shortName}`;
     if (previousRoute.current !== route) {
       if (shouldResetRouteScroll(previousRoute.current, route)) {
         window.scrollTo(0, restoreY ?? 0);
@@ -57,17 +60,17 @@ function App() {
       }
       previousRoute.current = route;
     }
-  }, [route, title, restoreY]);
+  }, [route, title, restoreY, companyProfile.shortName]);
 
   if (catalogState !== 'ready') return <CatalogStatus error={catalogState === 'error'} onRetry={() => { setCatalogState('loading'); setLoadAttempt((value) => value + 1); }} />;
-  return <ShopProvider><DeliveryProvider><AppearanceProvider>
+  return <DeliveryProvider><WorkflowProvider><ShopProvider><AppearanceProvider>
     {!isAdmin && <Navbar />}
     <a className="skip-to-content" href="#main-content" onClick={(event) => { event.preventDefault(); contentRef.current?.focus(); }}>Lewati ke isi halaman</a>
     <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
       {isAdmin ? <AdminAccess><AdminPage view={adminView} /></AdminAccess> : infoPage ? <StoreInfoPage page={infoPage} /> : route === '/pesanan' ? <OrdersPage /> : route === '/keranjang' ? <ShopPage type="cart" /> : route === '/checkout' ? <CheckoutPage /> : route === '/notifikasi' ? <ShopPage type="notifications" /> : route === '/favorit' ? <FavoritesPage /> : route === '/akun' ? <AccountPage /> : route === '/login' ? <AuthPage key="login" mode="login" /> : route === '/daftar' ? <AuthPage key="register" mode="register" /> : paymentMatch ? <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} /> : orderMatch ? <OrderConfirmationPage orderId={decodeId(orderMatch[1])} key={orderMatch[1]} /> : productMatch ? <ProductDetailPage productId={decodeId(productMatch[1])} returnTo={productReturnTo} key={productMatch[1]} /> : catalog && catalog.kind !== 'invalid' ? <Home key={catalogNavigationKey(route)} catalog={catalog} /> : route === '/' ? <Home /> : <div className="shop-page"><h1>Halaman tidak ditemukan</h1><a href="#/">Kembali ke beranda</a></div>}
     </main>
     {!isAdmin && <StoreFooter />}
-  </AppearanceProvider></DeliveryProvider></ShopProvider>;
+  </AppearanceProvider></ShopProvider></WorkflowProvider></DeliveryProvider>;
 }
 
 export default App;

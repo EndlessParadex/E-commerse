@@ -1,3 +1,4 @@
+import useCompany from '../../state/useCompany';
 import { useRef, useState } from 'react';
 import { ActionIcon } from '../shop/ShopIcon';
 import { validateAuth } from './authValidation';
@@ -9,6 +10,7 @@ function EyeIcon({ visible }) {
 }
 
 export default function AuthPage({ mode }) {
+  const { profile: companyProfile } = useCompany();
   const isRegister = mode === 'register';
   const { saveLocation, setUser } = useDelivery();
   const formRef = useRef(null);
@@ -69,7 +71,7 @@ export default function AuthPage({ mode }) {
     <nav className="shop-breadcrumb" aria-label="Breadcrumb"><a href="#/">Beranda</a><span aria-hidden="true">/</span><span aria-current="page">{isRegister ? 'Daftar akun' : 'Masuk'}</span></nav>
     <div className="auth-layout">
       <aside className="auth-intro">
-        <span className="auth-brand">BAM.</span>
+        <span className="auth-brand">{companyProfile.shortName}.</span>
         <div className="auth-intro-icon"><ActionIcon account /></div>
         <h2>{isRegister ? 'Mulai dari satu akun.' : 'Selamat datang kembali.'}</h2>
         <p>Temukan kosmetik, snack, dan kebutuhan harian pilihan dalam satu tempat.</p>

@@ -1,3 +1,4 @@
+import { workflowUsesServer } from '../../data/adminStore';
 import { isOrderNotification, notificationKind, shortOrderId } from '../../state/orderNotifications';
 import { dateLabel } from './shopPresentation';
 
@@ -16,7 +17,7 @@ export default function NotificationItem({ item, compact = false, onRead, onDele
       <p>{item.message}</p>
       <div className="notification-meta">{isOrderNotification(item) && <span>Pesanan #{shortOrderId(item.orderId)}</span>}<time dateTime={new Date(item.createdAt).toISOString()}>{dateLabel(item.createdAt)}</time></div>
       <div className="notification-actions">
-        <div className="notification-primary-actions">{isOrderNotification(item) && (orderLinkStatus === 'available' ? <a className="shop-text-button" href={'#/pesanan/' + encodeURIComponent(item.orderId)} onClick={() => { onRead(item.id); onNavigate?.(); }}>Lihat detail pesanan <span aria-hidden="true">→</span></a> : <span className="notification-history-unavailable">{orderLinkStatus === 'unavailable' ? 'Detail pesanan belum dapat dibaca. Coba muat ulang halaman.' : 'Detail pesanan tersedia di tab tempat pesanan dibuat.'}</span>)}{!compact && !item.read && <button type="button" className="shop-text-button notification-mark-read" aria-label={'Tandai dibaca: ' + item.title + (item.orderId ? ', pesanan ' + shortOrderId(item.orderId) : '')} onClick={() => onRead(item.id)}>Tandai dibaca</button>}</div>
+        <div className="notification-primary-actions">{isOrderNotification(item) && (orderLinkStatus === 'available' ? <a className="shop-text-button" href={'#/pesanan/' + encodeURIComponent(item.orderId)} onClick={() => { onRead(item.id); onNavigate?.(); }}>Lihat detail pesanan <span aria-hidden="true">→</span></a> : <span className="notification-history-unavailable">{orderLinkStatus === 'unavailable' ? 'Detail pesanan belum dapat dibaca. Coba muat ulang halaman.' : workflowUsesServer ? 'Buka riwayat pada akun pemilik pesanan.' : 'Detail pesanan tersedia di tab tempat pesanan dibuat.'}</span>)}{!compact && !item.read && <button type="button" className="shop-text-button notification-mark-read" aria-label={'Tandai dibaca: ' + item.title + (item.orderId ? ', pesanan ' + shortOrderId(item.orderId) : '')} onClick={() => onRead(item.id)}>Tandai dibaca</button>}</div>
         {!compact && <button type="button" className="shop-delete" aria-label={'Hapus notifikasi ' + item.title + (item.orderId ? ', pesanan ' + shortOrderId(item.orderId) : '')} onClick={() => onDelete(item)}>Hapus</button>}
       </div>
     </div>

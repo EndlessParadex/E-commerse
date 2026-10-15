@@ -198,7 +198,7 @@ export default function AuthPage({ mode }) {
             <h1 id="auth-title">{isRegister ? 'Buat akun' : 'Masuk ke akun'}</h1>
             <p>
               {isRegister
-                ? 'Daftar sebagai pembeli. Akses khusus diberikan oleh Pemilik setelah akun terdaftar.'
+                ? 'Daftar sebagai pembeli. Akun harus disetujui Admin atau Pemilik sebelum dapat masuk.'
                 : 'Gunakan email dan kata sandi Anda.'}
             </p>
           </header>
@@ -217,7 +217,8 @@ export default function AuthPage({ mode }) {
               </p>
               <ol>
                 <li>Periksa kotak masuk atau spam untuk mengonfirmasi email Anda.</li>
-                <li>Masuk menggunakan email dan kata sandi yang Anda isi saat mendaftar.</li>
+                <li>Tunggu Admin atau Pemilik toko menyetujui pendaftaran sebelum masuk.</li>
+                <li>Setelah disetujui, masuk menggunakan email dan kata sandi pendaftaran.</li>
               </ol>
               <p>
                 Konfirmasi email diperlukan sebelum membuat pesanan. Jika email belum diterima,

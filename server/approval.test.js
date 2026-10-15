@@ -117,3 +117,35 @@ test('akun lama tanpa catatan persetujuan tetap aktif; pembeli tidak dapat menye
     }, buyer)).status, 403);
   } finally { app.db.close(); }
 });
+
+test('verifikasi email tidak melewati approval; sesi pending juga tidak dapat menggunakan API', async () => {
+  const outbox = [];
+  const app = createApp({
+    dbPath: ':memory:',
+    mailer: { enabled: true, send: async message => outbox.push(message) },
+    mailConfig: { publicUrl: 'https://approval.fixture/', queueKey: 'a'.repeat(64) },
+    logger: () => {},
+  });
+  try {
+    const admin = await seedManager(app, 'operator');
+    const email = 'verified-pending@fixture.test';
+    await register(app, email);
+    const id = app.db.prepare('SELECT id FROM users WHERE email=?').get(email).id;
+    await app.identity.flushMail();
+    const token = outbox.find(message => message.to === email)?.text.match(/token=([A-Za-z0-9_-]+)/)?.[1];
+    assert.ok(token);
+    assert.equal((await request(app, 'POST', '/api/auth/verify-email', { token, password: secret })).status, 200);
+    assert.equal(app.identity.verified(id), true);
+    const sessionToken = 'x'.repeat(43);
+    const { createHash } = await import('node:crypto');
+    app.db.prepare('INSERT INTO sessions VALUES(?,?,?)').run(
+      createHash('sha256').update(sessionToken).digest('hex'), id, Date.now() + 60000,
+    );
+    assert.equal((await request(app, 'GET', '/api/auth/me', undefined, 'bam_session=' + sessionToken)).status, 401);
+    assert.equal((await request(app, 'POST', '/api/auth/login', { email, password: secret })).status, 403);
+    assert.equal((await decide(app, id, admin, 'approve')).status, 200);
+    const login = await request(app, 'POST', '/api/auth/login', { email, password: secret });
+    assert.equal(login.status, 200);
+    assert.equal(login.body.user.emailVerified, true);
+  } finally { app.db.close(); }
+});

@@ -52,7 +52,7 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
   dom.document.body.append(container);
   let root = createRoot(container);
   const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
-  const render = () =>
+  const render = (user = null) =>
     act(async () => {
       root.render(
         createElement(
@@ -60,7 +60,7 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
           null,
           createElement(
             DeliveryContext.Provider,
-            { value: { user: null } },
+            { value: { user } },
             createElement(
               ShopContext.Provider,
               { value: { quantity: 0, unreadCount: 0, cart: [], notifications: [] } },
@@ -113,6 +113,21 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     assert.equal(navigation.querySelector('.deliver-popup'), null);
     assert.equal(dom.document.body.style.overflow, '');
     assert.equal(dom.document.activeElement, delivery);
+    await render({
+      id: 'buyer-one', name: 'Nama Pribadi', address: 'Jalan Kirim nomor 42 Jakarta',
+      storeName: 'Toko Pelanggan',
+    });
+    assert.match(navigation.querySelector('.deliver-code').textContent, /Toko Pelanggan/);
+    assert.doesNotMatch(navigation.querySelector('.deliver-code').textContent, /Nama Pribadi/);
+    await click(navigation.querySelector('.delivery-trigger'));
+    assert.match(navigation.querySelector('.delivery-account-preview').textContent, /Penerima: Nama Pribadi/);
+    await click(navigation.querySelector('.delivery-close'));
+    await render({
+      id: 'buyer-two', name: 'Penerima Lain', address: 'Jalan Rumah nomor 15 Bandung',
+      storeName: '',
+    });
+    assert.match(navigation.querySelector('.deliver-code').textContent, /Alamat saya/);
+    assert.doesNotMatch(navigation.querySelector('.deliver-code').textContent, /Penerima Lain/);
 
     await act(async () => root.unmount());
     assert.equal(height(), '19px');

@@ -37,6 +37,7 @@ const Navbar = () => {
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
+  const deliveryTitle = user ? (user.storeName || 'Alamat saya') : 'Masuk';
   const deliverRef = useRef(null);
   const [compactDelivery, setCompactDelivery] = useState(
     () => window.matchMedia('(max-width: 600px)').matches,
@@ -289,8 +290,7 @@ const Navbar = () => {
                 aria-controls={showDeliverPopup ? 'delivery-popup' : undefined}
                 aria-label={
                   'Kirim ke, ' +
-                  (accountLocation?.namaToko ||
-                    (user ? 'lengkapi alamat akun' : 'masuk untuk memakai alamat akun'))
+                  ((user ? deliveryTitle : 'masuk untuk memakai alamat akun'))
                 }
               >
                 <span className="deliver-label">Kirim ke</span>
@@ -298,8 +298,8 @@ const Navbar = () => {
                 <div className="deliver-country">
                   <span>🇮🇩</span>
 
-                  <span className="deliver-code" title={accountLocation?.namaToko || user?.name}>
-                    {accountLocation?.namaToko || user?.name || 'Masuk'}
+                  <span className="deliver-code" title={deliveryTitle}>
+                    {deliveryTitle}
                   </span>
                 </div>
 
@@ -359,7 +359,8 @@ const Navbar = () => {
                           {accountLocation ? (
                             <div className="delivery-account-preview">
                               <span className="delivery-account-label">Alamat utama</span>
-                              <strong>{accountLocation.namaToko}</strong>
+                              <strong>{deliveryTitle}</strong>
+                              <span className="accounts-secondary">Penerima: {accountLocation.namaToko}</span>
                               <p>{accountLocation.namaJalan}</p>
                               <span className="delivery-account-country">🇮🇩 Indonesia</span>
                             </div>

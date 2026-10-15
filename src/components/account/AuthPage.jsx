@@ -28,7 +28,7 @@ function EyeIcon({ visible }) {
 export default function AuthPage({ mode }) {
   const { profile: companyProfile } = useCompany();
   const isRegister = mode === 'register';
-  const { saveLocation, setUser } = useDelivery();
+  const { setUser } = useDelivery();
   const formRef = useRef(null);
   const [values, setValues] = useState({
     name: '',
@@ -99,11 +99,11 @@ export default function AuthPage({ mode }) {
         return;
       }
       setUser(payload.user);
-      await saveLocation({ namaToko: payload.user.name, namaJalan: payload.user.address });
+      // Login must not overwrite the optional store name or recipient profile.
       setNotice(
         isRegister
-          ? 'Akun berhasil dibuat dan alamat sudah terhubung ke “Kirim ke”.'
-          : 'Berhasil masuk. Alamat akun sudah terhubung ke “Kirim ke”.',
+          ? 'Akun berhasil dibuat.'
+          : 'Berhasil masuk.',
       );
       window.location.hash =
         payload.user.role === 'admin'
@@ -205,7 +205,7 @@ export default function AuthPage({ mode }) {
           {!registrationSent && (
             <p className="auth-preview-note">
               {isRegister
-                ? 'Nama dan alamat akan digunakan untuk mengisi “Kirim ke” setelah akun berhasil dibuat.'
+                ? 'Nama penerima dan alamat digunakan untuk checkout. Nama toko dapat diatur melalui Akun Saya → Alamat.'
                 : 'Masuk untuk menggunakan alamat akun pada “Kirim ke” dan checkout.'}
             </p>
           )}

@@ -170,7 +170,7 @@ export default function AdminAccountsPage() {
       </div>
       <div className="accounts-content">
         <p className="accounts-explanation">
-          <strong>Aktif</strong> berarti akun bisa masuk. Pembeli perlu mengonfirmasi email sebelum
+          <strong>Aktif</strong> berarti akun bisa masuk setelah disetujui. Pendaftaran baru diperiksa Admin atau Pemilik pada menu Persetujuan akun. Pembeli perlu mengonfirmasi email sebelum
           memesan. Pengelolaan akun hanya oleh Pemilik.
         </p>
         <div className="accounts-team-help">
@@ -239,6 +239,8 @@ export default function AdminAccountsPage() {
               <option value="all">Semua status</option>
               <option value="active">Aktif</option>
               <option value="disabled">Nonaktif</option>
+              <option value="pending">Menunggu persetujuan</option>
+              <option value="rejected">Ditolak</option>
             </select>
           </div>
         </div>
@@ -312,7 +314,7 @@ export default function AdminAccountsPage() {
                             'accounts-status ' + (account.active ? 'is-active' : 'is-disabled')
                           }
                         >
-                          {account.active ? 'Aktif' : 'Nonaktif'}
+                          {account.approvalStatus === 'pending' ? 'Menunggu persetujuan' : account.approvalStatus === 'rejected' ? 'Ditolak' : account.active ? 'Aktif' : 'Nonaktif'}
                         </span>
                         <span className="accounts-secondary">
                           {account.emailVerified
@@ -326,7 +328,7 @@ export default function AdminAccountsPage() {
                       <td data-label="Pesanan">{account.orderCount} pesanan</td>
                       <td data-label="Tindakan">
                         <div className="accounts-row-actions">
-                          {account.canSetCustomerAccess && (
+                          {account.canSetCustomerAccess && account.approvalStatus === 'approved' && (
                             <button
                               className="admin-secondary"
                               type="button"

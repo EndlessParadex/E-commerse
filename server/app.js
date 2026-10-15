@@ -22,7 +22,7 @@ import { PasswordQueue } from './authSecurity.js';
 import { clientIpResolver } from './clientIp.js';
 import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
-import { accountIsActive } from './accountAccess.js';
+import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { AccountRepository } from './accounts.js';
 import { customerAccess } from './customerAccess.js';
 
@@ -186,7 +186,7 @@ export function createApp({
     return (
       db
         .prepare(
-          'SELECT u.id,u.name,u.email,u.address,u.role FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN account_access a ON a.user_id=u.id WHERE s.token_hash=? AND s.expires_at>? AND a.disabled_at IS NULL',
+          'SELECT u.id,u.name,u.email,u.address,u.role FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN account_access a ON a.user_id=u.id WHERE s.token_hash=? AND s.expires_at>? AND a.disabled_at IS NULL AND COALESCE((SELECT status FROM account_approvals WHERE user_id=u.id),\'approved\')=\'approved\'',
         )
         .get(digest(value), Date.now()) || null
     );
@@ -243,6 +243,28 @@ export function createApp({
     )
       throw new CatalogError('Akses pemilik telah berubah. Masuk kembali.', 403, 'forbidden');
   };
+  const confirmApprovalPassword = async (actor, value, ip) => {
+    if (actor.role !== 'admin' || !accountIsApproved(db, actor.id))
+      throw new CatalogError('Akses Admin atau Pemilik diperlukan.', 403, 'forbidden');
+    if (typeof value !== 'string' || !value || value.length > 128)
+      throw new CatalogError('Masukkan kata sandi akun pengelola.', 422, 'validation_error');
+    const stored = db.prepare('SELECT password_hash,role FROM users WHERE id=?').get(actor.id);
+    if (stored?.role !== 'admin') throw new CatalogError('Akses pengelola berubah.', 403, 'forbidden');
+    const matches = await passwordQueue.run(ip, async () => {
+      const delay = limiter.loginDelay(ip, actor.email);
+      if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      return passwordCheck(value, stored.password_hash);
+    });
+    if (!matches) {
+      const allowed = limiter.take('login', ip, actor.email);
+      throw new CatalogError('Kata sandi pengelola tidak sesuai.', allowed ? 401 : 429,
+        allowed ? 'invalid_credentials' : 'rate_limited');
+    }
+    const latest = db.prepare('SELECT password_hash,role FROM users WHERE id=?').get(actor.id);
+    if (latest?.role !== 'admin' || latest.password_hash !== stored.password_hash ||
+      !accountIsActive(db, actor.id) || !accountIsApproved(db, actor.id))
+      throw new CatalogError('Akses pengelola telah berubah. Masuk kembali.', 403, 'forbidden');
+  };
   const handler = async (req, res) => {
     const requestId = randomUUID();
     let path = '';
@@ -296,6 +318,20 @@ export function createApp({
           200,
           accounts.customers(user, new URL(req.url, 'http://bam.local').searchParams),
         );
+      }
+      const approvalMatch = path.match(/^\/api\/admin\/approvals(?:\/([^/]+))?$/);
+      if (approvalMatch) {
+        const admin = currentUser(req);
+        if (!admin) return sendError(res, 401, 'unauthorized');
+        if (admin.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (req.method === 'GET' && !approvalMatch[1])
+          return json(res, 200, accounts.listApprovals(admin, new URL(req.url, 'http://bam.local').searchParams));
+        if (req.method === 'POST' && approvalMatch[1]) {
+          const body = await readBody(req, 12000);
+          await confirmApprovalPassword(admin, body?.currentPassword, clientIp(req));
+          return json(res, 200, accounts.reviewApproval(admin, decodeURIComponent(approvalMatch[1]), body));
+        }
+        return sendError(res, 405, 'method_not_allowed');
       }
       const accountMatch = path.match(/^\/api\/admin\/accounts(?:\/([^/]+))?$/);
       if (accountMatch) {
@@ -550,6 +586,10 @@ export function createApp({
         if (!accountIsActive(db, user.id))
           return sendError(res, 403, 'account_disabled', {
             form: 'Akun ini dinonaktifkan. Hubungi pemilik toko.',
+          });
+        if (!accountIsApproved(db, user.id))
+          return sendError(res, 403, 'approval_required', {
+            form: 'Akun menunggu persetujuan Admin atau Pemilik toko, atau pendaftaran ditolak. Hubungi pengelola toko.',
           });
         limiter.clearLoginPair(ip, fields.email);
         return json(res, 200, { user: publicUser(user) }, sessionHeaders(user.id));

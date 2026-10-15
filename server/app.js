@@ -118,6 +118,10 @@ export function createApp({
   db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
     CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, address TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);`);
+  db.exec(`CREATE TABLE IF NOT EXISTS user_store_names (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    store_name TEXT NOT NULL CHECK(length(store_name) BETWEEN 2 AND 100)
+  );`);
   if (
     !db
       .prepare('PRAGMA table_info(users)')
@@ -161,6 +165,7 @@ export function createApp({
   const messages = new OrderMessages(db, identity, company, now, logger);
   const publicUser = (user) => ({
     ...userView(user),
+    storeName: db.prepare('SELECT store_name FROM user_store_names WHERE user_id=?').get(user.id)?.store_name || '',
     emailVerified: identity.verified(user.id),
     isOwner: isStoreOwner(db, user),
     ...customerAccess(db, user),
@@ -636,11 +641,33 @@ export function createApp({
         const address = typeof body?.address === 'string' ? body.address.trim() : '';
         if (name.length < 2 || name.length > 100 || address.length < 10 || address.length > 500)
           return sendError(res, 422, 'validation_error', { form: 'Nama atau alamat tidak valid.' });
+        const canEditStoreName = path === '/api/profile' && Object.hasOwn(body, 'storeName');
+        const storeName = canEditStoreName && typeof body.storeName === 'string'
+          ? body.storeName.trim()
+          : '';
+        if (canEditStoreName && (typeof body.storeName !== 'string' ||
+          (storeName.length > 0 && storeName.length < 2) || storeName.length > 100))
+          return sendError(res, 422, 'validation_error', {
+            form: 'Nama toko harus kosong atau berisi 2–100 karakter.',
+          });
         const user = db
           .prepare('SELECT id,name,email,address,role FROM users WHERE id=?')
           .get(userId);
         if (!user) return sendError(res, 404, 'user_not_found');
-        db.prepare('UPDATE users SET name=?,address=? WHERE id=?').run(name, address, userId);
+        db.exec('BEGIN IMMEDIATE');
+        try {
+          db.prepare('UPDATE users SET name=?,address=? WHERE id=?').run(name, address, userId);
+          if (canEditStoreName) {
+            if (storeName)
+              db.prepare('INSERT INTO user_store_names(user_id,store_name) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET store_name=excluded.store_name')
+                .run(userId, storeName);
+            else db.prepare('DELETE FROM user_store_names WHERE user_id=?').run(userId);
+          }
+          db.exec('COMMIT');
+        } catch (error) {
+          db.exec('ROLLBACK');
+          throw error;
+        }
         return json(res, 200, { user: publicUser({ ...user, name, address }) });
       }
       return sendError(res, 404, 'not_found');

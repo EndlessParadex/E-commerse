@@ -73,6 +73,24 @@ async function request(app, method, path, body, user = null, ip = '192.0.2.1', h
   });
   return result;
 }
+async function approveRegistration(app, email) {
+  const user = app.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  assert.ok(user, 'Pendaftaran pengujian harus sudah tersimpan');
+  const approval = await request(
+    app,
+    'POST',
+    '/api/admin/approvals/' + encodeURIComponent(user.id),
+    {
+      action: 'approve',
+      revision: 0,
+      reason: 'Persetujuan akun untuk pengujian keamanan',
+      currentPassword: password,
+    },
+    admin,
+  );
+  assert.equal(approval.status, 200, JSON.stringify(approval.body));
+}
+
 function order(app, quantity = 1, paymentId = 'cod') {
   const variant = app.catalog
     .snapshot()
@@ -324,10 +342,19 @@ test('registration is generic; verification requires ownership token and passwor
       (await request(app, 'POST', '/api/auth/verify-email', { token, password })).status,
       400,
     );
+    const pendingLogin = await request(app, 'POST', '/api/auth/login', {
+      email: 'new@fixture.test',
+      password,
+    });
+    assert.equal(pendingLogin.status, 403, 'Verifikasi email tidak melewati persetujuan manual');
+    assert.equal(pendingLogin.body.error, 'approval_required');
+    assert.equal(pendingLogin.headers['set-cookie'], undefined);
+    await approveRegistration(app, 'new@fixture.test');
     const login = await request(app, 'POST', '/api/auth/login', {
       email: 'new@fixture.test',
       password,
     });
+    assert.equal(login.status, 200);
     assert.equal(login.body.user.emailVerified, true);
     await request(app, 'POST', '/api/auth/forgot-password', { email: 'new@fixture.test' });
     await app.identity.flushMail();
@@ -470,6 +497,13 @@ test('registration retains the original password; repeat registration cannot ove
       ).status,
       200,
     );
+    const pendingLogin = await request(app, 'POST', '/api/auth/login', {
+      email: fields.email,
+      password: fields.password,
+    });
+    assert.equal(pendingLogin.status, 403, 'Akun terverifikasi tetap menunggu persetujuan');
+    assert.equal(pendingLogin.headers['set-cookie'], undefined);
+    await approveRegistration(app, fields.email);
     assert.equal(
       (
         await request(app, 'POST', '/api/auth/login', {

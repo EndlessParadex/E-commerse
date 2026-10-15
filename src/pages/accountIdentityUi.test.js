@@ -125,7 +125,12 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM users').get().n, 1);
     assert.equal(api.identity.verified(api.db.prepare('SELECT id FROM users').get().id), false);
     assert.equal(cookie, '');
-    assert.match(container.textContent, /Jika alamat tersebut memenuhi syarat/);
+    assert.match(container.textContent, /Akun baru menunggu persetujuan Admin atau Pemilik/);
+    const pendingCustomer = api.db.prepare('SELECT id FROM users WHERE email=?').get('website@fixture.test');
+    assert.equal(
+      api.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(pendingCustomer.id).status,
+      'pending',
+    );
     await api.identity.flushMail();
     const activation = mailToken();
     await route('/verifikasi-email?token=' + activation, () =>
@@ -140,6 +145,11 @@ test('account website: buyer security summary, admin password settings, registra
     await route('/login', () => container.querySelector('#auth-email'));
     await fill('#auth-email', 'website@fixture.test');
     await fill('#auth-password', 'registration-password');
+    await submit('.auth-card form');
+    await wait(() => container.textContent.includes('Akun menunggu persetujuan'));
+    assert.equal(dom.location.hash, '#/login', 'Email terverifikasi belum cukup untuk login');
+    api.db.prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?")
+      .run(pendingCustomer.id);
     await submit('.auth-card form');
     await wait(() => dom.location.hash === '#/');
     await route('/akun', () => container.querySelector('#account-tab-security'));

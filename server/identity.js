@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { logUnexpectedError } from './errorLogging.js';
-import { accountIsActive } from './accountAccess.js';
+import { accountIsActive, approvalSchema } from './accountAccess.js';
 
 const fail = (message, status = 400, code = 'invalid_token') => {
   throw new CatalogError(message, status, code);
@@ -28,6 +28,7 @@ export class IdentityRepository {
   ) {
     Object.assign(this, { db, now, mailer, queue, limiter, passwordCheck, hashPassword, logger });
     this.configureMail(mailer, config);
+    db.exec(approvalSchema);
     db.exec(`CREATE TABLE IF NOT EXISTS auth_account_state(user_id TEXT PRIMARY KEY REFERENCES users(id),verified_at INTEGER,credential_revision INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE IF NOT EXISTS auth_tokens(token_hash TEXT PRIMARY KEY,purpose TEXT NOT NULL,user_id TEXT REFERENCES users(id),email TEXT NOT NULL,payload TEXT NOT NULL,credential_revision INTEGER NOT NULL,expires_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS auth_email_daily(address_hash TEXT NOT NULL,created_at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS auth_email_daily_lookup ON auth_email_daily(address_hash,created_at);
@@ -163,6 +164,7 @@ export class IdentityRepository {
             encoded,
             new Date(this.now()).toISOString(),
           );
+        this.db.prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')").run(user.id);
         if (this.ready) this.issue('verify', fields.email, user);
       } else if (this.ready) this.issue('reset', fields.email, user);
     });
@@ -172,8 +174,8 @@ export class IdentityRepository {
     return {
       ...generic,
       message: this.ready
-        ? 'Jika alamat tersebut memenuhi syarat, instruksi akses akun dikirim melalui email. Untuk akun baru, gunakan kata sandi yang Anda isi saat mendaftar.'
-        : 'Permintaan pendaftaran diterima. Jika akun baru berhasil dibuat, Anda dapat masuk dengan kata sandi pendaftaran. Verifikasi email wajib sebelum memesan; layanan email toko belum aktif. Hubungi pengelola toko.',
+        ? 'Permintaan pendaftaran diterima. Akun baru menunggu persetujuan Admin atau Pemilik sebelum dapat masuk. Jika memenuhi syarat, instruksi konfirmasi email dikirim ke alamat Anda.'
+        : 'Permintaan pendaftaran diterima. Akun baru menunggu persetujuan Admin atau Pemilik sebelum dapat masuk. Layanan verifikasi email toko belum aktif; hubungi pengelola toko.',
     };
   }
   async forgot(value, ip) {

@@ -55,7 +55,10 @@ export function readBody(req, limit = 100000) {
     req.on('end', () => {
       if (failed) return;
       try {
-        resolveBody(chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {});
+        const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {};
+        if (!body || typeof body !== 'object' || Array.isArray(body))
+          return reject(new CatalogError('JSON harus berupa objek.', 400, 'invalid_json'));
+        resolveBody(body);
       } catch {
         reject(new CatalogError('JSON tidak valid.', 400, 'invalid_json'));
       }
@@ -585,6 +588,8 @@ export function createApp({
       ) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
+        if (path !== '/api/profile' && !isStoreOwner(db, actor))
+          return sendError(res, 403, 'forbidden');
         const userId = path === '/api/profile' ? actor.id : path.slice('/api/admin/users/'.length);
         const body = await readBody(req);
         const name = typeof body?.name === 'string' ? body.name.trim() : '';

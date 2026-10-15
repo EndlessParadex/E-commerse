@@ -70,7 +70,7 @@ test('pendaftaran baru menunggu persetujuan; owner dan admin dapat menyetujui ta
     assert.equal((await request(app, 'GET', '/api/admin/approvals', undefined, owner)).body.total, 1);
     assert.equal((await request(app, 'GET', '/api/admin/approvals', undefined, admin)).body.total, 1);
     assert.equal((await request(app, 'GET', '/api/admin/accounts', undefined, admin)).status, 403);
-    assert.equal((await decide(app, row.id, admin, 'approve', 0, 'wrong-password')).status, 200);
+    assert.equal((await decide(app, row.id, admin, 'approve')).status, 200);
     assert.equal((await decide(app, row.id, owner, 'approve')).status, 409);
     const allowed = await request(app, 'POST', '/api/auth/login', { email, password: secret });
     assert.equal(allowed.status, 200);

@@ -21,7 +21,7 @@ export default function AccountPage() {
   const { user, savedLocation, saveLocation, authLoading, authError } = useDelivery();
   const [activeTab, setActiveTab] = useState('profile');
   const [values, setValues] = useState(() =>
-    user ? { namaToko: user.name, namaJalan: user.address } : { namaToko: '', namaJalan: '' },
+    user ? { namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' } : { namaToko: '', namaJalan: '', storeName: '' },
   );
   const [edited, setEdited] = useState(false);
   const [errors, setErrors] = useState({});
@@ -34,7 +34,7 @@ export default function AccountPage() {
   useEffect(() => {
     if (user && !edited) {
       // oxlint-disable-next-line react/set-state-in-effect
-      setValues({ namaToko: user.name, namaJalan: user.address });
+      setValues({ namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' });
     }
   }, [user, edited]);
 
@@ -64,10 +64,13 @@ export default function AccountPage() {
     event.preventDefault();
     if (pending.current) return;
     const nextErrors = validateDelivery(values);
+    const storeName = values.storeName.trim();
+    if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
+      nextErrors.storeName = 'Nama toko harus kosong atau berisi 2–100 karakter.';
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       selectTab('address');
-      document.getElementById(nextErrors.namaToko ? 'account-name' : 'account-address')?.focus();
+      document.getElementById(nextErrors.storeName ? 'account-store-name' : nextErrors.namaToko ? 'account-name' : 'account-address')?.focus();
       return;
     }
     pending.current = true;
@@ -88,7 +91,7 @@ export default function AccountPage() {
       return;
     }
     setEdited(false);
-    setNotice('Nama dan alamat berhasil diperbarui.');
+    setNotice('Informasi akun, nama toko, dan alamat berhasil diperbarui.');
   };
 
   if (authLoading)
@@ -254,7 +257,25 @@ export default function AccountPage() {
                 <form onSubmit={save} noValidate>
                   <div className="account-panel-heading">
                     <h2>Alamat pengiriman</h2>
-                    <p>Nama dan alamat ini digunakan pada “Kirim ke” dan checkout.</p>
+                    <p>Nama toko tampil pada “Kirim ke”; nama penerima dan alamat tetap digunakan untuk checkout.</p>
+                  </div>
+                  <div className="account-field">
+                    <label htmlFor="account-store-name">Nama toko (opsional)</label>
+                    <input
+                      id="account-store-name"
+                      disabled={saving}
+                      type="text"
+                      maxLength={100}
+                      value={values.storeName}
+                      onChange={(event) => update('storeName', event.target.value)}
+                      placeholder="Contoh: Toko Endless"
+                      aria-invalid={Boolean(errors.storeName)}
+                      aria-describedby={errors.storeName ? 'account-store-name-error' : undefined}
+                    />
+                    {errors.storeName && (
+                      <p className="account-error" id="account-store-name-error">{errors.storeName}</p>
+                    )}
+                    <p className="account-profile-help">Kosongkan jika tidak memiliki toko. Nama pribadi tetap terpisah.</p>
                   </div>
                   <div className="account-field">
                     <label htmlFor="account-name">Nama penerima</label>

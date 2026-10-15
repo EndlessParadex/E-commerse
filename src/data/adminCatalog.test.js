@@ -11,10 +11,17 @@ test('admin menampilkan setiap SKU dan pemasok yang tepat tanpa menggabungkan uk
 });
 
 test('filter admin menggabungkan PT merek dan pencarian SKU/ukuran', () => {
-  const matches = filterAdminProducts({ supplierId: 'demo-pangan', brandId: 'rasa-contoh', query: '23g' });
+  const matches = filterAdminProducts({
+    supplierId: 'demo-pangan',
+    brandId: 'rasa-contoh',
+    query: '23g',
+  });
   assert.equal(matches.length, 1);
   assert.equal(matches[0].id, 'snack-pedas-23g');
-  assert.equal(filterAdminProducts({ supplierId: 'demo-beauty', brandId: 'rasa-contoh' }).length, 0);
+  assert.equal(
+    filterAdminProducts({ supplierId: 'demo-beauty', brandId: 'rasa-contoh' }).length,
+    0,
+  );
   assert.equal(filterAdminProducts({ query: 'produk tidak ada' }).length, 0);
   assert.equal(filterAdminProducts({ query: 'snack-pedas-23g' }).length, 1);
   assert.equal(filterAdminProducts().length, 25);
@@ -22,7 +29,10 @@ test('filter admin menggabungkan PT merek dan pencarian SKU/ukuran', () => {
 
 test('pilihan merek admin hanya berasal dari PT terpilih', () => {
   assert.equal(adminBrands().length, 8);
-  assert.deepEqual(adminBrands('demo-rumah').map((brand) => brand.id), ['natural-contoh']);
+  assert.deepEqual(
+    adminBrands('demo-rumah').map((brand) => brand.id),
+    ['natural-contoh'],
+  );
   assert.equal(adminBrands('demo-beauty').length, 2);
   assert.deepEqual(adminBrands('tidak-ada'), []);
 });

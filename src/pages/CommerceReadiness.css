@@ -1,0 +1,198 @@
+.commerce-readiness {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 22px;
+  margin-bottom: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+.workflow-admin-orders .commerce-readiness {
+  margin: 20px;
+}
+.commerce-readiness h3,
+.commerce-readiness h4,
+.commerce-readiness p {
+  margin: 0;
+}
+.commerce-readiness h3 {
+  font-size: 1.2rem;
+}
+.commerce-readiness h4 {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.commerce-readiness p {
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+.commerce-readiness-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.commerce-readiness-heading p {
+  margin-top: 4px;
+}
+.commerce-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.commerce-readiness-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.commerce-readiness-label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+.commerce-readiness-card a {
+  margin-top: auto;
+  padding-top: 8px;
+  font-weight: 650;
+  line-height: 1.5;
+  color: var(--color-link);
+}
+.commerce-readiness .commerce-readiness-owner-note {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 0.875rem;
+}
+.commerce-readiness-delivery {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 20px;
+  min-width: 0;
+}
+.commerce-delivery-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.delivery-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--color-surface-soft);
+}
+.delivery-count strong {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+.delivery-count span {
+  font-size: 0.9375rem;
+}
+.delivery-count.is-sent {
+  color: var(--color-success-text);
+  background: var(--color-success-soft);
+}
+.delivery-count.is-failed,
+.delivery-count.is-configuration_required {
+  color: var(--color-warning-text);
+  background: var(--color-warning-pill);
+}
+.commerce-readiness .commerce-delivery-hint {
+  font-size: 0.875rem;
+}
+.commerce-readiness-details {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+.commerce-readiness-details summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.commerce-readiness-details[open] summary {
+  border-bottom: 1px solid var(--color-border);
+}
+.commerce-readiness-details-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+.commerce-skip-reasons {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.commerce-skip-reasons li + li {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+.commerce-skip-reasons p {
+  margin-top: 4px;
+}
+.commerce-delivery-failure {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+.commerce-delivery-failure > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.commerce-delivery-failure button {
+  flex-shrink: 0;
+}
+.commerce-account-delivery,
+.commerce-readiness-notice {
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+}
+.commerce-readiness :is(a, button, summary):focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .commerce-readiness-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .workflow-admin-orders .commerce-readiness {
+    margin: 14px;
+  }
+  .commerce-readiness {
+    padding: 16px;
+    gap: 16px;
+  }
+  .commerce-readiness-card {
+    padding: 14px;
+  }
+  .commerce-delivery-failure {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .delivery-count {
+    flex: 1 1 130px;
+    min-width: 0;
+  }
+}

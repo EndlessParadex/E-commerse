@@ -5,8 +5,10 @@ export function validateDelivery(value) {
   const errors = {};
   const name = typeof value?.namaToko === 'string' ? value.namaToko.trim() : '';
   const address = typeof value?.namaJalan === 'string' ? value.namaJalan.trim() : '';
-  if (name.length < 2 || name.length > 100) errors.namaToko = 'Nama penerima harus berisi 2–100 karakter.';
-  if (address.length < 10 || address.length > 500) errors.namaJalan = 'Isi alamat lengkap sepanjang 10–500 karakter.';
+  if (name.length < 2 || name.length > 100)
+    errors.namaToko = 'Nama penerima harus berisi 2–100 karakter.';
+  if (address.length < 10 || address.length > 500)
+    errors.namaJalan = 'Isi alamat lengkap sepanjang 10–500 karakter.';
   return errors;
 }
 
@@ -17,13 +19,20 @@ export function normalizeDelivery(value) {
 }
 
 export function readDelivery(storage) {
-  try { return normalizeDelivery(JSON.parse(storage.getItem(companyStorageKey(DELIVERY_STORAGE_KEY)))); }
-  catch { return null; }
+  try {
+    return normalizeDelivery(JSON.parse(storage.getItem(companyStorageKey(DELIVERY_STORAGE_KEY))));
+  } catch {
+    return null;
+  }
 }
 
 export function writeDelivery(value, storage) {
   const normalized = normalizeDelivery(value);
   if (!normalized) return false;
-  try { storage.setItem(companyStorageKey(DELIVERY_STORAGE_KEY), JSON.stringify(normalized)); return true; }
-  catch { return false; }
+  try {
+    storage.setItem(companyStorageKey(DELIVERY_STORAGE_KEY), JSON.stringify(normalized));
+    return true;
+  } catch {
+    return false;
+  }
 }

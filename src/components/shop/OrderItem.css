@@ -1,38 +1,128 @@
-.orders-page .orders-products .order-item-brand, .confirmation-item-copy .order-item-brand { color: var(--color-link); font-size: 0.6875rem; }
-.orders-page .orders-products .order-item-size, .confirmation-item-copy .order-item-size { display: inline-block; width: fit-content; border-radius: 5px; padding: 4px 8px; margin: 3px 0; background: var(--color-info-soft); color: var(--color-info-text); font-size: 0.6875rem; font-weight: 600; }
-.orders-page .orders-products .order-item-subtotal { font-size: 0.75rem; color: var(--color-text-strong); margin-top: 2px; }
-.confirmation-item-count { margin-top: 14px; font-size: 0.75rem; color: var(--color-text-muted); }
-.confirmation-line-total { min-width: 0; display: grid; gap: 5px; text-align: right; }
-.confirmation-line-total span { font-size: 0.625rem; color: var(--color-text-muted); }
-.confirmation-line-total strong { max-width: 100%; font-size: 0.8125rem; white-space: normal; overflow-wrap: anywhere; }
-.order-confirmation-page .confirmation-items li { grid-template-columns: 140px minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.orders-page .orders-products .order-item-brand,
+.confirmation-item-copy .order-item-brand {
+  color: var(--color-link);
+  font-size: 0.6875rem;
+}
+.orders-page .orders-products .order-item-size,
+.confirmation-item-copy .order-item-size {
+  display: inline-block;
+  width: fit-content;
+  border-radius: 5px;
+  padding: 4px 8px;
+  margin: 3px 0;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.orders-page .orders-products .order-item-subtotal {
+  font-size: 0.75rem;
+  color: var(--color-text-strong);
+  margin-top: 2px;
+}
+.confirmation-item-count {
+  margin-top: 14px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+.confirmation-line-total {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  text-align: right;
+}
+.confirmation-line-total span {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+.confirmation-line-total strong {
+  max-width: 100%;
+  font-size: 0.8125rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.order-confirmation-page .confirmation-items li {
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
 .order-confirmation-page .confirmation-item-image,
-.order-confirmation-page .confirmation-item-image .bam-product-media--promo { width: 140px; height: 140px; }
-.order-confirmation-page .confirmation-item-image .bam-product-media--promo { padding: 4px; margin: 0; }
-.order-confirmation-page .confirmation-item-image .bam-product-fallback { font-size: 4rem; }
-.orders-page .orders-products li { grid-template-columns: 140px minmax(0, 1fr); align-items: start; }
+.order-confirmation-page .confirmation-item-image .bam-product-media--promo {
+  width: 140px;
+  height: 140px;
+}
+.order-confirmation-page .confirmation-item-image .bam-product-media--promo {
+  padding: 4px;
+  margin: 0;
+}
+.order-confirmation-page .confirmation-item-image .bam-product-fallback {
+  font-size: 4rem;
+}
+.orders-page .orders-products li {
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: start;
+}
 .orders-page .orders-products .bam-product-media--promo,
-.orders-page .orders-products .bam-product-media--thumbnail { width: 140px; height: 140px; padding: 4px; }
-.orders-page .orders-products .bam-product-fallback { font-size: 4rem; }
-.confirmation-info > p { overflow-wrap: anywhere; white-space: pre-line; }
+.orders-page .orders-products .bam-product-media--thumbnail {
+  width: 140px;
+  height: 140px;
+  padding: 4px;
+}
+.orders-page .orders-products .bam-product-fallback {
+  font-size: 4rem;
+}
+.confirmation-info > p {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
 @media (max-width: 600px) {
-  .order-confirmation-page .confirmation-items li { grid-template-columns: 110px minmax(0, 1fr); gap: 8px 12px; }
-  .confirmation-line-total { grid-column: 2; text-align: left; }
-  .order-confirmation-page .confirmation-item-image, .order-confirmation-page .confirmation-item-image .bam-product-media--promo { width: 110px; height: 110px; }
-  .order-confirmation-page .confirmation-item-image .bam-product-fallback { font-size: 3rem; }
-  .confirmation-item-copy strong { font-size: 0.8125rem; }
-  .orders-products { gap: 20px; }
-  .orders-page .orders-products li { grid-template-columns: 110px minmax(0, 1fr); }
+  .order-confirmation-page .confirmation-items li {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 8px 12px;
+  }
+  .confirmation-line-total {
+    grid-column: 2;
+    text-align: left;
+  }
+  .order-confirmation-page .confirmation-item-image,
+  .order-confirmation-page .confirmation-item-image .bam-product-media--promo {
+    width: 110px;
+    height: 110px;
+  }
+  .order-confirmation-page .confirmation-item-image .bam-product-fallback {
+    font-size: 3rem;
+  }
+  .confirmation-item-copy strong {
+    font-size: 0.8125rem;
+  }
+  .orders-products {
+    gap: 20px;
+  }
+  .orders-page .orders-products li {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
   .orders-page .orders-products .bam-product-media--promo,
-  .orders-page .orders-products .bam-product-media--thumbnail { width: 110px; height: 110px; }
-  .orders-page .orders-products .bam-product-fallback { font-size: 3rem; }
-  .orders-products strong { font-size: 0.8125rem; }
+  .orders-page .orders-products .bam-product-media--thumbnail {
+    width: 110px;
+    height: 110px;
+  }
+  .orders-page .orders-products .bam-product-fallback {
+    font-size: 3rem;
+  }
+  .orders-products strong {
+    font-size: 0.8125rem;
+  }
 }
 @media (max-width: 360px) {
   .order-confirmation-page .confirmation-items li,
-  .orders-page .orders-products li { grid-template-columns: 90px minmax(0, 1fr); }
+  .orders-page .orders-products li {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
   .order-confirmation-page .confirmation-item-image,
   .order-confirmation-page .confirmation-item-image .bam-product-media--promo,
   .orders-page .orders-products .bam-product-media--promo,
-  .orders-page .orders-products .bam-product-media--thumbnail { width: 90px; height: 90px; }
+  .orders-page .orders-products .bam-product-media--thumbnail {
+    width: 90px;
+    height: 90px;
+  }
 }

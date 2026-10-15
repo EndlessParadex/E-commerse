@@ -24,7 +24,8 @@ test('halaman baru, pencarian baru dan route invalid tetap memulai dari atas', (
     ['/produk/snack-pedas', '/pemasok/demo-pangan'],
     ['/cari?q=almond', '/cari?q=serum'],
     ['/pemasok/demo-pangan', '/pemasok/unknown'],
-  ]) assert.equal(shouldResetRouteScroll(previous, next), true);
+  ])
+    assert.equal(shouldResetRouteScroll(previous, next), true);
   assert.equal(catalogNavigationKey('/pemasok/unknown'), null);
   assert.equal(shouldResetRouteScroll('/keranjang', '/keranjang'), false);
 });

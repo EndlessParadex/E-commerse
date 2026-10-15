@@ -9,8 +9,11 @@ export function purchasePackagingLabel(variant, quantity = 1) {
 
 function choiceContents(variant, variants) {
   const value = packagingValues(variant);
-  const alternatives = variants.filter((entry) => sizeKey(entry) === sizeKey(variant)
-    && packagingValues(entry).packagingType === value.packagingType);
+  const alternatives = variants.filter(
+    (entry) =>
+      sizeKey(entry) === sizeKey(variant) &&
+      packagingValues(entry).packagingType === value.packagingType,
+  );
   // Two different pack sizes must remain distinguishable when both are sold.
   const contents = new Set(alternatives.map((entry) => packagingValues(entry).unitsPerPackage));
   return contents.size > 1 ? ` (isi ${value.unitsPerPackage})` : '';

@@ -1,16 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DELIVERY_STORAGE_KEY, normalizeDelivery, validateDelivery, readDelivery, writeDelivery } from './deliveryModel.js';
+import {
+  DELIVERY_STORAGE_KEY,
+  normalizeDelivery,
+  validateDelivery,
+  readDelivery,
+  writeDelivery,
+} from './deliveryModel.js';
 
-const location = { namaToko: 'Nama Contoh', namaJalan: 'Jalan Contoh No. 10, Tangerang, Banten 15810' };
+const location = {
+  namaToko: 'Nama Contoh',
+  namaJalan: 'Jalan Contoh No. 10, Tangerang, Banten 15810',
+};
 const memoryStorage = () => {
   const items = new Map();
-  return { getItem: (key) => items.get(key) ?? null, setItem: (key, value) => items.set(key, value) };
+  return {
+    getItem: (key) => items.get(key) ?? null,
+    setItem: (key, value) => items.set(key, value),
+  };
 };
 
 test('hanya nama dan alamat yang disimpan, tanpa email atau password', () => {
   const storage = memoryStorage();
-  assert.equal(writeDelivery({ ...location, email: 'contoh@example.com', password: 'secret', confirmPassword: 'secret' }, storage), true);
+  assert.equal(
+    writeDelivery(
+      { ...location, email: 'contoh@example.com', password: 'secret', confirmPassword: 'secret' },
+      storage,
+    ),
+    true,
+  );
   assert.deepEqual(JSON.parse(storage.getItem(DELIVERY_STORAGE_KEY)), location);
 });
 
@@ -24,8 +42,14 @@ test('alamat yang disimpan dapat dimuat ulang dan diedit', () => {
 });
 
 test('spasi luar dibersihkan dan baris alamat dipertahankan', () => {
-  const value = { namaToko: '  Nama Contoh  ', namaJalan: '  Jalan Contoh No. 10\nTangerang 15810  ' };
-  assert.deepEqual(normalizeDelivery(value), { namaToko: 'Nama Contoh', namaJalan: 'Jalan Contoh No. 10\nTangerang 15810' });
+  const value = {
+    namaToko: '  Nama Contoh  ',
+    namaJalan: '  Jalan Contoh No. 10\nTangerang 15810  ',
+  };
+  assert.deepEqual(normalizeDelivery(value), {
+    namaToko: 'Nama Contoh',
+    namaJalan: 'Jalan Contoh No. 10\nTangerang 15810',
+  });
 });
 
 test('data tidak valid dan JSON rusak tidak menyebabkan crash atau menimpa alamat valid', () => {
@@ -40,7 +64,14 @@ test('data tidak valid dan JSON rusak tidak menyebabkan crash atau menimpa alama
 });
 
 test('kegagalan penyimpanan dapat ditangani tanpa menganggap data tersimpan', () => {
-  const blocked = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
+  const blocked = {
+    getItem() {
+      throw new Error('blocked');
+    },
+    setItem() {
+      throw new Error('blocked');
+    },
+  };
   assert.equal(readDelivery(blocked), null);
   assert.equal(writeDelivery(location, blocked), false);
 });

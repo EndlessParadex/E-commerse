@@ -1,12 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createOrder, readOrder, readOrders, saveOrder, ORDER_HISTORY_KEY, ORDER_STORAGE_KEY } from './orderModel.js';
+import {
+  createOrder,
+  readOrder,
+  readOrders,
+  saveOrder,
+  ORDER_HISTORY_KEY,
+  ORDER_STORAGE_KEY,
+  validOrder,
+} from './orderModel.js';
 import { products } from '../data/products.js';
 import { orderItemPresentation } from '../data/orderItemPresentation.js';
 
 const storage = () => {
   const values = new Map();
-  return { setItem: (key, value) => values.set(key, value), getItem: (key) => values.get(key) || null };
+  return {
+    setItem: (key, value) => values.set(key, value),
+    getItem: (key) => values.get(key) || null,
+  };
 };
 
 test('order menghitung subtotal, ongkir, dan total dari cart', () => {
@@ -22,11 +33,74 @@ test('order menghitung subtotal, ongkir, dan total dari cart', () => {
   assert.equal(order.shipping.label, 'Reguler');
 });
 
-const sampleOrder = (overrides = {}) => ({ ...createOrder({ cart: [{ id: 'snack', name: 'Keripik', price: 18000, quantity: 1 }], recipient: 'Pembeli', address: 'Alamat contoh', shipping: { label: 'Reguler', cost: 10000 }, payment: {} }), ...overrides });
+const sampleOrder = (overrides = {}) => ({
+  ...createOrder({
+    cart: [{ id: 'snack', name: 'Keripik', price: 18000, quantity: 1 }],
+    recipient: 'Pembeli',
+    address: 'Alamat contoh',
+    shipping: { label: 'Reguler', cost: 10000 },
+    payment: {},
+  }),
+  ...overrides,
+});
+
+test('server COD confirmation records require a deadline and a coherent status before rendering', () => {
+  const waiting = sampleOrder({
+    status: 'awaiting_confirmation',
+    codConfirmation: { expiresAt: 1700000000000 },
+    payment: { id: 'cod', groupId: 'cod', label: 'Bayar di tempat', status: 'pay_on_delivery' },
+  });
+  assert.equal(validOrder(waiting), true);
+  assert.equal(Boolean(validOrder({ ...waiting, codConfirmation: undefined })), false);
+  assert.equal(
+    Boolean(validOrder({ ...waiting, codConfirmation: { expiresAt: 'not-a-time' } })),
+    false,
+  );
+  assert.equal(
+    Boolean(
+      validOrder({
+        ...waiting,
+        codConfirmation: {
+          expiresAt: 1700000000000,
+          confirmedAt: 1690000000000,
+          confirmedBy: 'admin',
+        },
+      }),
+    ),
+    false,
+  );
+  assert.equal(
+    Boolean(validOrder({ ...waiting, payment: { ...waiting.payment, groupId: 'va' } })),
+    false,
+  );
+  assert.equal(
+    validOrder({
+      ...waiting,
+      status: 'processing',
+      codConfirmation: {
+        expiresAt: 1700000000000,
+        confirmedAt: 1690000000000,
+        confirmedBy: 'admin',
+      },
+    }),
+    true,
+  );
+});
 
 test('semua SKU menyimpan merek ukuran dan harga saat pesan tanpa menggabungkan varian', () => {
-  const cart = products.map((product) => ({ id: product.id, name: product.name, price: product.price, quantity: 2 }));
-  const order = createOrder({ cart, recipient: 'Pembeli', address: 'Alamat contoh', shipping: { cost: 10000 }, payment: {} });
+  const cart = products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    quantity: 2,
+  }));
+  const order = createOrder({
+    cart,
+    recipient: 'Pembeli',
+    address: 'Alamat contoh',
+    shipping: { cost: 10000 },
+    payment: {},
+  });
   const target = storage();
   assert.equal(saveOrder(order, target), true);
   const saved = readOrder(order.id, target);
@@ -45,11 +119,23 @@ test('semua SKU menyimpan merek ukuran dan harga saat pesan tanpa menggabungkan 
 test('perubahan katalog tidak mengubah snapshot pesanan yang sudah tersimpan', () => {
   const product = products.find((item) => item.id === 'snack-pedas-23g');
   const original = { ...product };
-  const order = createOrder({ cart: [{ id: product.id, name: product.name, price: product.price, quantity: 2 }], recipient: 'Pembeli', address: 'Alamat contoh', shipping: { cost: 10000 }, payment: {} });
+  const order = createOrder({
+    cart: [{ id: product.id, name: product.name, price: product.price, quantity: 2 }],
+    recipient: 'Pembeli',
+    address: 'Alamat contoh',
+    shipping: { cost: 10000 },
+    payment: {},
+  });
   const target = storage();
   saveOrder(order, target);
   try {
-    Object.assign(product, { name: 'Produk katalog berubah', brand: 'Merek baru', price: 99999, sizeLabel: '999g', image: 'foto-baru.jpg' });
+    Object.assign(product, {
+      name: 'Produk katalog berubah',
+      brand: 'Merek baru',
+      price: 99999,
+      sizeLabel: '999g',
+      image: 'foto-baru.jpg',
+    });
     const saved = readOrder(order.id, target);
     const display = orderItemPresentation(saved.items[0]);
     assert.equal(display.brand, original.brand);
@@ -58,11 +144,17 @@ test('perubahan katalog tidak mengubah snapshot pesanan yang sudah tersimpan', (
     assert.equal(saved.items[0].price, 3500);
     assert.equal(saved.total, 17000);
     assert.notEqual(display.product.image, 'foto-baru.jpg');
-  } finally { Object.assign(product, original); }
+  } finally {
+    Object.assign(product, original);
+  }
 });
 
 test('pesanan lama tanpa metadata tetap dibaca dari nama/harga historis', () => {
-  const order = sampleOrder({ items: [{ id: 'snack-pedas', name: 'Keripik lama 62g', price: 6500, quantity: 1 }], subtotal: 6500, total: 16500 });
+  const order = sampleOrder({
+    items: [{ id: 'snack-pedas', name: 'Keripik lama 62g', price: 6500, quantity: 1 }],
+    subtotal: 6500,
+    total: 16500,
+  });
   const target = storage();
   assert.equal(saveOrder(order, target), true);
   const display = orderItemPresentation(readOrder(order.id, target).items[0]);
@@ -70,7 +162,11 @@ test('pesanan lama tanpa metadata tetap dibaca dari nama/harga historis', () => 
   assert.equal(display.sizeLabel, '62g');
   assert.equal(display.brand, '');
   assert.equal(display.product.image, '');
-  assert.equal(orderItemPresentation({ id: 'removed', name: 'Produk dihapus', price: 1000, quantity: 1 }).sizeLabel, '');
+  assert.equal(
+    orderItemPresentation({ id: 'removed', name: 'Produk dihapus', price: 1000, quantity: 1 })
+      .sizeLabel,
+    '',
+  );
 });
 
 test('checkout kedua mempertahankan detail pesanan pertama dan urutan terbaru', () => {
@@ -80,7 +176,10 @@ test('checkout kedua mempertahankan detail pesanan pertama dan urutan terbaru', 
   assert.notEqual(first.id, second.id);
   assert.equal(saveOrder(first, target), true);
   assert.equal(saveOrder(second, target), true);
-  assert.deepEqual(readOrders(target).map((order) => order.id), [second.id, first.id]);
+  assert.deepEqual(
+    readOrders(target).map((order) => order.id),
+    [second.id, first.id],
+  );
   assert.deepEqual(readOrder(first.id, target), first);
   assert.deepEqual(readOrder(second.id, target), second);
 });
@@ -92,7 +191,10 @@ test('pesanan terakhir versi lama dibaca dan dibawa ke riwayat baru', () => {
   assert.deepEqual(readOrders(target), [legacy]);
   const next = sampleOrder({ createdAt: 200 });
   assert.equal(saveOrder(next, target), true);
-  assert.deepEqual(readOrders(target).map((order) => order.id), [next.id, legacy.id]);
+  assert.deepEqual(
+    readOrders(target).map((order) => order.id),
+    [next.id, legacy.id],
+  );
   saveOrder(next, target);
   assert.equal(readOrders(target).length, 2);
 });
@@ -102,7 +204,16 @@ test('data rusak, tanggal invalid, total salah, dan duplikat disaring', () => {
   target.setItem(ORDER_HISTORY_KEY, '{invalid');
   assert.deepEqual(readOrders(target), []);
   const valid = sampleOrder();
-  target.setItem(ORDER_HISTORY_KEY, JSON.stringify([valid, valid, { id: 'broken' }, sampleOrder({ total: -1 }), sampleOrder({ createdAt: 1e20 })]));
+  target.setItem(
+    ORDER_HISTORY_KEY,
+    JSON.stringify([
+      valid,
+      valid,
+      { id: 'broken' },
+      sampleOrder({ total: -1 }),
+      sampleOrder({ createdAt: 1e20 }),
+    ]),
+  );
   assert.deepEqual(readOrders(target), [valid]);
   assert.equal(saveOrder({ id: 'broken' }, target), false);
 });
@@ -112,11 +223,20 @@ test('gagal menyimpan tidak menghilangkan riwayat; gagal membaca tidak menulis',
   const order = sampleOrder();
   saveOrder(order, target);
   const before = target.getItem(ORDER_HISTORY_KEY);
-  target.setItem = () => { throw new Error('quota'); };
+  target.setItem = () => {
+    throw new Error('quota');
+  };
   assert.equal(saveOrder(sampleOrder(), target), false);
   assert.equal(target.getItem(ORDER_HISTORY_KEY), before);
   let wrote = false;
-  const blocked = { getItem: () => { throw new Error('blocked'); }, setItem: () => { wrote = true; } };
+  const blocked = {
+    getItem: () => {
+      throw new Error('blocked');
+    },
+    setItem: () => {
+      wrote = true;
+    },
+  };
   assert.equal(saveOrder(sampleOrder(), blocked), false);
   assert.equal(wrote, false);
   assert.throws(() => readOrders(blocked));
@@ -125,12 +245,17 @@ test('gagal menyimpan tidak menghilangkan riwayat; gagal membaca tidak menulis',
 
 test('order dapat disimpan dan dibaca kembali berdasarkan id', () => {
   const target = storage();
-  const order = createOrder({ cart: [], recipient: 'Endless', address: 'Jl. Contoh nomor 10', shipping: { cost: 0 }, payment: {} });
+  const order = createOrder({
+    cart: [],
+    recipient: 'Endless',
+    address: 'Jl. Contoh nomor 10',
+    shipping: { cost: 0 },
+    payment: {},
+  });
   assert.equal(saveOrder(order, target), true);
   assert.deepEqual(readOrder(order.id, target), order);
   assert.equal(readOrder('BAM-NOT-FOUND', target), null);
 });
-
 
 test('catatan opsional tersimpan per pesanan dan tetap terbaca setelah muat ulang', () => {
   const target = storage();
@@ -146,8 +271,17 @@ test('catatan opsional tersimpan per pesanan dan tetap terbaca setelah muat ulan
 });
 
 test('catatan dinormalisasi dan dibatasi 300 karakter tanpa mengubah total', () => {
-  const input = { cart: [{ id: 'snack', name: 'Keripik', price: 18000, quantity: 1 }], recipient: 'Pembeli', address: 'Alamat contoh', shipping: { cost: 10000 }, payment: {} };
-  assert.equal(createOrder({ ...input, note: '  Pesan khusus\nBaris kedua  ' }).note, 'Pesan khusus\nBaris kedua');
+  const input = {
+    cart: [{ id: 'snack', name: 'Keripik', price: 18000, quantity: 1 }],
+    recipient: 'Pembeli',
+    address: 'Alamat contoh',
+    shipping: { cost: 10000 },
+    payment: {},
+  };
+  assert.equal(
+    createOrder({ ...input, note: '  Pesan khusus\nBaris kedua  ' }).note,
+    'Pesan khusus\nBaris kedua',
+  );
   assert.equal(createOrder({ ...input, note: '   ' }).note, '');
   const order = createOrder({ ...input, note: 'a'.repeat(301) });
   assert.equal(order.note.length, 300);

@@ -12,5 +12,19 @@ const paths = {
 };
 
 export default function NavigationIcon({ name }) {
-  return <svg className="navigation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={paths[name] || paths.overview} /></svg>;
+  return (
+    <svg
+      className="navigation-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={paths[name] || paths.overview} />
+    </svg>
+  );
 }

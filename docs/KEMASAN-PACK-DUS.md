@@ -46,11 +46,11 @@ Pada **Tambah produk** atau **Edit produk**, buka bagian **03 · Ukuran, kemasan
 
 Contoh pengisian berikut hanya untuk memahami format, bukan harga atau isi resmi produk:
 
-| SKU | Ukuran per satuan | Satuan ukuran | Jenis kemasan | Isi kemasan | Pack dalam dus | Harga per kemasan |
-| --- | --- | --- | --- | --- | --- | --- |
-| BUMBU-23G | 23 | Gram (g) | Satuan | 1 otomatis | — | Rp 12.000 |
-| BUMBU-23G-PACK6 | 23 | Gram (g) | Pack | 6 | — | Rp 65.000 |
-| BUMBU-23G-DUS24 | 23 | Gram (g) | Dus | 24 | 4, opsional | Rp 250.000 |
+| SKU             | Ukuran per satuan | Satuan ukuran | Jenis kemasan | Isi kemasan | Pack dalam dus | Harga per kemasan |
+| --------------- | ----------------- | ------------- | ------------- | ----------- | -------------- | ----------------- |
+| BUMBU-23G       | 23                | Gram (g)      | Satuan        | 1 otomatis  | —              | Rp 12.000         |
+| BUMBU-23G-PACK6 | 23                | Gram (g)      | Pack          | 6           | —              | Rp 65.000         |
+| BUMBU-23G-DUS24 | 23                | Gram (g)      | Dus           | 24          | 4, opsional    | Rp 250.000        |
 
 Untuk 62g atau 130g, tambahkan varian tersendiri hanya untuk kombinasi kemasan yang benar-benar dijual. SKU harus berbeda, termasuk saat ukurannya sama. Pack isi 6 dan pack isi 12 dapat menjadi dua varian yang berbeda.
 
@@ -58,7 +58,9 @@ Minimal isi pack/dus adalah 2 satuan, maksimal 1.000.000, tanpa pecahan. Jumlah 
 
 ## Pemeriksaan
 
-107 pengujian otomatis lulus, termasuk pengisian admin melalui API, perpindahan ukuran dengan kemasan yang tidak tersedia, perhitungan keranjang/checkout, riwayat setelah katalog berubah, validasi duplikat/isi, dan migrasi database lama yang dibuka kembali. Pemeriksaan kode dan build berhasil.
+109 pengujian otomatis lulus, termasuk pengisian admin melalui API, perpindahan ukuran dengan kemasan yang tidak tersedia, perhitungan keranjang/checkout, riwayat setelah katalog berubah, validasi duplikat/isi, migrasi database lama yang dibuka kembali, dan penolakan penyimpanan pack/dus saat API masih menggunakan server lama. Pemeriksaan kode dan build berhasil.
+
+Jika pilihan Pack kembali menjadi Satuan, ikuti `PERBAIKAN-SIMPAN-KEMASAN.md`. Setelah menyalin kode, server perlu dihentikan dan dijalankan ulang dari folder proyek yang sudah diperbarui.
 
 Pengujian interaksi menggunakan DOM otomatis. Pemeriksaan visual desktop/HP di browser proyek Anda masih perlu dilakukan setelah pemasangan, karena browser alat belum dapat mengakses server lokal lingkungan kerja.
 

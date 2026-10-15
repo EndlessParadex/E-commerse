@@ -28,11 +28,24 @@ test('nama harga dan jumlah snapshot lama tidak ditimpa data katalog', () => {
 });
 
 test('produk dihapus/produk demo lama tetap dapat ditampilkan tanpa tautan rusak', () => {
-  const display = cartItemPresentation({ id: 'removed', name: 'Sabun lama 100 ml', price: 20000, quantity: 1 });
+  const display = cartItemPresentation({
+    id: 'removed',
+    name: 'Sabun lama 100 ml',
+    price: 20000,
+    quantity: 1,
+  });
   assert.equal(display.name, 'Sabun lama');
   assert.equal(display.sizeLabel, '100ml');
   assert.equal(display.detailHref, '');
   assert.equal(display.brand, '');
   assert.equal(display.product.icon, '🛒');
-  assert.equal(cartItemPresentation({ id: 'demo-snack', name: '[Contoh] Keripik Kentang', price: 18000, quantity: 1 }).sizeLabel, '');
+  assert.equal(
+    cartItemPresentation({
+      id: 'demo-snack',
+      name: '[Contoh] Keripik Kentang',
+      price: 18000,
+      quantity: 1,
+    }).sizeLabel,
+    '',
+  );
 });

@@ -21,23 +21,45 @@ export const appearanceAccents = [
   { id: 'violet', label: 'Ungu', light: '#6d28d9', dark: '#c4b5fd' },
   { id: 'orange', label: 'Jingga', light: '#9a3412', dark: '#fdba74' },
 ];
-export const defaultAppearance = Object.freeze({ mode: 'light', background: 'default', textSize: 'normal', accent: 'blue' });
+export const defaultAppearance = Object.freeze({
+  mode: 'light',
+  background: 'default',
+  textSize: 'normal',
+  accent: 'blue',
+});
 export function normalizeAppearance(value) {
   return {
-    mode: appearanceModes.some((mode) => mode.id === value?.mode) ? value.mode : defaultAppearance.mode,
-    background: appearanceBackgrounds.some((background) => background.id === value?.background) ? value.background : defaultAppearance.background,
-    textSize: appearanceTextSizes.some((size) => size.id === value?.textSize) ? value.textSize : defaultAppearance.textSize,
-    accent: appearanceAccents.some((accent) => accent.id === value?.accent) ? value.accent : defaultAppearance.accent,
+    mode: appearanceModes.some((mode) => mode.id === value?.mode)
+      ? value.mode
+      : defaultAppearance.mode,
+    background: appearanceBackgrounds.some((background) => background.id === value?.background)
+      ? value.background
+      : defaultAppearance.background,
+    textSize: appearanceTextSizes.some((size) => size.id === value?.textSize)
+      ? value.textSize
+      : defaultAppearance.textSize,
+    accent: appearanceAccents.some((accent) => accent.id === value?.accent)
+      ? value.accent
+      : defaultAppearance.accent,
   };
 }
-export const appearanceOwner = (user) => user?.id != null ? `user:${user.id}` : 'guest';
-export const appearanceStorageKey = (owner) => companyStorageKey(`bam.appearance.v1.${encodeURIComponent(owner)}`);
+export const appearanceOwner = (user) => (user?.id != null ? `user:${user.id}` : 'guest');
+export const appearanceStorageKey = (owner) =>
+  companyStorageKey(`bam.appearance.v1.${encodeURIComponent(owner)}`);
 export function readAppearance(storage, owner) {
-  try { return normalizeAppearance(JSON.parse(storage.getItem(appearanceStorageKey(owner)))); }
-  catch { return { ...defaultAppearance }; }
+  try {
+    return normalizeAppearance(JSON.parse(storage.getItem(appearanceStorageKey(owner))));
+  } catch {
+    return { ...defaultAppearance };
+  }
 }
 export function writeAppearance(storage, owner, preferences) {
-  try { storage.setItem(appearanceStorageKey(owner), JSON.stringify(normalizeAppearance(preferences))); return true; }
-  catch { return false; }
+  try {
+    storage.setItem(appearanceStorageKey(owner), JSON.stringify(normalizeAppearance(preferences)));
+    return true;
+  } catch {
+    return false;
+  }
 }
-export const resolveAppearanceMode = (mode, systemDark) => mode === 'dark' || (mode === 'system' && systemDark) ? 'dark' : 'light';
+export const resolveAppearanceMode = (mode, systemDark) =>
+  mode === 'dark' || (mode === 'system' && systemDark) ? 'dark' : 'light';

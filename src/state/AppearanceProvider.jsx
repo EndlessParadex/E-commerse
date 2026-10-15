@@ -1,11 +1,25 @@
 import { useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useDelivery } from './useDelivery';
 import { AppearanceContext } from './useAppearance';
-import { appearanceOwner, appearanceStorageKey, defaultAppearance, normalizeAppearance, readAppearance, resolveAppearanceMode, writeAppearance } from './appearanceModel';
+import {
+  appearanceOwner,
+  appearanceStorageKey,
+  defaultAppearance,
+  normalizeAppearance,
+  readAppearance,
+  resolveAppearanceMode,
+  writeAppearance,
+} from './appearanceModel';
 import '../styles/themes.css';
 import '../styles/preferences.css';
 
-function browserStorage() { try { return window.localStorage; } catch { return null; } }
+function browserStorage() {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 const systemSnapshot = () => window.matchMedia?.('(prefers-color-scheme: dark)')?.matches || false;
 function subscribeSystem(change) {
   const media = window.matchMedia?.('(prefers-color-scheme: dark)');
@@ -35,12 +49,20 @@ export default function AppearanceProvider({ children }) {
 
   useLayoutEffect(() => {
     const page = document.documentElement;
-    const attributes = { 'data-theme': effectiveMode, 'data-background': preferences.background, 'data-text-size': preferences.textSize, 'data-accent': preferences.accent };
-    const previous = Object.fromEntries(Object.keys(attributes).map((name) => [name, page.getAttribute(name)]));
+    const attributes = {
+      'data-theme': effectiveMode,
+      'data-background': preferences.background,
+      'data-text-size': preferences.textSize,
+      'data-accent': preferences.accent,
+    };
+    const previous = Object.fromEntries(
+      Object.keys(attributes).map((name) => [name, page.getAttribute(name)]),
+    );
     for (const [name, value] of Object.entries(attributes)) page.setAttribute(name, value);
     return () => {
       for (const [name, value] of Object.entries(previous)) {
-        if (value === null) page.removeAttribute(name); else page.setAttribute(name, value);
+        if (value === null) page.removeAttribute(name);
+        else page.setAttribute(name, value);
       }
     };
   }, [effectiveMode, preferences.background, preferences.textSize, preferences.accent]);
@@ -58,7 +80,25 @@ export default function AppearanceProvider({ children }) {
   const update = (patch) => {
     const next = normalizeAppearance({ ...preferences, ...patch });
     const saved = writeAppearance(browserStorage(), owner, next);
-    setSelection({ owner, preferences: next, notice: saved ? 'Pilihan tampilan tersimpan di perangkat ini.' : 'Pilihan diterapkan, tetapi belum tersimpan. Penyimpanan di perangkat ini tidak tersedia; pilihan dapat hilang setelah halaman dimuat ulang.' });
+    setSelection({
+      owner,
+      preferences: next,
+      notice: saved
+        ? 'Pilihan tampilan tersimpan di perangkat ini.'
+        : 'Pilihan diterapkan, tetapi belum tersimpan. Penyimpanan di perangkat ini tidak tersedia; pilihan dapat hilang setelah halaman dimuat ulang.',
+    });
   };
-  return <AppearanceContext.Provider value={{ preferences, effectiveMode, update, reset: () => update(defaultAppearance), notice: selection.owner === owner ? selection.notice : '' }}>{children}</AppearanceContext.Provider>;
+  return (
+    <AppearanceContext.Provider
+      value={{
+        preferences,
+        effectiveMode,
+        update,
+        reset: () => update(defaultAppearance),
+        notice: selection.owner === owner ? selection.notice : '',
+      }}
+    >
+      {children}
+    </AppearanceContext.Provider>
+  );
 }

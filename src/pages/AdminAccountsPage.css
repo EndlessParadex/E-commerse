@@ -1,0 +1,237 @@
+.accounts-content {
+  display: grid;
+  gap: 20px;
+  padding: 22px;
+  min-width: 0;
+}
+.accounts-explanation {
+  padding: 14px 16px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.accounts-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(130px, 1fr));
+  gap: 16px;
+}
+.accounts-filters .admin-field {
+  margin: 0;
+}
+.accounts-list-toolbar,
+.accounts-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.accounts-list-toolbar p,
+.accounts-pagination span {
+  color: var(--color-text-muted);
+}
+.accounts-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+.accounts-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.accounts-table th {
+  padding: 12px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.accounts-table td {
+  padding: 14px 12px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+.accounts-table td:first-child {
+  max-width: 260px;
+}
+.accounts-secondary {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.accounts-status {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  border-radius: 999px;
+}
+.accounts-status.is-active {
+  background: var(--color-success-pill);
+  color: var(--color-success-text);
+}
+.accounts-status.is-disabled {
+  background: var(--color-warning-pill);
+  color: var(--color-warning-text);
+}
+.accounts-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.accounts-row-actions button {
+  min-height: 40px;
+}
+.accounts-row-actions .accounts-delete {
+  color: var(--color-danger-text);
+}
+.accounts-page button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.accounts-error,
+.accounts-notice {
+  padding: 14px 16px;
+  border-radius: 10px;
+  line-height: 1.7;
+}
+.accounts-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+.accounts-notice {
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+.accounts-empty {
+  padding: 24px;
+  text-align: center;
+}
+.accounts-action-fields {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+.accounts-action-fields label {
+  font-weight: 650;
+  font-size: 0.9375rem;
+  margin-top: 6px;
+}
+.accounts-action-fields textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 9px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+  resize: vertical;
+}
+.accounts-action-fields select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.accounts-team-help {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--color-border-info);
+  border-radius: 12px;
+  background: var(--color-surface-tint);
+}
+.accounts-team-help > details {
+  flex: 1 1 320px;
+}
+.accounts-team-help summary {
+  font-size: 1rem;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 8px 0;
+  line-height: 1.5;
+}
+.accounts-team-help ol {
+  padding-left: 22px;
+  margin: 12px 0;
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+}
+.accounts-team-help p {
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
+}
+.accounts-screen-reader {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.accounts-page :is(input, select, textarea, button, a, summary):focus-visible,
+.accounts-action-fields :is(input, textarea, select):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .accounts-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .accounts-filters > .admin-field:first-child {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 760px) {
+  .accounts-content {
+    padding: 16px;
+  }
+  .accounts-table thead {
+    display: none;
+  }
+  .accounts-table,
+  .accounts-table tbody,
+  .accounts-table tr,
+  .accounts-table td {
+    display: block;
+    width: 100%;
+  }
+  .accounts-table tr {
+    margin-bottom: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .accounts-table td {
+    padding: 8px 0;
+    border: 0;
+  }
+  .accounts-table td:first-child {
+    max-width: none;
+  }
+  .accounts-table td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    color: var(--color-text-secondary);
+  }
+  .accounts-action-fields :is(input, textarea),
+  .accounts-filters :is(input, select) {
+    font-size: 1rem;
+  }
+}

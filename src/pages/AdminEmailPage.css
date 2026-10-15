@@ -1,0 +1,168 @@
+.email-settings-body {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.email-settings-body p {
+  line-height: 1.7;
+}
+.email-settings-page fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.email-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.email-settings-page .admin-field {
+  margin: 0;
+}
+.email-settings-page label {
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+.email-settings-state {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+  display: grid;
+  gap: 8px;
+}
+.email-settings-state p,
+.email-settings-help {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.email-settings-help {
+  margin-top: 12px;
+}
+.email-settings-confirm {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+.email-settings-confirm input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.email-settings-confirm .email-settings-help {
+  margin: 0;
+}
+.email-setup-service,
+.email-setup-guide,
+.email-setup-recipient {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.email-setup-service {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+.email-setup-service > p,
+.email-setup-guide p,
+.email-setup-recipient p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+}
+.email-setup-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.email-setup-guide,
+.email-setup-recipient {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.email-setup-guide ol {
+  margin: 0;
+  padding-left: 24px;
+  display: grid;
+  gap: 10px;
+  line-height: 1.7;
+}
+.email-setup-guide a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.email-setup-heading {
+  margin: 24px 0 20px;
+}
+.email-settings-page h3 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.email-setup-service h3,
+.email-settings-confirm h3 {
+  margin: 0;
+}
+.email-setup-recipient {
+  margin: 8px 0;
+}
+.email-settings-page input:read-only {
+  background: var(--color-surface-soft);
+}
+.email-use-page-url {
+  margin-top: 16px;
+}
+.email-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.email-settings-error,
+.email-settings-notice {
+  padding: 14px 16px;
+  border-radius: 10px;
+}
+.email-settings-error {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+.email-settings-notice {
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+.email-settings-page :is(input, button, a):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.email-settings-page button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+@media (max-width: 760px) {
+  .email-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .email-settings-body {
+    padding: 16px;
+  }
+  .email-settings-actions > * {
+    flex: 1 1 200px;
+  }
+  .email-settings-page input {
+    font-size: 1rem;
+  }
+}

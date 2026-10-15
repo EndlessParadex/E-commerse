@@ -1,0 +1,108 @@
+.commerce-payment,
+.order-invoice {
+  overflow-wrap: anywhere;
+  color: var(--color-text, #0f172a);
+}
+.commerce-summary {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.2rem 0;
+}
+.commerce-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.commerce-summary dd {
+  margin: 0;
+  text-align: right;
+}
+.commerce-bank {
+  padding: 1rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 12px;
+  background: var(--color-surface-muted, #f1f5f9);
+}
+.commerce-account-number {
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+.commerce-upload {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.commerce-upload input {
+  max-width: 100%;
+}
+.commerce-help {
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+.commerce-invoice-disclosure {
+  margin-block: 1rem;
+}
+.commerce-invoice-disclosure summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+.commerce-print-button {
+  margin-block: 1rem;
+}
+.order-invoice table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.order-invoice th,
+.order-invoice td {
+  padding: 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid #94a3b8;
+}
+.order-invoice {
+  font-size: 0.9rem;
+}
+.order-invoice p {
+  line-height: 1.7;
+}
+.commerce-share {
+  margin: 1rem 0;
+}
+.order-invoice {
+  display: none;
+}
+.commerce-invoice-disclosure[open] .order-invoice {
+  display: block;
+}
+.invoice-print-root {
+  display: none;
+}
+@media print {
+  body > *:not(.invoice-print-root) {
+    display: none !important;
+  }
+  .invoice-print-root {
+    display: block !important;
+  }
+  .invoice-print-root .order-invoice {
+    display: block !important;
+    position: static;
+    width: 100%;
+    font-size: 11pt;
+  }
+  .invoice-print-root,
+  .invoice-print-root * {
+    color: #111 !important;
+    background: white !important;
+  }
+  .invoice-print-root table {
+    page-break-inside: auto;
+  }
+  .invoice-print-root tr {
+    page-break-inside: avoid;
+  }
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+}

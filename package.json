@@ -7,6 +7,8 @@
     "dev": "vite",
     "server": "node server/index.js",
     "create-admin": "node server/create-admin.js",
+    "create-owner": "node server/create-admin.js --owner",
+    "create-owner:company": "node tools/company-command.cjs owner",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
     "lint": "oxlint",
@@ -15,9 +17,13 @@
     "cleanup": "node tools/rapikan-proyek.cjs",
     "dev:company": "node tools/company-command.cjs dev",
     "server:company": "node tools/company-command.cjs server",
-    "create-admin:company": "node tools/company-command.cjs admin"
+    "create-admin:company": "node tools/company-command.cjs admin",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown"
   },
   "dependencies": {
+    "nodemailer": "10.1.0",
+    "proxy-addr": "2.0.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -28,6 +34,10 @@
     "concurrently": "^9.2.1",
     "happy-dom": "^20.14.5",
     "oxlint": "^1.81.0",
+    "prettier": "3.9.10",
     "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }

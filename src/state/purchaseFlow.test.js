@@ -20,14 +20,26 @@ test('alur beberapa varian dari cart sampai riwayat mempertahankan ukuran jumlah
   const address = { namaToko: 'Pembeli Contoh', namaJalan: 'Jalan Contoh Nomor 10, Belitung' };
   assert.deepEqual(validateDelivery(address), {});
   assert.equal(validateWhatsApp('', false), '');
-  const order = createOrder({ cart: state.cart, recipient: address.namaToko, address: address.namaJalan, shipping: { label: 'Reguler', cost: 10000 }, payment: { label: 'Bayar di tempat' } });
+  const order = createOrder({
+    cart: state.cart,
+    recipient: address.namaToko,
+    address: address.namaJalan,
+    shipping: { label: 'Reguler', cost: 10000 },
+    payment: { label: 'Bayar di tempat' },
+  });
   const values = new Map();
-  const storage = { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value) };
+  const storage = {
+    getItem: (key) => values.get(key) || null,
+    setItem: (key, value) => values.set(key, value),
+  };
   assert.equal(saveOrder(order, storage), true);
   const saved = readOrder(order.id, storage);
   assert.equal(saved.total, 64000);
   assert.equal(readOrders(storage).length, 1);
-  assert.deepEqual(saved.items.map((item) => orderItemPresentation(item).sizeLabel), ['23g', '180g', '10ml']);
+  assert.deepEqual(
+    saved.items.map((item) => orderItemPresentation(item).sizeLabel),
+    ['23g', '180g', '10ml'],
+  );
   for (const item of saved.items) {
     const before = state.cart.find((entry) => entry.id === item.id);
     assert.equal(item.price, before.price);
@@ -45,12 +57,28 @@ test('kondisi kosong, data wajib invalid dan penyimpanan gagal ditangani model t
   assert.ok(validateDelivery({ namaToko: 'Pembeli', namaJalan: '' }).namaJalan);
   assert.ok(validateWhatsApp('', true));
   const state = shopReducer(emptyShop(), { type: 'add', product: products[0] });
-  const order = createOrder({ cart: state.cart, recipient: 'Pembeli', address: 'Alamat contoh lengkap', shipping: { cost: 10000 }, payment: {} });
+  const order = createOrder({
+    cart: state.cart,
+    recipient: 'Pembeli',
+    address: 'Alamat contoh lengkap',
+    shipping: { cost: 10000 },
+    payment: {},
+  });
   const before = JSON.stringify(state);
-  const blocked = { getItem: () => null, setItem: () => { throw new Error('storage blocked'); } };
+  const blocked = {
+    getItem: () => null,
+    setItem: () => {
+      throw new Error('storage blocked');
+    },
+  };
   assert.equal(saveOrder(order, blocked), false);
   assert.equal(JSON.stringify(state), before);
-  const legacy = cartItemPresentation({ id: 'removed', name: 'Nama produk panjang yang tetap harus terlihat utuh pada keranjang lama 130g', price: 18000, quantity: 1 });
+  const legacy = cartItemPresentation({
+    id: 'removed',
+    name: 'Nama produk panjang yang tetap harus terlihat utuh pada keranjang lama 130g',
+    price: 18000,
+    quantity: 1,
+  });
   assert.equal(legacy.sizeLabel, '130g');
   assert.equal(legacy.detailHref, '');
   assert.ok(legacy.name.includes('tetap harus terlihat utuh'));

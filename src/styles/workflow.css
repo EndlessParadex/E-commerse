@@ -1,81 +1,500 @@
-.workflow-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); gap: 16px; padding: 20px; }
-.workflow-preview { margin: 20px; padding: 14px 16px; background: var(--color-surface-hover); border: 1px solid var(--color-border-info-strong); border-radius: 10px; color: var(--color-info-text); font-size: 0.8125rem; line-height: 1.7; }
-.workflow-notice { margin: 16px 20px; padding: 14px 16px; background: var(--color-success-soft); color: var(--color-success-text); border: 1px solid var(--color-success-border); border-radius: 10px; font-size: 0.8125rem; line-height: 1.6; overflow-wrap: anywhere; }
-.workflow-error { color: var(--color-danger-text); }
-.workflow-order-list, .workflow-stock-list { list-style: none; display: grid; gap: 18px; padding: 20px; }
-.workflow-stock-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.workflow-order-card, .workflow-stock-card { min-width: 0; border: 1px solid var(--color-border); border-radius: 12px; padding: 20px; }
-.workflow-stock-card { display: flex; flex-direction: column; background: var(--color-surface); }
-.workflow-order-card header, .workflow-stock-card header { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.workflow-order-card h3, .workflow-stock-card h3 { font-size: 0.9375rem; line-height: 1.6; overflow-wrap: anywhere; }
-.workflow-order-card p, .workflow-stock-card p, .workflow-order-summary { color: var(--color-text-muted); font-size: 0.8125rem; line-height: 1.7; overflow-wrap: anywhere; }
-.workflow-badge { display: inline-flex; padding: 7px 12px; border-radius: 999px; background: var(--color-info-soft); color: var(--color-info-text); font-size: 0.75rem; font-weight: 700; }
-.workflow-badge.status-cancelled { background: var(--color-surface-muted); color: var(--color-text-secondary); }
-.workflow-badge.status-expired, .orders-status.status-expired { background: var(--color-danger-pill); color: var(--color-danger-strong); }
-.workflow-badge.status-awaiting_payment { background: var(--color-warning-pill); color: var(--color-warning-text); }
-.workflow-badge.status-completed, .orders-status.status-completed { background: var(--color-success-pill); color: var(--color-success-text); }
-.workflow-order-summary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 18px 0; }
-.workflow-order-summary strong { color: var(--color-text); }
-.workflow-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-.workflow-actions > *, .payment-continue { min-height: 44px; }
-.workflow-order-details { border-top: 1px solid var(--color-border); padding-top: 8px; }
-.workflow-order-details summary { min-height: 44px; cursor: pointer; padding: 12px 0; color: var(--color-link); font-size: 0.8125rem; font-weight: 700; }
-.workflow-order-details > ul { list-style: none; display: grid; gap: 18px; margin: 12px 0; }
-.workflow-order-details > ul > li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 16px; align-items: start; font-size: 0.8125rem; }
-.workflow-order-details .bam-product-media { width: 72px; height: 80px; margin: 0; }
-.workflow-order-details li > div { min-width: 0; display: grid; gap: 5px; overflow-wrap: anywhere; }
-.workflow-order-details small, .workflow-stock-card small { display: block; color: var(--color-text-muted); font-size: 0.6875rem; overflow-wrap: anywhere; }
-.workflow-stock-overview { margin: 22px 0 20px; }
-.workflow-stock-overview-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
-.workflow-stock-overview-heading h4 { font-size: 0.875rem; color: var(--color-text-strong); font-weight: 700; }
-.workflow-stock-card .workflow-stock-amount { margin: 0; color: var(--color-info-text); background: var(--color-info-soft); padding: 5px 10px; border-radius: 8px; font-size: 0.8125rem; }
-.workflow-stock-amount strong { font-size: inherit; font-weight: 800; font-variant-numeric: tabular-nums; }
-.workflow-stock-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.workflow-stock-stat { min-width: 0; padding: 12px; border: 1px solid var(--color-border-info); border-radius: 12px; background: var(--color-surface-tint); }
-.workflow-stock-stat dt { color: var(--color-text-strong); font-size: 0.875rem; font-weight: 700; }
-.workflow-stock-stat dd { margin: 6px 0 0; }
-.workflow-stock-stat dd strong { display: block; color: var(--color-info-text); font-size: 2rem; font-weight: 800; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.workflow-stock-stat dd small { display: block; margin-top: 7px; color: var(--color-text-secondary); font-size: 0.8125rem; line-height: 1.5; }
-.workflow-stock-stat.is-unconfigured dd strong { color: var(--color-text-muted); }
-.workflow-stock-card .workflow-stock-hint { margin: 10px 0 0; color: var(--color-text-secondary); font-size: 0.8125rem; line-height: 1.6; }
-.workflow-stock-packaging-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(84px, .7fr); align-items: center; gap: 14px; padding: 15px 0 12px; border-top: 1px solid var(--color-border); }
-.workflow-stock-packaging-heading h4, .workflow-stock-packaging-heading > span { color: var(--color-text-secondary); font-size: 0.8125rem; font-weight: 600; }
-.workflow-stock-packaging-heading > span { text-align: right; }
-.workflow-stock-card > ul { list-style: none; display: grid; gap: 18px; padding: 0; }
-.workflow-stock-card > ul > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(84px, .7fr); align-items: start; gap: 14px; }
-.workflow-stock-card > ul > li > div { min-width: 0; }
-.workflow-stock-packaging-label { display: block; color: var(--color-text); font-size: 1.125rem; font-weight: 800; line-height: 1.4; overflow-wrap: anywhere; }
-.workflow-stock-packaging-label + small { margin-top: 6px; font-size: 0.8125rem; line-height: 1.5; }
-.workflow-stock-package-count { min-width: 0; color: var(--color-text); font-size: 1.125rem; font-weight: 800; line-height: 1.4; font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
-.workflow-stock-card .workflow-stock-sales-hint { margin: 14px 0 20px; color: var(--color-text-secondary); font-size: 0.8125rem; line-height: 1.6; }
-.workflow-stock-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--color-border); }
-.workflow-stock-footer > button { width: 100%; min-height: 44px; font-size: 0.875rem; }
-.workflow-stock-card .workflow-stock-name h3 { font-size: 1.0625rem; line-height: 1.4; }
-.workflow-stock-card .workflow-stock-name p { margin-top: 5px; font-size: 0.875rem; }
-.workflow-stock-identity { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 220px; }
-.workflow-stock-photo { flex: 0 0 76px; width: 76px; height: 76px; border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; background: var(--color-surface-muted); }
-.workflow-stock-photo .bam-product-media { height: 100%; padding: 8px; }
-.workflow-stock-name { min-width: 0; }
-.workflow-stock-card header > .workflow-badge { flex-shrink: 0; }
-.workflow-stock-dialog-product { padding: 14px; margin: 0 0 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface-soft); }
-.workflow-stock-dialog-product h3 { font-size: 0.9375rem; line-height: 1.5; overflow-wrap: anywhere; }
-.workflow-stock-dialog-product .workflow-stock-name p { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 0.75rem; overflow-wrap: anywhere; }
-@media (max-width: 700px) { .workflow-stock-identity { gap: 12px; flex-basis: 180px; }.workflow-stock-photo { flex-basis: 64px; width: 64px; height: 64px; border-radius: 10px; } }
-@media (max-width: 700px) { .workflow-stock-summary { gap: 8px; }.workflow-stock-stat { padding: 10px 8px; }.workflow-stock-stat dd strong { font-size: 1.75rem; }.workflow-stock-card .workflow-stock-name h3 { font-size: 1rem; } }
-.workflow-payment-page { max-width: 760px; }
-.workflow-order-id { overflow-wrap: anywhere; }
-.workflow-payment-page > .confirmation-card, .workflow-payment-page > .confirmation-home { margin-bottom: 20px; }
-.workflow-payment-demo > p { color: var(--color-text-muted); font-size: 0.8125rem; line-height: 1.7; margin: 12px 0 20px; }
-.workflow-payment-page .workflow-notice { margin-inline: 0; }
-.payment-continue { display: flex; margin-top: 18px; }
-.workflow-shipment dl { display: grid; gap: 12px; margin: 18px 0; font-size: 0.8125rem; }
-.workflow-shipment dt { color: var(--color-text-muted); margin-bottom: 4px; }
-.workflow-shipment dd { font-weight: 700; overflow-wrap: anywhere; }
-.workflow-shipment > p { color: var(--color-text-muted); font-size: 0.75rem; line-height: 1.7; }
-.account-profile-heading > div { min-width: 0; }
-.account-profile-heading h1, .account-profile-heading p { overflow-wrap: anywhere; }
-.admin-sidebar { overflow-y: auto; }
-@media (max-width: 600px) { .account-field input, .account-field textarea { font-size: 1rem; } }
-.bam-confirm-dialog input:not([type="checkbox"]):not([type="radio"]) { width: 100%; min-height: 44px; padding: 12px; border: 1px solid var(--color-input-border); border-radius: 8px; color: var(--color-text); background: var(--color-surface); font: inherit; }
-.add-product-button:disabled, .detail-actions button:disabled { opacity: .6; cursor: not-allowed; }
-@media (max-width: 700px) { .workflow-filters, .workflow-stock-list { grid-template-columns: minmax(0, 1fr); }.workflow-filters, .workflow-order-list, .workflow-stock-list { padding: 14px; }.workflow-preview { margin: 14px; }.workflow-order-card, .workflow-stock-card { padding: 16px; }.workflow-actions > * { flex: 1 1 180px; text-align: center; }.workflow-order-details > ul > li { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }.workflow-order-details .bam-product-media { width: 64px; height: 72px; }.bam-confirm-dialog input:not([type="checkbox"]):not([type="radio"]) { font-size: 1rem; } }
+.workflow-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  gap: 16px;
+  padding: 20px;
+}
+.workflow-preview {
+  margin: 20px;
+  padding: 14px 16px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-info-strong);
+  border-radius: 10px;
+  color: var(--color-info-text);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.workflow-notice {
+  margin: 16px 20px;
+  padding: 14px 16px;
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.workflow-error {
+  color: var(--color-danger-text);
+}
+.workflow-order-list,
+.workflow-stock-list {
+  list-style: none;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+.workflow-stock-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.workflow-order-card,
+.workflow-stock-card {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.workflow-stock-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+.workflow-order-card header,
+.workflow-stock-card header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.workflow-order-card h3,
+.workflow-stock-card h3 {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.workflow-order-card p,
+.workflow-stock-card p,
+.workflow-order-summary {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.workflow-badge {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.workflow-badge.status-cancelled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+.workflow-badge.status-expired,
+.orders-status.status-expired {
+  background: var(--color-danger-pill);
+  color: var(--color-danger-strong);
+}
+.workflow-badge.status-awaiting_review,
+.orders-status.status-awaiting_review,
+.workflow-badge.status-awaiting_payment,
+.workflow-badge.status-awaiting_confirmation,
+.orders-status.status-awaiting_confirmation {
+  background: var(--color-warning-pill);
+  color: var(--color-warning-text);
+}
+.workflow-badge.status-completed,
+.orders-status.status-completed {
+  background: var(--color-success-pill);
+  color: var(--color-success-text);
+}
+.workflow-order-summary {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+.workflow-order-summary strong {
+  color: var(--color-text);
+}
+.workflow-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.workflow-actions > *,
+.payment-continue {
+  min-height: 44px;
+}
+.workflow-order-details {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+.workflow-order-details summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding: 12px 0;
+  color: var(--color-link);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.workflow-order-details > ul {
+  list-style: none;
+  display: grid;
+  gap: 18px;
+  margin: 12px 0;
+}
+.workflow-order-details > ul > li {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  font-size: 0.8125rem;
+}
+.workflow-order-details .bam-product-media {
+  width: 72px;
+  height: 80px;
+  margin: 0;
+}
+.workflow-order-details li > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+.workflow-order-details small,
+.workflow-stock-card small {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-overview {
+  margin: 22px 0 20px;
+}
+.workflow-stock-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+.workflow-stock-overview-heading h4 {
+  font-size: 0.875rem;
+  color: var(--color-text-strong);
+  font-weight: 700;
+}
+.workflow-stock-card .workflow-stock-amount {
+  margin: 0;
+  color: var(--color-info-text);
+  background: var(--color-info-soft);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+}
+.workflow-stock-amount strong {
+  font-size: inherit;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.workflow-stock-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.workflow-stock-stat {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.workflow-stock-stat dt {
+  color: var(--color-text-strong);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.workflow-stock-stat dd {
+  margin: 6px 0 0;
+}
+.workflow-stock-stat dd strong {
+  display: block;
+  color: var(--color-info-text);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-stat dd small {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.workflow-stock-stat.is-unconfigured dd strong {
+  color: var(--color-text-muted);
+}
+.workflow-stock-card .workflow-stock-hint {
+  margin: 10px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.workflow-stock-packaging-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, 0.7fr);
+  align-items: center;
+  gap: 14px;
+  padding: 15px 0 12px;
+  border-top: 1px solid var(--color-border);
+}
+.workflow-stock-packaging-heading h4,
+.workflow-stock-packaging-heading > span {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.workflow-stock-packaging-heading > span {
+  text-align: right;
+}
+.workflow-stock-card > ul {
+  list-style: none;
+  display: grid;
+  gap: 18px;
+  padding: 0;
+}
+.workflow-stock-card > ul > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, 0.7fr);
+  align-items: start;
+  gap: 14px;
+}
+.workflow-stock-card > ul > li > div {
+  min-width: 0;
+}
+.workflow-stock-packaging-label {
+  display: block;
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-packaging-label + small {
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.workflow-stock-package-count {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-card .workflow-stock-sales-hint {
+  margin: 14px 0 20px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.workflow-stock-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+.workflow-stock-footer > button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 0.875rem;
+}
+.workflow-stock-card .workflow-stock-name h3 {
+  font-size: 1.0625rem;
+  line-height: 1.4;
+}
+.workflow-stock-card .workflow-stock-name p {
+  margin-top: 5px;
+  font-size: 0.875rem;
+}
+.workflow-stock-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+.workflow-stock-photo {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+}
+.workflow-stock-photo .bam-product-media {
+  height: 100%;
+  padding: 8px;
+}
+.workflow-stock-name {
+  min-width: 0;
+}
+.workflow-stock-card header > .workflow-badge {
+  flex-shrink: 0;
+}
+.workflow-stock-dialog-product {
+  padding: 14px;
+  margin: 0 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.workflow-stock-dialog-product h3 {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-dialog-product .workflow-stock-name p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .workflow-stock-identity {
+    gap: 12px;
+    flex-basis: 180px;
+  }
+  .workflow-stock-photo {
+    flex-basis: 64px;
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+  }
+}
+@media (max-width: 700px) {
+  .workflow-stock-summary {
+    gap: 8px;
+  }
+  .workflow-stock-stat {
+    padding: 10px 8px;
+  }
+  .workflow-stock-stat dd strong {
+    font-size: 1.75rem;
+  }
+  .workflow-stock-card .workflow-stock-name h3 {
+    font-size: 1rem;
+  }
+}
+.workflow-payment-page {
+  max-width: 760px;
+}
+.workflow-order-id {
+  overflow-wrap: anywhere;
+}
+.workflow-payment-page > .confirmation-card,
+.workflow-payment-page > .confirmation-home {
+  margin-bottom: 20px;
+}
+.workflow-payment-demo > p {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  margin: 12px 0 20px;
+}
+.workflow-payment-page .workflow-notice {
+  margin-inline: 0;
+}
+.payment-continue {
+  display: flex;
+  margin-top: 18px;
+}
+.workflow-shipment dl {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+  font-size: 0.8125rem;
+}
+.workflow-shipment dt {
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+.workflow-shipment dd {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.workflow-shipment > p {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.account-profile-heading > div {
+  min-width: 0;
+}
+.account-profile-heading h1,
+.account-profile-heading p {
+  overflow-wrap: anywhere;
+}
+.admin-sidebar {
+  overflow-y: auto;
+}
+@media (max-width: 600px) {
+  .account-field input,
+  .account-field textarea {
+    font-size: 1rem;
+  }
+}
+.bam-confirm-dialog input:not([type='checkbox']):not([type='radio']) {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font: inherit;
+}
+.add-product-button:disabled,
+.detail-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+@media (max-width: 700px) {
+  .workflow-filters,
+  .workflow-stock-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workflow-filters,
+  .workflow-order-list,
+  .workflow-stock-list {
+    padding: 14px;
+  }
+  .workflow-preview {
+    margin: 14px;
+  }
+  .workflow-order-card,
+  .workflow-stock-card {
+    padding: 16px;
+  }
+  .workflow-actions > * {
+    flex: 1 1 180px;
+    text-align: center;
+  }
+  .workflow-order-details > ul > li {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .workflow-order-details .bam-product-media {
+    width: 64px;
+    height: 72px;
+  }
+  .bam-confirm-dialog input:not([type='checkbox']):not([type='radio']) {
+    font-size: 1rem;
+  }
+}

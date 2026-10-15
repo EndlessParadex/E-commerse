@@ -1,23 +1,126 @@
 import { trackingSteps } from '../../state/orderTrackingModel.js';
 import './OrderTracking.css';
 
-export default function OrderTracking({ status = 'processing', server = false }) {
+export default function OrderTracking({ status = 'processing', server = false, released = true }) {
   const ended = status === 'cancelled' || status === 'expired';
-  const steps = status === 'awaiting_payment' ? [{ id: 'awaiting_payment', label: 'Menunggu pembayaran', description: server ? 'Metode pembayaran dicatat pada pesanan.' : 'Metode pembayaran tercatat pada pesanan percobaan.', state: 'current' }, ...trackingSteps().map((step) => ({ ...step, state: 'pending' }))] : trackingSteps(status);
+  const waitingReview = status === 'awaiting_review';
+  const waitingCOD = status === 'awaiting_confirmation';
+  const steps =
+    status === 'awaiting_acceptance'
+      ? [
+          {
+            id: 'awaiting_acceptance',
+            label: 'Menunggu persetujuan total',
+            description: 'Periksa ongkir dan total akhir. Stok ditahan sampai batas penawaran.',
+            state: 'current',
+          },
+          ...trackingSteps().map((step) => ({ ...step, state: 'pending' })),
+        ]
+      : waitingReview
+        ? [
+            {
+              id: 'awaiting_review',
+              label: 'Menunggu pemeriksaan toko',
+              description: 'Toko memeriksa permintaan. Stok baru ditahan setelah persetujuan.',
+              state: 'current',
+            },
+            ...trackingSteps().map((step) => ({ ...step, state: 'pending' })),
+          ]
+        : waitingCOD
+          ? [
+              {
+                id: 'awaiting_confirmation',
+                label: 'Menunggu konfirmasi COD',
+                description:
+                  'Toko memeriksa pesanan sebelum menyiapkan barang. Pembayaran dilakukan saat barang diterima.',
+                state: 'current',
+              },
+              ...trackingSteps().map((step) => ({ ...step, state: 'pending' })),
+            ]
+          : status === 'awaiting_payment'
+            ? [
+                {
+                  id: 'awaiting_payment',
+                  label: 'Menunggu pembayaran',
+                  description: server
+                    ? 'Metode pembayaran dicatat pada pesanan.'
+                    : 'Metode pembayaran tercatat pada pesanan percobaan.',
+                  state: 'current',
+                },
+                ...trackingSteps().map((step) => ({ ...step, state: 'pending' })),
+              ]
+            : trackingSteps(status);
   const current = steps.find((step) => step.state === 'current');
 
-  return <section className="order-tracking confirmation-card" aria-labelledby="order-tracking-title">
-    <div className="order-tracking-heading">
-      <h2 id="order-tracking-title">Status pesanan</h2>
-      <span className="order-tracking-badge">{server ? 'Status toko' : 'Simulasi'}</span>
-    </div>
-    <p className="order-tracking-note">{server ? 'Status tersimpan di server dan diperbarui oleh toko. Pelacakan kurir belum terhubung otomatis.' : 'Pratinjau frontend, bukan informasi pengiriman nyata. Belum terhubung ke toko atau kurir.'}</p>
-    <p className="order-tracking-summary" role="status"><strong>{ended ? status === 'expired' ? 'Kedaluwarsa' : 'Dibatalkan' : status === 'awaiting_payment' ? 'Menunggu pembayaran' : current.label}</strong> — {ended ? server ? 'Pesanan tidak dilanjutkan. Stok telah dikembalikan.' : 'Pesanan tidak akan dilanjutkan. Stok simulasi telah dilepas.' : status === 'awaiting_payment' ? server ? 'Menunggu pembayaran diperiksa dan dicatat oleh toko.' : 'Metode pembayaran sudah dipilih. Belum ada dana yang diproses dalam simulasi ini.' : current.description}</p>
-    {!ended && <ol className="order-tracking-steps" aria-label={server ? 'Tahapan pesanan' : 'Tahapan pesanan simulasi'}>
-      {steps.map((step, index) => <li key={step.id} className={'order-tracking-step is-' + step.state} aria-current={step.state === 'current' ? 'step' : undefined}>
-        <span className="order-tracking-marker" aria-hidden="true">{step.state === 'done' ? '✓' : index + 1}</span>
-        <div><strong>{step.label}</strong><span>{step.state === 'pending' ? 'Menunggu tahap sebelumnya.' : step.description}</span><small>{step.state === 'done' ? server ? 'Tahap terlewati' : 'Tahap terlewati (simulasi)' : step.state === 'current' ? server ? 'Status saat ini' : 'Status saat ini (simulasi)' : 'Belum berlangsung'}</small></div>
-      </li>)}
-    </ol>}
-  </section>;
+  return (
+    <section className="order-tracking confirmation-card" aria-labelledby="order-tracking-title">
+      <div className="order-tracking-heading">
+        <h2 id="order-tracking-title">Status pesanan</h2>
+        <span className="order-tracking-badge">{server ? 'Status toko' : 'Simulasi'}</span>
+      </div>
+      <p className="order-tracking-note">
+        {server
+          ? 'Status tersimpan di server dan diperbarui oleh toko. Pelacakan kurir belum terhubung otomatis.'
+          : 'Pratinjau frontend, bukan informasi pengiriman nyata. Belum terhubung ke toko atau kurir.'}
+      </p>
+      <p className="order-tracking-summary" role="status">
+        <strong>
+          {ended
+            ? status === 'expired'
+              ? 'Kedaluwarsa'
+              : 'Dibatalkan'
+            : status === 'awaiting_payment'
+              ? 'Menunggu pembayaran'
+              : current.label}
+        </strong>{' '}
+        —{' '}
+        {ended
+          ? server
+            ? released
+              ? 'Pesanan tidak dilanjutkan. Stok telah dikembalikan.'
+              : 'Permintaan berakhir. Tidak ada stok yang ditahan untuk pesanan ini.'
+            : 'Pesanan tidak akan dilanjutkan. Stok simulasi telah dilepas.'
+          : status === 'awaiting_payment'
+            ? server
+              ? 'Menunggu pembayaran diperiksa dan dicatat oleh toko.'
+              : 'Metode pembayaran sudah dipilih. Belum ada dana yang diproses dalam simulasi ini.'
+            : current.description}
+      </p>
+      {!ended && (
+        <ol
+          className="order-tracking-steps"
+          aria-label={server ? 'Tahapan pesanan' : 'Tahapan pesanan simulasi'}
+        >
+          {steps.map((step, index) => (
+            <li
+              key={step.id}
+              className={'order-tracking-step is-' + step.state}
+              aria-current={step.state === 'current' ? 'step' : undefined}
+            >
+              <span className="order-tracking-marker" aria-hidden="true">
+                {step.state === 'done' ? '✓' : index + 1}
+              </span>
+              <div>
+                <strong>{step.label}</strong>
+                <span>
+                  {step.state === 'pending' ? 'Menunggu tahap sebelumnya.' : step.description}
+                </span>
+                <small>
+                  {step.state === 'done'
+                    ? server
+                      ? 'Tahap terlewati'
+                      : 'Tahap terlewati (simulasi)'
+                    : step.state === 'current'
+                      ? server
+                        ? 'Status saat ini'
+                        : 'Status saat ini (simulasi)'
+                      : 'Belum berlangsung'}
+                </small>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
 }

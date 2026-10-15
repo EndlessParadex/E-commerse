@@ -26,3 +26,12 @@ dist-ssr
 # Local development database
 data/*.sqlite
 data/*.sqlite-*
+*.mail-key
+
+# Credentials and email queue encryption key
+.env
+.env.*
+!.env.example
+
+# Review artifacts are distributed separately from application source.
+/review/

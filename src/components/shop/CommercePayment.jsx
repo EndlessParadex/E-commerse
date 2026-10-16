@@ -77,7 +77,7 @@ export default function CommercePayment({ order }) {
         </div>
         <div>
           <dt>Ongkir</dt>
-          <dd>{order.shipping.quoted ? rupiah(order.shipping.cost) : 'Dikonfirmasi toko'}</dd>
+          <dd>{order.codFixedTotal ? 'GRATIS' : order.shipping.quoted ? rupiah(order.shipping.cost) : 'Dikonfirmasi toko'}</dd>
         </div>
         <div>
           <dt>{order.shipping.quoted ? 'Total akhir' : 'Subtotal sementara'}</dt>
@@ -132,7 +132,7 @@ export default function CommercePayment({ order }) {
           {order.payment.reference && 'Referensi: ' + order.payment.reference}
         </p>
       ) : order.payment.groupId === 'cod' ? (
-        <p>Bayar {rupiah(order.total)} saat barang diterima sesuai total yang Anda setujui.</p>
+        <p>Bayar {rupiah(order.total)} saat barang diterima. Harga final sejak checkout.</p>
       ) : (
         <>
           {destination && (

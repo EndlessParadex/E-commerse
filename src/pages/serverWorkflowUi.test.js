@@ -329,7 +329,9 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.match(invoice.textContent, /Informasi pembayaran/);
     assert.match(invoice.textContent, /Dikirim kepada/);
     assert.match(invoice.textContent, /RINCIAN PESANAN/);
-    assert.match(invoice.textContent, /Belum dibayar/);
+    // This fixture is an existing manual-transfer order awaiting staff verification, not COD.
+    assert.match(invoice.textContent, /Transfer bank toko/);
+    assert.match(invoice.textContent, /Belum dikonfirmasi dibayar/);
     assert.ok(invoice.querySelector('.invoice-items thead'));
     assert.ok(invoice.querySelector('.invoice-grand-total'));
     assert.equal(invoice.querySelectorAll('.invoice-items tbody tr').length, bobOrder.items.length);

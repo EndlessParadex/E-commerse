@@ -12,7 +12,6 @@ export default function OrderInvoice({ order }) {
   const finalized = order.commerceVersion !== 31 || shipping.quoted === true;
   const cod = payment.groupId === 'cod';
   const paid = payment.status === 'paid';
-  const freeShipping = finalized && shipping.cost === 0;
   const paymentLabel = cod ? 'Bayar di Tempat (COD)' : payment.label || 'Pembayaran toko';
   const paymentStatus = paid
     ? 'Sudah dibayar'
@@ -60,10 +59,17 @@ export default function OrderInvoice({ order }) {
 
       <div className="invoice-table-wrap">
         <table className="invoice-items">
+          <colgroup>
+            <col className="invoice-col-number" />
+            <col className="invoice-col-product" />
+            <col className="invoice-col-quantity" />
+            <col className="invoice-col-unit-price" />
+            <col className="invoice-col-subtotal" />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col" className="invoice-number">No.</th>
-              <th scope="col">Produk / SKU</th>
+              <th scope="col">Produk</th>
               <th scope="col" className="invoice-quantity">Qty</th>
               <th scope="col" className="invoice-money">Harga satuan</th>
               <th scope="col" className="invoice-money">Subtotal</th>
@@ -75,7 +81,6 @@ export default function OrderInvoice({ order }) {
                 <td className="invoice-number">{index + 1}</td>
                 <td className="invoice-product">
                   <strong>{item.name}</strong>
-                  <small>{item.id}</small>
                 </td>
                 <td className="invoice-quantity">{item.quantity}</td>
                 <td className="invoice-money">{rupiah(item.price)}</td>
@@ -91,10 +96,6 @@ export default function OrderInvoice({ order }) {
           <span>Subtotal barang</span>
           <strong>{rupiah(order.subtotal)}</strong>
         </div>
-        <div className="invoice-summary-row">
-          <span>Ongkos kirim</span>
-          <strong>{freeShipping ? 'GRATIS' : finalized ? rupiah(shipping.cost) : 'Belum ditetapkan'}</strong>
-        </div>
         <div className="invoice-grand-total">
           <span>{finalized ? (cod ? 'Total pembayaran COD' : 'Total pembayaran') : 'Subtotal sementara'}</span>
           <strong>{rupiah(order.total)}</strong>
@@ -105,14 +106,16 @@ export default function OrderInvoice({ order }) {
         <strong>Informasi pesanan</strong>
         <p>
           {!finalized
-            ? 'Ongkir dan total akhir belum ditetapkan toko. Ringkasan ini bukan jumlah pembayaran final.'
+            ? 'Total akhir belum ditetapkan toko. Ringkasan ini bukan jumlah pembayaran final.'
             : order.codFixedTotal
-              ? 'Harga final sejak checkout. Ongkir gratis. Bayar total COD saat barang diterima.'
+              ? 'Harga final sejak checkout. Bayar total COD saat barang diterima.'
               : cod
                 ? paid
                   ? 'Pembayaran COD sudah tercatat.'
                   : 'Bayar total pesanan saat barang diterima, sesuai rincian pesanan ini.'
-                : 'Rincian pembayaran mengikuti status dan metode pada pesanan ini.'}
+                : order.total !== order.subtotal
+                  ? 'Total akhir mengikuti biaya yang telah disepakati saat pesanan dibuat.'
+                  : 'Rincian pembayaran mengikuti status dan metode pada pesanan ini.'}
         </p>
       </div>
       {order.note && (

@@ -554,6 +554,7 @@ export class WorkflowRepository {
           id: variant.id,
           name,
           price,
+          ...(Number.isSafeInteger(Number(variant.oldPrice)) && Number(variant.oldPrice) > price ? { oldPrice: Number(variant.oldPrice) } : {}),
           quantity: entry.quantity,
           details: {
             name: draft.baseName,

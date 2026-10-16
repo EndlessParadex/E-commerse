@@ -609,6 +609,7 @@ export class WorkflowRepository {
         inventoryReserved: false,
       };
       order = this.prepareOrder ? this.prepareOrder(order) : order;
+      if (order.codFixedTotal) this.reserve(order, user.id);
       order = withNotificationEvent(order, 'orderCreated', time);
       this.db
         .prepare('INSERT INTO orders VALUES(?,?,?,?,?,?,?,?)')

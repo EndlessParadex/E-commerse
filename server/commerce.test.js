@@ -14,6 +14,7 @@ async function fixture(options = {}) {
   const sent = [],
     app = createApp({
       dbPath: ':memory:',
+      legacyCommerceFixture: true,
       now: () => time,
       mailer: { enabled: true, send: async (x) => sent.push(x) },
       mailConfig: { publicUrl: 'https://fixture.test', queueKey: 'f'.repeat(64) },

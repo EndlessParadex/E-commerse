@@ -2,80 +2,132 @@ import { createPortal } from 'react-dom';
 import useCompany from '../../state/useCompany';
 import { rupiah, dateLabel } from './shopPresentation';
 import './Commerce.css';
+
 export default function OrderInvoice({ order }) {
   const company = useCompany();
+  // Use the seller snapshot saved with this order, not editable current store settings.
   const seller = order.seller || company.profile;
-  const finalized = order.commerceVersion !== 31 || order.shipping.quoted === true;
+  const payment = order.payment || {};
+  const shipping = order.shipping || {};
+  const finalized = order.commerceVersion !== 31 || shipping.quoted === true;
+  const cod = payment.groupId === 'cod';
+  const paid = payment.status === 'paid';
+  const freeShipping = finalized && shipping.cost === 0;
+  const paymentLabel = cod ? 'Bayar di Tempat (COD)' : payment.label || 'Pembayaran toko';
+  const paymentStatus = paid
+    ? 'Sudah dibayar'
+    : cod
+      ? 'Belum dibayar — saat barang diterima'
+      : 'Belum dikonfirmasi dibayar';
+
   const invoice = (
-    <article className="order-invoice">
-      <header>
-        <h2>{finalized ? 'Faktur pesanan' : 'Ringkasan permintaan pesanan'}</h2>
-        <strong>{seller.legalName || seller.shortName}</strong>
-        <p>
-          {seller.address}
-          <br />
-          {seller.phone} {seller.email}
-        </p>
+    <article className="order-invoice" aria-label="Faktur pesanan BAM">
+      <header className="invoice-header">
+        <div className="invoice-seller">
+          <div className="invoice-brand">BAM<span>.</span></div>
+          <strong>{seller.legalName || seller.shortName || 'BAM'}</strong>
+          {seller.address && <p>{seller.address}</p>}
+          {(seller.phone || seller.email) && (
+            <p>{[seller.phone, seller.email].filter(Boolean).join(' · ')}</p>
+          )}
+        </div>
+        <div className="invoice-heading">
+          <span className="invoice-eyebrow">{finalized ? 'RINCIAN PESANAN' : 'RINGKASAN PESANAN'}</span>
+          <h2>{finalized ? 'Faktur pesanan' : 'Permintaan pesanan'}</h2>
+          <span className="invoice-heading-date">{dateLabel(order.createdAt)}</span>
+          <strong className="invoice-payment-tag">{cod ? 'COD' : paymentLabel}</strong>
+        </div>
       </header>
-      <p>
-        Nomor: <strong>{order.id}</strong>
-        <br />
-        Tanggal: {dateLabel(order.createdAt)}
-        <br />
-        Status pembayaran:{' '}
-        {order.payment.status === 'paid'
-          ? 'Sudah dibayar'
-          : order.payment.groupId === 'cod'
-            ? 'COD'
-            : 'Belum dikonfirmasi dibayar'}
-      </p>
-      <p>
-        <strong>Penerima: {order.recipient}</strong>
-        <br />
-        {order.address}
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Barang / SKU</th>
-            <th>Jumlah</th>
-            <th>Harga</th>
-            <th>Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.items.map((item) => (
-            <tr key={item.id}>
-              <td>
-                {item.name}
-                <br />
-                <small>{item.id}</small>
-              </td>
-              <td>{item.quantity}</td>
-              <td>{rupiah(item.price)}</td>
-              <td>{rupiah(item.price * item.quantity)}</td>
+
+      <section className="invoice-reference" aria-label="Identitas pesanan">
+        <span>Nomor pesanan</span>
+        <strong>{order.id}</strong>
+      </section>
+
+      <div className="invoice-details">
+        <section className="invoice-details-card" aria-label="Penerima">
+          <h3>Dikirim kepada</h3>
+          <strong>{order.recipient}</strong>
+          <p>{order.address}</p>
+        </section>
+        <section className="invoice-details-card" aria-label="Pembayaran">
+          <h3>Informasi pembayaran</h3>
+          <strong>{paymentLabel}</strong>
+          <p>{paymentStatus}</p>
+          {payment.reference && <p>Referensi: {payment.reference}</p>}
+        </section>
+      </div>
+
+      <div className="invoice-table-wrap">
+        <table className="invoice-items">
+          <thead>
+            <tr>
+              <th scope="col" className="invoice-number">No.</th>
+              <th scope="col">Produk / SKU</th>
+              <th scope="col" className="invoice-quantity">Qty</th>
+              <th scope="col" className="invoice-money">Harga satuan</th>
+              <th scope="col" className="invoice-money">Subtotal</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p>
-        Subtotal barang: {rupiah(order.subtotal)}
-        <br />
-        Ongkir: {finalized ? rupiah(order.shipping.cost) : 'Belum ditetapkan'}
-        <br />
-        <strong>
-          {finalized ? 'Total akhir' : 'Subtotal sementara'}: {rupiah(order.total)}
-        </strong>
-      </p>
-      {order.payment.reference && <p>Referensi pembayaran: {order.payment.reference}</p>}
-      <p>
-        {finalized
-          ? 'Total sesuai penawaran toko.'
-          : 'Ringkasan ini belum menjamin stok dan belum termasuk ongkir.'}{' '}
-        Dokumen ini bukan faktur pajak.
-      </p>
+          </thead>
+          <tbody>
+            {order.items.map((item, index) => (
+              <tr key={item.id}>
+                <td className="invoice-number">{index + 1}</td>
+                <td className="invoice-product">
+                  <strong>{item.name}</strong>
+                  <small>{item.id}</small>
+                </td>
+                <td className="invoice-quantity">{item.quantity}</td>
+                <td className="invoice-money">{rupiah(item.price)}</td>
+                <td className="invoice-money">{rupiah(item.price * item.quantity)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <section className="invoice-summary" aria-label="Ringkasan biaya">
+        <div className="invoice-summary-row">
+          <span>Subtotal barang</span>
+          <strong>{rupiah(order.subtotal)}</strong>
+        </div>
+        <div className="invoice-summary-row">
+          <span>Ongkos kirim</span>
+          <strong>{freeShipping ? 'GRATIS' : finalized ? rupiah(shipping.cost) : 'Belum ditetapkan'}</strong>
+        </div>
+        <div className="invoice-grand-total">
+          <span>{finalized ? (cod ? 'Total pembayaran COD' : 'Total pembayaran') : 'Subtotal sementara'}</span>
+          <strong>{rupiah(order.total)}</strong>
+        </div>
+      </section>
+
+      <div className="invoice-payment-notice">
+        <strong>Informasi pesanan</strong>
+        <p>
+          {!finalized
+            ? 'Ongkir dan total akhir belum ditetapkan toko. Ringkasan ini bukan jumlah pembayaran final.'
+            : order.codFixedTotal
+              ? 'Harga final sejak checkout. Ongkir gratis. Bayar total COD saat barang diterima.'
+              : cod
+                ? paid
+                  ? 'Pembayaran COD sudah tercatat.'
+                  : 'Bayar total pesanan saat barang diterima, sesuai rincian pesanan ini.'
+                : 'Rincian pembayaran mengikuti status dan metode pada pesanan ini.'}
+        </p>
+      </div>
+      {order.note && (
+        <section className="invoice-note">
+          <strong>Catatan pembeli</strong>
+          <p>{order.note}</p>
+        </section>
+      )}
+      <footer className="invoice-footer">
+        <strong>Terima kasih telah berbelanja di BAM.</strong>
+        <span>Dokumen ini adalah rincian pesanan, bukan faktur pajak.</span>
+      </footer>
     </article>
   );
+
   return (
     <>
       <details className="confirmation-card commerce-invoice-disclosure">

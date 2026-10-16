@@ -475,9 +475,14 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
     updated.edits.find((draft) => draft.groupId === 'snack-pedas').gallery = [
       { src: png, alt: 'Foto pesanan awal' },
     ];
+    // Promotion must be snapshotted at checkout and preserved after catalog edits.
+    const discounted = updated.edits.find((draft) => draft.groupId === 'snack-pedas');
+    const sale = discounted.variants.find((entry) => entry.id === 'snack-pedas');
+    sale.oldPrice = String(Number(sale.price) + 2000);
     app.catalog.save(updated);
     app.workflow.setStock(admin, { key, available: 40, revision: 0 });
     const order = approve(app, app.workflow.create(alice, input(app)));
+    assert.equal(order.items[0].oldPrice, order.items[0].price + 2000);
     assert.equal(
       (await request(app, 'PUT', '/api/orders/' + order.id, { action: 'paid', revision: 2 }))
         .status,
@@ -538,6 +543,7 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
     app.catalog.save(latest);
     const preserved = app.workflow.get(alice, order.id);
     assert.equal(preserved.items[0].price, order.items[0].price);
+    assert.equal(preserved.items[0].oldPrice, order.items[0].oldPrice);
     assert.equal(preserved.items[0].details.name, order.items[0].details.name);
     assert.deepEqual(preserved.items[0].details.packaging, order.items[0].details.packaging);
     const imagePath = order.items[0].details.image;

@@ -125,12 +125,20 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM users').get().n, 1);
     assert.equal(api.identity.verified(api.db.prepare('SELECT id FROM users').get().id), false);
     assert.equal(cookie, '');
-    assert.match(container.textContent, /Akun baru menunggu persetujuan Admin atau Pemilik/);
+    assert.match(container.textContent, /Admin atau Pemilik akan memeriksa pendaftaran/);
+    assert.ok(container.querySelector('.auth-registration-help button'));
+    assert.match(container.textContent, /Verifikasi email dapat dilakukan sambil menunggu/);
     const pendingCustomer = api.db.prepare('SELECT id FROM users WHERE email=?').get('website@fixture.test');
     assert.equal(
       api.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(pendingCustomer.id).status,
       'pending',
     );
+    await act(async () => {
+      container.querySelector('.auth-registration-help button').click();
+      await settle();
+    });
+    await wait(() => container.textContent.includes('Permintaan diterima. Jika email masih perlu diverifikasi'));
+    assert.ok(requests.some(request => request.path === '/api/auth/verification/resend'));
     await api.identity.flushMail();
     const activation = mailToken();
     await route('/verifikasi-email?token=' + activation, () =>

@@ -13,7 +13,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   const catalog = demo.catalog.snapshot();
   demo.db.close();
   let serverTime = Date.now();
-  const api = createApp({ dbPath: ':memory:', installMode: 'company', now: () => serverTime });
+  const api = createApp({ dbPath: ':memory:', installMode: 'company', legacyCommerceFixture: true, now: () => serverTime });
   api.catalog.save({ ...catalog, revision: 0 });
   const candidate = api.catalog.snapshot();
   const group = candidate.edits.find((row) => row.groupId === 'snack-pedas');

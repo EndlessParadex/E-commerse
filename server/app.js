@@ -511,6 +511,7 @@ export function createApp({
           emailReady: identity.ready,
           newRegistrationsRequireVerification: true,
           registrationUsesOriginalPassword: true,
+          registrationRequiresApproval: true,
         });
       if (
         req.method === 'POST' &&
@@ -519,6 +520,7 @@ export function createApp({
           '/api/auth/reset-password',
           '/api/auth/verify-email',
           '/api/auth/verification/request',
+          '/api/auth/verification/resend',
           '/api/auth/change-password',
         ].includes(path)
       ) {
@@ -540,10 +542,13 @@ export function createApp({
                 ? await identity.verify(body.token, body.password, ip)
                 : path === '/api/auth/verification/request'
                   ? identity.requestVerification(user, ip)
-                  : await identity.changePassword(user, body.currentPassword, body.password, ip);
+                  : path === '/api/auth/verification/resend'
+                    ? await identity.resendRegistrationVerification(body.email, ip)
+                    : await identity.changePassword(user, body.currentPassword, body.password, ip);
         return json(
           res,
-          path === '/api/auth/forgot-password' || path === '/api/auth/verification/request'
+          path === '/api/auth/forgot-password' || path === '/api/auth/verification/request' ||
+            path === '/api/auth/verification/resend'
             ? 202
             : 200,
           result,
@@ -597,7 +602,7 @@ export function createApp({
           });
         if (!accountIsApproved(db, user.id))
           return sendError(res, 403, 'approval_required', {
-            form: 'Akun menunggu persetujuan Admin atau Pemilik toko, atau pendaftaran ditolak. Hubungi pengelola toko.',
+            form: 'Akun belum dapat masuk karena persetujuan pengelola masih diperlukan. Jika Anda sudah mendaftar, periksa email verifikasi dan hubungi Admin atau Pemilik toko untuk bantuan.',
           });
         limiter.clearLoginPair(ip, fields.email);
         return json(res, 200, { user: publicUser(user) }, sessionHeaders(user.id));

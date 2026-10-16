@@ -119,7 +119,8 @@ export class OrderMessages {
           !['awaiting_acceptance', 'awaiting_payment'].includes(order.status)) ||
         (row.kind === 'orderCreated' &&
           row.admin &&
-          !['awaiting_confirmation', 'awaiting_review'].includes(order.status))
+          !['awaiting_confirmation', 'awaiting_review'].includes(order.status) &&
+          !(order.codFixedTotal && order.status === 'processing'))
       )
         skipReason = 'order_changed';
       if (skipReason) {

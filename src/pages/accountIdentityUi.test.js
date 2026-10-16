@@ -154,7 +154,7 @@ test('account website: buyer security summary, admin password settings, registra
     await fill('#auth-email', 'website@fixture.test');
     await fill('#auth-password', 'registration-password');
     await submit('.auth-card form');
-    await wait(() => container.textContent.includes('Akun menunggu persetujuan'));
+    await wait(() => container.textContent.includes('persetujuan pengelola masih diperlukan'));
     assert.equal(dom.location.hash, '#/login', 'Email terverifikasi belum cukup untuk login');
     api.db.prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?")
       .run(pendingCustomer.id);

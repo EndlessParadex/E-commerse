@@ -325,6 +325,14 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     );
     assert.match(container.querySelector('.payment-details').textContent, /sedang diperiksa/);
     assert.ok(container.querySelector('.order-invoice').textContent.includes(bobOrder.id));
+    const invoice = container.querySelector('.order-invoice');
+    assert.match(invoice.textContent, /Informasi pembayaran/);
+    assert.match(invoice.textContent, /Dikirim kepada/);
+    assert.match(invoice.textContent, /RINCIAN PESANAN/);
+    assert.match(invoice.textContent, /Belum dibayar/);
+    assert.ok(invoice.querySelector('.invoice-items thead'));
+    assert.ok(invoice.querySelector('.invoice-grand-total'));
+    assert.equal(invoice.querySelectorAll('.invoice-items tbody tr').length, bobOrder.items.length);
     await mountAs('admin', '/admin/pesanan');
     assert.ok(button('Minta perbaikan bukti'));
     assert.ok(

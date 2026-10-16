@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   }, [savedLocation, edited]);
 
   const offeredShipping = live
-    ? [
+    ? codOnly ? [{ id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa biaya ongkos kirim.', cost: 0 }] : [
         {
           id: 'regular',
           label: 'Ongkir dikonfirmasi toko',
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
     : shippingOptions;
   const shipping = codOnly ? { id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa ongkir', cost: 0 } : offeredShipping.find((option) => option.id === shippingId) || shippingOptions[0];
   const availableMethods = live ? (codOnly ? [paymentMethod('cod')] : livePaymentMethods(company.profile)) : null;
-  const effectivePaymentId = live
+  const effectivePaymentId = codOnly ? 'cod' : live
     ? availableMethods.find((m) => m.id === paymentId)?.id || availableMethods[0]?.id
     : paymentId;
   const payment = paymentMethod(effectivePaymentId);

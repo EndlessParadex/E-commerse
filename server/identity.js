@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { logUnexpectedError } from './errorLogging.js';
-import { accountIsActive, approvalSchema } from './accountAccess.js';
+import { accountIsActive, accountApprovalStatus, approvalSchema } from './accountAccess.js';
 
 const fail = (message, status = 400, code = 'invalid_token') => {
   throw new CatalogError(message, status, code);
@@ -174,9 +174,24 @@ export class IdentityRepository {
     return {
       ...generic,
       message: this.ready
-        ? 'Permintaan pendaftaran diterima. Akun baru menunggu persetujuan Admin atau Pemilik sebelum dapat masuk. Jika memenuhi syarat, instruksi konfirmasi email dikirim ke alamat Anda.'
-        : 'Permintaan pendaftaran diterima. Akun baru menunggu persetujuan Admin atau Pemilik sebelum dapat masuk. Layanan verifikasi email toko belum aktif; hubungi pengelola toko.',
+        ? 'Permintaan diterima. Jika akun baru berhasil dibuat, email verifikasi otomatis disiapkan. Periksa kotak masuk atau spam sambil menunggu persetujuan Admin atau Pemilik.'
+        : 'Permintaan diterima. Akun baru perlu persetujuan Admin atau Pemilik. Pengiriman verifikasi email belum tersedia; hubungi pengelola toko.',
+      emailReady: this.ready,
     };
+  }
+  async resendRegistrationVerification(value, ip) {
+    const email = emailOf(value);
+    this.requireEmail();
+    // The response is identical whether the account exists or not; avoid account enumeration.
+    if (!this.limiter.take('email', ip, email)) return generic;
+    await this.queue.run(ip, () => this.hashPassword('registration-verification-request'));
+    this.transaction(() => {
+      this.cleanup();
+      const user = this.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+      if (user && accountApprovalStatus(this.db, user.id) === 'pending' && !this.verified(user.id))
+        this.issue('verify', email, user);
+    });
+    return generic;
   }
   async forgot(value, ip) {
     const email = emailOf(value);
@@ -255,7 +270,15 @@ export class IdentityRepository {
         .prepare("DELETE FROM auth_tokens WHERE email=? AND purpose IN ('register','verify')")
         .run(current.email);
     });
-    return { ok: true, message: 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.' };
+    const approval = accountApprovalStatus(this.db, row.user_id || this.db.prepare('SELECT id FROM users WHERE email=?').get(row.email)?.id);
+    return {
+      ok: true,
+      message: approval === 'pending'
+        ? 'Email dikonfirmasi. Sekarang tunggu persetujuan Admin atau Pemilik sebelum masuk.'
+        : approval === 'rejected'
+          ? 'Email dikonfirmasi, tetapi pendaftaran belum disetujui. Hubungi pengelola toko.'
+          : 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.',
+    };
   }
   async reset(token, password, ip) {
     this.readToken(token, ['reset']);

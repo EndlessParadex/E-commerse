@@ -149,3 +149,32 @@ test('verifikasi email tidak melewati approval; sesi pending juga tidak dapat me
     assert.equal(login.body.user.emailVerified, true);
   } finally { app.db.close(); }
 });
+
+test('tautan verifikasi pendaftaran dapat diminta ulang tanpa login; akun asing dan yang telah diverifikasi tidak dibocorkan', async () => {
+  const sent = [];
+  const app = createApp({
+    dbPath: ':memory:',
+    mailer: { enabled: true, send: async message => sent.push(message) },
+    mailConfig: { publicUrl: 'https://approval.fixture/', queueKey: 'a'.repeat(64) },
+    logger: () => {},
+  });
+  try {
+    const email = 'resend-customer@fixture.test';
+    await register(app, email);
+    const row = app.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+    assert.equal((await request(app, 'POST', '/api/auth/verification/resend', { email })).status, 202);
+    await app.identity.flushMail(10);
+    assert.ok(sent.some(message => message.to === email));
+    const token = sent.at(-1).text.match(/token=([A-Za-z0-9_-]+)/)?.[1];
+    assert.ok(token);
+    assert.equal((await request(app, 'POST', '/api/auth/verify-email', { token, password: secret })).status, 200);
+    assert.equal(app.identity.verified(row.id), true);
+    const before = app.db.prepare('SELECT COUNT(*) AS n FROM auth_tokens').get().n;
+    const verified = await request(app, 'POST', '/api/auth/verification/resend', { email });
+    const unknown = await request(app, 'POST', '/api/auth/verification/resend', { email: 'not-found@fixture.test' });
+    assert.equal(verified.status, 202);
+    assert.equal(unknown.status, 202);
+    assert.deepEqual(verified.body, unknown.body);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM auth_tokens').get().n, before);
+  } finally { app.db.close(); }
+});

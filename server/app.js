@@ -111,6 +111,7 @@ export function createApp({
   passwordCheck = verifyPassword,
   logger = (entry) => console.error(entry),
   siteIndexHtml,
+  legacyCommerceFixture = false,
 } = {}) {
   const filename = dbPath === ':memory:' ? dbPath : resolve(dbPath);
   if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
@@ -160,7 +161,7 @@ export function createApp({
   const rawCompanySnapshot = company.snapshot.bind(company);
   company.snapshot = () => ({
     ...rawCompanySnapshot(),
-    commerce: { version: 31, emailReady: identity.ready, verificationRequired: true },
+    commerce: { version: 31, codOnly: !legacyCommerceFixture, emailReady: identity.ready, verificationRequired: true },
   });
   const messages = new OrderMessages(db, identity, company, now, logger);
   const publicUser = (user) => ({
@@ -171,7 +172,7 @@ export function createApp({
     ...customerAccess(db, user),
   });
   const workflow = new WorkflowRepository(db, catalog, company, now, reservationPolicy, messages);
-  installCommerce(workflow, identity, messages);
+  installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
   const accounts = new AccountRepository(db, now);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',

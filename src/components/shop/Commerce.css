@@ -109,6 +109,7 @@
 
 
 /* BAM invoice: high-contrast dividers for reliable monochrome A4 printing. */
+.commerce-invoice-disclosure:not([open]) .order-invoice { display: none; }
 .order-invoice {
   --invoice-ink: #111827;
   --invoice-border: #374151;

@@ -65,7 +65,7 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
         'INSERT INTO checkout_limits VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET attempts=attempts+1',
       ).run(b.key, time + b.duration);
   };
-  w.prepareOrder = (order) => {
+  w.prepareOrder = (order, { historical = false } = {}) => {
     order.commerceVersion = 31;
     order.seller = {
       shortName: w.company.snapshot().profile.shortName,
@@ -74,7 +74,7 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
       phone: w.company.snapshot().profile.phone,
       email: w.company.snapshot().profile.email,
     };
-    if (codOnly) {
+    if (codOnly && !historical) {
       // Harga pada checkout sudah final; stok ditahan ketika pesanan dibuat.
       order.codFixedTotal = true;
       order.shipping = {
@@ -284,7 +284,9 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
         }
         order.inventoryReserved = false;
         order.inventoryReleased = false;
-        order = w.prepareOrder(order);
+        // Historical unpaid VA/transfer orders retain their original review workflow.
+        // Applying the new COD-only checkout policy here would silently change an old order.
+        order = w.prepareOrder(order, { historical: true });
         order.migratedQuote = { ...previous, at: w.now() };
         order.revision++;
         order = withNotificationEvent(order, 'orderCreated', w.now());

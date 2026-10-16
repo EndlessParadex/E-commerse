@@ -333,6 +333,11 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.match(invoice.textContent, /Transfer bank toko/);
     assert.match(invoice.textContent, /Belum dikonfirmasi dibayar/);
     assert.ok(invoice.querySelector('.invoice-items thead'));
+    assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('SKU'), false);
+    assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('No.'), true);
+    assert.equal(invoice.querySelector('.invoice-product small'), null);
+    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Ongkos kirim'), false);
+    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Total pembayaran'), true);
     assert.ok(invoice.querySelector('.invoice-grand-total'));
     assert.equal(invoice.querySelectorAll('.invoice-items tbody tr').length, bobOrder.items.length);
     await mountAs('admin', '/admin/pesanan');

@@ -6,6 +6,7 @@ import './PaymentPicker.css';
 export default function PaymentPicker({ value, onChange, disabled = false }) {
   const company = useCompany();
   const available =
+    workflowUsesServer && company.commerce?.codOnly ? PAYMENT_METHODS.filter((m) => m.id === 'cod') :
     workflowUsesServer && company.commerce?.version === 31
       ? livePaymentMethods(company.profile)
       : PAYMENT_METHODS.filter((m) => m.id !== 'manual-transfer');
@@ -61,7 +62,7 @@ export default function PaymentPicker({ value, onChange, disabled = false }) {
       </fieldset>
       <p className="payment-preview-note">
         {workflowUsesServer
-          ? 'COD dibayar saat diterima. Transfer memakai rekening resmi toko setelah total akhir disetujui.'
+          ? company.commerce?.codOnly ? 'Gratis ongkir. Bayar COD saat diterima.' : 'COD dibayar saat diterima. Transfer memakai rekening resmi toko setelah total akhir disetujui.'
           : 'Pembayaran percobaan. Tidak ada dana yang diproses.'}
       </p>
     </div>

@@ -55,3 +55,26 @@ test('COD gratis: total final saat checkout, stok dicadangkan, langsung diproses
     app.db.close();
   }
 });
+
+test('COD langsung diproses tetap dibatasi lima pesanan aktif dan transaksi gagal tidak mengambil stok', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  try {
+    app.db.prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)')
+      .run('limited-buyer', 'Pelanggan', 'limited@fixture.test', 'Alamat lengkap pengujian',
+        'unused', new Date().toISOString(), 'user');
+    app.db.prepare('INSERT INTO auth_account_state(user_id,verified_at,credential_revision) VALUES(?,?,0)')
+      .run('limited-buyer', Date.now());
+    const user = { id: 'limited-buyer', role: 'user' };
+    const makeOrder = () => app.workflow.create(user, {
+      requestKey: randomUUID(), recipient: 'Penerima pesanan', address: 'Alamat lengkap pengujian',
+      shippingId: 'regular', paymentId: 'cod',
+      items: [{ id: 'snack-pedas', quantity: 1, expectedPrice: 18000 }],
+    });
+    for (let i = 0; i < 5; i++) assert.equal(makeOrder().status, 'processing');
+    const before = app.workflow.stock().stock['snack-pedas:180-g'].available;
+    assert.throws(makeOrder, { code: 'reservation_limit' });
+    assert.equal(app.workflow.stock().stock['snack-pedas:180-g'].available, before);
+  } finally {
+    app.db.close();
+  }
+});

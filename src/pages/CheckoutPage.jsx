@@ -222,9 +222,9 @@ export default function CheckoutPage() {
       <header className="checkout-header">
         <div>
           <span className="section-eyebrow">
-            {live ? 'Permintaan pesanan' : 'Langkah terakhir'}
+            {live && !codOnly ? 'Permintaan pesanan' : 'Langkah terakhir'}
           </span>
-          <h1>{live ? 'Kirim permintaan pesanan' : 'Checkout'}</h1>
+          <h1>{live && !codOnly ? 'Kirim permintaan pesanan' : 'Checkout COD'}</h1>
           <p>
             {live
               ? codOnly ? 'Harga final, ongkir gratis, dan COD saat barang diterima. Pesanan langsung diproses setelah berhasil dibuat.' : 'Periksa barang dan alamat. Toko akan mengirimkan ongkir serta total akhir untuk Anda setujui.'
@@ -442,7 +442,7 @@ export default function CheckoutPage() {
               <span className="checkout-step">4</span>
               <div>
                 <h2 id="payment-title">Metode pembayaran</h2>
-                <p>Pilih layanan yang ingin digunakan.</p>
+                <p>{codOnly ? 'Metode pembayaran toko hanya COD.' : 'Pilih layanan yang ingin digunakan.'}</p>
               </div>
             </div>
             {codOnly ? <p className="workflow-preview">COD (Bayar di Tempat) — bayar saat barang diterima.</p> : <PaymentPicker value={effectivePaymentId} onChange={setPaymentId} disabled={busy} />}

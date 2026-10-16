@@ -11,7 +11,7 @@ const field = (value, label, max = 100) => {
     fail(label + ' tidak valid.');
   return value.trim();
 };
-export function installCommerce(workflow, identity, messages) {
+export function installCommerce(workflow, identity, messages, { codOnly = true } = {}) {
   const w = workflow,
     db = w.db;
   w.messages = messages;
@@ -25,7 +25,11 @@ export function installCommerce(workflow, identity, messages) {
         403,
         'email_verification_required',
       );
-    if (!livePaymentMethods(w.company.snapshot().profile).some((m) => m.id === payment.id))
+    if (codOnly && payment.id !== 'cod')
+      fail('BAM hanya menerima pembayaran COD saat barang diterima.', 422, 'payment_unavailable');
+    if (codOnly && body.shippingId !== 'regular')
+      fail('Pengiriman BAM selalu gratis. Pilih pengiriman reguler.', 422, 'shipping_unavailable');
+    if (!codOnly && !livePaymentMethods(w.company.snapshot().profile).some((m) => m.id === payment.id))
       fail(
         'Metode pembayaran ini belum diaktifkan toko. Pilih COD atau transfer yang tersedia.',
         422,
@@ -70,6 +74,26 @@ export function installCommerce(workflow, identity, messages) {
       phone: w.company.snapshot().profile.phone,
       email: w.company.snapshot().profile.email,
     };
+    if (codOnly) {
+      // Harga pada checkout sudah final; stok ditahan ketika pesanan dibuat.
+      order.codFixedTotal = true;
+      order.shipping = {
+        id: 'regular',
+        label: 'Pengiriman gratis',
+        cost: 0,
+        quoted: true,
+        simulation: false,
+      };
+      order.total = order.subtotal;
+      order.payment.simulation = false;
+      order.payment.status = 'pay_on_delivery';
+      order.status = 'processing';
+      delete order.codConfirmation;
+      delete order.review;
+      order.whatsapp.simulation = false;
+      order.whatsapp.deliveryMode = 'manual';
+      return order;
+    }
     order.shipping = {
       id: order.shipping.id,
       label: 'Ongkir dikonfirmasi toko',

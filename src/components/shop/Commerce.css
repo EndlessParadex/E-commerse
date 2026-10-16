@@ -154,11 +154,17 @@
 .invoice-items .invoice-col-number { width: 3.4rem; }
 .invoice-items .invoice-col-product { width: auto; }
 .invoice-items .invoice-col-quantity { width: 3.4rem; }
-.invoice-items .invoice-col-unit-price { width: 8.1rem; }
-.invoice-items .invoice-col-subtotal { width: 8.6rem; }
+.invoice-items .invoice-col-unit-price { width: 7.1rem; }
+.invoice-items .invoice-col-discount { width: 7rem; }
+.invoice-items .invoice-col-subtotal { width: 8rem; }
 .invoice-items .invoice-quantity { text-align: center; width: 3rem; font-variant-numeric: tabular-nums; }
 .invoice-items .invoice-money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .invoice-product strong { display: block; font-weight: 600; }
+.invoice-items .invoice-discount { text-align: right; font-variant-numeric: tabular-nums; }
+.invoice-discount-details { display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; white-space: nowrap; }
+.invoice-discount-details strong { font-weight: 800; color: #166534; }
+.invoice-no-discount { color: #475569; }
+.invoice-savings { color: #166534; font-weight: 700; }
 .invoice-summary { width: min(100%, 23rem); margin: 1rem 0 1rem auto; }
 .invoice-summary-row, .invoice-grand-total { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; }
 .invoice-summary-row strong, .invoice-grand-total strong { text-align: right; font-variant-numeric: tabular-nums; }
@@ -177,7 +183,9 @@
   .invoice-items .invoice-money { white-space: normal; }
   .invoice-items .invoice-col-number { width: 2.8rem; }
   .invoice-items .invoice-number { width: 2.8rem; min-width: 2.8rem; }
-  .invoice-items .invoice-col-unit-price { width: 6.3rem; }
+  .invoice-items .invoice-col-unit-price { width: 5.5rem; }
+  .invoice-items .invoice-col-discount { width: 5.7rem; }
+  .invoice-discount-details { white-space: normal; }
   .invoice-items .invoice-col-subtotal { width: 6.5rem; }
 }
 @media print {
@@ -194,8 +202,9 @@
   .invoice-print-root .invoice-items .invoice-col-number { width: 11mm; }
   .invoice-print-root .invoice-items .invoice-number { width: 11mm; min-width: 11mm; }
   .invoice-print-root .invoice-items .invoice-col-quantity { width: 12mm; }
-  .invoice-print-root .invoice-items .invoice-col-unit-price { width: 30mm; }
-  .invoice-print-root .invoice-items .invoice-col-subtotal { width: 33mm; }
+  .invoice-print-root .invoice-items .invoice-col-unit-price { width: 26mm; }
+  .invoice-print-root .invoice-items .invoice-col-discount { width: 24mm; }
+  .invoice-print-root .invoice-items .invoice-col-subtotal { width: 31mm; }
   .invoice-print-root .invoice-items tr,
   .invoice-print-root .invoice-details,
   .invoice-print-root .invoice-summary,

@@ -14,7 +14,7 @@ const tokenFor = (user) => createHash('sha256').update(user.id).digest('base64ur
 async function fixture(options = {}) {
   const sent = [];
   const mailer = { enabled: true, send: async (message) => sent.push(message) };
-  const app = createApp({ dbPath: ':memory:', mailer, mailConfig, logger: () => {}, ...options });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer, mailConfig, logger: () => {}, ...options });
   const encoded = await hashPassword(password);
   for (const user of [alice, bob, admin]) {
     app.db
@@ -292,7 +292,7 @@ test('public inventory has no internal metrics; admin inventory is protected and
 });
 
 test('unconfigured email stores an unverified account without pretending delivery', async () => {
-  const app = createApp({ dbPath: ':memory:', mailer: { enabled: false }, logger: () => {} });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer: { enabled: false }, logger: () => {} });
   try {
     assert.equal((await request(app, 'GET', '/api/auth/features')).body.emailReady, false);
     const response = await request(app, 'POST', '/api/auth/register', {
@@ -806,7 +806,7 @@ test('public stock can hide exact counts and publish coarse sales; materialized 
     assert.equal(response.skuAvailability['snack-pedas'], true);
     const before = app.workflow.stock().stock[key];
     app.db.close();
-    app = createApp({ dbPath, mailer: { enabled: false } });
+    app = createApp({ legacyCommerceFixture: true, dbPath, mailer: { enabled: false } });
     assert.deepEqual(app.workflow.stock().stock[key], before);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM workflow_v30_migrations').get().n, 1);
     const profile = app.company.snapshot();
@@ -848,7 +848,7 @@ test('mail queue encrypts account links, retries after restart and redacts trans
     assert.doesNotMatch(JSON.stringify(logs), /SMTP secret|recipient and token/);
     assert.equal(app.db.prepare('SELECT attempts FROM auth_mail_outbox').get().attempts, 1);
     app.db.close();
-    app = createApp({
+    app = createApp({ legacyCommerceFixture: true,
       dbPath,
       now: () => time,
       mailConfig,

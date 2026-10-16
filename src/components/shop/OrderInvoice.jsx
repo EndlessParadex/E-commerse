@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import useCompany from '../../state/useCompany';
 import { rupiah, dateLabel } from './shopPresentation';
+import { invoiceDiscount } from './invoiceDiscount';
 import './Commerce.css';
 
 export default function OrderInvoice({ order }) {
@@ -13,6 +14,7 @@ export default function OrderInvoice({ order }) {
   const cod = payment.groupId === 'cod';
   const paid = payment.status === 'paid';
   const paymentLabel = cod ? 'Bayar di Tempat (COD)' : payment.label || 'Pembayaran toko';
+  const totalSavings = order.items.reduce((sum, item) => sum + (invoiceDiscount(item)?.savings || 0), 0);
   const paymentStatus = paid
     ? 'Sudah dibayar'
     : cod
@@ -64,6 +66,7 @@ export default function OrderInvoice({ order }) {
             <col className="invoice-col-product" />
             <col className="invoice-col-quantity" />
             <col className="invoice-col-unit-price" />
+            <col className="invoice-col-discount" />
             <col className="invoice-col-subtotal" />
           </colgroup>
           <thead>
@@ -72,6 +75,7 @@ export default function OrderInvoice({ order }) {
               <th scope="col">Produk</th>
               <th scope="col" className="invoice-quantity">Qty</th>
               <th scope="col" className="invoice-money">Harga satuan</th>
+              <th scope="col" className="invoice-discount">Diskon</th>
               <th scope="col" className="invoice-money">Subtotal</th>
             </tr>
           </thead>
@@ -83,7 +87,15 @@ export default function OrderInvoice({ order }) {
                   <strong>{item.name}</strong>
                 </td>
                 <td className="invoice-quantity">{item.quantity}</td>
-                <td className="invoice-money">{rupiah(item.price)}</td>
+                <td className="invoice-money">{rupiah(invoiceDiscount(item)?.oldPrice || item.price)}</td>
+                <td className="invoice-discount">
+                  {invoiceDiscount(item) ? (
+                    <span className="invoice-discount-details">
+                      <strong>−{invoiceDiscount(item).percentage}%</strong>
+                      <span>{rupiah(item.price)}</span>
+                    </span>
+                  ) : <span className="invoice-no-discount">—</span>}
+                </td>
                 <td className="invoice-money">{rupiah(item.price * item.quantity)}</td>
               </tr>
             ))}
@@ -96,6 +108,12 @@ export default function OrderInvoice({ order }) {
           <span>Subtotal barang</span>
           <strong>{rupiah(order.subtotal)}</strong>
         </div>
+        {totalSavings > 0 && (
+          <div className="invoice-summary-row invoice-savings">
+            <span>Total hemat</span>
+            <strong>{rupiah(totalSavings)}</strong>
+          </div>
+        )}
         <div className="invoice-grand-total">
           <span>{finalized ? (cod ? 'Total pembayaran COD' : 'Total pembayaran') : 'Subtotal sementara'}</span>
           <strong>{rupiah(order.total)}</strong>

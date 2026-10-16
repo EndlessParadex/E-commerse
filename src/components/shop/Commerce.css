@@ -144,17 +144,21 @@
 .invoice-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 1.15rem; }
 .invoice-details-card { border: 1.5px solid var(--invoice-border); border-radius: 6px; padding: 0.85rem; }
 .invoice-details-card strong { display: block; margin-top: 0.55rem; }
-.order-invoice .invoice-items { width: 100%; border-collapse: collapse; table-layout: auto; }
+.order-invoice .invoice-items { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .order-invoice .invoice-items thead { background: #eef2f6; }
 .order-invoice .invoice-items th { border-top: 2px solid var(--invoice-strong); border-bottom: 2px solid var(--invoice-strong); font-weight: 800; }
 .order-invoice .invoice-items th,
 .order-invoice .invoice-items td { border-bottom: 1.3px solid var(--invoice-border); padding: 0.7rem 0.5rem; vertical-align: top; }
 .order-invoice .invoice-items tbody tr:last-child td { border-bottom: 2px solid var(--invoice-strong); }
-.invoice-items .invoice-number { text-align: center; width: 2rem; }
+.invoice-items .invoice-number { text-align: center; width: 3.4rem; min-width: 3.4rem; white-space: nowrap; word-break: normal; overflow-wrap: normal; }
+.invoice-items .invoice-col-number { width: 3.4rem; }
+.invoice-items .invoice-col-product { width: auto; }
+.invoice-items .invoice-col-quantity { width: 3.4rem; }
+.invoice-items .invoice-col-unit-price { width: 8.1rem; }
+.invoice-items .invoice-col-subtotal { width: 8.6rem; }
 .invoice-items .invoice-quantity { text-align: center; width: 3rem; font-variant-numeric: tabular-nums; }
 .invoice-items .invoice-money { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.invoice-product strong, .invoice-product small { display: block; }
-.invoice-product small { font-size: 0.73rem; margin-top: 0.2rem; }
+.invoice-product strong { display: block; font-weight: 600; }
 .invoice-summary { width: min(100%, 23rem); margin: 1rem 0 1rem auto; }
 .invoice-summary-row, .invoice-grand-total { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; }
 .invoice-summary-row strong, .invoice-grand-total strong { text-align: right; font-variant-numeric: tabular-nums; }
@@ -171,6 +175,10 @@
   .invoice-details { grid-template-columns: 1fr; }
   .order-invoice .invoice-items th, .order-invoice .invoice-items td { padding: 0.4rem 0.25rem; }
   .invoice-items .invoice-money { white-space: normal; }
+  .invoice-items .invoice-col-number { width: 2.8rem; }
+  .invoice-items .invoice-number { width: 2.8rem; min-width: 2.8rem; }
+  .invoice-items .invoice-col-unit-price { width: 6.3rem; }
+  .invoice-items .invoice-col-subtotal { width: 6.5rem; }
 }
 @media print {
   .invoice-print-root .order-invoice { max-width: none; padding: 0; font-size: 9.5pt; }
@@ -183,6 +191,11 @@
   .invoice-print-root .invoice-details-card,
   .invoice-print-root .invoice-payment-notice { border-color: #222 !important; }
   .invoice-print-root .invoice-items thead { display: table-header-group; }
+  .invoice-print-root .invoice-items .invoice-col-number { width: 11mm; }
+  .invoice-print-root .invoice-items .invoice-number { width: 11mm; min-width: 11mm; }
+  .invoice-print-root .invoice-items .invoice-col-quantity { width: 12mm; }
+  .invoice-print-root .invoice-items .invoice-col-unit-price { width: 30mm; }
+  .invoice-print-root .invoice-items .invoice-col-subtotal { width: 33mm; }
   .invoice-print-root .invoice-items tr,
   .invoice-print-root .invoice-details,
   .invoice-print-root .invoice-summary,

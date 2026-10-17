@@ -24,6 +24,7 @@ import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { AccountRepository } from './accounts.js';
+import { B2BStoreRepository } from './b2bStores.js';
 import { customerAccess } from './customerAccess.js';
 
 const scrypt = promisify(scryptCallback);
@@ -174,6 +175,7 @@ export function createApp({
   const workflow = new WorkflowRepository(db, catalog, company, now, reservationPolicy, messages);
   installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
   const accounts = new AccountRepository(db, now);
+  const b2bStores = new B2BStoreRepository(db, now);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',
     indexHtml: siteIndexHtml,
@@ -327,6 +329,29 @@ export function createApp({
           200,
           accounts.customers(user, new URL(req.url, 'http://bam.local').searchParams),
         );
+      }
+      if (path === '/api/b2b/stores' || path === '/api/b2b/sales' ||
+          path === '/api/b2b/sales/appoint' || path === '/api/b2b/stores/create' ||
+          /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)$/.test(path)) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        if (req.method === 'GET' && path === '/api/b2b/stores')
+          return json(res, 200, { stores: b2bStores.list(actor), role: b2bStores.role(actor) });
+        if (req.method === 'GET' && path === '/api/b2b/sales')
+          return json(res, 200, { sales: b2bStores.salesList(actor) });
+        if (req.method === 'POST' && path === '/api/b2b/stores/create')
+          return json(res, 201, { store: b2bStores.create(actor, await readBody(req)) });
+        if (req.method === 'POST' && path === '/api/b2b/sales/appoint')
+          return json(res, 200, b2bStores.appointSales(actor, (await readBody(req)).userId));
+        const match = path.match(/^\/api\/b2b\/stores\/([^/]+)\/(members|sales)$/);
+        if (match && req.method === 'POST') {
+          const userId = (await readBody(req)).userId;
+          const storeId = decodeURIComponent(match[1]);
+          return json(res, 200, match[2] === 'sales'
+            ? b2bStores.assignSales(actor, storeId, userId)
+            : b2bStores.addMember(actor, storeId, userId));
+        }
+        return sendError(res, 405, 'method_not_allowed');
       }
       const approvalMatch = path.match(/^\/api\/admin\/approvals(?:\/([^/]+))?$/);
       if (approvalMatch) {

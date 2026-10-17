@@ -801,6 +801,21 @@
   margin-top: 8px;
   line-height: 1.7;
 }
+/* Product filters remain visible while the catalog rows scroll beneath them.
+   The panel's overflow must be visible for position: sticky to work. */
+.admin-products-panel {
+  overflow: visible;
+  display: flow-root;
+}
+.admin-products-panel .admin-filters {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  box-shadow: 0 7px 14px -12px rgba(0, 0, 0, 0.45);
+}
 .admin-filters {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));

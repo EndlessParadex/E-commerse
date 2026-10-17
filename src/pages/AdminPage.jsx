@@ -497,7 +497,7 @@ export default function AdminPage({ view = 'overview' }) {
             </section>
           </>
         ) : (
-          <section className="admin-panel">
+          <section className="admin-panel admin-products-panel">
             <div className="admin-panel-heading">
               <div>
                 <h2>Katalog produk</h2>

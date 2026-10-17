@@ -270,6 +270,18 @@ export default function AdminCompanyPage() {
                 </section>
               </div>
             </div>
+            {company.commerce?.codOnly === true ? (
+              <section className="company-settings-section company-settings-divider" aria-labelledby="company-payment-title">
+                <div className="company-section-heading">
+                  <h3 id="company-payment-title">Pembayaran toko</h3>
+                  <p>COD (Bayar di Tempat) adalah metode pembayaran tetap untuk pesanan baru.</p>
+                </div>
+                <div className="company-mode-note">
+                  <strong>COD aktif · Ongkir gratis</strong>
+                  <p>Harga pesanan final saat checkout. Pembeli membayar saat barang diterima, tanpa transfer bank atau persetujuan total tambahan.</p>
+                </div>
+              </section>
+            ) : (
             <section
               className="company-settings-section company-settings-divider"
               aria-labelledby="company-payment-title"
@@ -309,6 +321,7 @@ export default function AdminCompanyPage() {
                 </div>
               </div>
             </section>
+            )}
             <section
               className="company-settings-section company-settings-divider"
               aria-labelledby="company-visibility-title"

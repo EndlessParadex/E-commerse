@@ -187,7 +187,7 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
     candidate.masters.categories.push({
       id: 'category-test',
       name: 'Kategori Test',
-      icon: '💻',
+      icon: '🥔',
       children: [{ id: 'sub-test', name: 'Subkategori Test' }],
     });
     candidate.edits.push({
@@ -209,6 +209,10 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
     const publicCatalog = (await request(app, 'GET', '/api/catalog')).body;
     assert.equal(publicCatalog.edits[0].baseName, 'Produk dari database');
     assert.equal(publicCatalog.edits[0].image, png);
+    assert.equal(
+      publicCatalog.masters.categories.find((entry) => entry.id === 'category-test').icon,
+      '🥔',
+    );
     assert.equal((await request(app, 'PUT', '/api/admin/catalog', candidate, cookie)).status, 409);
     const invalids = [
       (value) => {
@@ -239,6 +243,9 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
       },
       (value) => {
         value.masters.suppliers[0].color = 'unknown-color';
+      },
+      (value) => {
+        value.masters.categories[0].icon = 'unknown-icon';
       },
     ];
     for (const mutate of invalids) {
@@ -274,6 +281,7 @@ test('katalog dan foto tetap ada setelah database dibuka kembali', async () => {
     next.edits[0].variants[0].price = '19000';
     next.edits[0].color = 'sky';
     next.masters.suppliers[0].color = 'rose';
+    next.masters.categories[0].icon = '🍪';
     assert.equal((await request(app, 'PUT', '/api/admin/catalog', next, cookie)).status, 200);
     app.db.close();
     app = createApp({ dbPath: path });
@@ -283,6 +291,7 @@ test('katalog dan foto tetap ada setelah database dibuka kembali', async () => {
     assert.equal(publicCatalog.body.edits[0].variants[0].price, '19000');
     assert.equal(publicCatalog.body.edits[0].color, 'sky');
     assert.equal(publicCatalog.body.masters.suppliers[0].color, 'rose');
+    assert.equal(publicCatalog.body.masters.categories[0].icon, '🍪');
     assert.equal(
       (await request(app, 'GET', '/api/auth/me', undefined, cookie)).body.user.role,
       'admin',

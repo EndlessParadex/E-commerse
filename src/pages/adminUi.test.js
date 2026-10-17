@@ -132,7 +132,7 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await render('categories');
     await click(button('+ Tambah kategori'));
     await fill('#master-name', 'Kategori UI Uji');
-    await fill('#master-icon', '💻');
+    await fill('#master-icon', '🥔');
     await fill('#child-0', 'Laptop UI Uji');
     await click(button('+ Tambah subkategori'));
     await fill('#child-1', 'Aksesori UI Uji');
@@ -144,7 +144,10 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.ok(filterPanel.querySelector('.admin-filters #admin-search'));
     assert.ok(filterPanel.querySelector('.admin-filters #admin-supplier'));
     assert.ok(filterPanel.querySelector('.admin-filters #admin-brand'));
-    assert.match(themeStyle.textContent, /\.admin-products-panel \.admin-filters\s*\{[^}]*position:\s*sticky/);
+    assert.match(
+      themeStyle.textContent,
+      /\.admin-products-panel \.admin-filters\s*\{[^}]*position:\s*sticky/,
+    );
     assert.match(themeStyle.textContent, /\.admin-products-panel\s*\{[^}]*overflow:\s*visible/);
     await click(button('+ Tambah produk'));
     await fill('#product-supplierId', newSupplier.id);
@@ -156,6 +159,7 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.match(container.querySelector('.admin-form-preview').textContent, /Merek UI Uji/);
     const categoryModule = await server.ssrLoadModule('/src/data/catalog.js');
     const category = categoryModule.categories.find((entry) => entry.name === 'Kategori UI Uji');
+    assert.equal(category.icon, '🥔');
     await fill('#product-categoryId', category.id);
     assert.equal(container.querySelector('#product-subcategoryId').options.length, 3);
     const transfer = new dom.DataTransfer();

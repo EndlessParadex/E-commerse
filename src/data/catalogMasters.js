@@ -2,6 +2,7 @@ import { products } from './products.js';
 import { suppliers } from './suppliers.js';
 import { categories } from './catalog.js';
 import { validCatalogColor } from './catalogColors.js';
+import { isCategoryIcon } from './categoryIcons.js';
 
 export const brands = [
   ...new Map(
@@ -73,8 +74,7 @@ export function validateMaster(type, draft, snapshot = masterSnapshot(), checkUs
       errors.supplierIds = 'PT yang masih memiliki produk dengan merek ini harus tetap dipilih.';
   }
   if (type === 'categories') {
-    if (!['📦', '🍫', '✨', '🍛', '🧼', '💻', '👕'].includes(draft.icon))
-      errors.icon = 'Pilih ikon.';
+    if (!isCategoryIcon(draft.icon)) errors.icon = 'Pilih ikon.';
     if (!draft.children.length || draft.children.length > 30)
       errors.children = 'Isi 1–30 subkategori.';
     const seen = new Set();

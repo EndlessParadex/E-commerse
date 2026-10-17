@@ -11,6 +11,7 @@ import {
 } from '../data/adminStore';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { catalogColors, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
+import { categoryIconGroups } from '../data/categoryIcons';
 
 const labels = { suppliers: 'PT pemasok', brands: 'merek', categories: 'kategori' };
 const entriesFor = (type) => ({ suppliers, brands, categories })[type];
@@ -168,13 +169,24 @@ function MasterForm({ type, initial, onClose, onSaved }) {
                     id="master-icon"
                     value={draft.icon}
                     onChange={(event) => update('icon', event.target.value)}
+                    aria-invalid={Boolean(errors.icon)}
+                    aria-describedby={errors.icon ? 'master-error-icon' : undefined}
                   >
-                    {['📦', '🍫', '✨', '🍛', '🧼', '💻', '👕'].map((icon) => (
-                      <option key={icon} value={icon}>
-                        {icon}
-                      </option>
+                    {categoryIconGroups.map((group) => (
+                      <optgroup key={group.name} label={group.name}>
+                        {group.icons.map(([icon, label]) => (
+                          <option key={icon} value={icon}>
+                            {icon} {label}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
+                  {errors.icon && (
+                    <small className="admin-error" id="master-error-icon">
+                      {errors.icon}
+                    </small>
+                  )}
                 </div>
                 <div className="admin-full">
                   <div className="admin-section-heading">

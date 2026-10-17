@@ -2,6 +2,7 @@ import { products } from '../src/data/products.js';
 import { productDraft, slug } from '../src/data/adminEditor.js';
 import { masterSnapshot } from '../src/data/catalogMasters.js';
 import { validCatalogColor } from '../src/data/catalogColors.js';
+import { isCategoryIcon } from '../src/data/categoryIcons.js';
 import { packagingValues, packagingErrors, variantKey } from '../src/data/productPackaging.js';
 import { MAX_PRODUCT_PHOTOS } from '../src/data/productPhotos.js';
 
@@ -88,9 +89,7 @@ export function normalizeCatalog(input, current = null) {
     const categories = entries(input.masters.categories, 500, 'kategori', true).map((entry) => ({
       id: entry.id,
       name: text(entry.name, 100, 'Nama kategori'),
-      icon: ['📦', '🍫', '✨', '🍛', '🧼', '💻', '👕'].includes(entry.icon)
-        ? entry.icon
-        : fail('Ikon kategori tidak valid.'),
+      icon: isCategoryIcon(entry.icon) ? entry.icon : fail('Ikon kategori tidak valid.'),
       children: entries(entry.children, 30, 'subkategori').map((child) => ({
         id: child.id,
         name: text(child.name, 80, 'Nama subkategori'),

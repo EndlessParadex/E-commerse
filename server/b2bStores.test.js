@@ -12,7 +12,7 @@ test('B2B store: only BAM owner creates and assigns, buyers and sales see scoped
       db.prepare('INSERT INTO auth_account_state(user_id,verified_at,credential_revision) VALUES(?,?,0)')
         .run(id,Date.now());
     }
-    db.prepare('INSERT INTO store_owners(user_id,created_at) VALUES(?,?)').run('owner-b2b','2026-10-17');
+    db.prepare('INSERT INTO store_owners(user_id,granted_at) VALUES(?,?)').run('owner-b2b','2026-10-17');
     const owner={id:'owner-b2b',role:'admin'}, operator={id:'operator-b2b',role:'admin'};
     const buyer={id:'buyer-b2b',role:'user'}, sales={id:'sales-b2b',role:'user'}, other={id:'other-b2b',role:'user'};
     const store=app.b2bStores.create(owner,{storeName:'Toko Nusantara',phone:'081234567890',address:'Jalan Nusantara Nomor 15'});

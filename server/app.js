@@ -402,6 +402,7 @@ export function createApp({
             emailReady: identity.ready,
             canManageEmail: isStoreOwner(db, user),
             verificationRequired: true,
+            codOnly: !legacyCommerceFixture,
             transferReady: Boolean(company.snapshot().profile.bankAccount),
             delivery: messages.summary(),
             skippedReasons: messages.skippedSummary(),
@@ -415,6 +416,9 @@ export function createApp({
               .prepare(
                 "SELECT COUNT(*) AS n FROM orders WHERE status IN ('awaiting_confirmation','awaiting_review')",
               )
+              .get().n,
+            processingOrders: db
+              .prepare("SELECT COUNT(*) AS n FROM orders WHERE status='processing'")
               .get().n,
           });
         const retryMatch = path.match(/^\/api\/admin\/notifications\/(.+)\/retry$/);

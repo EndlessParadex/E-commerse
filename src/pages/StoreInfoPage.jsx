@@ -201,6 +201,34 @@ export default function StoreInfoPage({ page }) {
       text: 'Rekening tujuan berasal dari pengaturan toko. Bukti transfer tersimpan pada server dan hanya dapat dibuka pemilik pesanan serta admin. Email digunakan untuk verifikasi, pemulihan akun dan pembaruan pesanan. Nomor WhatsApp opsional digunakan toko untuk kontak manual dengan persetujuan Anda.',
     };
   }
+  // Keep historical order details intact, but explain the actual rules for new orders.
+  if (workflowUsesServer && company.commerce?.codOnly === true) {
+    configured.pengiriman.intro = 'Periksa alamat pengiriman sebelum checkout. Ongkos kirim BAM gratis.';
+    configured.pengiriman.sections[1] = {
+      title: 'Gratis ongkos kirim',
+      text: 'Semua pesanan baru menggunakan pengiriman gratis (Rp0). Harga total sudah final sejak checkout. Toko mengatur pengiriman secara manual.',
+    };
+    configured.pengiriman.sections[2] = {
+      title: 'Status dan pengiriman barang',
+      text: 'Pesanan baru langsung diproses jika checkout berhasil. Toko menyiapkan barang dan mencatat kurir serta resi saat dikirim. Lihat perkembangan di Pesanan saya; pelacakan otomatis ke sistem kurir belum tersedia.',
+    };
+    configured.bantuan.sections[3] = {
+      title: 'Pembayaran COD',
+      text: 'BAM hanya menerima bayar di tempat (COD) untuk pesanan baru. Tidak perlu transfer bank atau membayar sebelum barang diterima. Ongkir gratis dan harga checkout sudah final.',
+    };
+    configured.bantuan.sections[4] = {
+      title: 'Setelah checkout',
+      text: 'Setelah checkout berhasil, pesanan langsung berstatus Diproses. Anda tidak perlu menekan tombol persetujuan harga atau total kedua. Lihat Pesanan saya untuk memantau pengiriman dan membayar COD saat barang diterima.',
+    };
+    configured.pembatalan.sections[1] = {
+      title: 'Membatalkan pesanan baru',
+      text: 'Buka Pesanan saya, pilih pesanan lalu Batalkan pesanan dengan alasan. Pesanan yang sudah dikirim atau selesai tidak dapat dibatalkan langsung dari website; hubungi toko untuk bantuan.',
+    };
+    configured.privasi.sections[2] = {
+      title: 'Pembayaran COD dan kontak',
+      text: 'Pesanan baru dibayar COD saat barang diterima. Email digunakan untuk verifikasi, pemulihan akun, serta pembaruan pesanan. Nomor WhatsApp bersifat opsional untuk kontak manual dengan persetujuan Anda. Riwayat pesanan lama tetap disimpan sesuai transaksi awalnya.',
+    };
+  }
   const content = configured[page] || configured.bantuan;
   return (
     <div className="store-info-page">

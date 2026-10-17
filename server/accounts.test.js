@@ -343,7 +343,8 @@ test('self registration appears in the buyer directory without role selection or
     );
     assert.equal(listed.body.total, 1);
     assert.equal(listed.body.users[0].emailVerified, false);
-    assert.equal(listed.body.users[0].active, true);
+    assert.equal(listed.body.users[0].active, false);
+    assert.equal(app.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(buyer.id).status, 'pending');
     assert.equal(
       (await request(app, 'GET', '/api/company')).body.commerce.verificationRequired,
       true,
@@ -611,16 +612,10 @@ test('accounts with orders cannot be deleted; disabling access preserves reserve
       shippingId: 'regular',
       items: [{ id: variant.id, quantity: 2, expectedPrice: Number(variant.price) }],
     });
-    order = app.workflow.update(owner, order.id, {
-      action: 'confirm_cod',
-      revision: order.revision,
-      shippingCost: 10000,
-      courier: 'Kurir fixture',
-    });
-    order = app.workflow.update(buyer, order.id, {
-      action: 'accept_quote',
-      revision: order.revision,
-    });
+    assert.equal(order.status, 'processing');
+    assert.equal(order.shipping.cost, 0);
+    assert.equal(order.total, order.subtotal);
+    assert.equal(order.inventoryReserved, true);
     const before = JSON.stringify(app.workflow.stock());
     assert.equal((await change(app, 'buyer', 'delete')).status, 409);
     assert.equal(app.accounts.get('buyer', owner).canDelete, false);

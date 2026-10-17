@@ -75,6 +75,7 @@ function App() {
     '/admin/perusahaan': 'company',
     '/admin/email': 'email',
     '/admin/akun': 'accounts',
+    '/admin/persetujuan': 'approvals',
   }[route];
   const isAdmin = Boolean(adminView);
   const recoveryMatch = route.match(
@@ -103,6 +104,7 @@ function App() {
         company: 'Admin · Pengaturan Perusahaan',
         accounts: 'Admin · Kelola Akun',
         email: 'Admin · Pengaturan Email',
+        approvals: 'Admin · Persetujuan Akun',
       }[adminView]
     : recoveryMatch
       ? 'Pemulihan dan verifikasi akun'

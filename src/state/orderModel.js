@@ -37,6 +37,7 @@ export function createOrder({
       id: item.id,
       name: item.name.trim().slice(0, 200),
       price: item.price,
+      ...(Number.isSafeInteger(item.oldPrice) && item.oldPrice > item.price ? { oldPrice: item.oldPrice } : {}),
       quantity: item.quantity,
       details: {
         name: display.name,

@@ -199,7 +199,7 @@ export default function OrdersPage() {
                   </span>
                   <strong>{rupiah(order.total)}</strong>
                   <small>
-                    Termasuk ongkir · {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
+                    {order.codFixedTotal ? 'Gratis ongkir' : 'Termasuk ongkir'} · {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
                     kemasan
                   </small>
                 </div>

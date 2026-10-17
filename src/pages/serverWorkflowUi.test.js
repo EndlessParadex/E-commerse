@@ -13,7 +13,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   const catalog = demo.catalog.snapshot();
   demo.db.close();
   let serverTime = Date.now();
-  const api = createApp({ dbPath: ':memory:', installMode: 'company', now: () => serverTime });
+  const api = createApp({ dbPath: ':memory:', installMode: 'company', legacyCommerceFixture: true, now: () => serverTime });
   api.catalog.save({ ...catalog, revision: 0 });
   const candidate = api.catalog.snapshot();
   const group = candidate.edits.find((row) => row.groupId === 'snack-pedas');
@@ -325,6 +325,21 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     );
     assert.match(container.querySelector('.payment-details').textContent, /sedang diperiksa/);
     assert.ok(container.querySelector('.order-invoice').textContent.includes(bobOrder.id));
+    const invoice = container.querySelector('.order-invoice');
+    assert.match(invoice.textContent, /Informasi pembayaran/);
+    assert.match(invoice.textContent, /Dikirim kepada/);
+    assert.match(invoice.textContent, /RINCIAN PESANAN/);
+    // This fixture is an existing manual-transfer order awaiting staff verification, not COD.
+    assert.match(invoice.textContent, /Transfer bank toko/);
+    assert.match(invoice.textContent, /Belum dikonfirmasi dibayar/);
+    assert.ok(invoice.querySelector('.invoice-items thead'));
+    assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('SKU'), false);
+    assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('No.'), true);
+    assert.equal(invoice.querySelector('.invoice-product small'), null);
+    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Ongkos kirim'), false);
+    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Total pembayaran'), true);
+    assert.ok(invoice.querySelector('.invoice-grand-total'));
+    assert.equal(invoice.querySelectorAll('.invoice-items tbody tr').length, bobOrder.items.length);
     await mountAs('admin', '/admin/pesanan');
     assert.ok(button('Minta perbaikan bukti'));
     assert.ok(

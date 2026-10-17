@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { logUnexpectedError } from './errorLogging.js';
-import { accountIsActive } from './accountAccess.js';
+import { accountIsActive, accountApprovalStatus, approvalSchema } from './accountAccess.js';
 
 const fail = (message, status = 400, code = 'invalid_token') => {
   throw new CatalogError(message, status, code);
@@ -28,6 +28,7 @@ export class IdentityRepository {
   ) {
     Object.assign(this, { db, now, mailer, queue, limiter, passwordCheck, hashPassword, logger });
     this.configureMail(mailer, config);
+    db.exec(approvalSchema);
     db.exec(`CREATE TABLE IF NOT EXISTS auth_account_state(user_id TEXT PRIMARY KEY REFERENCES users(id),verified_at INTEGER,credential_revision INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE IF NOT EXISTS auth_tokens(token_hash TEXT PRIMARY KEY,purpose TEXT NOT NULL,user_id TEXT REFERENCES users(id),email TEXT NOT NULL,payload TEXT NOT NULL,credential_revision INTEGER NOT NULL,expires_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS auth_email_daily(address_hash TEXT NOT NULL,created_at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS auth_email_daily_lookup ON auth_email_daily(address_hash,created_at);
@@ -163,6 +164,7 @@ export class IdentityRepository {
             encoded,
             new Date(this.now()).toISOString(),
           );
+        this.db.prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')").run(user.id);
         if (this.ready) this.issue('verify', fields.email, user);
       } else if (this.ready) this.issue('reset', fields.email, user);
     });
@@ -172,9 +174,24 @@ export class IdentityRepository {
     return {
       ...generic,
       message: this.ready
-        ? 'Jika alamat tersebut memenuhi syarat, instruksi akses akun dikirim melalui email. Untuk akun baru, gunakan kata sandi yang Anda isi saat mendaftar.'
-        : 'Permintaan pendaftaran diterima. Jika akun baru berhasil dibuat, Anda dapat masuk dengan kata sandi pendaftaran. Verifikasi email wajib sebelum memesan; layanan email toko belum aktif. Hubungi pengelola toko.',
+        ? 'Permintaan diterima. Jika akun baru berhasil dibuat, email verifikasi otomatis disiapkan. Periksa kotak masuk atau spam sambil menunggu persetujuan Admin atau Pemilik.'
+        : 'Permintaan diterima. Akun baru perlu persetujuan Admin atau Pemilik. Pengiriman verifikasi email belum tersedia; hubungi pengelola toko.',
+      emailReady: this.ready,
     };
+  }
+  async resendRegistrationVerification(value, ip) {
+    const email = emailOf(value);
+    this.requireEmail();
+    // The response is identical whether the account exists or not; avoid account enumeration.
+    if (!this.limiter.take('email', ip, email)) return generic;
+    await this.queue.run(ip, () => this.hashPassword('registration-verification-request'));
+    this.transaction(() => {
+      this.cleanup();
+      const user = this.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+      if (user && accountApprovalStatus(this.db, user.id) === 'pending' && !this.verified(user.id))
+        this.issue('verify', email, user);
+    });
+    return generic;
   }
   async forgot(value, ip) {
     const email = emailOf(value);
@@ -253,7 +270,15 @@ export class IdentityRepository {
         .prepare("DELETE FROM auth_tokens WHERE email=? AND purpose IN ('register','verify')")
         .run(current.email);
     });
-    return { ok: true, message: 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.' };
+    const approval = accountApprovalStatus(this.db, row.user_id || this.db.prepare('SELECT id FROM users WHERE email=?').get(row.email)?.id);
+    return {
+      ok: true,
+      message: approval === 'pending'
+        ? 'Email dikonfirmasi. Sekarang tunggu persetujuan Admin atau Pemilik sebelum masuk.'
+        : approval === 'rejected'
+          ? 'Email dikonfirmasi, tetapi pendaftaran belum disetujui. Hubungi pengelola toko.'
+          : 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.',
+    };
   }
   async reset(token, password, ip) {
     this.readToken(token, ['reset']);

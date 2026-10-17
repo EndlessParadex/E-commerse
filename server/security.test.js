@@ -85,7 +85,7 @@ function clean(directory) {
 }
 
 test('reservation abuse: order cap is atomic; retries at the cap succeed and another buyer can order', () => {
-  const app = createApp({ dbPath: ':memory:', reservationPolicy: policy });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', reservationPolicy: policy });
   users(app);
   try {
     const body = input(app);
@@ -105,7 +105,7 @@ test('reservation abuse: order cap is atomic; retries at the cap succeed and ano
 });
 
 test('reservation abuse: packaging aliases share a quantity cap; totals across products are bounded', () => {
-  const app = createApp({ dbPath: ':memory:', reservationPolicy: policy });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', reservationPolicy: policy });
   users(app);
   try {
     const candidate = app.catalog.snapshot();
@@ -161,7 +161,7 @@ test('reservation abuse: packaging aliases share a quantity cap; totals across p
 
 test('COD confirmation: admin-only, expires once, confirmed/shipped orders survive and late confirmation fails', () => {
   let time = 1700000000000;
-  const app = createApp({ dbPath: ':memory:', now: () => time, reservationPolicy: policy });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', now: () => time, reservationPolicy: policy });
   users(app);
   try {
     const pending = app.workflow.create(alice, input(app));
@@ -227,7 +227,7 @@ test('legacy COD migration grants one review window, survives restart, and prese
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-migration-'));
   const dbPath = join(directory, 'test.sqlite');
   let time = 1700000000000;
-  let app = createApp({ dbPath, now: () => time, reservationPolicy: policy });
+  let app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
   users(app);
   try {
     const pending = app.workflow.create(alice, input(app));
@@ -243,7 +243,7 @@ test('legacy COD migration grants one review window, survives restart, and prese
     );
     app.db.close();
     time += 5000;
-    app = createApp({ dbPath, now: () => time, reservationPolicy: policy });
+    app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
     const review = app.workflow.get(alice, pending.id);
     assert.equal(review.status, 'awaiting_confirmation');
     assert.equal(review.codConfirmation.expiresAt, time + 1000);
@@ -251,7 +251,7 @@ test('legacy COD migration grants one review window, survives restart, and prese
     const deadline = review.codConfirmation.expiresAt;
     app.db.close();
     time += 500;
-    app = createApp({ dbPath, now: () => time, reservationPolicy: policy });
+    app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
     assert.equal(app.workflow.get(alice, pending.id).codConfirmation.expiresAt, deadline);
     assert.equal(app.workflow.get(bob, shipped.id).status, 'shipped');
     time = deadline;
@@ -267,7 +267,7 @@ test('public inventory is read-only during expiry and works while another WAL co
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-read-'));
   const dbPath = join(directory, 'test.sqlite');
   let time = 1700000000000;
-  const app = createApp({ dbPath, now: () => time, reservationPolicy: policy });
+  const app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
   users(app);
   const writer = new DatabaseSync(dbPath);
   try {
@@ -307,13 +307,13 @@ test('public inventory is read-only during expiry and works while another WAL co
 test('parallel checkout cannot cross the outstanding-order cap across backend processes', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-concurrent-'));
   const dbPath = join(directory, 'test.sqlite');
-  const app = createApp({ dbPath, reservationPolicy: policy });
+  const app = createApp({ legacyCommerceFixture: true, dbPath, reservationPolicy: policy });
   users(app);
   try {
     const task = () =>
       new Promise((resolve, reject) => {
         const worker = new Worker(
-          `const {parentPort,workerData}=require('node:worker_threads'); (async()=>{const {createApp}=await import(workerData.module); const app=createApp({dbPath:workerData.dbPath,reservationPolicy:workerData.policy}); try{parentPort.postMessage({id:app.workflow.create(workerData.user,workerData.body).id})}catch(error){parentPort.postMessage({code:error.code})}finally{app.db.close()}})().catch(error=>{throw error});`,
+          `const {parentPort,workerData}=require('node:worker_threads'); (async()=>{const {createApp}=await import(workerData.module); const app=createApp({ legacyCommerceFixture: true,dbPath:workerData.dbPath,reservationPolicy:workerData.policy}); try{parentPort.postMessage({id:app.workflow.create(workerData.user,workerData.body).id})}catch(error){parentPort.postMessage({code:error.code})}finally{app.db.close()}})().catch(error=>{throw error});`,
           {
             eval: true,
             workerData: {
@@ -343,7 +343,7 @@ test('parallel checkout cannot cross the outstanding-order cap across backend pr
 
 test('login executes a password check for missing and existing emails and returns the same failure', async () => {
   const seen = [];
-  const app = createApp({
+  const app = createApp({ legacyCommerceFixture: true,
     dbPath: ':memory:',
     passwordCheck: async (password, encoded) => {
       seen.push({ password, encoded });
@@ -387,7 +387,7 @@ test('parallel password work is bounded; a flooded account still admits its owne
   });
   let active = 0,
     maximum = 0;
-  const app = createApp({
+  const app = createApp({ legacyCommerceFixture: true,
     dbPath: ':memory:',
     passwordQueueOptions: { maxActive: 2, perIp: 1, maxQueued: 4, perIpQueued: 2 },
     authLimits: { loginIp: 4, loginPair: 2 },
@@ -532,7 +532,7 @@ test('failed-login limits persist on the same source; registration throttling do
 
 test('unexpected errors are logged with request correlation and no credentials/body/error-message leak', async () => {
   const entries = [];
-  const app = createApp({
+  const app = createApp({ legacyCommerceFixture: true,
     dbPath: ':memory:',
     logger: (entry) => entries.push(entry),
     passwordCheck: async () => {
@@ -570,7 +570,7 @@ test('real password verification rejects missing/corrupt hashes and a dummy pass
   assert.equal(await verifyPassword('wrong-password', encoded), false);
   assert.equal(await verifyPassword('dummy-credential-not-used-for-login', undefined), false);
   assert.equal(await verifyPassword('correct-password', 'corrupt-hash'), false);
-  const app = createApp({ dbPath: ':memory:' });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   try {
     const response = await request(app, 'POST', '/api/auth/login', {
       email: 'missing@test.id',
@@ -587,14 +587,14 @@ test('real password verification rejects missing/corrupt hashes and a dummy pass
 test('failed-login source counters are shared across backend processes', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-global-'));
   const dbPath = join(directory, 'test.sqlite');
-  const app = createApp({ dbPath });
+  const app = createApp({ legacyCommerceFixture: true, dbPath });
   try {
     const tasks = Array.from(
       { length: 4 },
       (_, index) =>
         new Promise((resolve, reject) => {
           const worker = new Worker(
-            `const {parentPort,workerData}=require('node:worker_threads'); const {Readable}=require('node:stream'); (async()=>{const {createApp}=await import(workerData.module); const app=createApp({dbPath:workerData.dbPath,authLimits:{loginPair:1},passwordCheck:async()=>false}); try {const req=Readable.from([JSON.stringify({email:'target@test.id',password:'wrong'})]); req.method='POST'; req.url='/api/auth/login'; req.socket={remoteAddress:'192.0.2.1'}; req.headers={host:'security.test','content-type':'application/json'}; let status; await app.handler(req,{writeHead(value){status=value},end(){}}); parentPort.postMessage(status)} finally{app.db.close()}})().catch(error=>{throw error});`,
+            `const {parentPort,workerData}=require('node:worker_threads'); const {Readable}=require('node:stream'); (async()=>{const {createApp}=await import(workerData.module); const app=createApp({ legacyCommerceFixture: true,dbPath:workerData.dbPath,authLimits:{loginPair:1},passwordCheck:async()=>false}); try {const req=Readable.from([JSON.stringify({email:'target@test.id',password:'wrong'})]); req.method='POST'; req.url='/api/auth/login'; req.socket={remoteAddress:'192.0.2.1'}; req.headers={host:'security.test','content-type':'application/json'}; let status; await app.handler(req,{writeHead(value){status=value},end(){}}); parentPort.postMessage(status)} finally{app.db.close()}})().catch(error=>{throw error});`,
             {
               eval: true,
               workerData: { module: new URL('./app.js', import.meta.url).href, dbPath, index },
@@ -618,7 +618,7 @@ test('failed-login source counters are shared across backend processes', async (
 
 test('active limiter buckets cannot be evicted by churn; expired buckets recover without trusting forwarded IP', async () => {
   let time = 1700000000000;
-  const app = createApp({
+  const app = createApp({ legacyCommerceFixture: true,
     dbPath: ':memory:',
     now: () => time,
     authLimits: { loginIp: 1 },
@@ -698,7 +698,7 @@ test('invalid reservation configuration fails closed instead of silently disabli
 
 test('checkout checks overdue reservations even when the maintenance timer has not run', () => {
   let time = 1700000000000;
-  const app = createApp({
+  const app = createApp({ legacyCommerceFixture: true,
     dbPath: ':memory:',
     now: () => time,
     reservationPolicy: { ...policy, maxOpenOrders: 1 },

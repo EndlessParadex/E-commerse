@@ -139,6 +139,13 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(button('Simpan kategori'));
     assert.match(container.textContent, /Aksesori UI Uji/);
     await render('products');
+    const filterPanel = container.querySelector('.admin-products-panel');
+    assert.ok(filterPanel, 'product catalog has its own sticky filter container');
+    assert.ok(filterPanel.querySelector('.admin-filters #admin-search'));
+    assert.ok(filterPanel.querySelector('.admin-filters #admin-supplier'));
+    assert.ok(filterPanel.querySelector('.admin-filters #admin-brand'));
+    assert.match(themeStyle.textContent, /\.admin-products-panel \.admin-filters\s*\{[^}]*position:\s*sticky/);
+    assert.match(themeStyle.textContent, /\.admin-products-panel\s*\{[^}]*overflow:\s*visible/);
     await click(button('+ Tambah produk'));
     await fill('#product-supplierId', newSupplier.id);
     const options = [...container.querySelector('#product-brandId').options];

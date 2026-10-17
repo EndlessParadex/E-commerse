@@ -14,7 +14,7 @@ const tokenFor = (user) => createHash('sha256').update(user.id).digest('base64ur
 async function fixture(options = {}) {
   const sent = [];
   const mailer = { enabled: true, send: async (message) => sent.push(message) };
-  const app = createApp({ dbPath: ':memory:', mailer, mailConfig, logger: () => {}, ...options });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer, mailConfig, logger: () => {}, ...options });
   const encoded = await hashPassword(password);
   for (const user of [alice, bob, admin]) {
     app.db
@@ -73,6 +73,24 @@ async function request(app, method, path, body, user = null, ip = '192.0.2.1', h
   });
   return result;
 }
+async function approveRegistration(app, email) {
+  const user = app.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  assert.ok(user, 'Pendaftaran pengujian harus sudah tersimpan');
+  const approval = await request(
+    app,
+    'POST',
+    '/api/admin/approvals/' + encodeURIComponent(user.id),
+    {
+      action: 'approve',
+      revision: 0,
+      reason: 'Persetujuan akun untuk pengujian keamanan',
+      currentPassword: password,
+    },
+    admin,
+  );
+  assert.equal(approval.status, 200, JSON.stringify(approval.body));
+}
+
 function order(app, quantity = 1, paymentId = 'cod') {
   const variant = app.catalog
     .snapshot()
@@ -274,7 +292,7 @@ test('public inventory has no internal metrics; admin inventory is protected and
 });
 
 test('unconfigured email stores an unverified account without pretending delivery', async () => {
-  const app = createApp({ dbPath: ':memory:', mailer: { enabled: false }, logger: () => {} });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer: { enabled: false }, logger: () => {} });
   try {
     assert.equal((await request(app, 'GET', '/api/auth/features')).body.emailReady, false);
     const response = await request(app, 'POST', '/api/auth/register', {
@@ -324,10 +342,19 @@ test('registration is generic; verification requires ownership token and passwor
       (await request(app, 'POST', '/api/auth/verify-email', { token, password })).status,
       400,
     );
+    const pendingLogin = await request(app, 'POST', '/api/auth/login', {
+      email: 'new@fixture.test',
+      password,
+    });
+    assert.equal(pendingLogin.status, 403, 'Verifikasi email tidak melewati persetujuan manual');
+    assert.equal(pendingLogin.body.error, 'approval_required');
+    assert.equal(pendingLogin.headers['set-cookie'], undefined);
+    await approveRegistration(app, 'new@fixture.test');
     const login = await request(app, 'POST', '/api/auth/login', {
       email: 'new@fixture.test',
       password,
     });
+    assert.equal(login.status, 200);
     assert.equal(login.body.user.emailVerified, true);
     await request(app, 'POST', '/api/auth/forgot-password', { email: 'new@fixture.test' });
     await app.identity.flushMail();
@@ -470,6 +497,13 @@ test('registration retains the original password; repeat registration cannot ove
       ).status,
       200,
     );
+    const pendingLogin = await request(app, 'POST', '/api/auth/login', {
+      email: fields.email,
+      password: fields.password,
+    });
+    assert.equal(pendingLogin.status, 403, 'Akun terverifikasi tetap menunggu persetujuan');
+    assert.equal(pendingLogin.headers['set-cookie'], undefined);
+    await approveRegistration(app, fields.email);
     assert.equal(
       (
         await request(app, 'POST', '/api/auth/login', {
@@ -772,7 +806,7 @@ test('public stock can hide exact counts and publish coarse sales; materialized 
     assert.equal(response.skuAvailability['snack-pedas'], true);
     const before = app.workflow.stock().stock[key];
     app.db.close();
-    app = createApp({ dbPath, mailer: { enabled: false } });
+    app = createApp({ legacyCommerceFixture: true, dbPath, mailer: { enabled: false } });
     assert.deepEqual(app.workflow.stock().stock[key], before);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM workflow_v30_migrations').get().n, 1);
     const profile = app.company.snapshot();
@@ -814,7 +848,7 @@ test('mail queue encrypts account links, retries after restart and redacts trans
     assert.doesNotMatch(JSON.stringify(logs), /SMTP secret|recipient and token/);
     assert.equal(app.db.prepare('SELECT attempts FROM auth_mail_outbox').get().attempts, 1);
     app.db.close();
-    app = createApp({
+    app = createApp({ legacyCommerceFixture: true,
       dbPath,
       now: () => time,
       mailConfig,

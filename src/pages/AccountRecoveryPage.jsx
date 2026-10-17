@@ -100,9 +100,9 @@ export default function AccountRecoveryPage({ mode, route }) {
         </h1>
         <p>
           {forgot
-            ? 'Masukkan email akun. Instruksi hanya dikirim jika alamat tersebut memenuhi syarat.'
+            ? 'Masukkan email akun untuk meminta petunjuk pemulihan.'
             : verify
-              ? 'Gunakan tautan dari email. Masukkan kata sandi akun yang dipilih saat mendaftar. Tautan hanya dapat digunakan sekali.'
+              ? 'Masukkan kata sandi akun untuk memastikan tautan ini milik Anda. Verifikasi email dilakukan sekali; persetujuan Admin atau Pemilik adalah langkah terpisah.'
               : 'Tentukan kata sandi baru. Tautan hanya dapat digunakan sekali.'}
         </p>
         {ready === false && (

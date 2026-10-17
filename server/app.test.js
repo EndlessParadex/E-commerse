@@ -88,6 +88,18 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       (await request(app, 'PUT', '/api/admin/users/admin-test', {}, userCookie)).status,
       403,
     );
+    const unauthorizedProfile = await request(
+      app,
+      'PUT',
+      `/api/admin/users/${active.body.user.id}`,
+      { name: 'Nama Disusupi', address: 'Alamat korban yang diubah tanpa izin' },
+      userCookie,
+    );
+    assert.equal(unauthorizedProfile.status, 403);
+    assert.equal(
+      app.db.prepare('SELECT name FROM users WHERE id=?').get(active.body.user.id).name,
+      'User Test',
+    );
     assert.equal(
       (
         await request(app, 'POST', '/api/auth/register', {
@@ -111,6 +123,15 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
     const users = await request(app, 'GET', '/api/admin/users', undefined, cookie);
     assert.equal(users.status, 200);
     assert.ok(users.body.users.every((user) => !Object.hasOwn(user, 'password_hash')));
+    const ownerProfile = await request(
+      app,
+      'PUT',
+      `/api/admin/users/${active.body.user.id}`,
+      { name: 'User Diperbarui', address: 'Alamat pelanggan yang diperbarui pemilik' },
+      cookie,
+    );
+    assert.equal(ownerProfile.status, 200);
+    assert.equal(ownerProfile.body.user.name, 'User Diperbarui');
     const profile = await request(
       app,
       'PUT',
@@ -123,6 +144,19 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
     assert.equal((await request(app, 'PUT', '/api/admin/catalog', {}, cookie)).status, 401);
     app.db.prepare('UPDATE sessions SET expires_at=0').run();
     assert.equal((await request(app, 'GET', '/api/auth/me', undefined, userCookie)).status, 401);
+  } finally {
+    app.db.close();
+  }
+});
+
+test('permintaan mutasi hanya menerima objek JSON; input null dan array tidak menjadi error 500', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  try {
+    for (const body of [null, [], 42, 'hello']) {
+      const response = await request(app, 'POST', '/api/auth/forgot-password', body);
+      assert.equal(response.status, 400);
+      assert.equal(response.body.error, 'invalid_json');
+    }
   } finally {
     app.db.close();
   }

@@ -3,6 +3,7 @@ import { useContext, useRef, useState } from 'react';
 import { DeliveryContext } from '../state/useDelivery';
 import AdminEmailPage from './AdminEmailPage';
 import AdminAccountsPage from './AdminAccountsPage';
+import AdminApprovalsPage from './AdminApprovalsPage';
 import { suppliers } from '../data/suppliers';
 import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCatalog';
 import { rupiah } from '../components/shop/shopPresentation';
@@ -81,6 +82,7 @@ const navigationGroups = [
     label: 'Pengaturan',
     items: [
       { view: 'company', label: 'Pengaturan perusahaan', href: '#/admin/perusahaan' },
+      { view: 'approvals', label: 'Persetujuan akun', href: '#/admin/persetujuan' },
       { view: 'accounts', label: 'Kelola akun', href: '#/admin/akun', ownerOnly: true },
       { view: 'email', label: 'Pengaturan email', href: '#/admin/email', ownerOnly: true },
     ],
@@ -173,6 +175,7 @@ export default function AdminPage({ view = 'overview' }) {
     company: 'Pengaturan perusahaan',
     email: 'Pengaturan email',
     accounts: 'Kelola akun',
+    approvals: 'Persetujuan akun',
   }[view];
   // The form's capture listener confirms unsaved changes before this handler runs.
   // Close explicitly even when the selected link points to the current hash.
@@ -373,7 +376,9 @@ export default function AdminPage({ view = 'overview' }) {
             ✓ {notice}
           </p>
         )}
-        {view === 'accounts' ? (
+        {view === 'approvals' ? (
+          <AdminApprovalsPage />
+        ) : view === 'accounts' ? (
           <AdminAccountsPage />
         ) : view === 'email' ? (
           <AdminEmailPage />
@@ -492,7 +497,7 @@ export default function AdminPage({ view = 'overview' }) {
             </section>
           </>
         ) : (
-          <section className="admin-panel">
+          <section className="admin-panel admin-products-panel">
             <div className="admin-panel-heading">
               <div>
                 <h2>Katalog produk</h2>

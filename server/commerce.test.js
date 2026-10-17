@@ -14,6 +14,7 @@ async function fixture(options = {}) {
   const sent = [],
     app = createApp({
       dbPath: ':memory:',
+      legacyCommerceFixture: true,
       now: () => time,
       mailer: { enabled: true, send: async (x) => sent.push(x) },
       mailConfig: { publicUrl: 'https://fixture.test', queueKey: 'f'.repeat(64) },
@@ -279,6 +280,22 @@ test('v31: no SMTP accepts an unverified registration using its original passwor
       password: pass,
     };
     assert.equal((await request(app, 'POST', '/api/auth/register', fields)).status, 202);
+    const pendingLogin = await request(app, 'POST', '/api/auth/login', {
+      email: fields.email,
+      password: pass,
+    });
+    assert.equal(pendingLogin.status, 403, 'Akun baru belum disetujui');
+    assert.equal(pendingLogin.body.error, 'approval_required');
+    assert.equal(pendingLogin.headers['set-cookie'], undefined);
+    const registered = app.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
+    assert.ok(registered);
+    const review = await request(app, 'POST', '/api/admin/approvals/' + registered.id, {
+      action: 'approve',
+      revision: 0,
+      reason: 'Setujui pelanggan pengujian',
+      currentPassword: pass,
+    }, admin);
+    assert.equal(review.status, 200, JSON.stringify(review.body));
     const login = await request(app, 'POST', '/api/auth/login', {
       email: fields.email,
       password: pass,

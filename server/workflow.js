@@ -161,12 +161,18 @@ export class WorkflowRepository {
   checkReservations(user, allocations) {
     const pending = this.db
       .prepare(
-        "SELECT data FROM orders WHERE user_id=? AND status IN ('awaiting_payment','awaiting_confirmation','awaiting_review','awaiting_acceptance')",
+        "SELECT data FROM orders WHERE user_id=? AND status IN ('awaiting_payment','awaiting_confirmation','awaiting_review','awaiting_acceptance','processing','shipped')",
       )
-      .all(user.id);
+      .all(user.id)
+      .map((row) => JSON.parse(row.data))
+      .filter((order) =>
+        ['awaiting_payment', 'awaiting_confirmation', 'awaiting_review', 'awaiting_acceptance'].includes(
+          order.status,
+        ) || (order.codFixedTotal && order.inventoryReserved === true),
+      );
     const held = new Map();
-    for (const row of pending)
-      for (const allocation of JSON.parse(row.data).inventory)
+    for (const order of pending)
+      for (const allocation of order.inventory)
         held.set(allocation.key, (held.get(allocation.key) || 0) + allocation.units);
     for (const [key, units] of allocations) held.set(key, (held.get(key) || 0) + units);
     if (
@@ -548,6 +554,7 @@ export class WorkflowRepository {
           id: variant.id,
           name,
           price,
+          ...(Number.isSafeInteger(Number(variant.oldPrice)) && Number(variant.oldPrice) > price ? { oldPrice: Number(variant.oldPrice) } : {}),
           quantity: entry.quantity,
           details: {
             name: draft.baseName,
@@ -609,6 +616,7 @@ export class WorkflowRepository {
         inventoryReserved: false,
       };
       order = this.prepareOrder ? this.prepareOrder(order) : order;
+      if (order.codFixedTotal) this.reserve(order, user.id);
       order = withNotificationEvent(order, 'orderCreated', time);
       this.db
         .prepare('INSERT INTO orders VALUES(?,?,?,?,?,?,?,?)')

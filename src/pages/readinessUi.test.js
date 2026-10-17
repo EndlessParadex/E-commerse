@@ -21,6 +21,8 @@ test('readiness explains skipped mail, respects owner settings links and disting
     canManageEmail: false,
     transferReady: false,
     pendingOrders: 0,
+    processingOrders: 2,
+    codOnly: true,
     delivery: [
       { status: 'skipped', count: 3 },
       { status: 'sent', count: 2 },
@@ -88,6 +90,9 @@ test('readiness explains skipped mail, respects owner settings links and disting
     assert.match(container.textContent, /Minta Pemilik/);
     assert.match(container.textContent, /bukan jumlah pesanan/);
     assert.match(container.textContent, /diterima layanan email/);
+    assert.match(container.textContent, /COD aktif · ongkir gratis/);
+    assert.match(container.textContent, /2 pesanan menunggu pengiriman/);
+    assert.equal(container.querySelector('a[href="#/admin/perusahaan"]'), null);
     const reasons = [...container.querySelectorAll('details')].find((item) =>
       item.querySelector('summary').textContent.includes('dilewati'),
     );
@@ -124,10 +129,11 @@ test('readiness explains skipped mail, respects owner settings links and disting
     await click(button('Muat ulang status'));
     await wait(() => container.querySelector('[role="alert"]'));
     failRead = false;
-    data = { ...data, delivery: [], skippedReasons: [], failedMessages: [], emailReady: false };
+    data = { ...data, delivery: [], skippedReasons: [], failedMessages: [], emailReady: false, processingOrders: 0 };
     await click(button('Muat ulang status'));
     await wait(() => container.querySelector('.commerce-delivery-empty'));
     assert.match(container.textContent, /Perlu disiapkan/);
+    assert.match(container.textContent, /Tidak ada pesanan menunggu pengiriman/);
     assert.equal(container.querySelector('[role="alert"]'), null);
     assert.equal(container.querySelector('.commerce-delivery-counts'), null);
   } finally {

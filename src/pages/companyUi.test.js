@@ -8,7 +8,7 @@ import { act, createElement } from 'react';
 import { createApp, hashPassword } from '../../server/app.js';
 
 test('perusahaan: halaman kosong, pengaturan tersimpan, logo tampil, guard isian, katalog pertama dan stok 0 tanpa impor demo', async () => {
-  const api = createApp({ dbPath: ':memory:', installMode: 'company' });
+  const api = createApp({ dbPath: ':memory:', installMode: 'company', legacyCommerceFixture: true });
   const demo = createApp({ dbPath: ':memory:' });
   const seed = demo.catalog.snapshot();
   demo.db.close();

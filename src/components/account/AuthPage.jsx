@@ -28,7 +28,7 @@ function EyeIcon({ visible }) {
 export default function AuthPage({ mode }) {
   const { profile: companyProfile } = useCompany();
   const isRegister = mode === 'register';
-  const { saveLocation, setUser } = useDelivery();
+  const { setUser } = useDelivery();
   const formRef = useRef(null);
   const [values, setValues] = useState({
     name: '',
@@ -41,6 +41,9 @@ export default function AuthPage({ mode }) {
   const [visible, setVisible] = useState({ password: false, confirmPassword: false });
   const [notice, setNotice] = useState('');
   const [registrationSent, setRegistrationSent] = useState(false);
+  const [registrationEmailReady, setRegistrationEmailReady] = useState(false);
+  const [resendNotice, setResendNotice] = useState('');
+  const [resending, setResending] = useState(false);
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
 
@@ -95,15 +98,17 @@ export default function AuthPage({ mode }) {
       if (isRegister && !payload.user) {
         setValues((current) => ({ ...current, password: '', confirmPassword: '' }));
         setNotice(payload.message || 'Periksa email untuk melanjutkan pendaftaran.');
+        setRegistrationEmailReady(payload.emailReady === true);
+        setResendNotice('');
         setRegistrationSent(true);
         return;
       }
       setUser(payload.user);
-      await saveLocation({ namaToko: payload.user.name, namaJalan: payload.user.address });
+      // Login must not overwrite the optional store name or recipient profile.
       setNotice(
         isRegister
-          ? 'Akun berhasil dibuat dan alamat sudah terhubung ke “Kirim ke”.'
-          : 'Berhasil masuk. Alamat akun sudah terhubung ke “Kirim ke”.',
+          ? 'Akun berhasil dibuat.'
+          : 'Berhasil masuk.',
       );
       window.location.hash =
         payload.user.role === 'admin'
@@ -116,6 +121,29 @@ export default function AuthPage({ mode }) {
     } finally {
       pending.current = false;
       setBusy(false);
+    }
+  };
+
+  const resend = async () => {
+    if (resending || !values.email) return;
+    setResending(true);
+    setResendNotice('');
+    try {
+      const response = await fetch('/api/auth/verification/resend', {
+        method: 'POST',
+        credentials: 'include',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: values.email }),
+      });
+      const payload = await response.json();
+      setResendNotice(response.ok
+        ? 'Permintaan diterima. Jika email masih perlu diverifikasi, periksa kotak masuk dan spam. Tunggu beberapa menit.'
+        : payload.errors?.form || 'Belum berhasil meminta tautan. Coba kembali nanti.');
+    } catch {
+      setResendNotice('Koneksi ke layanan email belum tersedia. Coba kembali nanti.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -198,14 +226,14 @@ export default function AuthPage({ mode }) {
             <h1 id="auth-title">{isRegister ? 'Buat akun' : 'Masuk ke akun'}</h1>
             <p>
               {isRegister
-                ? 'Daftar sebagai pembeli. Akses khusus diberikan oleh Pemilik setelah akun terdaftar.'
+                ? 'Daftar sebagai pembeli. Akun harus disetujui Admin atau Pemilik sebelum dapat masuk.'
                 : 'Gunakan email dan kata sandi Anda.'}
             </p>
           </header>
           {!registrationSent && (
             <p className="auth-preview-note">
               {isRegister
-                ? 'Nama dan alamat akan digunakan untuk mengisi “Kirim ke” setelah akun berhasil dibuat.'
+                ? 'Nama penerima dan alamat digunakan untuk checkout. Nama toko dapat diatur melalui Akun Saya → Alamat.'
                 : 'Masuk untuk menggunakan alamat akun pada “Kirim ke” dan checkout.'}
             </p>
           )}
@@ -216,13 +244,21 @@ export default function AuthPage({ mode }) {
                 {notice}
               </p>
               <ol>
-                <li>Periksa kotak masuk atau spam untuk mengonfirmasi email Anda.</li>
-                <li>Masuk menggunakan email dan kata sandi yang Anda isi saat mendaftar.</li>
+                <li>{registrationEmailReady
+                  ? 'Periksa kotak masuk atau spam. Tautan verifikasi dikirim otomatis jika akun baru berhasil dibuat.'
+                  : 'Pengiriman email belum tersedia. Hubungi pengelola toko untuk bantuan verifikasi.'}</li>
+                <li>Admin atau Pemilik akan memeriksa pendaftaran Anda. Verifikasi email dapat dilakukan sambil menunggu.</li>
+                <li>Setelah disetujui, masuk memakai kata sandi pendaftaran. Email harus terverifikasi sebelum memesan.</li>
               </ol>
-              <p>
-                Konfirmasi email diperlukan sebelum membuat pesanan. Jika email belum diterima,
-                lihat statusnya melalui Akun saya → Keamanan.
-              </p>
+              {registrationEmailReady && (
+                <div className="auth-registration-help">
+                  <p>Belum ada email? Tunggu beberapa menit, periksa spam, lalu gunakan tombol berikut bila diperlukan.</p>
+                  <button className="auth-register-again" type="button" onClick={resend} disabled={resending}>
+                    {resending ? 'Mengirim permintaan…' : 'Kirim ulang tautan verifikasi'}
+                  </button>
+                  {resendNotice && <p role="status">{resendNotice}</p>}
+                </div>
+              )}
               <a className="shop-primary auth-submit" href="#/login">
                 Lanjut ke halaman masuk
               </a>
@@ -232,6 +268,7 @@ export default function AuthPage({ mode }) {
                 onClick={() => {
                   setRegistrationSent(false);
                   setNotice('');
+                  setResendNotice('');
                 }}
               >
                 Daftar dengan email lain

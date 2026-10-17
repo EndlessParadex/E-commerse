@@ -199,6 +199,7 @@ export default function AdminOrdersPage() {
                 </span>
                 <strong>{rupiah(order.total)}</strong>
               </div>
+              {order.codFixedTotal && order.status === 'processing' && <p className="workflow-preview">Harga final sejak checkout · Gratis ongkir · COD saat diterima. Stok sudah dicadangkan.</p>}
               {order.status === 'awaiting_confirmation' && (
                 <p className="workflow-preview">
                   {order.codConfirmation?.legacyReview

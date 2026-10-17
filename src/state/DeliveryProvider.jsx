@@ -54,12 +54,15 @@ export default function DeliveryProvider({ children }) {
     let persisted = false;
     if (user) {
       try {
+        const storeName = typeof value?.storeName === 'string' ? value.storeName.trim() : user.storeName || '';
+        if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
+          return { ok: false, persisted: false };
         const response = await fetch('/api/profile', {
           method: 'PUT',
           credentials: 'include',
           signal: AbortSignal.timeout(15000),
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ name: normalized.namaToko, address: normalized.namaJalan }),
+          body: JSON.stringify({ name: normalized.namaToko, address: normalized.namaJalan, storeName }),
         });
         if (!response.ok) return { ok: false, persisted: false };
         const payload = await response.json();

@@ -106,7 +106,7 @@ const clean = (dir) => {
 
 test('stok publik: terjual hanya pesanan selesai, stok tertahan terpisah dan isi kemasan lama tetap benar', async () => {
   let time = Date.now();
-  const app = createApp({ dbPath: ':memory:', now: () => time });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', now: () => time });
   users(app);
   try {
     const candidate = app.catalog.snapshot();
@@ -218,7 +218,7 @@ test('stok publik: terjual hanya pesanan selesai, stok tertahan terpisah dan isi
 });
 
 test('checkout memakai harga/ongkir server, idempotensi, stok bersama Satuan/Pack/Dus dan pembatalan tepat sekali', async () => {
-  const app = createApp({ dbPath: ':memory:' });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   users(app);
   try {
     const catalog = app.catalog.snapshot();
@@ -326,7 +326,7 @@ test('checkout memakai harga/ongkir server, idempotensi, stok bersama Satuan/Pac
   }
 });
 test('akses akun, admin, harga palsu, kegagalan sebagian keranjang dan versi stok dilindungi server', async () => {
-  const app = createApp({ dbPath: ':memory:' });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   users(app);
   try {
     const { key } = product(app);
@@ -434,7 +434,7 @@ test('batas pembayaran memakai waktu server; kedaluwarsa melepas stok sekali dan
   const dir = mkdtempSync(join(tmpdir(), 'bam-workflow-expiry-'));
   const dbPath = join(dir, 'test.sqlite');
   let time = 1700000000000;
-  let app = createApp({ dbPath, now: () => time });
+  let app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time });
   users(app);
   try {
     const { key } = product(app);
@@ -449,7 +449,7 @@ test('batas pembayaran memakai waktu server; kedaluwarsa melepas stok sekali dan
       .get().n;
     assert.equal(events, 1);
     app.db.close();
-    app = createApp({ dbPath, now: () => time });
+    app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time });
     assert.equal(app.workflow.get(alice, order.id).status, 'expired');
     assert.equal(app.workflow.stock().stock[key].available, 120);
     assert.equal(
@@ -462,10 +462,10 @@ test('batas pembayaran memakai waktu server; kedaluwarsa melepas stok sekali dan
   }
 });
 test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harga/kemasan tetap setelah katalog diubah', async () => {
-  const seed = createApp({ dbPath: ':memory:' });
+  const seed = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   const snapshot = seed.catalog.snapshot();
   seed.db.close();
-  const app = createApp({ dbPath: ':memory:', installMode: 'company' });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', installMode: 'company' });
   users(app);
   try {
     app.catalog.save({ ...snapshot, revision: 0 });
@@ -475,9 +475,14 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
     updated.edits.find((draft) => draft.groupId === 'snack-pedas').gallery = [
       { src: png, alt: 'Foto pesanan awal' },
     ];
+    // Promotion must be snapshotted at checkout and preserved after catalog edits.
+    const discounted = updated.edits.find((draft) => draft.groupId === 'snack-pedas');
+    const sale = discounted.variants.find((entry) => entry.id === 'snack-pedas');
+    sale.oldPrice = String(Number(sale.price) + 2000);
     app.catalog.save(updated);
     app.workflow.setStock(admin, { key, available: 40, revision: 0 });
     const order = approve(app, app.workflow.create(alice, input(app)));
+    assert.equal(order.items[0].oldPrice, order.items[0].price + 2000);
     assert.equal(
       (await request(app, 'PUT', '/api/orders/' + order.id, { action: 'paid', revision: 2 }))
         .status,
@@ -538,6 +543,7 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
     app.catalog.save(latest);
     const preserved = app.workflow.get(alice, order.id);
     assert.equal(preserved.items[0].price, order.items[0].price);
+    assert.equal(preserved.items[0].oldPrice, order.items[0].oldPrice);
     assert.equal(preserved.items[0].details.name, order.items[0].details.name);
     assert.deepEqual(preserved.items[0].details.packaging, order.items[0].details.packaging);
     const imagePath = order.items[0].details.image;
@@ -551,7 +557,7 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
 test('paginasi riwayat mempertahankan batas akun; stok terakhir hanya dapat dipesan sekali oleh proses bersamaan', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'bam-workflow-concurrent-'));
   const dbPath = join(dir, 'test.sqlite');
-  const app = createApp({ dbPath });
+  const app = createApp({ legacyCommerceFixture: true, dbPath });
   users(app);
   try {
     const { key } = product(app);
@@ -562,7 +568,7 @@ test('paginasi riwayat mempertahankan batas akun; stok terakhir hanya dapat dipe
           `const { parentPort, workerData } = require('node:worker_threads');
           (async () => {
             const { createApp } = await import(workerData.module);
-            const app = createApp({ dbPath: workerData.dbPath });
+            const app = createApp({ legacyCommerceFixture: true, dbPath: workerData.dbPath });
             try {
               let order = app.workflow.create(workerData.user, workerData.body);
               if (['awaiting_review', 'awaiting_confirmation'].includes(order.status)) {
@@ -638,7 +644,7 @@ test('paginasi riwayat mempertahankan batas akun; stok terakhir hanya dapat dipe
 });
 
 test('impor stok lama harus admin, valid secara utuh dan hanya sebelum stok atau pesanan server digunakan', async () => {
-  const app = createApp({ dbPath: ':memory:' });
+  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   users(app);
   try {
     const { key } = product(app);

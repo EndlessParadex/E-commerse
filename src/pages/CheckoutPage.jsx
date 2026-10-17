@@ -27,6 +27,7 @@ export default function CheckoutPage() {
   const shop = useShop();
   const company = useCompany();
   const live = workflowUsesServer && company.commerce?.version === 31;
+  const codOnly = live && company.commerce?.codOnly === true;
   const { savedLocation, user, authLoading } = useDelivery();
   const [form, setForm] = useState(() => savedLocation || emptyForm);
   const [addressEditing, setAddressEditing] = useState(
@@ -63,7 +64,7 @@ export default function CheckoutPage() {
   }, [savedLocation, edited]);
 
   const offeredShipping = live
-    ? [
+    ? codOnly ? [{ id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa biaya ongkos kirim.', cost: 0 }] : [
         {
           id: 'regular',
           label: 'Ongkir dikonfirmasi toko',
@@ -73,9 +74,9 @@ export default function CheckoutPage() {
         },
       ]
     : shippingOptions;
-  const shipping = offeredShipping.find((option) => option.id === shippingId) || shippingOptions[0];
-  const availableMethods = live ? livePaymentMethods(company.profile) : null;
-  const effectivePaymentId = live
+  const shipping = codOnly ? { id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa ongkir', cost: 0 } : offeredShipping.find((option) => option.id === shippingId) || shippingOptions[0];
+  const availableMethods = live ? (codOnly ? [paymentMethod('cod')] : livePaymentMethods(company.profile)) : null;
+  const effectivePaymentId = codOnly ? 'cod' : live
     ? availableMethods.find((m) => m.id === paymentId)?.id || availableMethods[0]?.id
     : paymentId;
   const payment = paymentMethod(effectivePaymentId);
@@ -221,12 +222,12 @@ export default function CheckoutPage() {
       <header className="checkout-header">
         <div>
           <span className="section-eyebrow">
-            {live ? 'Permintaan pesanan' : 'Langkah terakhir'}
+            {live && !codOnly ? 'Permintaan pesanan' : 'Langkah terakhir'}
           </span>
-          <h1>{live ? 'Kirim permintaan pesanan' : 'Checkout'}</h1>
+          <h1>{live && !codOnly ? 'Kirim permintaan pesanan' : 'Checkout COD'}</h1>
           <p>
             {live
-              ? 'Periksa barang dan alamat. Toko akan mengirimkan ongkir serta total akhir untuk Anda setujui.'
+              ? codOnly ? 'Harga final, ongkir gratis, dan COD saat barang diterima. Pesanan langsung diproses setelah berhasil dibuat.' : 'Periksa barang dan alamat. Toko akan mengirimkan ongkir serta total akhir untuk Anda setujui.'
               : 'Periksa alamat dan pilihan pengiriman sebelum membuat pesanan.'}
           </p>
         </div>
@@ -406,8 +407,8 @@ export default function CheckoutPage() {
             <div className="checkout-card-heading">
               <span className="checkout-step">3</span>
               <div>
-                <h2 id="shipping-title">Pilihan pengiriman</h2>
-                <p>Pilih estimasi yang sesuai kebutuhan Anda.</p>
+                <h2 id="shipping-title">{codOnly ? 'Pengiriman gratis' : 'Pilihan pengiriman'}</h2>
+                <p>{codOnly ? 'Ongkos kirim selalu Rp0.' : 'Pilih estimasi yang sesuai kebutuhan Anda.'}</p>
               </div>
             </div>
             <div className="checkout-options">
@@ -429,7 +430,7 @@ export default function CheckoutPage() {
                     <small>{option.description}</small>
                   </span>
                   <strong className="checkout-option-price">
-                    {live ? 'Belum ditetapkan' : rupiah(option.cost)}
+                    {codOnly ? 'GRATIS' : live ? 'Belum ditetapkan' : rupiah(option.cost)}
                   </strong>
                 </label>
               ))}
@@ -441,15 +442,13 @@ export default function CheckoutPage() {
               <span className="checkout-step">4</span>
               <div>
                 <h2 id="payment-title">Metode pembayaran</h2>
-                <p>Pilih layanan yang ingin digunakan.</p>
+                <p>{codOnly ? 'Metode pembayaran toko hanya COD.' : 'Pilih layanan yang ingin digunakan.'}</p>
               </div>
             </div>
-            <PaymentPicker value={effectivePaymentId} onChange={setPaymentId} disabled={busy} />
+            {codOnly ? <p className="workflow-preview">COD (Bayar di Tempat) — bayar saat barang diterima.</p> : <PaymentPicker value={effectivePaymentId} onChange={setPaymentId} disabled={busy} />}
             {workflowUsesServer && (
               <p className="workflow-preview">
-                Permintaan pesanan perlu disetujui toko. Stok baru ditahan setelah persetujuan.
-                Batas pemeriksaan akan terlihat pada detail pesanan. Tunggu instruksi resmi toko
-                untuk pembayaran; COD dibayar saat barang diterima.
+                {codOnly ? 'Harga sudah final. Tidak ada konfirmasi tambahan; bayar COD saat barang diterima.' : 'Permintaan pesanan perlu disetujui toko. Stok baru ditahan setelah persetujuan. Batas pemeriksaan akan terlihat pada detail pesanan. Tunggu instruksi resmi toko untuk pembayaran; COD dibayar saat barang diterima.'}
               </p>
             )}
           </section>
@@ -518,10 +517,10 @@ export default function CheckoutPage() {
             </div>
             <div>
               <span>Ongkir</span>
-              <strong>{live ? 'Dikonfirmasi toko' : rupiah(shipping.cost)}</strong>
+              <strong>{codOnly ? 'GRATIS' : live ? 'Dikonfirmasi toko' : rupiah(shipping.cost)}</strong>
             </div>
             <div className="checkout-total">
-              <span>{live ? 'Subtotal sementara' : 'Total pembayaran'}</span>
+              <span>{live && !codOnly ? 'Subtotal sementara' : 'Total pembayaran'}</span>
               <strong>{rupiah(total)}</strong>
             </div>
           </div>
@@ -537,7 +536,7 @@ export default function CheckoutPage() {
           >
             {busy
               ? 'Memeriksa pesanan…'
-              : `${live ? 'Kirim permintaan' : 'Buat pesanan'} · ${rupiah(total)}`}
+              : `${live && !codOnly ? 'Kirim permintaan' : 'Buat pesanan COD'} · ${rupiah(total)}`}
           </button>
           {!shop.cartReview.ready && (
             <p className="checkout-note" role="status">
@@ -546,22 +545,22 @@ export default function CheckoutPage() {
           )}
           <p className="checkout-note">
             {workflowUsesServer
-              ? 'Permintaan belum menjamin stok. Toko menetapkan ongkir dan total akhir; Anda menyetujuinya sebelum pembayaran. Pembaruan pesanan dikirim melalui email.'
+              ? codOnly ? 'Harga final saat checkout. Gratis ongkir dan bayar COD saat barang diterima.' : 'Permintaan belum menjamin stok. Toko menetapkan ongkir dan total akhir; Anda menyetujuinya sebelum pembayaran. Pembaruan pesanan dikirim melalui email.'
               : 'Pesanan dan pembayaran masih simulasi. Tidak ada pembayaran yang diproses.'}
           </p>
         </aside>
         <div className="checkout-action-bar">
           <div className="checkout-action-total">
-            <span>{live ? 'Subtotal sementara' : 'Total pembayaran'}</span>
+            <span>{live && !codOnly ? 'Subtotal sementara' : 'Total pembayaran'}</span>
             <strong aria-live="polite">{rupiah(total)}</strong>
-            <small>{live ? 'Belum termasuk ongkir' : 'Termasuk ongkir'}</small>
+            <small>{codOnly ? 'Gratis ongkir · COD' : live ? 'Belum termasuk ongkir' : 'Termasuk ongkir'}</small>
           </div>
           <button
             type="submit"
             className="checkout-submit"
             disabled={busy || !shop.cartReview.ready || (live && !availableMethods.length)}
           >
-            {busy ? 'Memeriksa…' : live ? 'Kirim permintaan' : 'Buat pesanan'}
+            {busy ? 'Memeriksa…' : live && !codOnly ? 'Kirim permintaan' : 'Buat pesanan COD'}
           </button>
         </div>
       </form>

@@ -14,7 +14,27 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `POST /api/b2b/stores/:id/sales`: Owner BAM menugaskan Sales ke toko.
 - Semua mutasi mencatat aktor dan perubahan di tabel `b2b_store_audit`.
 
-**Penting:** Tahap 1 adalah API internal, belum mempunyai halaman UI untuk penugasan. Belum ada login nomor HP, shared cart, atau perubahan aturan checkout; karena itu jangan aktifkan sebagai alur produksi B2B sebelum tahap selanjutnya selesai.
+### Halaman Toko & Sales
+
+- Buka menu **Toko & Sales** di ruang Admin (`#/admin/toko-sales`).
+- Pemilik BAM dapat membuat toko, mencari akun pembeli aktif yang sudah disetujui, menghubungkan pembeli ke toko, mendaftarkan akun staf sebagai Sales, dan menugaskan Sales ke toko.
+- Admin operasional dapat melihat toko, pembeli yang terhubung, dan penugasan Sales. Tombol perubahan hanya tersedia untuk pemilik; API juga memeriksa hak pemilik.
+- Nama/kode/nomor HP toko dan nama/email calon akun dicari di server dengan halaman berisi 25 hasil, sehingga hasil pencarian tidak terbatas pada halaman yang sedang ditampilkan.
+- `GET /api/b2b/stores?page=1&q=...` mengembalikan hasil beserta `total`, `page`, `pageSize`, dan `pages`. Pembeli/Sales tetap hanya mendapatkan toko yang terhubung/ditugaskan. Bentuk respons tanpa parameter `page` tetap kompatibel dengan API sebelumnya.
+- `GET /api/b2b/stores/:id` khusus Admin/Pemilik mengembalikan profil toko beserta akun pembeli dan Sales yang terhubung.
+- `GET /api/b2b/accounts?page=1&q=...` khusus Pemilik mencari akun non-Admin aktif yang sudah disetujui dan belum menjadi Sales.
+- Data disimpan ke SQLite. Perubahan yang gagal mempertahankan isian; pemuatan ulang yang gagal setelah penyimpanan berhasil menampilkan kesalahan pemuatan secara terpisah.
+
+**Batas tahap ini:** login masih memakai akun yang tersedia. Layanan SMS OTP belum dipilih. Keranjang bersama, finalisasi khusus Admin, dan faktur B2B tanpa harga belum diimplementasikan; alur checkout yang tersedia masih mengikuti versi sebelumnya.
+
+### Verifikasi halaman
+
+1. Gunakan Node.js 24+, jalankan `npm ci`, lalu `npm run dev:full` dari branch B2B.
+2. Masuk dengan akun **Pemilik BAM**, buka **Toko & Sales**, pilih **Tambah toko**, isi nama, nomor HP Indonesia, dan alamat, kemudian simpan. Pastikan kode `TKB-......` muncul.
+3. Pilih toko, cari akun pembeli yang sudah aktif/disetujui, dan pilih **Hubungkan pembeli**. Pastikan akun masuk pada daftar pembeli toko tersebut.
+4. Cari akun staf non-Admin, pilih **Daftarkan sebagai Sales**, periksa nama/email pada dialog, lalu konfirmasi. Pilih akun itu pada **Tugaskan Sales ke toko ini**, kemudian simpan penugasan.
+5. Muat ulang halaman dan pastikan toko, pembeli, dan penugasan tetap ada. Masuk sebagai Admin operasional: data dapat dibaca, tetapi form perubahan tidak tersedia.
+6. Jalankan `node --test server/b2bStores.test.js server/b2bManagement.test.js src/pages/b2bManagementUi.test.js`, `npm test`, `npm run lint`, dan `npm run build`.
 
 ## Tahap 2: Autentikasi pembeli menggunakan nomor HP
 

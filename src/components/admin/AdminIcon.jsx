@@ -7,6 +7,7 @@ const paths = {
   brands: 'M3 3h7l11 11-7 7L3 10z M7 7h.01',
   categories: 'M9 5h12 M9 12h12 M9 19h12 M3 5h.01 M3 12h.01 M3 19h.01',
   company: 'M4 7h16 M4 17h16 M8 4v6 M16 14v6',
+  b2bStores: 'M3 10h18 M4 10v11h16V10 M3 10l2-7h14l2 7 M9 21v-7h6v7 M8 3v7 M16 3v7',
   accounts:
     'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M17 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87',
   email: 'M3 5h18v14H3z M3 5l9 7 9-7',

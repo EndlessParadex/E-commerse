@@ -4,6 +4,7 @@ import { DeliveryContext } from '../state/useDelivery';
 import AdminEmailPage from './AdminEmailPage';
 import AdminAccountsPage from './AdminAccountsPage';
 import AdminApprovalsPage from './AdminApprovalsPage';
+import AdminB2BStoresPage from './AdminB2BStoresPage';
 import { suppliers } from '../data/suppliers';
 import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCatalog';
 import { rupiah } from '../components/shop/shopPresentation';
@@ -65,6 +66,7 @@ const navigationGroups = [
       { view: 'overview', label: 'Ringkasan', href: '#/admin' },
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
+      { view: 'b2bStores', label: 'Toko & Sales', href: '#/admin/toko-sales' },
     ],
   },
   {
@@ -176,6 +178,7 @@ export default function AdminPage({ view = 'overview' }) {
     email: 'Pengaturan email',
     accounts: 'Kelola akun',
     approvals: 'Persetujuan akun',
+    b2bStores: 'Toko & Sales',
   }[view];
   // The form's capture listener confirms unsaved changes before this handler runs.
   // Close explicitly even when the selected link points to the current hash.
@@ -297,47 +300,57 @@ export default function AdminPage({ view = 'overview' }) {
           <div>
             <span className="admin-eyebrow">
               {companyProfile.shortName} ·{' '}
-              {['email', 'accounts'].includes(view) ? 'Pengaturan pemilik' : 'Pengelolaan katalog'}
+              {view === 'b2bStores'
+                ? 'Pengelolaan toko B2B'
+                : ['email', 'accounts'].includes(view)
+                  ? 'Pengaturan pemilik'
+                  : 'Pengelolaan katalog'}
             </span>
             <h1>{pageTitle}</h1>
             <p>
-              {view === 'accounts'
-                ? 'Kelola akses akun pembeli dan admin operasional.'
-                : view === 'email'
-                  ? 'Atur pengiriman email verifikasi, pemulihan akun dan pembaruan pesanan.'
-                  : workflowView
-                    ? workflowUsesServer
-                      ? 'Kelola pesanan dan persediaan yang tersimpan di database.'
-                      : 'Kelola alur pesanan dan persediaan pada pratinjau frontend.'
-                    : isProducts
-                      ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.'
-                      : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`}
+              {view === 'b2bStores'
+                ? 'Kelola toko pelanggan, akun pembeli, dan penugasan Sales.'
+                : view === 'accounts'
+                  ? 'Kelola akses akun pembeli dan admin operasional.'
+                  : view === 'email'
+                    ? 'Atur pengiriman email verifikasi, pemulihan akun dan pembaruan pesanan.'
+                    : workflowView
+                      ? workflowUsesServer
+                        ? 'Kelola pesanan dan persediaan yang tersimpan di database.'
+                        : 'Kelola alur pesanan dan persediaan pada pratinjau frontend.'
+                      : isProducts
+                        ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.'
+                        : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`}
             </p>
           </div>
           <span className="admin-demo-badge">
-            {['email', 'accounts'].includes(view)
-              ? 'Akses pemilik toko'
-              : workflowView
-                ? workflowUsesServer
-                  ? 'Pesanan & stok · Database'
-                  : 'Pratinjau · Simulasi'
-                : catalogUsesServer
-                  ? 'Katalog · Database'
-                  : 'Pratinjau · Data dummy'}
+            {view === 'b2bStores'
+              ? 'Toko & Sales · Database'
+              : ['email', 'accounts'].includes(view)
+                ? 'Akses pemilik toko'
+                : workflowView
+                  ? workflowUsesServer
+                    ? 'Pesanan & stok · Database'
+                    : 'Pratinjau · Simulasi'
+                  : catalogUsesServer
+                    ? 'Katalog · Database'
+                    : 'Pratinjau · Data dummy'}
           </span>
         </header>
         <p className="admin-preview-notice">
-          {view === 'accounts'
-            ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
-            : view === 'email'
-              ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
-              : workflowView
-                ? workflowUsesServer
-                  ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
-                  : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
-                : catalogUsesServer
-                  ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
-                  : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
+          {view === 'b2bStores'
+            ? 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
+            : view === 'accounts'
+              ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
+              : view === 'email'
+                ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
+                : workflowView
+                  ? workflowUsesServer
+                    ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
+                    : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
+                  : catalogUsesServer
+                    ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
+                    : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
         </p>
         {pendingLocalImport && view === 'overview' && !editor && (
           <section className="admin-next">
@@ -376,7 +389,9 @@ export default function AdminPage({ view = 'overview' }) {
             ✓ {notice}
           </p>
         )}
-        {view === 'approvals' ? (
+        {view === 'b2bStores' ? (
+          <AdminB2BStoresPage key={delivery?.user?.id} />
+        ) : view === 'approvals' ? (
           <AdminApprovalsPage />
         ) : view === 'accounts' ? (
           <AdminAccountsPage />

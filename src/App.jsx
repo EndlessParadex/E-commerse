@@ -104,6 +104,7 @@ function App() {
         company: 'Admin · Pengaturan Perusahaan',
         accounts: 'Admin · Kelola Akun',
         email: 'Admin · Pengaturan Email',
+        approvals: 'Admin · Persetujuan Akun',
       }[adminView]
     : recoveryMatch
       ? 'Pemulihan dan verifikasi akun'

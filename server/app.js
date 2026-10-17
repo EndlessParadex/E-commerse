@@ -736,6 +736,7 @@ export function createApp({
     messages,
     emailSettings,
     accounts,
+    b2bStores,
     refreshMailSettings,
   };
 }

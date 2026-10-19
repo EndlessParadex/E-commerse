@@ -35,6 +35,7 @@ if (require.main === module) {
     const entries = {
       dev: [
         'node_modules/concurrently/dist/bin/concurrently.js',
+        '--kill-others-on-fail',
         'node server/index.js',
         'node node_modules/vite/bin/vite.js',
       ],

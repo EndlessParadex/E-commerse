@@ -36,6 +36,17 @@ const emailTimer = setInterval(() => {
   })();
 }, 5000);
 emailTimer.unref();
+server.once('error', (error) => {
+  clearInterval(expiryTimer);
+  clearInterval(emailTimer);
+  if (error.code === 'EADDRINUSE')
+    console.error(
+      `Port ${port} masih dipakai server lain. Hentikan server lama dengan Ctrl+C, lalu jalankan kembali dari folder proyek yang sudah diperbarui.`,
+    );
+  else logUnexpectedError((entry) => console.error(entry), error, { operation: 'server_start' });
+  db.close();
+  process.exitCode = 1;
+});
 server.listen(port, host, () => console.log(`BAM API listening on http://${host}:${port}`));
 for (const signal of ['SIGINT', 'SIGTERM'])
   process.on(signal, () => {

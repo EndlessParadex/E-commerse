@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DeliveryContext } from './useDelivery';
 import { normalizeDelivery, readDelivery, writeDelivery } from './deliveryModel';
 import { requestLogout } from '../components/account/accountSession';
@@ -14,7 +14,15 @@ function initialLocation() {
 export default function DeliveryProvider({ children }) {
   const [savedLocation, setSavedLocation] = useState(initialLocation);
   const [storageError, setStorageError] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
+  const userRef = useRef(null);
+  const sessionGeneration = useRef(0);
+  const setUser = useCallback((value) => {
+    const next = typeof value === 'function' ? value(userRef.current) : value;
+    if ((next?.id || null) !== (userRef.current?.id || null)) sessionGeneration.current += 1;
+    userRef.current = next;
+    setUserState(next);
+  }, []);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
@@ -46,16 +54,18 @@ export default function DeliveryProvider({ children }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [setUser]);
 
   const saveLocation = async (value) => {
+    const actor = userRef.current;
+    const generation = sessionGeneration.current;
     const normalized = normalizeDelivery(value);
     if (!normalized) return { ok: false, persisted: false };
     let persisted = false;
-    if (user) {
+    if (actor) {
       try {
         const storeName =
-          typeof value?.storeName === 'string' ? value.storeName.trim() : user.storeName || '';
+          typeof value?.storeName === 'string' ? value.storeName.trim() : actor.storeName || '';
         if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
           return { ok: false, persisted: false };
         const response = await fetch('/api/profile', {
@@ -72,12 +82,17 @@ export default function DeliveryProvider({ children }) {
         if (!response.ok) return { ok: false, persisted: false };
         const payload = await response.json();
         if (
-          payload?.user?.id !== user.id ||
-          typeof payload.user.name !== 'string' ||
-          typeof payload.user.address !== 'string'
+          sessionGeneration.current !== generation ||
+          payload?.user?.id !== actor.id ||
+          payload.user.name !== normalized.namaToko ||
+          payload.user.address !== normalized.namaJalan ||
+          (payload.user.storeName || '') !== storeName
         )
           return { ok: false, persisted: false };
-        setUser(payload.user);
+        setUser((current) => ({
+          ...payload.user,
+          avatar: current?.avatar ?? payload.user.avatar ?? '',
+        }));
       } catch {
         return { ok: false, persisted: false };
       }
@@ -93,8 +108,10 @@ export default function DeliveryProvider({ children }) {
   };
 
   const saveAvatar = async (avatar) => {
-    if (!user) return { ok: false, error: 'Masuk untuk mengubah foto profil.' };
-    const userId = user.id;
+    const actor = userRef.current;
+    const generation = sessionGeneration.current;
+    if (!actor) return { ok: false, error: 'Masuk untuk mengubah foto profil.' };
+    const userId = actor.id;
     try {
       const response = await fetch('/api/profile/photo', {
         method: 'PUT',
@@ -104,6 +121,11 @@ export default function DeliveryProvider({ children }) {
         body: JSON.stringify({ avatar }),
       });
       const payload = await response.json();
+      if (sessionGeneration.current !== generation)
+        return {
+          ok: false,
+          error: 'Sesi akun berubah. Muat ulang profil akun yang sedang digunakan.',
+        };
       if (!response.ok)
         return {
           ok: false,

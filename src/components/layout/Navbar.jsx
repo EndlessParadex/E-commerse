@@ -12,6 +12,27 @@ import { productVariants } from '../../data/products';
 const Navbar = () => {
   const { profile: companyProfile } = useCompany();
   const navigationRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    let frame = null;
+    const update = () => {
+      frame = null;
+      setScrolled(
+        window.scrollY > 0 && window.getComputedStyle(navigationRef.current).position === 'sticky',
+      );
+    };
+    const schedule = () => {
+      if (frame === null) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    };
+  }, []);
   useLayoutEffect(() => {
     const navigation = navigationRef.current;
     const page = document.documentElement;
@@ -37,7 +58,7 @@ const Navbar = () => {
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
-  const deliveryTitle = user ? (user.storeName || 'Alamat saya') : 'Masuk';
+  const deliveryTitle = user ? user.storeName || 'Alamat saya' : 'Masuk';
   const deliverRef = useRef(null);
   const [compactDelivery, setCompactDelivery] = useState(
     () => window.matchMedia('(max-width: 600px)').matches,
@@ -154,7 +175,7 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className="store-navigation" ref={navigationRef}>
+    <div className={'store-navigation' + (scrolled ? ' is-scrolled' : '')} ref={navigationRef}>
       <header className="navbar">
         <div className="navbar-container">
           {/* Kiri: Logo */}
@@ -289,8 +310,7 @@ const Navbar = () => {
                 aria-expanded={showDeliverPopup}
                 aria-controls={showDeliverPopup ? 'delivery-popup' : undefined}
                 aria-label={
-                  'Kirim ke, ' +
-                  ((user ? deliveryTitle : 'masuk untuk memakai alamat akun'))
+                  'Kirim ke, ' + (user ? deliveryTitle : 'masuk untuk memakai alamat akun')
                 }
               >
                 <span className="deliver-label">Kirim ke</span>
@@ -360,7 +380,9 @@ const Navbar = () => {
                             <div className="delivery-account-preview">
                               <span className="delivery-account-label">Alamat utama</span>
                               <strong>{deliveryTitle}</strong>
-                              <span className="accounts-secondary">Penerima: {accountLocation.namaToko}</span>
+                              <span className="accounts-secondary">
+                                Penerima: {accountLocation.namaToko}
+                              </span>
                               <p>{accountLocation.namaJalan}</p>
                               <span className="delivery-account-country">🇮🇩 Indonesia</span>
                             </div>

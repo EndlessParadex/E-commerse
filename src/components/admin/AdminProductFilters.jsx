@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { Children, useEffect, useId, useRef, useState } from 'react';
 
-export default function AdminProductFilters({ children }) {
+export default function AdminProductFilters({ children, activeCount = 0 }) {
   const anchorRef = useRef(null);
   const filtersRef = useRef(null);
   const [stuck, setStuck] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const optionsId = useId();
+  const [search, ...options] = Children.toArray(children);
 
   useEffect(() => {
     const anchor = anchorRef.current;
@@ -13,7 +16,8 @@ export default function AdminProductFilters({ children }) {
       frame = null;
       const top = Number.parseFloat(window.getComputedStyle(filters).top) || 0;
       setStuck(
-        anchor.getBoundingClientRect().top < top &&
+        window.getComputedStyle(filters).position === 'sticky' &&
+          anchor.getBoundingClientRect().top < top &&
           Math.abs(filters.getBoundingClientRect().top - top) < 1,
       );
     };
@@ -38,7 +42,20 @@ export default function AdminProductFilters({ children }) {
     <>
       <div className="admin-filter-anchor" ref={anchorRef} aria-hidden="true" />
       <div className={'admin-filters' + (stuck ? ' is-stuck' : '')} ref={filtersRef}>
-        {children}
+        {search}
+        <button
+          className="admin-filter-toggle"
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={optionsId}
+          onClick={() => setExpanded((current) => !current)}
+        >
+          Filter{activeCount ? ` (${activeCount})` : ''}{' '}
+          <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+        </button>
+        <div className={'admin-filter-options' + (expanded ? ' is-open' : '')} id={optionsId}>
+          {options}
+        </div>
       </div>
     </>
   );

@@ -22,6 +22,7 @@ export default function AccountPage() {
   const { profile: companyProfile } = useCompany();
   const { user, savedLocation, saveLocation, saveAvatar, authLoading, authError } = useDelivery();
   const [photoNotice, setPhotoNotice] = useState('');
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [values, setValues] = useState(() =>
     user
@@ -34,7 +35,7 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const pending = useRef(false);
   const tabButtons = useRef([]);
-  useUnsavedChanges(edited, undefined, saving);
+  useUnsavedChanges(edited, undefined, saving || photoBusy);
 
   useEffect(() => {
     if (user && !edited) {
@@ -67,7 +68,7 @@ export default function AccountPage() {
 
   const save = async (event) => {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || photoBusy) return;
     const nextErrors = validateDelivery(values);
     const storeName = values.storeName.trim();
     if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
@@ -216,6 +217,7 @@ export default function AccountPage() {
                       label="Foto profil"
                       value={user.avatar || ''}
                       disabled={saving}
+                      onBusyChange={setPhotoBusy}
                       onChange={async (avatar) => {
                         setPhotoNotice('');
                         const result = await saveAvatar(avatar);
@@ -362,7 +364,11 @@ export default function AccountPage() {
                         ? 'Ada perubahan yang belum disimpan.'
                         : 'Perubahan alamat hanya berlaku untuk akun Anda.'}
                     </span>
-                    <button className="shop-primary account-save" type="submit" disabled={saving}>
+                    <button
+                      className="shop-primary account-save"
+                      type="submit"
+                      disabled={saving || photoBusy}
+                    >
                       {saving ? 'Menyimpan…' : 'Simpan perubahan'}
                     </button>
                   </div>

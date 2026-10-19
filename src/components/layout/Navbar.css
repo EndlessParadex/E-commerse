@@ -4,7 +4,15 @@
   z-index: 500;
   padding-top: env(safe-area-inset-top, 0px);
   background: var(--color-surface);
+  box-shadow: none;
+}
+.store-navigation.is-scrolled {
   box-shadow: 0 4px 14px #0f172a08;
+}
+@media (max-width: 960px) and (max-height: 500px) {
+  .store-navigation {
+    position: static;
+  }
 }
 
 .navbar {

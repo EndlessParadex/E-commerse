@@ -534,7 +534,9 @@ export default function AdminPage({ view = 'overview' }) {
                 </button>
               </div>
             </div>
-            <AdminProductFilters>
+            <AdminProductFilters
+              activeCount={Number(Boolean(supplierId)) + Number(Boolean(brandId))}
+            >
               <div className="admin-field admin-search">
                 <label htmlFor="admin-search">Cari produk</label>
                 <input

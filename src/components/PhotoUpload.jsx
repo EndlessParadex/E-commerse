@@ -13,6 +13,7 @@ export default function PhotoUpload({
   const [error, setError] = useState('');
   const request = useRef(0);
   const pending = useRef(false);
+  const input = useRef(null);
   useEffect(
     () => () => {
       request.current += 1;
@@ -67,6 +68,9 @@ export default function PhotoUpload({
     <div className="photo-upload" aria-busy={busy}>
       <label htmlFor={id}>{label}</label>
       <input
+        ref={input}
+        className="photo-upload-input"
+        tabIndex={-1}
         id={id}
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -79,9 +83,24 @@ export default function PhotoUpload({
           change(file);
         }}
       />
+      <button
+        type="button"
+        className="photo-upload-select"
+        disabled={disabled || busy}
+        aria-label={`${value ? 'Ganti' : 'Pilih'} ${label.toLocaleLowerCase('id')}`}
+        aria-describedby={`${id}-help${error ? ` ${id}-error` : ''}`}
+        onClick={() => input.current?.click()}
+      >
+        {value ? 'Ganti foto' : 'Pilih foto'}
+      </button>
       <p id={`${id}-help`}>JPG, PNG, atau WebP. Maksimal 1 MB.</p>
       {value && (
-        <button type="button" disabled={disabled || busy} onClick={() => change(null, true)}>
+        <button
+          type="button"
+          className="photo-upload-remove"
+          disabled={disabled || busy}
+          onClick={() => change(null, true)}
+        >
           Hapus foto
         </button>
       )}

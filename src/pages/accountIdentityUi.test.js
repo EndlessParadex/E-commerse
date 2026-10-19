@@ -229,7 +229,7 @@ test('account website: buyer security summary, admin password settings, registra
       'avatar restored after reload',
     );
     await act(async () => {
-      container.querySelector('.account-avatar-card .photo-upload button').click();
+      container.querySelector('.account-avatar-card .photo-upload-remove').click();
       await settle();
     });
     await wait(() => !container.querySelector('.account-trigger img'));

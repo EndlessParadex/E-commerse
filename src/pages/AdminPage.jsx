@@ -10,6 +10,7 @@ import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCa
 import { rupiah } from '../components/shop/shopPresentation';
 import ProductImage from '../components/shop/ProductImage';
 import AdminIcon from '../components/admin/AdminIcon';
+import AdminProductFilters from '../components/admin/AdminProductFilters';
 import './AdminPage.css';
 import AdminProductForm from './AdminProductForm';
 import {
@@ -533,7 +534,7 @@ export default function AdminPage({ view = 'overview' }) {
                 </button>
               </div>
             </div>
-            <div className="admin-filters">
+            <AdminProductFilters>
               <div className="admin-field admin-search">
                 <label htmlFor="admin-search">Cari produk</label>
                 <input
@@ -578,7 +579,7 @@ export default function AdminPage({ view = 'overview' }) {
                   ))}
                 </select>
               </div>
-            </div>
+            </AdminProductFilters>
             <div className="admin-results">
               <p role="status">
                 Menampilkan <strong>{filtered.length}</strong> dari {adminProducts.length} varian

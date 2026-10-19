@@ -13,6 +13,8 @@ import PromoCarousel from '../components/shop/PromoCarousel';
 import PromotionSection from '../components/shop/PromotionSection';
 import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
+import SupplierBrandsPage from './SupplierBrandsPage';
+import { brandsForSupplier } from '../data/catalogMasters';
 import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 
@@ -32,7 +34,9 @@ export default function Home({ catalog = null }) {
   const sub = category?.children.find((item) => item.id === catalog.subcategoryId);
   const query = catalog.query || '';
   const supplier = supplierBy(catalog.supplierId);
-  const brands = availableBrands(supplier?.id || '');
+  if (supplier && !catalog.brandId)
+    return <SupplierBrandsPage supplier={supplier} catalog={catalog} />;
+  const brands = supplier ? brandsForSupplier(supplier.id) : availableBrands('');
   const brand = brands.find((item) => item.id === catalog.brandId);
   const scopes = {
     query,
@@ -50,7 +54,7 @@ export default function Home({ catalog = null }) {
   const visible = filterCatalogProducts(scopes);
   const title = query
     ? `Hasil pencarian “${query}”`
-    : supplier?.name || sub?.name || category?.name || 'Semua produk';
+    : brand?.name || supplier?.name || sub?.name || category?.name || 'Semua produk';
   const count = (next) => filterCatalogProducts({ ...scopes, ...next }).length;
   const chips = [
     ...(supplier ? [{ id: 'supplier', name: supplier.name, next: { supplierId: '' } }] : []),
@@ -65,9 +69,20 @@ export default function Home({ catalog = null }) {
       <nav className="shop-breadcrumb" aria-label="Breadcrumb">
         <a href="#/">Beranda</a>
         <span aria-hidden="true">/</span>
+        {supplier && catalog.brandId && (
+          <>
+            <a href={href({ brandId: '' })}>{supplier.name}</a>
+            <span aria-hidden="true">/</span>
+          </>
+        )}
         <span aria-current="page">{title}</span>
       </nav>
       <section className="catalog-section" id="catalog" aria-labelledby="catalog-title">
+        {supplier && catalog.brandId && (
+          <a className="supplier-back-to-brands" href={href({ brandId: '' })}>
+            ← Kembali ke merek {supplier.name}
+          </a>
+        )}
         <div className="section-heading">
           <div>
             <span className="section-eyebrow">Temukan pilihanmu</span>

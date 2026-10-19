@@ -2,6 +2,8 @@ import { parseCatalogRoute } from './catalog.js';
 
 export function catalogNavigationKey(route) {
   const catalog = parseCatalogRoute(route);
+  if (catalog?.kind === 'supplier' && !catalog.brandId)
+    return `supplier-brands:${catalog.supplierId}:${catalog.query || ''}`;
   return catalog && catalog.kind !== 'invalid' ? `catalog:${catalog.query || ''}` : null;
 }
 

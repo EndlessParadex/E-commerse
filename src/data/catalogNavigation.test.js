@@ -2,14 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { catalogNavigationKey, shouldResetRouteScroll } from './catalogNavigation.js';
 
-test('PT, merek dan hapus filter mempertahankan posisi pada pencarian yang sama', () => {
+test('filter produk dan merek mempertahankan posisi pada pencarian yang sama', () => {
   for (const [previous, next] of [
-    ['/cari?q=', '/pemasok/demo-pangan'],
-    ['/pemasok/demo-pangan', '/pemasok/demo-beauty'],
-    ['/pemasok/demo-pangan', '/pemasok/demo-pangan?merek=rasa-contoh'],
+    ['/cari?q=', '/pemasok/demo-pangan?merek=rasa-contoh'],
+    ['/pemasok/demo-pangan?merek=rasa-contoh', '/pemasok/demo-pangan?merek=cokelat-contoh'],
     ['/pemasok/demo-pangan?merek=rasa-contoh', '/cari?q='],
-    ['/cari?q=almond', '/pemasok/demo-pangan?q=almond'],
-    ['/kategori/snack', '/pemasok/demo-pangan'],
+    ['/cari?q=almond', '/pemasok/demo-pangan?q=almond&merek=rasa-contoh'],
+    ['/kategori/snack', '/pemasok/demo-pangan?merek=rasa-contoh'],
   ]) {
     assert.equal(shouldResetRouteScroll(previous, next), false);
     assert.equal(catalogNavigationKey(previous), catalogNavigationKey(next));
@@ -19,6 +18,12 @@ test('PT, merek dan hapus filter mempertahankan posisi pada pencarian yang sama'
 test('halaman baru, pencarian baru dan route invalid tetap memulai dari atas', () => {
   for (const [previous, next] of [
     ['/', '/pemasok/demo-pangan'],
+    ['/cari?q=', '/pemasok/demo-pangan'],
+    ['/pemasok/demo-pangan', '/pemasok/demo-beauty'],
+    ['/pemasok/demo-pangan', '/pemasok/demo-pangan?merek=rasa-contoh'],
+    ['/pemasok/demo-pangan?merek=rasa-contoh', '/pemasok/demo-pangan'],
+    ['/cari?q=almond', '/pemasok/demo-pangan?q=almond'],
+    ['/kategori/snack', '/pemasok/demo-pangan'],
     ['/pemasok/demo-pangan', '/produk/snack-pedas'],
     ['/pemasok/demo-pangan', '/keranjang'],
     ['/produk/snack-pedas', '/pemasok/demo-pangan'],

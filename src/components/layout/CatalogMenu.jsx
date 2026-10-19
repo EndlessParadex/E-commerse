@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   categories,
   categoryHref,
-  availableBrands,
   filterCatalogProducts,
   filterProducts,
   searchHref,
@@ -12,6 +11,7 @@ import { avatarColorStyle, productColorStyle } from '../../data/catalogColors';
 import { productGallery } from '../../data/productGallery';
 import ProductImage from '../shop/ProductImage';
 import './CatalogMenu.css';
+import { brandsForSupplier } from '../../data/catalogMasters';
 
 function CatalogMenuCard({ name, href, options, icon = '📦' }) {
   const matches = filterProducts(options);
@@ -178,10 +178,10 @@ export default function CatalogMenu() {
                   <header>
                     <span className="section-eyebrow">Mitra pemasok</span>
                     <h2>{supplier.name}</h2>
-                    <a href={supplierHref(supplier.id)}>Semua produk PT ini →</a>
+                    <a href={supplierHref(supplier.id)}>Lihat merek PT ini →</a>
                   </header>
                   <div className="bam-catalog-grid">
-                    {availableBrands(supplier.id).map((brand) => (
+                    {brandsForSupplier(supplier.id).map((brand) => (
                       <CatalogMenuCard
                         key={brand.id}
                         name={brand.name}
@@ -190,8 +190,8 @@ export default function CatalogMenu() {
                       />
                     ))}
                   </div>
-                  {!availableBrands(supplier.id).length && (
-                    <p>Belum ada produk untuk pemasok ini.</p>
+                  {!brandsForSupplier(supplier.id).length && (
+                    <p>Belum ada merek untuk pemasok ini.</p>
                   )}
                 </>
               ) : (

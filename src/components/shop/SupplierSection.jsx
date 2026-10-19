@@ -4,6 +4,7 @@ import { searchHref } from '../../data/catalog';
 import ProductImage from './ProductImage';
 import './SupplierSection.css';
 import { supplierColorStyle, avatarColorStyle } from '../../data/catalogColors';
+import { brandsForSupplier } from '../../data/catalogMasters';
 
 export default function SupplierSection() {
   return (
@@ -49,9 +50,9 @@ export default function SupplierSection() {
                 <h3>{supplier.name}</h3>
                 <p>{categories.join(' · ') || 'Produk belum tersedia'}</p>
                 <div className="bam-supplier-bottom">
-                  <span>{items.length} produk</span>
+                  <span>{brandsForSupplier(supplier.id).length} merek</span>
                   <strong>
-                    Lihat produk <span aria-hidden="true">↗</span>
+                    Lihat merek <span aria-hidden="true">↗</span>
                   </strong>
                 </div>
               </a>

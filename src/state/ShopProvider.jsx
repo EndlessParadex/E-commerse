@@ -10,6 +10,7 @@ import { notifyWorkflow } from './workflowEvents';
 import { workflowUsesServer } from '../data/adminStore';
 import { DeliveryContext } from './useDelivery';
 import { clearCompletedCheckoutRequest, serverStock } from './serverWorkflow';
+import useSharedCart from './useSharedCart';
 
 function loadShop(key) {
   try {
@@ -27,10 +28,12 @@ function loadShop(key) {
 
 export default function ShopProvider({ children }) {
   const delivery = useContext(DeliveryContext);
+  const shared = useSharedCart(delivery?.user, delivery?.authLoading);
   const storageKey = companyStorageKey(
     STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''),
   );
   const [state, rawDispatch] = useReducer(shopReducer, storageKey, loadShop);
+  const cart = shared.enabled ? shared.cart?.items || [] : state.cart;
   const stateRef = useRef(state);
   useLayoutEffect(() => {
     stateRef.current = state;
@@ -70,6 +73,24 @@ export default function ShopProvider({ children }) {
   }, [state, storageKey]);
 
   const dispatch = (action) => {
+    if (
+      shared.enabled &&
+      ['add', 'quantity', 'remove', 'clearCart', 'updateCart', 'completeOrder'].includes(
+        action.type,
+      )
+    ) {
+      if (!shared.canEdit) return Promise.resolve(false);
+      const types = {
+        add: 'add',
+        quantity: 'set',
+        remove: 'remove',
+        clearCart: 'clear',
+        updateCart: 'refresh',
+      };
+      return types[action.type]
+        ? shared.mutate(types[action.type], action.product?.id || action.id, action.quantity)
+        : Promise.resolve(false);
+    }
     const previous = stateRef.current;
     const next = shopReducer(previous, action);
     if (
@@ -97,7 +118,11 @@ export default function ShopProvider({ children }) {
       const statistics = workflowUsesServer ? serverStock(product) : {};
       return {
         available: availableStock(product, window.sessionStorage, workflow.orders),
-        maximum: cartStockLimit(product, state.cart, window.sessionStorage, workflow.orders),
+        maximum: shared.enabled
+          ? shared.canEdit
+            ? 99
+            : 0
+          : cartStockLimit(product, cart, window.sessionStorage, workflow.orders),
         soldUnits: statistics.soldUnits ?? null,
         inStock: workflowUsesServer
           ? statistics.inStock
@@ -105,27 +130,34 @@ export default function ShopProvider({ children }) {
             packagingValues(product).unitsPerPackage,
         publishedSoldMinimum: statistics.publishedSoldMinimum ?? null,
         reservedUnits: statistics.reservedUnits ?? null,
-        failed: workflow.failed || workflow.loading,
+        failed: shared.enabled ? !shared.canEdit : workflow.failed || workflow.loading,
       };
     } catch {
       return { available: 0, maximum: 0, soldUnits: null, reservedUnits: null, failed: true };
     }
   };
-  const review = reviewCart(state.cart);
+  const review = reviewCart(cart);
   try {
-    review.issues.push(...reviewStock(state.cart, window.sessionStorage, workflow.orders));
+    if (!shared.enabled)
+      review.issues.push(...reviewStock(cart, window.sessionStorage, workflow.orders));
   } catch {
     review.issues.push({ id: 'stock-storage', type: 'stock_error' });
   }
-  if (workflow.failed && !review.issues.some((issue) => issue.type === 'stock_error'))
+  if (
+    !shared.enabled &&
+    workflow.failed &&
+    !review.issues.some((issue) => issue.type === 'stock_error')
+  )
     review.issues.push({ id: 'stock-storage', type: 'stock_error' });
-  review.ready = state.cart.length > 0 && review.issues.length === 0;
+  review.ready = cart.length > 0 && review.issues.length === 0;
 
   return (
     <ShopContext.Provider
       value={{
         ...state,
-        ...cartTotals(state.cart),
+        cart,
+        shared,
+        ...cartTotals(cart),
         cartReview: review,
         stockFor,
         orderLinkStatus: (id) =>
@@ -134,7 +166,7 @@ export default function ShopProvider({ children }) {
             : workflow.server || workflow.orders.some((order) => order.id === id)
               ? 'available'
               : 'missing',
-        updateCart: () => dispatch({ type: 'updateCart', cart: updateCartPrices(state.cart) }),
+        updateCart: () => dispatch({ type: 'updateCart', cart: updateCartPrices(cart) }),
         unreadCount: state.notifications.filter((item) => !item.read).length,
         storageError,
         addItem,

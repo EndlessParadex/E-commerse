@@ -39,13 +39,19 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
     'Nama akun, foto profil, dan Guest',
     (text) => text.includes('account-trigger-name') && text.includes('Guest'),
   );
-  await get('/api/catalog', 'Server: foto merek dan penyimpanan katalog', (text) => {
+  await get(
+    '/src/state/useSharedCart.js',
+    'Keranjang bersama: kode sinkronisasi terbaru',
+    (text) => text.includes('/api/b2b/cart-context') && text.includes('retryPending'),
+  );
+  await get('/api/catalog', 'Server: foto merek, katalog, dan keranjang bersama', (text) => {
     const value = JSON.parse(text);
     return (
       value.version === 1 &&
       value.capabilities?.brandPhotos === true &&
       value.capabilities?.gallery === true &&
-      value.capabilities?.workflow === true
+      value.capabilities?.workflow === true &&
+      value.capabilities?.sharedCarts === true
     );
   });
   return { url: url.origin, checks, ok: checks.every((entry) => entry.ok) };

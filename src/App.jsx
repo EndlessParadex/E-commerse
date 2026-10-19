@@ -9,6 +9,7 @@ import { catalogNavigationKey, shouldResetRouteScroll } from './data/catalogNavi
 import ShopProvider from './state/ShopProvider';
 import WorkflowProvider from './state/WorkflowProvider';
 import ShopPage from './components/shop/ShopPage';
+import { SharedCartBar } from './components/shop/SharedCartPage';
 import AuthPage from './components/account/AuthPage';
 import DeliveryProvider from './state/DeliveryProvider';
 import AppearanceProvider from './state/AppearanceProvider';
@@ -77,6 +78,7 @@ function App() {
     '/admin/akun': 'accounts',
     '/admin/persetujuan': 'approvals',
     '/admin/toko-sales': 'b2bStores',
+    '/admin/keranjang': 'sharedCarts',
   }[route];
   const isAdmin = Boolean(adminView);
   const recoveryMatch = route.match(
@@ -107,6 +109,7 @@ function App() {
         email: 'Admin · Pengaturan Email',
         approvals: 'Admin · Persetujuan Akun',
         b2bStores: 'Admin · Toko & Sales',
+        sharedCarts: 'Admin · Keranjang Bersama',
       }[adminView]
     : recoveryMatch
       ? 'Pemulihan dan verifikasi akun'
@@ -163,6 +166,7 @@ function App() {
         <ShopProvider>
           <AppearanceProvider>
             {!isAdmin && <Navbar />}
+            {!isAdmin && <SharedCartBar />}
             <a
               className="skip-to-content"
               href="#main-content"

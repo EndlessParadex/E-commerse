@@ -16,6 +16,7 @@ export default function ProductPurchasePanel({
   onAdd,
   added,
   error,
+  sharedCart,
 }) {
   const panel = useRef(null);
   useLayoutEffect(() => {
@@ -48,7 +49,17 @@ export default function ProductPurchasePanel({
   const photo = productGallery(product)[0];
   return (
     <section ref={panel} className="detail-purchase-panel" aria-labelledby="detail-purchase-title">
-      <h2 id="detail-purchase-title">Atur pembelian</h2>
+      <h2 id="detail-purchase-title">
+        {sharedCart?.enabled ? 'Atur keranjang toko' : 'Atur pembelian'}
+      </h2>
+      {sharedCart?.enabled && (
+        <p className="detail-shared-context">
+          {sharedCart.cart
+            ? `Untuk ${sharedCart.cart.store.storeName}. Stok diperiksa saat finalisasi Admin.`
+            : 'Pilih toko dan periode sebelum menambahkan barang.'}{' '}
+          <a href="#/keranjang">Buka keranjang bersama →</a>
+        </p>
+      )}
       <div className="detail-purchase-product">
         <div className="detail-purchase-photo">
           <ProductImage
@@ -88,25 +99,33 @@ export default function ProductPurchasePanel({
             +
           </button>
         </div>
-        <div
-          className={
-            'detail-stock-summary' + (!stock.failed && stock.inStock === false ? ' is-empty' : '')
-          }
-          role="status"
-          aria-live="polite"
-        >
-          <span>Sisa stok</span>
-          <strong className="detail-stock-remaining">{purchaseStockLabel(product, stock)}</strong>
-        </div>
+        {!sharedCart?.enabled && (
+          <div
+            className={
+              'detail-stock-summary' + (!stock.failed && stock.inStock === false ? ' is-empty' : '')
+            }
+            role="status"
+            aria-live="polite"
+          >
+            <span>Sisa stok</span>
+            <strong className="detail-stock-remaining">{purchaseStockLabel(product, stock)}</strong>
+          </div>
+        )}
       </div>
       <p className="detail-stock" role="status">
-        {stock.failed
-          ? 'Stok belum dapat diperiksa'
-          : stock.inStock === false
-            ? 'Stok kemasan ini habis'
-            : remaining
-              ? `Dapat ditambah ${purchasePackagingLabel(product, remaining)} ke keranjang`
-              : 'Stok tersedia sudah masuk keranjang atau batas jumlah tercapai'}
+        {sharedCart?.enabled
+          ? sharedCart.busy
+            ? 'Menyimpan perubahan…'
+            : sharedCart.canEdit
+              ? `Dapat ditambah ${purchasePackagingLabel(product, remaining)} (batas keranjang, belum mencadangkan stok).`
+              : 'Buka keranjang bersama untuk memilih toko atau memeriksa statusnya.'
+          : stock.failed
+            ? 'Stok belum dapat diperiksa'
+            : stock.inStock === false
+              ? 'Stok kemasan ini habis'
+              : remaining
+                ? `Dapat ditambah ${purchasePackagingLabel(product, remaining)} ke keranjang`
+                : 'Stok tersedia sudah masuk keranjang atau batas jumlah tercapai'}
       </p>
       {!stock.failed && stock.reservedUnits > 0 && (
         <p className="detail-stock-reserved">
@@ -139,7 +158,7 @@ export default function ProductPurchasePanel({
           disabled={!remaining}
           onClick={() => onAdd(true)}
         >
-          Beli sekarang
+          {sharedCart?.enabled ? 'Tambah dan buka keranjang' : 'Beli sekarang'}
         </button>
       </div>
       <p

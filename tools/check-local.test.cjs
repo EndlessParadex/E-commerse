@@ -8,9 +8,10 @@ test('local checks identify a stale frontend and backend instead of reporting an
     '/src/components/layout/Navbar.jsx': 'store-navigation is-scrolled',
     '/src/components/admin/AdminProductFilters.jsx': 'is-stuck admin-filter-toggle',
     '/src/components/shop/ShopActions.jsx': 'account-trigger-name Guest',
+    '/src/state/useSharedCart.js': '/api/b2b/cart-context retryPending',
     '/api/catalog': JSON.stringify({
       version: 1,
-      capabilities: { brandPhotos: true, gallery: true, workflow: true },
+      capabilities: { brandPhotos: true, gallery: true, workflow: true, sharedCarts: true },
     }),
   };
   const request = async (url) =>

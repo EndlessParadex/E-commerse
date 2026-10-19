@@ -15,5 +15,6 @@
 - Pada HP, pencarian tetap tersedia. Tombol **Filter** membuka/menutup pilihan PT pemasok dan merek. Angka pada tombol menunjukkan jumlah filter aktif; menutup pilihan tidak menghapus filter.
 - Pada HP dalam posisi mendatar dengan layar pendek, header toko ikut bergulir agar tidak menutupi sebagian besar konten.
 - Nama pengguna dan foto profil tampil setelah masuk; setelah keluar, tulisan menjadi **Guest**. Foto merek/profil tetap ada setelah halaman dimuat ulang.
+- Untuk akun B2B yang sudah dihubungkan ke toko, ikon keranjang membuka keranjang bersama. Admin melihatnya melalui menu **Keranjang bersama**. Ikuti [panduan pengujian keranjang bersama](KERANJANG-BERSAMA.md) untuk menguji pembeli dan Sales pada sesi terpisah.
 
 Jika pemeriksaan gagal, catat alamat dan baris **GAGAL** yang muncul. Jangan menghapus database atau menjalankan reset Git untuk mengatasi perbedaan versi.

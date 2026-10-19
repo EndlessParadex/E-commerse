@@ -5,6 +5,7 @@ import AdminEmailPage from './AdminEmailPage';
 import AdminAccountsPage from './AdminAccountsPage';
 import AdminApprovalsPage from './AdminApprovalsPage';
 import AdminB2BStoresPage from './AdminB2BStoresPage';
+import SharedCartPage from '../components/shop/SharedCartPage';
 import { suppliers } from '../data/suppliers';
 import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCatalog';
 import { rupiah } from '../components/shop/shopPresentation';
@@ -68,6 +69,7 @@ const navigationGroups = [
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
       { view: 'b2bStores', label: 'Toko & Sales', href: '#/admin/toko-sales' },
+      { view: 'sharedCarts', label: 'Keranjang bersama', href: '#/admin/keranjang' },
     ],
   },
   {
@@ -167,6 +169,7 @@ export default function AdminPage({ view = 'overview' }) {
   const isProducts = view === 'products';
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
   const workflowView = view === 'orders' || view === 'stock';
+  const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const pageTitle = {
     overview: 'Ringkasan katalog',
     products: 'Daftar produk',
@@ -180,6 +183,7 @@ export default function AdminPage({ view = 'overview' }) {
     accounts: 'Kelola akun',
     approvals: 'Persetujuan akun',
     b2bStores: 'Toko & Sales',
+    sharedCarts: 'Keranjang bersama toko',
   }[view];
   // The form's capture listener confirms unsaved changes before this handler runs.
   // Close explicitly even when the selected link points to the current hash.
@@ -301,7 +305,7 @@ export default function AdminPage({ view = 'overview' }) {
           <div>
             <span className="admin-eyebrow">
               {companyProfile.shortName} ·{' '}
-              {view === 'b2bStores'
+              {b2bView
                 ? 'Pengelolaan toko B2B'
                 : ['email', 'accounts'].includes(view)
                   ? 'Pengaturan pemilik'
@@ -309,8 +313,10 @@ export default function AdminPage({ view = 'overview' }) {
             </span>
             <h1>{pageTitle}</h1>
             <p>
-              {view === 'b2bStores'
-                ? 'Kelola toko pelanggan, akun pembeli, dan penugasan Sales.'
+              {b2bView
+                ? view === 'sharedCarts'
+                  ? 'Periksa keranjang per toko, periode, dan riwayat perubahan pembeli/Sales.'
+                  : 'Kelola toko pelanggan, akun pembeli, dan penugasan Sales.'
                 : view === 'accounts'
                   ? 'Kelola akses akun pembeli dan admin operasional.'
                   : view === 'email'
@@ -325,8 +331,8 @@ export default function AdminPage({ view = 'overview' }) {
             </p>
           </div>
           <span className="admin-demo-badge">
-            {view === 'b2bStores'
-              ? 'Toko & Sales · Database'
+            {b2bView
+              ? 'B2B · Database'
               : ['email', 'accounts'].includes(view)
                 ? 'Akses pemilik toko'
                 : workflowView
@@ -339,8 +345,10 @@ export default function AdminPage({ view = 'overview' }) {
           </span>
         </header>
         <p className="admin-preview-notice">
-          {view === 'b2bStores'
-            ? 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
+          {b2bView
+            ? view === 'sharedCarts'
+              ? 'Keranjang masih berupa daftar barang. Pemeriksaan dan finalisasi pesanan oleh Admin dikerjakan pada tahap berikutnya.'
+              : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
             : view === 'accounts'
               ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
               : view === 'email'
@@ -390,7 +398,9 @@ export default function AdminPage({ view = 'overview' }) {
             ✓ {notice}
           </p>
         )}
-        {view === 'b2bStores' ? (
+        {view === 'sharedCarts' ? (
+          <SharedCartPage key={delivery?.user?.id} />
+        ) : view === 'b2bStores' ? (
           <AdminB2BStoresPage key={delivery?.user?.id} />
         ) : view === 'approvals' ? (
           <AdminApprovalsPage />

@@ -325,10 +325,13 @@ test('parallel checkout cannot cross the outstanding-order cap across backend pr
             },
           },
         );
-        worker.on('message', resolve);
+        let result;
+        worker.on('message', (value) => { result = value; });
         worker.on('error', reject);
         worker.on('exit', (code) => {
           if (code) reject(new Error('worker failed'));
+          else if (!result) reject(new Error('worker exited without a result'));
+          else resolve(result);
         });
       });
     const results = await Promise.all(Array.from({ length: 4 }, task));
@@ -600,10 +603,13 @@ test('failed-login source counters are shared across backend processes', async (
               workerData: { module: new URL('./app.js', import.meta.url).href, dbPath, index },
             },
           );
-          worker.on('message', resolve);
+          let result;
+          worker.on('message', (value) => { result = value; });
           worker.on('error', reject);
           worker.on('exit', (code) => {
             if (code) reject(new Error('worker failed'));
+            else if (!result) reject(new Error('worker exited without a result'));
+            else resolve(result);
           });
         }),
     );

@@ -25,7 +25,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `GET /api/b2b/accounts?page=1&q=...` khusus Pemilik mencari akun non-Admin aktif yang sudah disetujui dan belum menjadi Sales.
 - Data disimpan ke SQLite. Perubahan yang gagal mempertahankan isian; pemuatan ulang yang gagal setelah penyimpanan berhasil menampilkan kesalahan pemuatan secara terpisah.
 
-**Batas tahap ini:** login masih memakai akun yang tersedia. Layanan SMS OTP belum dipilih. Keranjang bersama, finalisasi khusus Admin, dan faktur B2B tanpa harga belum diimplementasikan; alur checkout yang tersedia masih mengikuti versi sebelumnya.
+**Status saat ini:** tahap 1 dan keranjang bersama tahap 3 sudah diimplementasikan. Login masih memakai email/kata sandi; layanan SMS OTP belum dipilih. Finalisasi khusus Admin dan faktur B2B tanpa harga dikerjakan pada tahap berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
 
 ### Verifikasi halaman
 
@@ -44,10 +44,17 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 
 ## Tahap 3: Keranjang bersama per toko dan per periode
 
-- `cart_cycles`, `cart_items`, `cart_events`: simpan pada SQLite, tidak hanya localStorage.
-- Satu keranjang aktif per toko dan jadwal pengiriman, dengan `revision` untuk mencegah perubahan bersamaan saling menimpa.
-- Pembeli hanya boleh mengedit keranjang tokonya. Sales hanya boleh mengedit keranjang toko yang ditugaskan.
-- Admin dapat memeriksa semua keranjang; tidak boleh menciptakan order final dari jalur pembeli.
+Sudah diimplementasikan. Panduan penggunaan dan pengujian: [KERANJANG-BERSAMA.md](KERANJANG-BERSAMA.md).
+
+- `cart_cycles`, `cart_items`, `cart_events` tersimpan pada SQLite; isi keranjang tidak disimpan ke localStorage. Pilihan toko/tanggal saja disimpan sebagai preferensi perangkat dan akun.
+- Satu keranjang per toko/tanggal rencana pengiriman. Tanggal bukan janji pengiriman dan tidak berganti otomatis ketika hari berganti. Daftar periode lama dapat dibuka kembali.
+- Pembeli yang terhubung dan Sales yang ditugaskan mengedit keranjang yang sama. Semua akses diperiksa di server, termasuk setelah penugasan atau akses akun dicabut.
+- Pembaruan berkala setiap 5 detik ketika halaman aktif, saat fokus kembali, serta tombol Muat terbaru. Konflik `revision` ditolak tanpa menimpa isian lain, termasuk ketika pengguna masih mengetik atau membuka konfirmasi kosongkan.
+- Setiap perubahan memakai kode unik. Respons yang terputus dapat dipastikan dengan mengirim ulang kode/perubahan yang sama tanpa menggandakan barang.
+- Nama, harga dan konversi kemasan diambil dari katalog server; SKU yang dihapus tetap terlihat sampai dikeluarkan. Harga/informasi yang berubah perlu diperbarui secara eksplisit.
+- Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin, dengan isi dan riwayat yang hanya dapat dibaca. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
+- Batas 100 SKU per keranjang dan 99 kemasan per SKU. Keranjang tidak mencadangkan stok dan belum membuat order. Finalisasi Admin masuk tahap 4.
+- Akun yang belum pernah dihubungkan ke toko dan belum menjadi Sales tetap memakai alur lama selama migrasi. Keranjang pribadi lama tidak otomatis digabung ke keranjang toko; foto produk dapat ditambahkan belakangan.
 
 ## Tahap 4: Finalisasi eksklusif Admin
 

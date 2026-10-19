@@ -1,0 +1,260 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { Window } from 'happy-dom';
+import { createServer } from 'vite';
+import { act, createElement } from 'react';
+import { createApp } from '../../server/app.js';
+import { seedSharedCart, sharedRequest } from '../../server/sharedCartFixture.js';
+
+test('shared cart website persists buyer/Sales edits, handles conflicts and lost responses, isolates stores, and gives Admin read access', async () => {
+  const api = createApp({ dbPath: ':memory:', logger: () => {} });
+  const { first, second, actors } = seedSharedCart(api);
+  const dom = new Window({ url: 'http://fixture.test/#/keranjang' });
+  const previousFetch = globalThis.fetch;
+  Object.assign(globalThis, {
+    window: dom,
+    document: dom.document,
+    HTMLElement: dom.HTMLElement,
+    ResizeObserver: dom.ResizeObserver,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+  Object.defineProperty(globalThis, 'navigator', { value: dom.navigator, configurable: true });
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: dom.localStorage,
+    configurable: true,
+  });
+  dom.scrollTo = () => {};
+  let actor = 'buyer',
+    loseResponse = false,
+    offline = false;
+  const mutations = [];
+  globalThis.fetch = async (path, options = {}) => {
+    const who = actor;
+    if (offline && /\/cart(?:\?|$)/.test(path)) throw new TypeError('Fixture offline');
+    const body = options.body ? JSON.parse(options.body) : undefined;
+    const response = await sharedRequest(api, options.method || 'GET', path, who, body);
+    if (options.method === 'POST' && /\/cart$/.test(path)) {
+      mutations.push(body);
+      if (loseResponse) {
+        loseResponse = false;
+        throw new TypeError('Fixture dropped committed response');
+      }
+    }
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      json: async () => response.body,
+    };
+  };
+  const vite = await createServer({
+    configFile: false,
+    resolve: { preserveSymlinks: true },
+    oxc: { jsx: { runtime: 'automatic' } },
+    optimizeDeps: { noDiscovery: true },
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+    appType: 'custom',
+    ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] },
+  });
+  let root;
+  try {
+    const { default: App } = await vite.ssrLoadModule('/src/App.jsx');
+    const { createRoot } = await import('react-dom/client');
+    const container = dom.document.createElement('div');
+    dom.document.body.append(container);
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 15));
+    const wait = async (check) => {
+      const until = Date.now() + 4000;
+      while (!check() && Date.now() < until) await act(settle);
+      assert.ok(check(), container.textContent.slice(-2000));
+    };
+    const button = (text) =>
+      [...container.querySelectorAll('button')].find((node) => node.textContent.trim() === text);
+    const click = async (element) =>
+      act(async () => {
+        assert.ok(element);
+        element.click();
+        await settle();
+      });
+    const fill = async (selector, value) =>
+      act(async () => {
+        const field = container.querySelector(selector);
+        assert.ok(field, selector);
+        const prototype =
+          field.tagName === 'SELECT'
+            ? dom.HTMLSelectElement.prototype
+            : dom.HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(prototype, 'value').set.call(field, value);
+        field.dispatchEvent(
+          new dom.Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }),
+        );
+        await settle();
+      });
+    const submit = async (selector) =>
+      act(async () => {
+        container
+          .querySelector(selector)
+          .dispatchEvent(new dom.Event('submit', { bubbles: true, cancelable: true }));
+        await settle();
+      });
+    const navigate = async (route) =>
+      act(async () => {
+        dom.location.hash = route;
+        dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
+        await settle();
+      });
+    const mount = async (who, route = '/keranjang') => {
+      if (root) await act(async () => root.unmount());
+      actor = who;
+      dom.location.hash = route;
+      dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
+      root = createRoot(container);
+      await act(async () => {
+        root.render(createElement(App));
+        await settle();
+      });
+      await wait(() => container.querySelector('#shared-store'));
+    };
+    const openDate = async () => {
+      await fill('#shared-date', '2026-10-21');
+      await submit('.shared-open-form');
+      await wait(() => container.querySelector('.shared-cart-heading'));
+    };
+
+    await mount('buyer');
+    await openDate();
+    assert.equal(container.querySelector('#shared-store').value, first.id);
+    assert.equal(container.querySelectorAll('#shared-store option').length, 2);
+    await navigate('/produk/snack-pedas-23g');
+    await wait(() => container.querySelector('.detail-add:not(:disabled)'));
+    await click(container.querySelector('.detail-add'));
+    await wait(() => container.textContent.includes('Berhasil ditambahkan'));
+    await navigate('/keranjang');
+    await wait(() => container.querySelector('.shared-item'));
+    assert.equal(container.querySelector('.shared-quantity input').value, '1');
+    assert.equal(container.querySelector('a[href="#/checkout"]'), null);
+    assert.match(container.querySelector('.shared-history').textContent, /Akun buyer/);
+    await fill('.shared-quantity input', '4');
+    await submit('.shared-quantity');
+    await wait(
+      () => api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').items[0].quantity === 4,
+    );
+
+    await mount('sales');
+    await openDate();
+    assert.equal(container.querySelector('.shared-quantity input').value, '4');
+    await fill('.shared-quantity input', '6');
+    await submit('.shared-quantity');
+    await mount('buyer');
+    await openDate();
+    assert.equal(
+      container.querySelector('.shared-quantity input').value,
+      '6',
+      'another account/device sees persisted edits',
+    );
+    const current = api.sharedCarts.read(actors.sales, first.id, '2026-10-21');
+    await fill('.shared-quantity input', '9');
+    api.sharedCarts.mutate(actors.sales, first.id, {
+      date: current.date,
+      revision: current.revision,
+      requestId: randomUUID(),
+      action: 'set',
+      productId: current.items[0].id,
+      quantity: 7,
+    });
+    await act(async () => {
+      dom.dispatchEvent(new dom.Event('focus'));
+      await settle();
+    });
+    await wait(() =>
+      container
+        .querySelector('.shared-cart-heading')
+        .textContent.includes('Versi ' + (current.revision + 1)),
+    );
+    assert.equal(
+      container.querySelector('.shared-quantity input').value,
+      '9',
+      'background refresh retains unsaved input and its original revision',
+    );
+    await submit('.shared-quantity');
+    await wait(() => container.querySelector('.shared-quantity input')?.value === '7');
+    assert.match(container.textContent, /Keranjang sudah berubah/);
+    assert.equal(api.sharedCarts.read(actors.buyer, first.id, current.date).items[0].quantity, 7);
+    await click(button('Muat terbaru'));
+
+    loseResponse = true;
+    await fill('.shared-quantity input', '8');
+    await submit('.shared-quantity');
+    await wait(() => button('Pastikan penyimpanan'));
+    assert.equal(container.querySelector('#shared-store').disabled, true);
+    const requestId = mutations.at(-1).requestId;
+    await click(button('Pastikan penyimpanan'));
+    await wait(() => container.querySelector('.shared-quantity input')?.value === '8');
+    assert.equal(mutations.at(-1).requestId, requestId);
+    assert.equal(
+      api.db.prepare('SELECT COUNT(*) AS n FROM cart_events WHERE request_id=?').get(requestId).n,
+      1,
+    );
+    await click(button('Kosongkan keranjang'));
+    const beforeClear = api.sharedCarts.read(actors.sales, first.id, current.date);
+    api.sharedCarts.mutate(actors.sales, first.id, {
+      date: current.date,
+      revision: beforeClear.revision,
+      requestId: randomUUID(),
+      action: 'set',
+      productId: current.items[0].id,
+      quantity: 9,
+    });
+    await act(async () => {
+      dom.dispatchEvent(new dom.Event('focus'));
+      await settle();
+    });
+    await wait(() => container.querySelector('.shared-quantity input').value === '9');
+    await click(button('Ya, kosongkan'));
+    await wait(() => container.textContent.includes('Keranjang sudah berubah'));
+    assert.equal(
+      api.sharedCarts.read(actors.buyer, first.id, current.date).items[0].quantity,
+      9,
+      'confirmation cannot erase edits made after it opened',
+    );
+    await click(button('Muat terbaru'));
+
+    offline = true;
+    await click(button('Muat terbaru'));
+    await wait(() => container.querySelector('[role="alert"]'));
+    assert.equal(container.querySelector('.shared-quantity input').disabled, true);
+    offline = false;
+    await click(button('Muat terbaru'));
+    await wait(() => !container.querySelector('.shared-quantity input').disabled);
+    await navigate('/checkout');
+    assert.match(container.textContent, /Finalisasi pesanan dilakukan oleh Admin/);
+    assert.equal(container.querySelector('#checkout-form'), null);
+
+    await mount('other');
+    assert.equal(container.querySelector('#shared-store').value, second.id);
+    assert.equal(container.textContent.includes('Toko Bersama'), false);
+    assert.equal(container.querySelector('.shared-item'), null);
+    await mount('operator', '/admin/keranjang');
+    await fill('#shared-store', first.id);
+    await openDate();
+    await wait(() => container.querySelector('.shared-item'));
+    assert.equal(container.querySelector('.shared-quantity'), null);
+    assert.equal(button('Kosongkan keranjang'), undefined);
+    assert.match(container.textContent, /Admin dapat memeriksa/);
+    assert.ok(container.querySelector('nav a[href="#/admin/keranjang"][aria-current="page"]'));
+    assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
+    for (let i = 0; i < dom.localStorage.length; i++) {
+      const key = dom.localStorage.key(i);
+      assert.ok(
+        !dom.localStorage.getItem(key).includes('snack-pedas-23g'),
+        'shared contents are never cached as a local cart',
+      );
+    }
+  } finally {
+    if (root) await act(async () => root.unmount());
+    await vite.close();
+    api.db.close();
+    globalThis.fetch = previousFetch;
+    dom.happyDOM.abort();
+  }
+});

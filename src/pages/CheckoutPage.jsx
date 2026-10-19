@@ -83,6 +83,20 @@ export default function CheckoutPage() {
   const total = shop.subtotal + shipping.cost;
   const itemProducts = shop.cart.map((item) => ({ item, display: cartItemPresentation(item) }));
 
+  if (shop.shared?.enabled)
+    return (
+      <div className="checkout-page">
+        <h1>Keranjang bersama toko</h1>
+        <p>
+          Barang B2B disimpan dalam keranjang bersama. Finalisasi pesanan dilakukan oleh Admin pada
+          tahap berikutnya.
+        </p>
+        <a className="shop-primary" href="#/keranjang">
+          Buka keranjang bersama
+        </a>
+      </div>
+    );
+
   if (!shop.cart.length)
     return (
       <div className="checkout-page">

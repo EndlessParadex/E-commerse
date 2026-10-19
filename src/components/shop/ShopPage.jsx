@@ -12,6 +12,7 @@ import CartReview from './CartReview';
 import PackagingSummary from './PackagingSummary';
 import { initializeCatalog, catalogUsesServer } from '../../data/adminStore';
 import NotificationsPanel from './NotificationsPanel';
+import SharedCartPage from './SharedCartPage';
 
 export default function ShopPage({ type }) {
   const shop = useShop();
@@ -47,6 +48,7 @@ export default function ShopPage({ type }) {
     }
   };
 
+  if (isCart && shop.shared?.enabled) return <SharedCartPage />;
   return (
     <div className={'shop-page' + (isCart ? ' cart-page' : ' notifications-page')}>
       <nav className="shop-breadcrumb" aria-label="Breadcrumb">

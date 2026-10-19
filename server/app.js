@@ -25,6 +25,7 @@ import { IdentityRepository } from './identity.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { AccountRepository } from './accounts.js';
 import { B2BStoreRepository } from './b2bStores.js';
+import { SharedCartRepository } from './sharedCarts.js';
 import { customerAccess } from './customerAccess.js';
 
 const scrypt = promisify(scryptCallback);
@@ -189,6 +190,7 @@ export function createApp({
   installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
   const accounts = new AccountRepository(db, now);
   const b2bStores = new B2BStoreRepository(db, now);
+  const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',
     indexHtml: siteIndexHtml,
@@ -350,6 +352,31 @@ export function createApp({
           200,
           accounts.customers(user, new URL(req.url, 'http://bam.local').searchParams),
         );
+      }
+      const sharedCartMatch = path.match(
+        /^\/api\/b2b\/stores\/([^/]+)\/(cart|carts|cart\/events)$/,
+      );
+      if (path === '/api/b2b/cart-context' || sharedCartMatch) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        if (path === '/api/b2b/cart-context' && req.method === 'GET')
+          return json(res, 200, sharedCarts.context(actor));
+        if (sharedCartMatch) {
+          const storeId = decodeURIComponent(sharedCartMatch[1]);
+          const params = new URL(req.url, 'http://bam.local').searchParams;
+          if (req.method === 'GET') {
+            if (sharedCartMatch[2] === 'carts')
+              return json(res, 200, sharedCarts.list(actor, storeId, params));
+            if (sharedCartMatch[2] === 'cart/events')
+              return json(res, 200, sharedCarts.events(actor, storeId, params));
+            return json(res, 200, { cart: sharedCarts.read(actor, storeId, params.get('date')) });
+          }
+          if (sharedCartMatch[2] === 'cart' && req.method === 'POST')
+            return json(res, 200, {
+              cart: sharedCarts.mutate(actor, storeId, await readBody(req)),
+            });
+        }
+        return sendError(res, 405, 'method_not_allowed');
       }
       const b2bDetailMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)$/);
       if (
@@ -542,10 +569,15 @@ export function createApp({
               before: new URL(req.url, 'http://bam.local').searchParams.get('before') || '',
             }),
           );
-        if (req.method === 'POST' && path === '/api/orders')
+        if (req.method === 'POST' && path === '/api/orders') {
+          if (user.role !== 'admin' && sharedCarts.participates(user))
+            return sendError(res, 403, 'shared_cart_required', {
+              form: 'Akun B2B menggunakan keranjang bersama. Pesanan akan difinalisasi oleh Admin.',
+            });
           return json(res, 201, {
             order: workflow.create(user, await readBody(req), clientIp(req)),
           });
+        }
         const imageMatch = path.match(/^\/api\/orders\/([^/]+)\/images\/(\d+)$/);
         if (imageMatch && req.method === 'GET') {
           const picture = workflow.image(
@@ -810,6 +842,7 @@ export function createApp({
     emailSettings,
     accounts,
     b2bStores,
+    sharedCarts,
     refreshMailSettings,
   };
 }

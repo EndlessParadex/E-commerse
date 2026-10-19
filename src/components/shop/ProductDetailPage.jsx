@@ -32,7 +32,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
   const [selectedId, setSelectedId] = useState(productId);
   const product = products.find((item) => item.id === selectedId);
   const variants = productVariants(productId);
-  const { addItem, cart, favoriteIds, toggleFavorite, stockFor } = useShop();
+  const { addItem, cart, favoriteIds, toggleFavorite, stockFor, shared } = useShop();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
@@ -50,7 +50,14 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
   };
   const [addError, setAddError] = useState('');
   const feedbackTimer = useRef(null);
-  useEffect(() => () => window.clearTimeout(feedbackTimer.current), []);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      window.clearTimeout(feedbackTimer.current);
+    };
+  }, []);
 
   if (!product)
     return (
@@ -110,17 +117,25 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
       setAddError('Stok atau isi keranjang berubah. Kurangi jumlah sebelum menambahkan barang.');
       return;
     }
-    if (!addItem(product, quantity)) {
-      setAddError(
-        'Barang belum dapat ditambahkan. Periksa stok, penyimpanan browser, dan batas 100 pilihan barang di keranjang.',
-      );
-      return;
-    }
-    setAddError('');
-    setAdded(true);
-    window.clearTimeout(feedbackTimer.current);
-    feedbackTimer.current = window.setTimeout(() => setAdded(false), 1800);
-    if (goToCart) window.location.assign('#/keranjang');
+    const finish = (success) => {
+      if (!mounted.current) return;
+      if (!success) {
+        setAddError(
+          shared?.enabled
+            ? 'Perubahan belum tersimpan. Buka keranjang bersama untuk memeriksa status penyimpanan dan isian terbaru.'
+            : 'Barang belum dapat ditambahkan. Periksa stok, penyimpanan browser, dan batas 100 pilihan barang di keranjang.',
+        );
+        return;
+      }
+      setAddError('');
+      setAdded(true);
+      window.clearTimeout(feedbackTimer.current);
+      feedbackTimer.current = window.setTimeout(() => setAdded(false), 1800);
+      if (goToCart) window.location.assign('#/keranjang');
+    };
+    const result = addItem(product, quantity);
+    if (result && typeof result.then === 'function') void result.then(finish);
+    else finish(result);
   };
 
   return (
@@ -310,6 +325,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
             onAdd={addToCart}
             added={added}
             error={addError}
+            sharedCart={shared}
           />
         </aside>
       </div>
@@ -324,7 +340,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
           disabled={!remaining}
           onClick={() => addToCart(true)}
         >
-          Beli sekarang
+          {shared?.enabled ? 'Tambah dan buka keranjang' : 'Beli sekarang'}
         </button>
       </div>
     </div>

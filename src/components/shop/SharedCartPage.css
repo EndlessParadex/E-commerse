@@ -1,0 +1,212 @@
+.shared-cart-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 20px;
+  padding: 12px 24px;
+  background: var(--color-info-soft);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+.shared-cart-bar a {
+  font-weight: 700;
+}
+.shared-cart-page {
+  max-width: 1200px;
+}
+.shared-cart-explanation {
+  line-height: 1.7;
+}
+.shared-cart-selection,
+.shared-history,
+.shared-cart-summary,
+.shared-item {
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  margin: 20px 0;
+}
+.shared-cart-selection h2,
+.shared-cart-summary h2,
+.shared-history h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+.shared-store-search label,
+.shared-open-form label,
+.shared-quantity label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+  min-width: 0;
+}
+.shared-store-search > div {
+  display: flex;
+  gap: 10px;
+  margin: 8px 0 16px;
+}
+.shared-cart-page input,
+.shared-cart-page select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+  background: var(--color-surface);
+  color: inherit;
+}
+.shared-cart-page button {
+  min-height: 44px;
+  cursor: pointer;
+  font: inherit;
+}
+.shared-cart-page button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.shared-open-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+.shared-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 0.9rem;
+}
+.shared-pagination button,
+.shared-cycle-list button {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: inherit;
+  background: var(--color-surface);
+}
+.shared-cart-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.shared-cart-heading h2 {
+  margin-bottom: 8px;
+}
+.shared-cart-heading p {
+  margin: 4px 0;
+}
+.shared-save-notice {
+  padding: 14px;
+  background: var(--color-info-soft);
+  border-radius: 8px;
+}
+.shared-cart-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+}
+.shared-items,
+.shared-cycle-list {
+  padding: 0;
+  list-style: none;
+}
+.shared-item-identity {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.shared-item-identity h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.shared-item-identity p {
+  margin: 6px 0;
+}
+.shared-item-photo {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--color-info-soft);
+}
+.shared-item-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.shared-sku {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.shared-quantity {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.shared-quantity label {
+  max-width: 130px;
+  font-size: 0.85rem;
+}
+.shared-line-total {
+  text-align: right;
+}
+.shared-cart-summary p {
+  line-height: 1.7;
+}
+.shared-cart-summary strong {
+  display: block;
+  font-size: 1.25rem;
+}
+.shared-history li {
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.shared-history li p {
+  margin: 6px 0;
+}
+.shared-clear-confirm {
+  margin-top: 16px;
+}
+.shared-clear-confirm button {
+  margin: 4px;
+}
+.shared-browse {
+  display: inline-flex;
+}
+@media (max-width: 760px) {
+  .shared-open-form,
+  .shared-cart-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shared-cart-selection,
+  .shared-history,
+  .shared-cart-summary,
+  .shared-item {
+    padding: 16px;
+  }
+  .shared-cart-summary {
+    margin-top: 0;
+  }
+  .shared-store-search > div {
+    flex-wrap: wrap;
+  }
+  .shared-cart-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .shared-cart-bar {
+    padding: 12px 16px;
+  }
+}

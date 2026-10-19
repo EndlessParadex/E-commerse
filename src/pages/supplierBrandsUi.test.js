@@ -23,6 +23,7 @@ test('PT opens only its brand cards; brand products and photos remain scoped; Ba
   );
   const png =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6NnQAAAAASUVORK5CYII=';
+  seed.masters.brands.find((brand) => brand.id === 'qa-fries').logo = png;
   const product = (id, supplierId, brandId, brand, name, alt) => ({
     ...structuredClone(seed.edits[0]),
     groupId: id,
@@ -165,6 +166,14 @@ test('PT opens only its brand cards; brand products and photos remain scoped; Ba
     assert.equal(brio.getAttribute('href'), '#/pemasok/qa-first?merek=qa-brio');
     assert.match(brio.textContent, /1 produk/);
     assert.equal(brio.querySelector('img').getAttribute('alt'), 'Foto Brio PT Utama');
+    assert.equal(
+      container.querySelector('[data-brand-id="qa-fries"] img').getAttribute('src'),
+      png,
+    );
+    assert.equal(
+      container.querySelector('[data-brand-id="qa-fries"] img').getAttribute('alt'),
+      'Foto merek French Fries',
+    );
     assert.match(
       container.querySelector('[data-brand-id="qa-new"]').textContent,
       /Produk belum tersedia/,

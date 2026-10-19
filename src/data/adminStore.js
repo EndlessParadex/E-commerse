@@ -39,6 +39,7 @@ let localChecked = false;
 let initialization = null;
 let serverSupportsPackaging = false;
 let serverSupportsGallery = false;
+let serverSupportsBrandPhotos = false;
 const listeners = new Set();
 export const subscribeCatalog = (listener) => {
   listeners.add(listener);
@@ -114,6 +115,7 @@ function applyServerCatalog(value) {
           Object.hasOwn(variant, 'packagingType') && Object.hasOwn(variant, 'unitsPerPackage'),
       ));
   serverSupportsGallery = value.capabilities?.gallery === true;
+  serverSupportsBrandPhotos = value.capabilities?.brandPhotos === true;
   workflowUsesServer = value.capabilities?.workflow === true;
   refreshAdmin();
   announce();
@@ -212,6 +214,11 @@ async function loadServerCatalog(request) {
   );
 }
 async function persistServer(masters, nextEdits, result) {
+  if (!serverSupportsBrandPhotos && masters.brands.some((brand) => brand.logo))
+    return {
+      storageError:
+        'Server yang berjalan belum mendukung foto merek. Jalankan ulang server terbaru, lalu muat ulang halaman. Foto belum dikirim; simpan file foto Anda sebelum memuat ulang.',
+    };
   if (
     !serverSupportsGallery &&
     nextEdits.some(
@@ -287,6 +294,16 @@ async function persistServer(masters, nextEdits, result) {
       return {
         storageError:
           'Server membalas foto produk yang berbeda dari isian. Hasil penyimpanan perlu diperiksa; isian form tetap tersedia. Jalankan ulang server terbaru dan periksa produk sebelum menyimpan kembali.',
+      };
+    const brandPhotosSaved = masters.brands.every(
+      (brand) =>
+        (brand.logo || '') ===
+        (payload.masters?.brands?.find((entry) => entry.id === brand.id)?.logo || ''),
+    );
+    if (!brandPhotosSaved)
+      return {
+        storageError:
+          'Foto merek belum dapat dikonfirmasi. Jalankan ulang server terbaru, lalu periksa katalog; isian tetap tersedia.',
       };
     applyServerCatalog(payload);
     pendingLocalImport = false;

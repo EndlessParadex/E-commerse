@@ -54,7 +54,8 @@ export default function DeliveryProvider({ children }) {
     let persisted = false;
     if (user) {
       try {
-        const storeName = typeof value?.storeName === 'string' ? value.storeName.trim() : user.storeName || '';
+        const storeName =
+          typeof value?.storeName === 'string' ? value.storeName.trim() : user.storeName || '';
         if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
           return { ok: false, persisted: false };
         const response = await fetch('/api/profile', {
@@ -62,7 +63,11 @@ export default function DeliveryProvider({ children }) {
           credentials: 'include',
           signal: AbortSignal.timeout(15000),
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ name: normalized.namaToko, address: normalized.namaJalan, storeName }),
+          body: JSON.stringify({
+            name: normalized.namaToko,
+            address: normalized.namaJalan,
+            storeName,
+          }),
         });
         if (!response.ok) return { ok: false, persisted: false };
         const payload = await response.json();
@@ -87,6 +92,45 @@ export default function DeliveryProvider({ children }) {
     return { ok: true, persisted };
   };
 
+  const saveAvatar = async (avatar) => {
+    if (!user) return { ok: false, error: 'Masuk untuk mengubah foto profil.' };
+    const userId = user.id;
+    try {
+      const response = await fetch('/api/profile/photo', {
+        method: 'PUT',
+        credentials: 'include',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ avatar }),
+      });
+      const payload = await response.json();
+      if (!response.ok)
+        return {
+          ok: false,
+          error:
+            response.status === 401
+              ? 'Sesi berakhir. Masuk kembali.'
+              : payload.errors?.form || 'Foto belum dapat disimpan.',
+        };
+      if (payload?.user?.id !== userId || payload.user.avatar !== avatar)
+        return {
+          ok: false,
+          error:
+            'Foto belum dapat dikonfirmasi. Jalankan ulang server terbaru, lalu muat ulang profil untuk memeriksa hasilnya.',
+        };
+      setUser((current) =>
+        current?.id === userId ? { ...current, avatar: payload.user.avatar } : current,
+      );
+      return { ok: true };
+    } catch {
+      return {
+        ok: false,
+        error:
+          'Hasil penyimpanan belum dapat dikonfirmasi. Periksa koneksi lalu muat ulang profil sebelum mencoba lagi.',
+      };
+    }
+  };
+
   const logout = async () => {
     if (logoutPending.current) return false;
     logoutPending.current = true;
@@ -105,6 +149,7 @@ export default function DeliveryProvider({ children }) {
       value={{
         savedLocation,
         saveLocation,
+        saveAvatar,
         storageError,
         user,
         setUser,

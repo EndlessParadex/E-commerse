@@ -84,7 +84,13 @@ export function normalizeCatalog(input, current = null) {
         entry.supplierIds.some((key) => !supplierIds.has(key))
       )
         fail('PT pemasok merek tidak valid.');
-      return { id: entry.id, name, supplierIds: [...entry.supplierIds] };
+      const previous = current?.masters.brands.find((brand) => brand.id === entry.id);
+      return {
+        id: entry.id,
+        name,
+        supplierIds: [...entry.supplierIds],
+        logo: photo(entry.logo ?? previous?.logo ?? ''),
+      };
     });
     const categories = entries(input.masters.categories, 500, 'kategori', true).map((entry) => ({
       id: entry.id,
@@ -242,6 +248,13 @@ export class CatalogRepository {
       CREATE TABLE IF NOT EXISTS catalog_subcategories (category_id TEXT REFERENCES catalog_categories(id), id TEXT NOT NULL, name TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(category_id,id));
       CREATE TABLE IF NOT EXISTS catalog_products (id TEXT PRIMARY KEY, supplier_id TEXT REFERENCES catalog_suppliers(id), brand_id TEXT REFERENCES catalog_brands(id), category_id TEXT, subcategory_id TEXT, data TEXT NOT NULL, position INTEGER NOT NULL, FOREIGN KEY(category_id,subcategory_id) REFERENCES catalog_subcategories(category_id,id));
       CREATE TABLE IF NOT EXISTS catalog_variants (id TEXT PRIMARY KEY COLLATE NOCASE, product_id TEXT REFERENCES catalog_products(id), size_value REAL NOT NULL, size_unit TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>0), old_price INTEGER NOT NULL CHECK(old_price>=0), position INTEGER NOT NULL, UNIQUE(product_id,size_value,size_unit));`);
+    if (
+      !db
+        .prepare('PRAGMA table_info(catalog_brands)')
+        .all()
+        .some((column) => column.name === 'logo')
+    )
+      db.exec("ALTER TABLE catalog_brands ADD COLUMN logo TEXT NOT NULL DEFAULT ''");
     // Rebuild the legacy size-only constraint transactionally. Existing IDs, prices,
     // order and catalog revision are retained; their packaging defaults to Satuan.
     if (
@@ -299,7 +312,7 @@ export class CatalogRepository {
       .all()
       .map((entry) => JSON.parse(entry.data));
     const brands = db
-      .prepare('SELECT id,name FROM catalog_brands ORDER BY position')
+      .prepare('SELECT id,name,logo FROM catalog_brands ORDER BY position')
       .all()
       .map((entry) => ({
         ...entry,
@@ -355,7 +368,12 @@ export class CatalogRepository {
       });
     return {
       version: 1,
-      capabilities: { packaging: true, gallery: true, workflow: this.workflowEnabled === true },
+      capabilities: {
+        packaging: true,
+        gallery: true,
+        brandPhotos: true,
+        workflow: this.workflowEnabled === true,
+      },
       ...(this.companySnapshot ? { company: this.companySnapshot() } : {}),
       revision: db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision,
       masters: { suppliers, brands, categories },
@@ -380,7 +398,12 @@ export class CatalogRepository {
         .run(entry.id, JSON.stringify(entry), index),
     );
     value.masters.brands.forEach((entry, index) => {
-      db.prepare('INSERT INTO catalog_brands VALUES(?,?,?)').run(entry.id, entry.name, index);
+      db.prepare('INSERT INTO catalog_brands(id,name,position,logo) VALUES(?,?,?,?)').run(
+        entry.id,
+        entry.name,
+        index,
+        entry.logo || '',
+      );
       entry.supplierIds.forEach((supplierId) =>
         db.prepare('INSERT INTO catalog_brand_suppliers VALUES(?,?)').run(entry.id, supplierId),
       );

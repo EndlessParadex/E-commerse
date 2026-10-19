@@ -12,6 +12,7 @@ import {
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { catalogColors, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
 import { categoryIconGroups } from '../data/categoryIcons';
+import PhotoUpload from '../components/PhotoUpload';
 
 const labels = { suppliers: 'PT pemasok', brands: 'merek', categories: 'kategori' };
 const entriesFor = (type) => ({ suppliers, brands, categories })[type];
@@ -19,7 +20,7 @@ const newDraft = (type) =>
   type === 'suppliers'
     ? { id: '', name: '', initials: '', color: 'sky', logo: '' }
     : type === 'brands'
-      ? { id: '', name: '', supplierIds: [] }
+      ? { id: '', name: '', supplierIds: [], logo: '' }
       : { id: '', name: '', icon: '📦', children: [{ id: '', name: '' }] };
 const copy = (entry) => JSON.parse(JSON.stringify(entry));
 
@@ -28,11 +29,12 @@ function MasterForm({ type, initial, onClose, onSaved }) {
   const [errors, setErrors] = useState({});
   const [storageError, setStorageError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const savePending = useRef(false);
   const heading = useRef(null);
   const form = useRef(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
-  useUnsavedChanges(dirty, onClose, saving);
+  useUnsavedChanges(dirty, onClose, saving || uploading);
   useEffect(() => {
     heading.current?.focus();
   }, []);
@@ -64,7 +66,7 @@ function MasterForm({ type, initial, onClose, onSaved }) {
   );
   const submit = async (event) => {
     event.preventDefault();
-    if (savePending.current) return;
+    if (savePending.current || uploading) return;
     savePending.current = true;
     setSaving(true);
     setStorageError('');
@@ -132,6 +134,33 @@ function MasterForm({ type, initial, onClose, onSaved }) {
                   </div>
                 </div>
               </>
+            )}
+            {type === 'brands' && (
+              <div className="admin-field admin-full">
+                {draft.logo && (
+                  <img
+                    className="admin-brand-photo-preview"
+                    src={draft.logo}
+                    alt={`Foto ${draft.name || 'merek'}`}
+                  />
+                )}
+                <PhotoUpload
+                  id="master-logo"
+                  label="Foto merek"
+                  value={draft.logo || ''}
+                  onChange={(src) => update('logo', src)}
+                  onBusyChange={setUploading}
+                  disabled={saving}
+                />
+                {errors.logo && (
+                  <small className="admin-error" role="alert">
+                    {errors.logo}
+                  </small>
+                )}
+                <p className="admin-form-hint">
+                  Foto tampil pada kartu merek. Tekan Simpan merek untuk menyimpan perubahan.
+                </p>
+              </div>
             )}
             {type === 'brands' && (
               <fieldset
@@ -264,7 +293,7 @@ function MasterForm({ type, initial, onClose, onSaved }) {
             <button type="button" className="admin-secondary" onClick={cancel}>
               Batal
             </button>
-            <button className="admin-primary" type="submit">
+            <button className="admin-primary" type="submit" disabled={uploading}>
               {saving ? 'Menyimpan…' : `Simpan ${labels[type]}`}
             </button>
           </div>
@@ -394,11 +423,15 @@ export default function AdminMasterPage({ type }) {
                     style={type === 'suppliers' ? avatarColorStyle(entry.color) : undefined}
                     aria-hidden="true"
                   >
-                    {type === 'suppliers'
-                      ? entry.initials
-                      : type === 'categories'
-                        ? entry.icon
-                        : entry.name.slice(0, 2).toUpperCase()}
+                    {type === 'brands' && entry.logo ? (
+                      <img className="admin-brand-avatar" src={entry.logo} alt="" />
+                    ) : type === 'suppliers' ? (
+                      entry.initials
+                    ) : type === 'categories' ? (
+                      entry.icon
+                    ) : (
+                      entry.name.slice(0, 2).toUpperCase()
+                    )}
                   </span>
                   <div>
                     <h3>{entry.name}</h3>

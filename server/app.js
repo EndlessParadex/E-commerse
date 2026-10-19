@@ -7,7 +7,7 @@ import { dirname, resolve } from 'node:path';
 import { createHash, randomBytes, randomUUID, scrypt as scryptCallback } from 'node:crypto';
 import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
-import { CatalogRepository, CatalogError } from './catalog.js';
+import { CatalogRepository, CatalogError, photo } from './catalog.js';
 import { CompanyRepository } from './company.js';
 import { WorkflowRepository } from './workflow.js';
 import {
@@ -124,6 +124,10 @@ export function createApp({
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     store_name TEXT NOT NULL CHECK(length(store_name) BETWEEN 2 AND 100)
   );`);
+  db.exec(`CREATE TABLE IF NOT EXISTS user_profile_photos (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    photo TEXT NOT NULL
+  );`);
   if (
     !db
       .prepare('PRAGMA table_info(users)')
@@ -162,12 +166,21 @@ export function createApp({
   const rawCompanySnapshot = company.snapshot.bind(company);
   company.snapshot = () => ({
     ...rawCompanySnapshot(),
-    commerce: { version: 31, codOnly: !legacyCommerceFixture, emailReady: identity.ready, verificationRequired: true },
+    commerce: {
+      version: 31,
+      codOnly: !legacyCommerceFixture,
+      emailReady: identity.ready,
+      verificationRequired: true,
+    },
   });
   const messages = new OrderMessages(db, identity, company, now, logger);
   const publicUser = (user) => ({
     ...userView(user),
-    storeName: db.prepare('SELECT store_name FROM user_store_names WHERE user_id=?').get(user.id)?.store_name || '',
+    avatar:
+      db.prepare('SELECT photo FROM user_profile_photos WHERE user_id=?').get(user.id)?.photo || '',
+    storeName:
+      db.prepare('SELECT store_name FROM user_store_names WHERE user_id=?').get(user.id)
+        ?.store_name || '',
     emailVerified: identity.verified(user.id),
     isOwner: isStoreOwner(db, user),
     ...customerAccess(db, user),
@@ -197,7 +210,7 @@ export function createApp({
     return (
       db
         .prepare(
-          'SELECT u.id,u.name,u.email,u.address,u.role FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN account_access a ON a.user_id=u.id WHERE s.token_hash=? AND s.expires_at>? AND a.disabled_at IS NULL AND COALESCE((SELECT status FROM account_approvals WHERE user_id=u.id),\'approved\')=\'approved\'',
+          "SELECT u.id,u.name,u.email,u.address,u.role FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN account_access a ON a.user_id=u.id WHERE s.token_hash=? AND s.expires_at>? AND a.disabled_at IS NULL AND COALESCE((SELECT status FROM account_approvals WHERE user_id=u.id),'approved')='approved'",
         )
         .get(digest(value), Date.now()) || null
     );
@@ -260,7 +273,8 @@ export function createApp({
     if (typeof value !== 'string' || !value || value.length > 128)
       throw new CatalogError('Masukkan kata sandi akun pengelola.', 422, 'validation_error');
     const stored = db.prepare('SELECT password_hash,role FROM users WHERE id=?').get(actor.id);
-    if (stored?.role !== 'admin') throw new CatalogError('Akses pengelola berubah.', 403, 'forbidden');
+    if (stored?.role !== 'admin')
+      throw new CatalogError('Akses pengelola berubah.', 403, 'forbidden');
     const matches = await passwordQueue.run(ip, async () => {
       const delay = limiter.loginDelay(ip, actor.email);
       if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
@@ -268,12 +282,19 @@ export function createApp({
     });
     if (!matches) {
       const allowed = limiter.take('login', ip, actor.email);
-      throw new CatalogError('Kata sandi pengelola tidak sesuai.', allowed ? 401 : 429,
-        allowed ? 'invalid_credentials' : 'rate_limited');
+      throw new CatalogError(
+        'Kata sandi pengelola tidak sesuai.',
+        allowed ? 401 : 429,
+        allowed ? 'invalid_credentials' : 'rate_limited',
+      );
     }
     const latest = db.prepare('SELECT password_hash,role FROM users WHERE id=?').get(actor.id);
-    if (latest?.role !== 'admin' || latest.password_hash !== stored.password_hash ||
-      !accountIsActive(db, actor.id) || !accountIsApproved(db, actor.id))
+    if (
+      latest?.role !== 'admin' ||
+      latest.password_hash !== stored.password_hash ||
+      !accountIsActive(db, actor.id) ||
+      !accountIsApproved(db, actor.id)
+    )
       throw new CatalogError('Akses pengelola telah berubah. Masuk kembali.', 403, 'forbidden');
   };
   const handler = async (req, res) => {
@@ -331,20 +352,33 @@ export function createApp({
         );
       }
       const b2bDetailMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)$/);
-      if (path === '/api/b2b/stores' || path === '/api/b2b/sales' || path === '/api/b2b/accounts' ||
-          path === '/api/b2b/sales/appoint' || path === '/api/b2b/stores/create' ||
-          b2bDetailMatch ||
-          /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)$/.test(path)) {
+      if (
+        path === '/api/b2b/stores' ||
+        path === '/api/b2b/sales' ||
+        path === '/api/b2b/accounts' ||
+        path === '/api/b2b/sales/appoint' ||
+        path === '/api/b2b/stores/create' ||
+        b2bDetailMatch ||
+        /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)$/.test(path)
+      ) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
         if (req.method === 'GET' && path === '/api/b2b/stores') {
           const params = new URL(req.url, 'http://bam.local').searchParams;
-          return json(res, 200, params.has('page')
-            ? b2bStores.page(actor, params)
-            : { stores: b2bStores.list(actor), role: b2bStores.role(actor) });
+          return json(
+            res,
+            200,
+            params.has('page')
+              ? b2bStores.page(actor, params)
+              : { stores: b2bStores.list(actor), role: b2bStores.role(actor) },
+          );
         }
         if (req.method === 'GET' && path === '/api/b2b/accounts')
-          return json(res, 200, b2bStores.candidates(actor, new URL(req.url, 'http://bam.local').searchParams));
+          return json(
+            res,
+            200,
+            b2bStores.candidates(actor, new URL(req.url, 'http://bam.local').searchParams),
+          );
         if (req.method === 'GET' && b2bDetailMatch && path !== '/api/b2b/stores/create')
           return json(res, 200, b2bStores.details(actor, decodeURIComponent(b2bDetailMatch[1])));
         if (req.method === 'GET' && path === '/api/b2b/sales')
@@ -357,9 +391,13 @@ export function createApp({
         if (match && req.method === 'POST') {
           const userId = (await readBody(req)).userId;
           const storeId = decodeURIComponent(match[1]);
-          return json(res, 200, match[2] === 'sales'
-            ? b2bStores.assignSales(actor, storeId, userId)
-            : b2bStores.addMember(actor, storeId, userId));
+          return json(
+            res,
+            200,
+            match[2] === 'sales'
+              ? b2bStores.assignSales(actor, storeId, userId)
+              : b2bStores.addMember(actor, storeId, userId),
+          );
         }
         return sendError(res, 405, 'method_not_allowed');
       }
@@ -369,11 +407,19 @@ export function createApp({
         if (!admin) return sendError(res, 401, 'unauthorized');
         if (admin.role !== 'admin') return sendError(res, 403, 'forbidden');
         if (req.method === 'GET' && !approvalMatch[1])
-          return json(res, 200, accounts.listApprovals(admin, new URL(req.url, 'http://bam.local').searchParams));
+          return json(
+            res,
+            200,
+            accounts.listApprovals(admin, new URL(req.url, 'http://bam.local').searchParams),
+          );
         if (req.method === 'POST' && approvalMatch[1]) {
           const body = await readBody(req, 12000);
           await confirmApprovalPassword(admin, body?.currentPassword, clientIp(req));
-          return json(res, 200, accounts.reviewApproval(admin, decodeURIComponent(approvalMatch[1]), body));
+          return json(
+            res,
+            200,
+            accounts.reviewApproval(admin, decodeURIComponent(approvalMatch[1]), body),
+          );
         }
         return sendError(res, 405, 'method_not_allowed');
       }
@@ -587,7 +633,8 @@ export function createApp({
                     : await identity.changePassword(user, body.currentPassword, body.password, ip);
         return json(
           res,
-          path === '/api/auth/forgot-password' || path === '/api/auth/verification/request' ||
+          path === '/api/auth/forgot-password' ||
+            path === '/api/auth/verification/request' ||
             path === '/api/auth/verification/resend'
             ? 202
             : 200,
@@ -672,6 +719,18 @@ export function createApp({
               .all(),
           });
       }
+      if (req.method === 'PUT' && path === '/api/profile/photo') {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        const body = await readBody(req, 1400100);
+        const avatar = photo(body.avatar);
+        if (avatar)
+          db.prepare(
+            'INSERT INTO user_profile_photos(user_id,photo) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET photo=excluded.photo',
+          ).run(actor.id, avatar);
+        else db.prepare('DELETE FROM user_profile_photos WHERE user_id=?').run(actor.id);
+        return json(res, 200, { user: publicUser(actor) });
+      }
       if (
         (req.method === 'PUT' && path === '/api/profile') ||
         (req.method === 'PUT' && path.startsWith('/api/admin/users/'))
@@ -687,11 +746,14 @@ export function createApp({
         if (name.length < 2 || name.length > 100 || address.length < 10 || address.length > 500)
           return sendError(res, 422, 'validation_error', { form: 'Nama atau alamat tidak valid.' });
         const canEditStoreName = path === '/api/profile' && Object.hasOwn(body, 'storeName');
-        const storeName = canEditStoreName && typeof body.storeName === 'string'
-          ? body.storeName.trim()
-          : '';
-        if (canEditStoreName && (typeof body.storeName !== 'string' ||
-          (storeName.length > 0 && storeName.length < 2) || storeName.length > 100))
+        const storeName =
+          canEditStoreName && typeof body.storeName === 'string' ? body.storeName.trim() : '';
+        if (
+          canEditStoreName &&
+          (typeof body.storeName !== 'string' ||
+            (storeName.length > 0 && storeName.length < 2) ||
+            storeName.length > 100)
+        )
           return sendError(res, 422, 'validation_error', {
             form: 'Nama toko harus kosong atau berisi 2–100 karakter.',
           });
@@ -704,8 +766,9 @@ export function createApp({
           db.prepare('UPDATE users SET name=?,address=? WHERE id=?').run(name, address, userId);
           if (canEditStoreName) {
             if (storeName)
-              db.prepare('INSERT INTO user_store_names(user_id,store_name) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET store_name=excluded.store_name')
-                .run(userId, storeName);
+              db.prepare(
+                'INSERT INTO user_store_names(user_id,store_name) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET store_name=excluded.store_name',
+              ).run(userId, storeName);
             else db.prepare('DELETE FROM user_store_names WHERE user_id=?').run(userId);
           }
           db.exec('COMMIT');

@@ -23,6 +23,14 @@ test('account website: buyer security summary, admin password settings, registra
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   dom.scrollTo = () => {};
   dom.confirm = () => true;
+  // FileReader is real; image decoding is simulated because Happy DOM has no image decoder.
+  dom.Image = class {
+    set src(value) {
+      queueMicrotask(() =>
+        value.startsWith('data:image/png;base64,iVBORw0KGgo') ? this.onload?.() : this.onerror?.(),
+      );
+    }
+  };
   let cookie = '';
   const requests = [];
   globalThis.fetch = async (path, options = {}) => {
@@ -109,6 +117,7 @@ test('account website: buyer security summary, admin password settings, registra
       await settle();
     });
     await wait(() => container.querySelector('#auth-name'));
+    assert.equal(container.querySelector('.account-trigger-name').textContent, 'Guest');
     await fill('#auth-name', 'Pembeli Website');
     await fill('#auth-email', 'website@fixture.test');
     await fill('#auth-address', 'Alamat pengujian website lengkap');
@@ -128,17 +137,22 @@ test('account website: buyer security summary, admin password settings, registra
     assert.match(container.textContent, /Admin atau Pemilik akan memeriksa pendaftaran/);
     assert.ok(container.querySelector('.auth-registration-help button'));
     assert.match(container.textContent, /Verifikasi email dapat dilakukan sambil menunggu/);
-    const pendingCustomer = api.db.prepare('SELECT id FROM users WHERE email=?').get('website@fixture.test');
+    const pendingCustomer = api.db
+      .prepare('SELECT id FROM users WHERE email=?')
+      .get('website@fixture.test');
     assert.equal(
-      api.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(pendingCustomer.id).status,
+      api.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(pendingCustomer.id)
+        .status,
       'pending',
     );
     await act(async () => {
       container.querySelector('.auth-registration-help button').click();
       await settle();
     });
-    await wait(() => container.textContent.includes('Permintaan diterima. Jika email masih perlu diverifikasi'));
-    assert.ok(requests.some(request => request.path === '/api/auth/verification/resend'));
+    await wait(() =>
+      container.textContent.includes('Permintaan diterima. Jika email masih perlu diverifikasi'),
+    );
+    assert.ok(requests.some((request) => request.path === '/api/auth/verification/resend'));
     await api.identity.flushMail();
     const activation = mailToken();
     await route('/verifikasi-email?token=' + activation, () =>
@@ -156,11 +170,34 @@ test('account website: buyer security summary, admin password settings, registra
     await submit('.auth-card form');
     await wait(() => container.textContent.includes('persetujuan pengelola masih diperlukan'));
     assert.equal(dom.location.hash, '#/login', 'Email terverifikasi belum cukup untuk login');
-    api.db.prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?")
+    api.db
+      .prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?")
       .run(pendingCustomer.id);
     await submit('.auth-card form');
     await wait(() => dom.location.hash === '#/');
     await route('/akun', () => container.querySelector('#account-tab-security'));
+    assert.equal(container.querySelector('.account-trigger-name').textContent, 'Pembeli Website');
+    const png =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
+    const upload = async (file) =>
+      act(async () => {
+        const input = container.querySelector('#account-photo');
+        const transfer = new dom.DataTransfer();
+        transfer.items.add(file);
+        input.files = transfer.files;
+        input.dispatchEvent(new dom.Event('change', { bubbles: true }));
+        await settle();
+      });
+    await upload(new dom.File(['text'], 'invalid.txt', { type: 'text/plain' }));
+    assert.match(container.querySelector('#account-photo-error').textContent, /JPG, PNG/);
+    assert.equal(requests.filter((x) => x.path === '/api/profile/photo').length, 0);
+    await upload(
+      new dom.File([Buffer.from(png.split(',')[1], 'base64')], 'profil.png', { type: 'image/png' }),
+    );
+    await wait(() => container.querySelector('.account-trigger img'));
+    assert.equal(container.querySelector('.account-trigger img').getAttribute('src'), png);
+    assert.equal(container.querySelector('.account-page-avatar img').getAttribute('src'), png);
+    assert.equal(container.querySelector('.account-avatar-large img').getAttribute('src'), png);
     await act(async () => {
       container.querySelector('#account-tab-security').click();
       await settle();
@@ -186,6 +223,17 @@ test('account website: buyer security summary, admin password settings, registra
       await settle();
     });
     await wait(() => container.querySelector('#account-tab-security'));
+    assert.equal(
+      container.querySelector('.account-trigger img').getAttribute('src'),
+      png,
+      'avatar restored after reload',
+    );
+    await act(async () => {
+      container.querySelector('.account-avatar-card .photo-upload button').click();
+      await settle();
+    });
+    await wait(() => !container.querySelector('.account-trigger img'));
+    assert.equal(container.querySelector('.account-trigger-name').textContent, 'Pembeli Website');
     await act(async () => {
       container.querySelector('#account-tab-security').click();
       await settle();
@@ -205,6 +253,7 @@ test('account website: buyer security summary, admin password settings, registra
     await submit('#account-panel-security form');
     await wait(() => container.querySelector('#auth-email'));
     assert.equal(dom.location.hash, '#/login');
+    assert.equal(container.querySelector('.account-trigger-name').textContent, 'Guest');
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n, 0);
     await route('/forgot-password', () => container.querySelector('#recovery-email'));
     await wait(() => !container.querySelector('fieldset').disabled);

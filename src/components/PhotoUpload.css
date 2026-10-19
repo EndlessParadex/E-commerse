@@ -1,0 +1,45 @@
+.photo-upload {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  text-align: left;
+}
+.photo-upload label {
+  font-weight: 650;
+}
+.photo-upload input {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+}
+.photo-upload input::file-selector-button,
+.photo-upload button {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-link);
+  font: inherit;
+  cursor: pointer;
+}
+.photo-upload button {
+  justify-self: start;
+}
+.photo-upload input:focus-visible,
+.photo-upload button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.photo-upload p {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+.photo-upload .photo-upload-error {
+  color: var(--color-danger-text, #b91c1c);
+}
+.photo-upload :disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

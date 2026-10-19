@@ -3,6 +3,7 @@ import { suppliers } from './suppliers.js';
 import { categories } from './catalog.js';
 import { validCatalogColor } from './catalogColors.js';
 import { isCategoryIcon } from './categoryIcons.js';
+import { galleryError } from './productPhotos.js';
 
 export const brands = [
   ...new Map(
@@ -58,6 +59,11 @@ export function validateMaster(type, draft, snapshot = masterSnapshot(), checkUs
     if (!validCatalogColor(draft.color)) errors.color = 'Pilih warna.';
   }
   if (type === 'brands') {
+    if (
+      (draft.logo !== undefined && typeof draft.logo !== 'string') ||
+      (draft.logo && galleryError([{ src: draft.logo }]))
+    )
+      errors.logo = 'Pilih JPG, PNG, atau WebP, maksimal 1 MB.';
     if (!/[a-z0-9]/i.test(draft.name.normalize('NFKD')))
       errors.name = 'Nama merek perlu memuat huruf atau angka.';
     if (

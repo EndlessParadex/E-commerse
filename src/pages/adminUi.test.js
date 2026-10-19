@@ -129,6 +129,43 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(ptCheckbox);
     await click(button('Simpan merek'));
     assert.match(container.textContent, /berhasil disimpan/);
+    await click(container.querySelector('button[aria-label="Edit Merek UI Uji"]'));
+    dom.Image = class {
+      set src(value) {
+        queueMicrotask(() =>
+          value.startsWith('data:image/png;base64,iVBORw0KGgo')
+            ? this.onload?.()
+            : this.onerror?.(),
+        );
+      }
+    };
+    const brandPhoto =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
+    const brandUpload = new dom.DataTransfer();
+    brandUpload.items.add(
+      new dom.File([Buffer.from(brandPhoto.split(',')[1], 'base64')], 'merek.png', {
+        type: 'image/png',
+      }),
+    );
+    await act(async () => {
+      const input = container.querySelector('#master-logo');
+      input.files = brandUpload.files;
+      input.dispatchEvent(new dom.Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    assert.equal(
+      container.querySelector('.admin-brand-photo-preview').getAttribute('src'),
+      brandPhoto,
+    );
+    await click(button('Simpan merek'));
+    assert.equal(masters.brands.find((entry) => entry.name === 'Merek UI Uji').logo, brandPhoto);
+    assert.ok(container.querySelector('.admin-brand-avatar'));
+    await click(container.querySelector('button[aria-label="Edit Merek UI Uji"]'));
+    assert.equal(
+      container.querySelector('.admin-brand-photo-preview').getAttribute('src'),
+      brandPhoto,
+    );
+    await click(button('Batal'));
     await render('categories');
     await click(button('+ Tambah kategori'));
     await fill('#master-name', 'Kategori UI Uji');

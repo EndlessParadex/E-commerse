@@ -5,6 +5,8 @@ import { useDelivery } from '../state/useDelivery';
 import AccountMenu from '../components/account/AccountMenu';
 import AppearanceSettings from '../components/account/AppearanceSettings';
 import AccountSecurity from '../components/account/AccountSecurity';
+import AccountAvatar from '../components/account/AccountAvatar';
+import PhotoUpload from '../components/PhotoUpload';
 import { ActionIcon } from '../components/shop/ShopIcon';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import './AccountPage.css';
@@ -18,10 +20,13 @@ const tabs = [
 
 export default function AccountPage() {
   const { profile: companyProfile } = useCompany();
-  const { user, savedLocation, saveLocation, authLoading, authError } = useDelivery();
+  const { user, savedLocation, saveLocation, saveAvatar, authLoading, authError } = useDelivery();
+  const [photoNotice, setPhotoNotice] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
   const [values, setValues] = useState(() =>
-    user ? { namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' } : { namaToko: '', namaJalan: '', storeName: '' },
+    user
+      ? { namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' }
+      : { namaToko: '', namaJalan: '', storeName: '' },
   );
   const [edited, setEdited] = useState(false);
   const [errors, setErrors] = useState({});
@@ -70,7 +75,15 @@ export default function AccountPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       selectTab('address');
-      document.getElementById(nextErrors.storeName ? 'account-store-name' : nextErrors.namaToko ? 'account-name' : 'account-address')?.focus();
+      document
+        .getElementById(
+          nextErrors.storeName
+            ? 'account-store-name'
+            : nextErrors.namaToko
+              ? 'account-name'
+              : 'account-address',
+        )
+        ?.focus();
       return;
     }
     pending.current = true;
@@ -147,9 +160,7 @@ export default function AccountPage() {
           <div className="account-workspace">
             <aside className="account-sidebar" aria-label="Navigasi akun">
               <div className="account-sidebar-identity">
-                <div className="account-page-avatar" aria-hidden="true">
-                  {user.name.slice(0, 1).toUpperCase()}
-                </div>
+                <AccountAvatar user={user} className="account-page-avatar" />
                 <div>
                   <strong>{user.name}</strong>
                   <span>
@@ -199,11 +210,24 @@ export default function AccountPage() {
                 </div>
                 <div className="account-profile-layout">
                   <div className="account-avatar-card">
-                    <div className="account-avatar-large" aria-hidden="true">
-                      {user.name.slice(0, 1).toUpperCase()}
-                    </div>
-                    <strong>Avatar inisial</strong>
-                    <p>Profil memakai inisial nama Anda.</p>
+                    <AccountAvatar user={user} className="account-avatar-large" />
+                    <PhotoUpload
+                      id="account-photo"
+                      label="Foto profil"
+                      value={user.avatar || ''}
+                      disabled={saving}
+                      onChange={async (avatar) => {
+                        setPhotoNotice('');
+                        const result = await saveAvatar(avatar);
+                        if (!result.ok) throw new Error(result.error);
+                        setPhotoNotice(
+                          avatar
+                            ? 'Foto profil berhasil disimpan.'
+                            : 'Foto profil berhasil dihapus.',
+                        );
+                      }}
+                    />
+                    {photoNotice && <p role="status">{photoNotice}</p>}
                   </div>
                   <div className="account-profile-details">
                     <dl className="account-biodata">
@@ -257,7 +281,10 @@ export default function AccountPage() {
                 <form onSubmit={save} noValidate>
                   <div className="account-panel-heading">
                     <h2>Alamat pengiriman</h2>
-                    <p>Nama toko tampil pada “Kirim ke”; nama penerima dan alamat tetap digunakan untuk checkout.</p>
+                    <p>
+                      Nama toko tampil pada “Kirim ke”; nama penerima dan alamat tetap digunakan
+                      untuk checkout.
+                    </p>
                   </div>
                   <div className="account-field">
                     <label htmlFor="account-store-name">Nama toko (opsional)</label>
@@ -273,9 +300,13 @@ export default function AccountPage() {
                       aria-describedby={errors.storeName ? 'account-store-name-error' : undefined}
                     />
                     {errors.storeName && (
-                      <p className="account-error" id="account-store-name-error">{errors.storeName}</p>
+                      <p className="account-error" id="account-store-name-error">
+                        {errors.storeName}
+                      </p>
                     )}
-                    <p className="account-profile-help">Kosongkan jika tidak memiliki toko. Nama pribadi tetap terpisah.</p>
+                    <p className="account-profile-help">
+                      Kosongkan jika tidak memiliki toko. Nama pribadi tetap terpisah.
+                    </p>
                   </div>
                   <div className="account-field">
                     <label htmlFor="account-name">Nama penerima</label>

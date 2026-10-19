@@ -58,9 +58,11 @@ export default function SupplierBrandsPage({ supplier, catalog }) {
                 productGallery(product).some((photo) => !photo.demo),
               );
               const photo = featured && productGallery(featured)[0];
-              const preview = featured
-                ? { ...featured, image: photo.src, imageAlt: photo.alt }
-                : { name: brand.name, icon: brand.name.slice(0, 2).toLocaleUpperCase('id') };
+              const preview = brand.logo
+                ? { name: brand.name, image: brand.logo, imageAlt: `Foto merek ${brand.name}` }
+                : featured
+                  ? { ...featured, image: photo.src, imageAlt: photo.alt }
+                  : { name: brand.name, icon: brand.name.slice(0, 2).toLocaleUpperCase('id') };
               return (
                 <li key={brand.id}>
                   <a

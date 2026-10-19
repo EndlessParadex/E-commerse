@@ -5,6 +5,7 @@ import { useShop } from '../../state/useShop';
 import { useDelivery } from '../../state/useDelivery';
 import { ActionIcon } from './ShopIcon';
 import AccountMenu from '../account/AccountMenu';
+import AccountAvatar from '../account/AccountAvatar';
 import { rupiah } from './shopPresentation';
 import NotificationItem from './NotificationItem';
 import './ShopActions.css';
@@ -116,7 +117,7 @@ export default function ShopActions({ onOpen }) {
                 isAccount
                   ? user
                     ? 'Akun saya, ' + user.name
-                    : 'Akun saya, masuk'
+                    : 'Guest, masuk atau daftar'
                   : isCart
                     ? 'Keranjang, ' + count + ' barang'
                     : 'Notifikasi, ' + count + ' belum dibaca'
@@ -125,8 +126,12 @@ export default function ShopActions({ onOpen }) {
               aria-controls={'preview-' + kind}
               onClick={close}
             >
-              <ActionIcon notification={!isCart && !isAccount} account={isAccount} />
-              {isAccount && <span>{user ? 'Akun Saya' : 'Masuk / Daftar'}</span>}
+              {isAccount ? <AccountAvatar user={user} /> : <ActionIcon notification={!isCart} />}
+              {isAccount && (
+                <span className="account-trigger-name" title={user?.name || 'Guest'}>
+                  {user?.name || 'Guest'}
+                </span>
+              )}
               {count > 0 && (
                 <span className="shop-badge" aria-hidden="true">
                   {count > 99 ? '99+' : count}
@@ -164,9 +169,7 @@ export default function ShopActions({ onOpen }) {
                   )}
                   {isAccount ? (
                     <div className="account-preview-body">
-                      <div className="account-preview-avatar">
-                        <ActionIcon account />
-                      </div>
+                      <AccountAvatar user={user} className="account-preview-avatar" />
                       {user ? (
                         <>
                           <h3>Halo, {user.name}</h3>

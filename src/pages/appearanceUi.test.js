@@ -149,10 +149,9 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       assert.equal(container.querySelectorAll('[role="tab"][tabindex="0"]').length, 1);
       assert.equal(container.querySelector(`#account-panel-${id}`).hidden, false);
     }
-    assert.equal(
-      container.querySelector('input[type="file"]'),
-      null,
-      'the profile remains a plain initial',
+    assert.ok(
+      container.querySelector('#account-photo'),
+      'photo upload is available alongside the initial avatar',
     );
     assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 4);
     await choose('appearance-text-size', 'large');

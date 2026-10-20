@@ -94,6 +94,9 @@ export default function DeliveryProvider({ children }) {
           ...payload.user,
           avatar: current?.avatar ?? payload.user.avatar ?? '',
           phone: current?.phone ?? payload.user.phone ?? '',
+          phoneVerified: current?.phoneVerified ?? payload.user.phoneVerified ?? false,
+          phoneVerifiedAt: current?.phoneVerifiedAt ?? payload.user.phoneVerifiedAt ?? null,
+          phoneRevision: current?.phoneRevision ?? payload.user.phoneRevision ?? '',
         }));
       } catch {
         return { ok: false, persisted: false };
@@ -189,7 +192,17 @@ export default function DeliveryProvider({ children }) {
           ok: false,
           error: 'Nomor HP belum dapat dikonfirmasi. Muat ulang profil untuk memeriksa hasilnya.',
         };
-      setUser((current) => (current?.id === actor.id ? { ...current, phone } : current));
+      setUser((current) =>
+        current?.id === actor.id
+          ? {
+              ...current,
+              phone,
+              phoneVerified: payload.user.phoneVerified === true,
+              phoneVerifiedAt: payload.user.phoneVerifiedAt ?? null,
+              phoneRevision: payload.user.phoneRevision || '',
+            }
+          : current,
+      );
       return { ok: true, phone };
     } catch {
       return {

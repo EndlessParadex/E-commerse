@@ -4,6 +4,7 @@ import { isStoreOwner } from './emailSettings.js';
 import { customerAccess, customerAccessSchema } from './customerAccess.js';
 import { customerRoles } from '../src/data/customerRoles.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
+import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -14,12 +15,14 @@ const fields = `u.id,u.name,u.email,u.address,u.role,u.created_at AS createdAt,
   COALESCE(a.reason,'') AS reason,COALESCE(approval.status,'approved') AS approvalStatus,
   CASE WHEN o.user_id IS NOT NULL THEN 1 ELSE 0 END AS owner,
   CASE WHEN s.verified_at IS NOT NULL THEN 1 ELSE 0 END AS verified,
+  s.verified_at AS emailVerifiedAt,COALESCE(p.phone,'') AS phone,p.verified_at AS phoneVerifiedAt,
   (SELECT COUNT(*) FROM orders t WHERE t.user_id=u.id) AS orderCount,
   (SELECT COUNT(*) FROM store_email_settings e WHERE e.updated_by=u.id) AS settingsReferences`;
 const joins = `FROM users u LEFT JOIN account_access a ON a.user_id=u.id
   LEFT JOIN store_customer_viewers v ON v.user_id=u.id
   LEFT JOIN store_owners o ON o.user_id=u.id LEFT JOIN auth_account_state s ON s.user_id=u.id
-  LEFT JOIN account_approvals approval ON approval.user_id=u.id`;
+  LEFT JOIN account_approvals approval ON approval.user_id=u.id
+  LEFT JOIN user_contact_phones p ON p.user_id=u.id`;
 export class AccountRepository {
   constructor(db, now) {
     Object.assign(this, { db, now });
@@ -62,6 +65,10 @@ export class AccountRepository {
       disabledAt: row.disabledAt,
       reason: row.reason,
       emailVerified: Boolean(row.verified),
+      emailVerifiedAt: row.emailVerifiedAt ?? null,
+      phone: row.phone || '',
+      phoneVerified: row.phoneVerifiedAt != null,
+      phoneVerifiedAt: row.phoneVerifiedAt ?? null,
       orderCount: row.orderCount,
       protectedReason,
       deleteBlockedReason,
@@ -92,13 +99,23 @@ export class AccountRepository {
     const where = [],
       args = [];
     if (query) {
-      where.push("instr(lower(u.name||' '||u.email),?)>0");
+      const normalizedPhone = normalizeWhatsApp(query);
+      where.push(
+        "(instr(lower(u.name||' '||u.email||' '||COALESCE(p.phone,'')),?)>0" +
+          (normalizedPhone ? ' OR p.phone=?' : '') +
+          ')',
+      );
       args.push(query);
+      if (normalizedPhone) args.push(normalizedPhone);
     }
     if (status !== 'all') {
-      if (status === 'active') where.push("a.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'");
+      if (status === 'active')
+        where.push("a.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'");
       else if (status === 'disabled') where.push('a.disabled_at IS NOT NULL');
-      else { where.push('approval.status=?'); args.push(status); }
+      else {
+        where.push('approval.status=?');
+        args.push(status);
+      }
     }
     if (role === 'owner') where.push('o.user_id IS NOT NULL');
     else if (['chair', 'deputy', 'trusted'].includes(role)) {
@@ -120,7 +137,11 @@ export class AccountRepository {
     return { users, total, page, pageSize, pages: Math.max(1, Math.ceil(total / pageSize)) };
   }
   requireApprover(actor) {
-    if (actor?.role !== 'admin' || !accountIsActive(this.db, actor.id) || !accountIsApproved(this.db, actor.id))
+    if (
+      actor?.role !== 'admin' ||
+      !accountIsActive(this.db, actor.id) ||
+      !accountIsApproved(this.db, actor.id)
+    )
       fail('Hanya Admin atau Pemilik yang dapat memeriksa pendaftaran.', 403, 'forbidden');
   }
   listApprovals(actor, params) {
@@ -128,25 +149,46 @@ export class AccountRepository {
     const status = params.get('status') || 'pending';
     const query = (params.get('q') || '').trim().toLocaleLowerCase('id');
     const page = Number(params.get('page') || 1);
-    if (!['pending', 'rejected', 'all'].includes(status) || query.length > 200 ||
-      !Number.isSafeInteger(page) || page < 1 || page > 100000)
+    if (
+      !['pending', 'rejected', 'all'].includes(status) ||
+      query.length > 200 ||
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      page > 100000
+    )
       fail('Filter persetujuan tidak valid.');
     const where = ["u.role='user'", "a.status IN ('pending','rejected')"];
     const args = [];
-    if (status !== 'all') { where.push('a.status=?'); args.push(status); }
-    if (query) { where.push("instr(lower(u.name||' '||u.email),?)>0"); args.push(query); }
+    if (status !== 'all') {
+      where.push('a.status=?');
+      args.push(status);
+    }
+    if (query) {
+      where.push("instr(lower(u.name||' '||u.email),?)>0");
+      args.push(query);
+    }
     const clause = ' WHERE ' + where.join(' AND ');
-    const from = 'FROM account_approvals a JOIN users u ON u.id=a.user_id LEFT JOIN auth_account_state s ON s.user_id=u.id';
+    const from =
+      'FROM account_approvals a JOIN users u ON u.id=a.user_id LEFT JOIN auth_account_state s ON s.user_id=u.id';
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from + clause).get(...args).n;
     const pageSize = 25;
-    const users = this.db.prepare(
-      'SELECT u.id,u.name,u.email,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,s.verified_at AS verifiedAt ' +
-      from + clause + ' ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?',
-    ).all(...args, pageSize, (page - 1) * pageSize).map(row => ({
-      id: row.id, name: row.name, email: row.email, createdAt: row.createdAt,
-      approvalStatus: row.approvalStatus, revision: row.revision,
-      emailVerified: row.verifiedAt != null,
-    }));
+    const users = this.db
+      .prepare(
+        'SELECT u.id,u.name,u.email,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,s.verified_at AS verifiedAt ' +
+          from +
+          clause +
+          ' ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?',
+      )
+      .all(...args, pageSize, (page - 1) * pageSize)
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        createdAt: row.createdAt,
+        approvalStatus: row.approvalStatus,
+        revision: row.revision,
+        emailVerified: row.verifiedAt != null,
+      }));
     return { users, total, page, pageSize, pages: Math.max(1, Math.ceil(total / pageSize)) };
   }
   reviewApproval(actor, id, body) {
@@ -154,34 +196,43 @@ export class AccountRepository {
     if (!['approve', 'reject'].includes(body?.action) || !Number.isSafeInteger(body.revision))
       fail('Tindakan persetujuan atau revisi akun tidak valid.');
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
-    if (reason.length < 5 || reason.length > 300)
-      fail('Isi alasan sepanjang 5–300 karakter.');
+    if (reason.length < 5 || reason.length > 300) fail('Isi alasan sepanjang 5–300 karakter.');
     this.db.exec('BEGIN IMMEDIATE');
     try {
       this.requireApprover(actor);
-      const target = this.db.prepare(
-        'SELECT u.role,a.status,a.revision FROM account_approvals a JOIN users u ON u.id=a.user_id WHERE a.user_id=?',
-      ).get(id);
-      if (!target || target.role !== 'user')
-        fail('Pendaftaran tidak ditemukan.', 404, 'not_found');
+      const target = this.db
+        .prepare(
+          'SELECT u.role,a.status,a.revision FROM account_approvals a JOIN users u ON u.id=a.user_id WHERE a.user_id=?',
+        )
+        .get(id);
+      if (!target || target.role !== 'user') fail('Pendaftaran tidak ditemukan.', 404, 'not_found');
       if (target.revision !== body.revision)
         fail('Status pendaftaran berubah. Muat ulang daftar.', 409, 'approval_conflict');
-      if (!['pending', 'rejected'].includes(target.status) ||
-          (body.action === 'reject' && target.status !== 'pending'))
+      if (
+        !['pending', 'rejected'].includes(target.status) ||
+        (body.action === 'reject' && target.status !== 'pending')
+      )
         fail('Pendaftaran tidak lagi menunggu tindakan ini.', 409, 'approval_conflict');
       const next = body.action === 'approve' ? 'approved' : 'rejected';
-      this.db.prepare(
-        'UPDATE account_approvals SET status=?,revision=revision+1,decided_by=?,decided_at=? WHERE user_id=?',
-      ).run(next, actor.id, this.now(), id);
+      this.db
+        .prepare(
+          'UPDATE account_approvals SET status=?,revision=revision+1,decided_by=?,decided_at=? WHERE user_id=?',
+        )
+        .run(next, actor.id, this.now(), id);
       if (body.action === 'reject')
         this.revoke(id, this.db.prepare('SELECT email FROM users WHERE id=?').get(id).email);
-      this.db.prepare('INSERT INTO account_management_audit VALUES(?,?,?,?,?,?)').run(
-        randomUUID(), actor.id, id, 'registration:' + body.action, reason, this.now(),
-      );
+      this.db
+        .prepare('INSERT INTO account_management_audit VALUES(?,?,?,?,?,?)')
+        .run(randomUUID(), actor.id, id, 'registration:' + body.action, reason, this.now());
       this.db.exec('COMMIT');
-      return { ok: true, message: next === 'approved'
-        ? 'Akun disetujui. Pelanggan kini dapat masuk; email tetap harus dikonfirmasi sebelum memesan.'
-        : 'Pendaftaran ditolak. Akun tidak dapat masuk.', status: next };
+      return {
+        ok: true,
+        message:
+          next === 'approved'
+            ? 'Akun disetujui. Pelanggan kini dapat masuk; email tetap harus dikonfirmasi sebelum memesan.'
+            : 'Pendaftaran ditolak. Akun tidak dapat masuk.',
+        status: next,
+      };
     } catch (error) {
       this.db.exec('ROLLBACK');
       throw error;
@@ -357,6 +408,7 @@ export class AccountRepository {
     return { users, total, page, pageSize, pages: Math.max(1, Math.ceil(total / pageSize)) };
   }
   revoke(id, email) {
+    this.db.prepare('DELETE FROM phone_otp_challenges WHERE user_id=?').run(id);
     this.db.prepare('DELETE FROM sessions WHERE user_id=?').run(id);
     this.db.prepare('DELETE FROM auth_tokens WHERE user_id=? OR email=?').run(id, email);
   }

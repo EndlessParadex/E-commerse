@@ -7,6 +7,7 @@ import AppearanceSettings from '../components/account/AppearanceSettings';
 import AccountSecurity from '../components/account/AccountSecurity';
 import AccountAvatar from '../components/account/AccountAvatar';
 import AccountPhone from '../components/account/AccountPhone';
+import AccountEmailStatus from '../components/account/AccountEmailStatus';
 import PhotoUpload from '../components/PhotoUpload';
 import { ActionIcon } from '../components/shop/ShopIcon';
 import useUnsavedChanges from '../state/useUnsavedChanges';
@@ -240,7 +241,10 @@ export default function AccountPage() {
                       </div>
                       <div>
                         <dt>Email</dt>
-                        <dd>{user.email}</dd>
+                        <dd>
+                          {user.email}
+                          <AccountEmailStatus key={user.id} />
+                        </dd>
                       </div>
                       <div>
                         <dt>Jenis akun</dt>

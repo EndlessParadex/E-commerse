@@ -9,7 +9,17 @@ import { createTestApp } from '../../server/testingHelpers.js';
 test('account website: buyer security summary, admin password settings, registration, verification, reset and SMTP-off message', async () => {
   let emailReady = true;
   let time = Date.now();
-  const api = createTestApp({ dbPath: ':memory:', now: () => time });
+  const whatsapp = [];
+  const api = createTestApp({
+    dbPath: ':memory:',
+    now: () => time,
+    whatsappSender: {
+      enabled: true,
+      send: async (value) => {
+        whatsapp.push(value);
+      },
+    },
+  });
   const dom = new Window({ url: 'http://fixture.test/#/daftar' }),
     oldFetch = globalThis.fetch;
   globalThis.window = dom;
@@ -33,8 +43,11 @@ test('account website: buyer security summary, admin password settings, registra
     }
   };
   let cookie = '';
+  let sessionDelay = 0;
   const requests = [];
   globalThis.fetch = async (path, options = {}) => {
+    if (path === '/api/auth/me' && sessionDelay)
+      await new Promise((resolve) => setTimeout(resolve, sessionDelay));
     requests.push({ path, body: options.body && JSON.parse(options.body) });
     if (path === '/api/auth/features') return { ok: true, json: async () => ({ emailReady }) };
     const req = Readable.from(options.body ? [options.body] : []);
@@ -209,7 +222,57 @@ test('account website: buyer security summary, admin password settings, registra
         .get(pendingCustomer.id).phone,
       '+6281234567890',
     );
-    assert.match(container.querySelector('#account-phone-help').textContent, /belum diverifikasi/);
+    assert.match(
+      container.querySelector('.account-phone-verification').textContent,
+      /Nomor HP belum dikonfirmasi/,
+    );
+    await act(async () => {
+      [...container.querySelectorAll('.account-phone-verification button')]
+        .find((button) => button.textContent === 'Kirim kode ke WhatsApp')
+        .click();
+      await settle();
+    });
+    await wait(() => container.querySelector('#phone-otp'));
+    assert.equal(whatsapp.length, 1);
+    assert.equal(
+      api.phoneVerification.contact(pendingCustomer.id).phoneVerified,
+      false,
+      'sending alone is not confirmation',
+    );
+    await fill('#phone-otp', whatsapp[0].code === '000000' ? '000001' : '000000');
+    await submit('.account-phone-verification form');
+    await wait(() => container.querySelector('.account-phone-verification [role=alert]'));
+    assert.equal(api.phoneVerification.contact(pendingCustomer.id).phoneVerified, false);
+    await fill('#phone-otp', whatsapp[0].code);
+    await submit('.account-phone-verification form');
+    await wait(() => container.querySelector('.account-phone-verification .is-confirmed'));
+    assert.match(
+      container.querySelector('.account-phone-verification').textContent,
+      /Nomor HP terkonfirmasi/,
+    );
+    assert.equal(container.querySelector('#phone-otp'), null);
+    assert.ok(container.querySelector('.account-phone-verification time'));
+    api.identity.issue('verify', 'website@fixture.test', { id: pendingCustomer.id });
+    await api.identity.flushMail();
+    const signedInLink = mailToken();
+    await act(async () => root.unmount());
+    dom.history.replaceState(null, '', '/#/verifikasi-email?token=' + signedInLink);
+    sessionDelay = 120;
+    root = createRoot(container);
+    await act(async () => {
+      root.render(createElement(StrictMode, null, createElement(App)));
+      await settle();
+    });
+    await wait(() => container.querySelector('#recovery-password'));
+    assert.equal(container.querySelector('#recovery-password').disabled, false);
+    assert.equal(
+      container.querySelector('#verification-email'),
+      null,
+      'authenticated session startup must not discard the email link',
+    );
+    assert.equal(dom.location.hash, '#/verifikasi-email');
+    sessionDelay = 0;
+    await route('/akun', () => container.querySelector('#account-phone'));
     await route('/verifikasi-email', () =>
       container.textContent.includes('Email akun Anda sudah dikonfirmasi'),
     );
@@ -265,6 +328,10 @@ test('account website: buyer security summary, admin password settings, registra
       container.querySelector('#account-phone').value,
       '+6281234567890',
       'phone restored after account reload',
+    );
+    assert.match(
+      container.querySelector('.account-phone-verification').textContent,
+      /Nomor HP terkonfirmasi/,
     );
     assert.equal(
       container.querySelector('.account-trigger img').getAttribute('src'),

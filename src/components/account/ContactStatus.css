@@ -1,0 +1,68 @@
+.contact-confirmation {
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+  margin-top: 8px;
+}
+.contact-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.contact-badge.is-confirmed {
+  background: var(--color-success-pill);
+  color: var(--color-success-text);
+}
+.contact-badge.is-pending {
+  background: var(--color-warning-pill);
+  color: var(--color-warning-text);
+}
+.contact-badge.is-empty {
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+}
+.contact-confirmation time {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.contact-actions button {
+  min-height: 40px;
+}
+.account-phone-verification {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+}
+.account-phone-verification .account-profile-help {
+  margin: 10px 0;
+}
+.account-phone-verification .account-field {
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+.account-phone-verification input {
+  max-width: 220px;
+  letter-spacing: 3px;
+}
+.account-email-status .account-page-secondary {
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: 0.75rem;
+}
+.account-phone-verification button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

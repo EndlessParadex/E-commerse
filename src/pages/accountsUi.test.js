@@ -35,6 +35,9 @@ test('account management website: owner filters, confirmed deactivate/reactivate
       );
   api.db.prepare('INSERT INTO store_owners VALUES(?,?)').run('owner', new Date().toISOString());
   api.db.prepare('INSERT INTO auth_account_state(user_id,verified_at) VALUES(?,?)').run('buyer', 1);
+  api.phoneVerification.save('buyer', '081234567890');
+  api.db.prepare('UPDATE user_contact_phones SET verified_at=1 WHERE user_id=?').run('buyer');
+  api.phoneVerification.save('customer', '081298765432');
   const dom = new Window({ url: 'http://fixture.test/#/login' }),
     oldFetch = globalThis.fetch;
   globalThis.window = dom;
@@ -157,6 +160,14 @@ test('account management website: owner filters, confirmed deactivate/reactivate
         await settle();
       });
     await wait(() => row('buyer'));
+    assert.match(row('buyer').textContent, /Email terkonfirmasi/);
+    assert.match(row('buyer').textContent, /Nomor HP terkonfirmasi/);
+    assert.match(row('customer').textContent, /Nomor HP belum dikonfirmasi/);
+    assert.match(row('owner').textContent, /Nomor HP belum ditambahkan/);
+    assert.equal(
+      row('buyer').querySelector('a[href^="https://wa.me/"]').getAttribute('href'),
+      'https://wa.me/6281234567890',
+    );
     assert.equal(rowButton('owner', 'Hapus'), undefined);
     assert.match(row('owner').textContent, /Akun yang sedang digunakan/);
     assert.equal(rowButton('owner', 'Atur akses'), undefined);

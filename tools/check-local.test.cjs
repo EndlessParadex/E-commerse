@@ -11,7 +11,7 @@ test('local checks identify a stale frontend and backend instead of reporting an
     '/src/state/useSharedCart.js': '/api/b2b/cart-context retryPending',
     '/src/pages/AccountRecoveryPage.jsx': 'auth-recovery-help Kirim tautan verifikasi baru',
     '/src/components/account/AccountPhone.jsx': 'account-phone Simpan nomor HP',
-    '/api/auth/features': JSON.stringify({ profilePhone: true }),
+    '/api/auth/features': JSON.stringify({ profilePhone: true, contactVerification: true }),
     '/api/catalog': JSON.stringify({
       version: 1,
       capabilities: { brandPhotos: true, gallery: true, workflow: true, sharedCarts: true },

@@ -25,7 +25,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `GET /api/b2b/accounts?page=1&q=...` khusus Pemilik mencari akun non-Admin aktif yang sudah disetujui dan belum menjadi Sales.
 - Data disimpan ke SQLite. Perubahan yang gagal mempertahankan isian; pemuatan ulang yang gagal setelah penyimpanan berhasil menampilkan kesalahan pemuatan secara terpisah.
 
-**Status saat ini:** tahap 1 dan keranjang bersama tahap 3 sudah diimplementasikan. Login masih memakai email/kata sandi; layanan SMS OTP belum dipilih. Finalisasi khusus Admin dan faktur B2B tanpa harga dikerjakan pada tahap berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
+**Status saat ini:** tahap 1 dan keranjang bersama tahap 3 sudah diimplementasikan. Login masih memakai email/kata sandi. Konfirmasi nomor kontak melalui OTP WhatsApp tersedia pada kode aplikasi, tetapi pengiriman sungguhan masih memerlukan konfigurasi Meta. Finalisasi khusus Admin dan faktur B2B tanpa harga dikerjakan pada tahap berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
 
 ### Verifikasi halaman
 
@@ -38,9 +38,9 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 
 ## Tahap 2: Autentikasi pembeli menggunakan nomor HP
 
-Nomor HP dapat disimpan pada profil akun sebagai kontak yang belum diverifikasi; lihat [Nomor HP akun dan tautan email](AKUN-DAN-NOMOR-HP.md). Ini belum mengaktifkan OTP atau login nomor HP. Kebutuhan terbaru adalah OTP melalui WhatsApp; akun layanan dan pengirim WhatsApp resmi masih perlu disiapkan.
+Profil dan Kelola akun menampilkan status konfirmasi email/nomor HP. Alur konfirmasi nomor dengan OTP WhatsApp dan adapter Cloud API tersedia; pengiriman sungguhan masih memerlukan konfigurasi layanan Meta yang sah. Ini **belum mengaktifkan login nomor HP**. Lihat [Nomor HP akun dan tautan email](AKUN-DAN-NOMOR-HP.md).
 
-- Integrasi penyedia SMS OTP asli, throttle pengiriman dan verifikasi OTP, batas percobaan, expiry, dan anti-enumeration.
+- Integrasi pengirim WhatsApp OTP asli untuk login, throttle pengiriman dan verifikasi OTP, batas percobaan, expiry, dan anti-enumeration. Verifikasi kontak pada akun yang sudah masuk telah tersedia; login nomor HP tetap tahap terpisah.
 - Migrasi akun lama, verifikasi kepemilikan nomor HP, serta pemetaan akun ke toko.
 - Jangan gunakan nomor HP saja sebagai bukti autentikasi.
 

@@ -2,18 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useDelivery } from '../../state/useDelivery';
 import useUnsavedChanges from '../../state/useUnsavedChanges';
 import { normalizeWhatsApp } from '../../state/whatsappModel';
+import PhoneVerification from './PhoneVerification';
 
 export default function AccountPhone() {
   const { user, savePhone } = useDelivery();
   const [value, setValue] = useState(user.phone || '');
   const [edited, setEdited] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [verifyBusy, setVerifyBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const active = useRef(true),
     pending = useRef(false),
     input = useRef(null);
-  useUnsavedChanges(edited, undefined, busy);
+  useUnsavedChanges(edited, undefined, busy || verifyBusy);
   useEffect(() => {
     active.current = true;
     return () => {
@@ -29,7 +31,7 @@ export default function AccountPhone() {
   }, [user.phone, edited]);
   const submit = async (event) => {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || verifyBusy) return;
     setError('');
     setMessage('');
     if (value.trim() && !normalizeWhatsApp(value)) {
@@ -61,46 +63,58 @@ export default function AccountPhone() {
     }
   };
   return (
-    <form className="account-phone-form" onSubmit={submit} noValidate aria-label="Nomor HP akun">
-      <div className="account-field">
-        <label htmlFor="account-phone">Nomor HP / WhatsApp (opsional)</label>
-        <input
-          id="account-phone"
-          ref={input}
-          type="tel"
-          autoComplete="tel"
-          inputMode="tel"
-          value={value}
-          maxLength={40}
-          disabled={busy}
-          placeholder="Contoh: 081234567890"
-          onChange={(event) => {
-            setValue(event.target.value);
-            setEdited(true);
-            setError('');
-            setMessage('');
-          }}
-          aria-invalid={Boolean(error)}
-          aria-describedby={'account-phone-help' + (error ? ' account-phone-error' : '')}
-        />
-        <p className="account-profile-help" id="account-phone-help">
-          Nomor ini disimpan sebagai kontak akun dan belum diverifikasi. Login tetap menggunakan
-          email dan kata sandi. Kosongkan lalu simpan untuk menghapus nomor.
-        </p>
-        {error && (
-          <p id="account-phone-error" className="account-error" role="alert">
-            {error}
+    <>
+      <form className="account-phone-form" onSubmit={submit} noValidate aria-label="Nomor HP akun">
+        <div className="account-field">
+          <label htmlFor="account-phone">Nomor HP / WhatsApp (opsional)</label>
+          <input
+            id="account-phone"
+            ref={input}
+            type="tel"
+            autoComplete="tel"
+            inputMode="tel"
+            value={value}
+            maxLength={40}
+            disabled={busy || verifyBusy}
+            placeholder="Contoh: 081234567890"
+            onChange={(event) => {
+              setValue(event.target.value);
+              setEdited(true);
+              setError('');
+              setMessage('');
+            }}
+            aria-invalid={Boolean(error)}
+            aria-describedby={'account-phone-help' + (error ? ' account-phone-error' : '')}
+          />
+          <p className="account-profile-help" id="account-phone-help">
+            Nomor ini disimpan sebagai kontak akun. Konfirmasikan melalui kode WhatsApp di bawah.
+            Kosongkan lalu simpan untuk menghapus nomor.
+          </p>
+          {error && (
+            <p id="account-phone-error" className="account-error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+        <button
+          className="account-page-secondary"
+          type="submit"
+          disabled={busy || verifyBusy || !edited}
+        >
+          {busy ? 'Menyimpan…' : 'Simpan nomor HP'}
+        </button>
+        {message && (
+          <p className="account-phone-notice" role="status">
+            {message}
           </p>
         )}
-      </div>
-      <button className="account-page-secondary" type="submit" disabled={busy || !edited}>
-        {busy ? 'Menyimpan…' : 'Simpan nomor HP'}
-      </button>
-      {message && (
-        <p className="account-phone-notice" role="status">
-          {message}
-        </p>
-      )}
-    </form>
+      </form>
+      <PhoneVerification
+        key={user.phoneRevision || ''}
+        disabled={busy || edited}
+        draftChanged={edited}
+        onBusyChange={setVerifyBusy}
+      />
+    </>
   );
 }

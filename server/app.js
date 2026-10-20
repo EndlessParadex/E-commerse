@@ -27,7 +27,8 @@ import { AccountRepository } from './accounts.js';
 import { B2BStoreRepository } from './b2bStores.js';
 import { SharedCartRepository } from './sharedCarts.js';
 import { customerAccess } from './customerAccess.js';
-import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
+import { PhoneVerificationRepository } from './phoneVerification.js';
+import { createWhatsAppOtpSender } from './whatsappOtp.js';
 
 const scrypt = promisify(scryptCallback);
 const digest = (token) => createHash('sha256').update(token).digest('hex');
@@ -110,6 +111,7 @@ export function createApp({
   mailer,
   mailConfig,
   mailTransportFactory,
+  whatsappSender,
   passwordQueueOptions,
   passwordCheck = verifyPassword,
   logger = (entry) => console.error(entry),
@@ -180,6 +182,12 @@ export function createApp({
     },
   });
   const messages = new OrderMessages(db, identity, company, now, logger);
+  const phoneVerification = new PhoneVerificationRepository(db, {
+    now,
+    sender: whatsappSender ?? createWhatsAppOtpSender(),
+    queue: passwordQueue,
+    hashPassword,
+  });
   const publicUser = (user) => ({
     ...userView(user),
     avatar:
@@ -187,9 +195,11 @@ export function createApp({
     storeName:
       db.prepare('SELECT store_name FROM user_store_names WHERE user_id=?').get(user.id)
         ?.store_name || '',
-    phone:
-      db.prepare('SELECT phone FROM user_contact_phones WHERE user_id=?').get(user.id)?.phone || '',
+    ...phoneVerification.contact(user.id),
     emailVerified: identity.verified(user.id),
+    emailVerifiedAt:
+      db.prepare('SELECT verified_at FROM auth_account_state WHERE user_id=?').get(user.id)
+        ?.verified_at ?? null,
     isOwner: isStoreOwner(db, user),
     ...customerAccess(db, user),
   });
@@ -634,6 +644,8 @@ export function createApp({
       if (req.method === 'GET' && path === '/api/auth/features')
         return json(res, 200, {
           profilePhone: true,
+          contactVerification: true,
+          phoneVerificationReady: phoneVerification.ready,
           emailReady: identity.ready,
           newRegistrationsRequireVerification: true,
           registrationUsesOriginalPassword: true,
@@ -759,23 +771,32 @@ export function createApp({
               .all(),
           });
       }
+      if (req.method === 'GET' && path === '/api/profile/phone/verification') {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        return json(res, 200, phoneVerification.status(actor.id));
+      }
+      if (
+        req.method === 'POST' &&
+        [
+          '/api/profile/phone/verification/request',
+          '/api/profile/phone/verification/confirm',
+        ].includes(path)
+      ) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        const body = await readBody(req);
+        const result = path.endsWith('/request')
+          ? await phoneVerification.request(actor, body.phone, clientIp(req))
+          : await phoneVerification.confirm(actor, body, clientIp(req));
+        return json(res, 200, result);
+      }
       if (req.method === 'PUT' && path === '/api/profile/phone') {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
         const body = await readBody(req);
-        if (typeof body.phone !== 'string' || body.phone.length > 40)
-          return sendError(res, 422, 'validation_error', { form: 'Nomor HP tidak valid.' });
-        const phone = normalizeWhatsApp(body.phone);
-        if (body.phone.trim() && !phone)
-          return sendError(res, 422, 'validation_error', {
-            form: 'Isi nomor HP Indonesia yang valid, misalnya 081234567890.',
-          });
         // Contact information is not proof of ownership and never authenticates an account.
-        if (phone)
-          db.prepare(
-            'INSERT INTO user_contact_phones(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone',
-          ).run(actor.id, phone);
-        else db.prepare('DELETE FROM user_contact_phones WHERE user_id=?').run(actor.id);
+        phoneVerification.save(actor.id, body.phone);
         return json(res, 200, { user: publicUser(actor) });
       }
       if (req.method === 'PUT' && path === '/api/profile/photo') {
@@ -865,6 +886,7 @@ export function createApp({
     company,
     workflow,
     identity,
+    phoneVerification,
     messages,
     emailSettings,
     accounts,

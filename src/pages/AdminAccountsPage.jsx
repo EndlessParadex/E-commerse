@@ -5,6 +5,7 @@ import { accountApi } from '../components/account/accountApi';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import './AdminAccountsPage.css';
 import { customerRoles } from '../data/customerRoles';
+import ContactStatus from '../components/account/ContactStatus';
 
 const roles = { owner: 'Pemilik toko', admin: 'Admin', user: 'Pembeli' };
 const actions = {
@@ -170,8 +171,11 @@ export default function AdminAccountsPage() {
       </div>
       <div className="accounts-content">
         <p className="accounts-explanation">
-          <strong>Aktif</strong> berarti akun bisa masuk setelah disetujui. Pendaftaran baru diperiksa Admin atau Pemilik pada menu Persetujuan akun. Pembeli perlu mengonfirmasi email sebelum
-          memesan. Pengelolaan akun hanya oleh Pemilik.
+          <strong>Aktif</strong> berarti akun bisa masuk setelah disetujui. Pendaftaran baru
+          diperiksa Admin atau Pemilik pada menu Persetujuan akun. Pembeli perlu mengonfirmasi email
+          sebelum memesan. Pengelolaan akun hanya oleh Pemilik. Status kontak terkonfirmasi
+          membuktikan penerimaan tautan atau kode pada waktu konfirmasi, bukan jaminan kontak akan
+          selalu aktif.
         </p>
         <div className="accounts-team-help">
           <details>
@@ -191,14 +195,14 @@ export default function AdminAccountsPage() {
         </div>
         <div className="accounts-filters">
           <div className="admin-field">
-            <label htmlFor="accounts-search">Cari nama atau email</label>
+            <label htmlFor="accounts-search">Cari nama, email, atau nomor HP</label>
             <input
               id="accounts-search"
               type="search"
               maxLength={200}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nama atau alamat email"
+              placeholder="Nama, alamat email, atau nomor HP"
             />
           </div>
           <div className="admin-field">
@@ -291,6 +295,19 @@ export default function AdminAccountsPage() {
                       <td data-label="Akun">
                         <strong>{account.name}</strong>
                         <span className="accounts-secondary">{account.email}</span>
+                        {account.phone && (
+                          <span className="accounts-secondary">{account.phone}</span>
+                        )}
+                        {account.phone && (
+                          <a
+                            className="accounts-secondary"
+                            href={'https://wa.me/' + account.phone.replace(/\D/g, '')}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Buka WhatsApp ↗
+                          </a>
+                        )}
                       </td>
                       <td data-label="Peran">
                         <strong>
@@ -314,13 +331,25 @@ export default function AdminAccountsPage() {
                             'accounts-status ' + (account.active ? 'is-active' : 'is-disabled')
                           }
                         >
-                          {account.approvalStatus === 'pending' ? 'Menunggu persetujuan' : account.approvalStatus === 'rejected' ? 'Ditolak' : account.active ? 'Aktif' : 'Nonaktif'}
+                          {account.approvalStatus === 'pending'
+                            ? 'Menunggu persetujuan'
+                            : account.approvalStatus === 'rejected'
+                              ? 'Ditolak'
+                              : account.active
+                                ? 'Aktif'
+                                : 'Nonaktif'}
                         </span>
-                        <span className="accounts-secondary">
-                          {account.emailVerified
-                            ? 'Email terkonfirmasi'
-                            : 'Email belum dikonfirmasi'}
-                        </span>
+                        <ContactStatus
+                          channel="Email"
+                          verified={account.emailVerified}
+                          at={account.emailVerifiedAt}
+                        />
+                        <ContactStatus
+                          channel="Nomor HP"
+                          verified={account.phoneVerified}
+                          at={account.phoneVerifiedAt}
+                          missing={!account.phone}
+                        />
                         {!account.active && (
                           <span className="accounts-secondary">Alasan: {account.reason}</span>
                         )}
@@ -328,16 +357,17 @@ export default function AdminAccountsPage() {
                       <td data-label="Pesanan">{account.orderCount} pesanan</td>
                       <td data-label="Tindakan">
                         <div className="accounts-row-actions">
-                          {account.canSetCustomerAccess && account.approvalStatus === 'approved' && (
-                            <button
-                              className="admin-secondary"
-                              type="button"
-                              disabled={busy || loading}
-                              onClick={() => open(account, 'customer-access')}
-                            >
-                              Atur akses
-                            </button>
-                          )}
+                          {account.canSetCustomerAccess &&
+                            account.approvalStatus === 'approved' && (
+                              <button
+                                className="admin-secondary"
+                                type="button"
+                                disabled={busy || loading}
+                                onClick={() => open(account, 'customer-access')}
+                              >
+                                Atur akses
+                              </button>
+                            )}
                           {account.canDisable && (
                             <button
                               className="admin-text-button"

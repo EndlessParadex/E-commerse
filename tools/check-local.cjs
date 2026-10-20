@@ -66,8 +66,9 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
   );
   await get(
     '/api/auth/features',
-    'Server: penyimpanan nomor HP akun',
-    (text) => JSON.parse(text).profilePhone === true,
+    'Server: nomor HP dan konfirmasi kontak',
+    (text) =>
+      JSON.parse(text).profilePhone === true && JSON.parse(text).contactVerification === true,
   );
   return { url: url.origin, checks, ok: checks.every((entry) => entry.ok) };
 }

@@ -4,6 +4,19 @@ import { useDelivery } from '../state/useDelivery';
 import '../components/account/AuthPage.css';
 
 export default function AccountRecoveryPage({ mode, route }) {
+  const { authLoading } = useDelivery();
+  // WorkflowProvider replaces its children when the initial account session resolves.
+  // Do not consume/scrub the email token before that replacement is finished.
+  if (authLoading)
+    return (
+      <div className="auth-page" role="status">
+        Memuat akun…
+      </div>
+    );
+  return <AccountRecoveryForm mode={mode} route={route} />;
+}
+
+function AccountRecoveryForm({ mode, route }) {
   const { user, authLoading } = useDelivery();
   const [token, setToken] = useState(
     () => new URLSearchParams(route.split('?')[1] || '').get('token') || '',

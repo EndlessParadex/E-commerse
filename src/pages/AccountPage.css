@@ -421,6 +421,19 @@
   min-width: 150px;
   text-align: center;
 }
+.account-phone-form {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border);
+}
+.account-phone-form .account-field {
+  margin-bottom: 12px;
+}
+.account-phone-notice {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
 .account-page-secondary {
   border: 1px solid var(--color-border-info-strong);
   border-radius: 9px;

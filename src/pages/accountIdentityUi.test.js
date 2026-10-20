@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { Window } from 'happy-dom';
 import { createServer } from 'vite';
-import { act, createElement } from 'react';
+import { act, createElement, StrictMode } from 'react';
 import { createTestApp } from '../../server/testingHelpers.js';
 
 test('account website: buyer security summary, admin password settings, registration, verification, reset and SMTP-off message', async () => {
   let emailReady = true;
-  const api = createTestApp({ dbPath: ':memory:' });
+  let time = Date.now();
+  const api = createTestApp({ dbPath: ':memory:', now: () => time });
   const dom = new Window({ url: 'http://fixture.test/#/daftar' }),
     oldFetch = globalThis.fetch;
   globalThis.window = dom;
@@ -155,6 +156,23 @@ test('account website: buyer security summary, admin password settings, registra
     assert.ok(requests.some((request) => request.path === '/api/auth/verification/resend'));
     await api.identity.flushMail();
     const activation = mailToken();
+    await route('/verifikasi-email', () => container.querySelector('#verification-email'));
+    assert.equal(
+      container.querySelector('#recovery-password'),
+      null,
+      'missing links do not show a locked password field',
+    );
+    assert.match(container.textContent, /Tautan verifikasi belum lengkap/);
+    await fill('#verification-email', 'website@fixture.test');
+    await submit('.auth-recovery-request');
+    await wait(() => container.querySelector('.auth-submit-notice'));
+    assert.ok(
+      requests.some(
+        (request) =>
+          request.path === '/api/auth/verification/resend' &&
+          request.body?.email === 'website@fixture.test',
+      ),
+    );
     await route('/verifikasi-email?token=' + activation, () =>
       container.querySelector('#recovery-password'),
     );
@@ -177,6 +195,26 @@ test('account website: buyer security summary, admin password settings, registra
     await wait(() => dom.location.hash === '#/');
     await route('/akun', () => container.querySelector('#account-tab-security'));
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Pembeli Website');
+    await fill('#account-phone', '0812abc');
+    await submit('.account-phone-form');
+    assert.match(container.querySelector('#account-phone-error').textContent, /nomor HP Indonesia/);
+    assert.equal(requests.filter((request) => request.path === '/api/profile/phone').length, 0);
+    await fill('#account-phone', '0812-3456-7890');
+    await submit('.account-phone-form');
+    await wait(() => container.querySelector('.account-phone-notice'));
+    assert.equal(container.querySelector('#account-phone').value, '+6281234567890');
+    assert.equal(
+      api.db
+        .prepare('SELECT phone FROM user_contact_phones WHERE user_id=?')
+        .get(pendingCustomer.id).phone,
+      '+6281234567890',
+    );
+    assert.match(container.querySelector('#account-phone-help').textContent, /belum diverifikasi/);
+    await route('/verifikasi-email', () =>
+      container.textContent.includes('Email akun Anda sudah dikonfirmasi'),
+    );
+    assert.equal(container.querySelector('#recovery-password'), null);
+    await route('/akun', () => container.querySelector('#account-phone'));
     const png =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
     const upload = async (file) =>
@@ -224,6 +262,11 @@ test('account website: buyer security summary, admin password settings, registra
     });
     await wait(() => container.querySelector('#account-tab-security'));
     assert.equal(
+      container.querySelector('#account-phone').value,
+      '+6281234567890',
+      'phone restored after account reload',
+    );
+    assert.equal(
       container.querySelector('.account-trigger img').getAttribute('src'),
       png,
       'avatar restored after reload',
@@ -255,6 +298,8 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(dom.location.hash, '#/login');
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Guest');
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n, 0);
+    // Several resend paths were exercised above; keep the real per-hour email limit in place.
+    time += 3600001;
     await route('/forgot-password', () => container.querySelector('#recovery-email'));
     await wait(() => !container.querySelector('fieldset').disabled);
     await fill('#recovery-email', 'website@fixture.test');
@@ -278,6 +323,24 @@ test('account website: buyer security summary, admin password settings, registra
     await submit('.auth-card form');
     await wait(() => container.querySelector('.auth-error'));
     assert.match(container.querySelector('.auth-error').textContent, /Tautan tidak valid/);
+    await act(async () => {
+      container.querySelector('.auth-register-again').click();
+      await settle();
+    });
+    assert.equal(container.querySelector('#recovery-password'), null);
+    assert.ok(container.querySelector('a[href="#/forgot-password"]'));
+    await route('/verifikasi-email?token=' + activation, () =>
+      container.querySelector('#recovery-password'),
+    );
+    // A full reload clears the secret from the URL. Recovery must offer a new link, not a dead input.
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await act(async () => {
+      root.render(createElement(StrictMode, null, createElement(App)));
+      await settle();
+    });
+    await wait(() => container.querySelector('#verification-email'));
+    assert.equal(container.querySelector('#recovery-password'), null);
     emailReady = false;
     await route('/forgot-password', () => container.querySelector('#recovery-email'));
     await wait(() => container.textContent.includes('Layanan email toko belum diaktifkan'));

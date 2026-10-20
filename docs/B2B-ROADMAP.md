@@ -38,6 +38,8 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 
 ## Tahap 2: Autentikasi pembeli menggunakan nomor HP
 
+Nomor HP dapat disimpan pada profil akun sebagai kontak yang belum diverifikasi; lihat [Nomor HP akun dan tautan email](AKUN-DAN-NOMOR-HP.md). Ini belum mengaktifkan OTP atau login nomor HP. Kebutuhan terbaru adalah OTP melalui WhatsApp; akun layanan dan pengirim WhatsApp resmi masih perlu disiapkan.
+
 - Integrasi penyedia SMS OTP asli, throttle pengiriman dan verifikasi OTP, batas percobaan, expiry, dan anti-enumeration.
 - Migrasi akun lama, verifikasi kepemilikan nomor HP, serta pemetaan akun ke toko.
 - Jangan gunakan nomor HP saja sebagai bukti autentikasi.

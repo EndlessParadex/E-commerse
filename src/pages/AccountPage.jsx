@@ -6,6 +6,7 @@ import AccountMenu from '../components/account/AccountMenu';
 import AppearanceSettings from '../components/account/AppearanceSettings';
 import AccountSecurity from '../components/account/AccountSecurity';
 import AccountAvatar from '../components/account/AccountAvatar';
+import AccountPhone from '../components/account/AccountPhone';
 import PhotoUpload from '../components/PhotoUpload';
 import { ActionIcon } from '../components/shop/ShopIcon';
 import useUnsavedChanges from '../state/useUnsavedChanges';
@@ -260,6 +261,7 @@ export default function AccountPage() {
                     <p className="account-profile-help">
                       Email digunakan untuk masuk ke akun Anda.
                     </p>
+                    <AccountPhone key={user.id} />
                   </div>
                 </div>
                 <div className="account-address-preview">

@@ -54,6 +54,21 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
       value.capabilities?.sharedCarts === true
     );
   });
+  await get(
+    '/src/pages/AccountRecoveryPage.jsx',
+    'Verifikasi email: bantuan tautan dan form terbaru',
+    (text) => text.includes('auth-recovery-help') && text.includes('Kirim tautan verifikasi baru'),
+  );
+  await get(
+    '/src/components/account/AccountPhone.jsx',
+    'Profil: isian nomor HP akun',
+    (text) => text.includes('account-phone') && text.includes('Simpan nomor HP'),
+  );
+  await get(
+    '/api/auth/features',
+    'Server: penyimpanan nomor HP akun',
+    (text) => JSON.parse(text).profilePhone === true,
+  );
   return { url: url.origin, checks, ok: checks.every((entry) => entry.ok) };
 }
 

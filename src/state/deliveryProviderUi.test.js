@@ -4,7 +4,7 @@ import { Window } from 'happy-dom';
 import { createServer } from 'vite';
 import { act, createElement } from 'react';
 
-test('late profile responses cannot restore a logged-out account or replace a newly saved avatar', async () => {
+test('late profile responses cannot restore a logged-out account or replace a newly saved avatar or phone', async () => {
   const dom = new Window({ url: 'http://fixture.test/#/akun' });
   const originalFetch = globalThis.fetch;
   Object.assign(globalThis, {
@@ -21,8 +21,9 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     email: 'first@fixture.test',
     avatar: 'old-photo',
     storeName: '',
+    phone: '',
   };
-  let resolveProfile, resolveAvatar;
+  let resolveProfile, resolveAvatar, resolvePhone;
   globalThis.fetch = async (path) => {
     if (path === '/api/auth/me') return new Response(JSON.stringify({ user: initial }));
     if (path === '/api/profile')
@@ -32,6 +33,10 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     if (path === '/api/profile/photo')
       return new Promise((resolve) => {
         resolveAvatar = resolve;
+      });
+    if (path === '/api/profile/phone')
+      return new Promise((resolve) => {
+        resolvePhone = resolve;
       });
     throw new Error('Unexpected request: ' + path);
   };
@@ -92,15 +97,18 @@ test('late profile responses cannot restore a logged-out account or replace a ne
       'a stale response cannot replace the active delivery address',
     );
     await act(async () => current.setUser(initial));
-    let avatarRequest;
+    let avatarRequest, phoneRequest;
     await act(async () => {
       profileRequest = current.saveLocation(values);
       avatarRequest = current.saveAvatar('new-photo');
+      phoneRequest = current.savePhone('081234567890');
       await settle();
     });
     await act(async () => {
       resolveAvatar(reply({ ...initial, avatar: 'new-photo' }));
       await avatarRequest;
+      resolvePhone(reply({ ...initial, phone: '+6281234567890' }));
+      await phoneRequest;
     });
     await act(async () => {
       resolveProfile(reply(changed));
@@ -108,6 +116,11 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     });
     assert.equal(result.ok, true);
     assert.equal(current.user.name, changed.name);
+    assert.equal(
+      current.user.phone,
+      '+6281234567890',
+      'a delayed address response cannot undo the phone',
+    );
     assert.equal(
       current.user.avatar,
       'new-photo',
@@ -127,6 +140,21 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     assert.equal(result.ok, false);
     assert.equal(current.user.id, 'second');
     assert.equal(current.user.avatar, 'second-photo');
+    await act(async () => {
+      phoneRequest = current.savePhone('081298765432');
+      await settle();
+    });
+    await act(async () => current.setUser(null));
+    await act(async () => {
+      resolvePhone(reply({ ...initial, id: 'second', phone: '+6281298765432' }));
+      result = await phoneRequest;
+    });
+    assert.equal(result.ok, false);
+    assert.equal(
+      current.user,
+      null,
+      'a delayed phone response cannot restore a logged-out account',
+    );
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

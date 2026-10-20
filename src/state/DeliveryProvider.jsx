@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { DeliveryContext } from './useDelivery';
 import { normalizeDelivery, readDelivery, writeDelivery } from './deliveryModel';
 import { requestLogout } from '../components/account/accountSession';
+import { normalizeWhatsApp } from './whatsappModel';
 
 function initialLocation() {
   try {
@@ -92,6 +93,7 @@ export default function DeliveryProvider({ children }) {
         setUser((current) => ({
           ...payload.user,
           avatar: current?.avatar ?? payload.user.avatar ?? '',
+          phone: current?.phone ?? payload.user.phone ?? '',
         }));
       } catch {
         return { ok: false, persisted: false };
@@ -153,6 +155,51 @@ export default function DeliveryProvider({ children }) {
     }
   };
 
+  const savePhone = async (value) => {
+    const actor = userRef.current;
+    const generation = sessionGeneration.current;
+    if (!actor) return { ok: false, error: 'Masuk untuk mengubah nomor HP.' };
+    const phone = normalizeWhatsApp(value);
+    if (typeof value !== 'string' || value.length > 40 || (value.trim() && !phone))
+      return { ok: false, error: 'Isi nomor HP Indonesia yang valid, misalnya 081234567890.' };
+    try {
+      const response = await fetch('/api/profile/phone', {
+        method: 'PUT',
+        credentials: 'include',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const payload = await response.json();
+      if (sessionGeneration.current !== generation)
+        return {
+          ok: false,
+          error: 'Sesi akun berubah. Muat ulang profil akun yang sedang digunakan.',
+        };
+      if (!response.ok)
+        return {
+          ok: false,
+          error:
+            response.status === 401
+              ? 'Sesi berakhir. Masuk kembali.'
+              : payload.errors?.form || 'Nomor HP belum dapat disimpan.',
+        };
+      if (payload?.user?.id !== actor.id || payload.user.phone !== phone)
+        return {
+          ok: false,
+          error: 'Nomor HP belum dapat dikonfirmasi. Muat ulang profil untuk memeriksa hasilnya.',
+        };
+      setUser((current) => (current?.id === actor.id ? { ...current, phone } : current));
+      return { ok: true, phone };
+    } catch {
+      return {
+        ok: false,
+        error:
+          'Hasil penyimpanan belum dapat dikonfirmasi. Periksa koneksi lalu muat ulang profil sebelum mencoba lagi.',
+      };
+    }
+  };
+
   const logout = async () => {
     if (logoutPending.current) return false;
     logoutPending.current = true;
@@ -172,6 +219,7 @@ export default function DeliveryProvider({ children }) {
         savedLocation,
         saveLocation,
         saveAvatar,
+        savePhone,
         storageError,
         user,
         setUser,

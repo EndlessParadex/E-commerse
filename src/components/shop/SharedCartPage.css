@@ -277,6 +277,71 @@
 }
 
 
+
+.shared-admin-summary-store {
+  font-weight: 700;
+  margin: 16px 0;
+}
+.shared-admin-summary-store small {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+.shared-admin-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.shared-admin-summary-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.shared-admin-summary-stats span {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+.shared-admin-sidebar .shared-admin-summary-stats strong {
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+.shared-admin-sidebar .shared-admin-summary-stats .shared-admin-status {
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+.shared-admin-status.status-open {
+  color: var(--color-action);
+}
+.shared-admin-status.status-locked,
+.shared-admin-status.status-finalized {
+  color: var(--color-text-secondary);
+}
+.shared-admin-quantity-stepper {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.shared-admin-quantity-stepper button {
+  min-width: 40px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--color-border);
+  background: var(--color-info-soft);
+  color: var(--color-action);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.shared-admin-quantity-stepper button:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}
+
 /* Admin workspace: a guided layout without changing buyer/Sales cart behavior. */
 .shared-admin-workflow {
   min-width: 0;

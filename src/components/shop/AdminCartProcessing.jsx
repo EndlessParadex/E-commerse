@@ -9,7 +9,7 @@ const statusLabel = { open: 'Terbuka', locked: 'Dikunci Admin', finalized: 'Suda
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' });
 const admin = (shared) => ['admin', 'owner'].includes(shared.role);
-export function AdminCartQueue({ shared }) {
+export function AdminCartQueue({ shared, onOpenCart }) {
   const [q, setQ] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('pending');
@@ -116,7 +116,7 @@ export function AdminCartQueue({ shared }) {
                   type="button"
                   className="bam-button-secondary"
                   disabled={frozen}
-                  onClick={() => shared.choose({ storeId: cart.storeId, date: cart.date })}
+                  onClick={() => (onOpenCart || shared.choose)({ storeId: cart.storeId, date: cart.date })}
                 >
                   Periksa keranjang
                 </button>
@@ -207,10 +207,11 @@ export function AdminB2BBanks() {
   };
   return (
     <section className="admin-cart-queue" aria-labelledby="b2b-bank-title">
-      <details>
-        <summary id="b2b-bank-title"><strong>Pengaturan rekening transfer BAM (Pemilik)</strong></summary>
-        <p>Rekening diatur Pemilik BAM. Pembeli toko/Sales hanya memilih metode pembayaran.
-          Finalisasi transfer memerlukan rekening aktif sesuai bank yang dipilih.</p>
+      <h2 id="b2b-bank-title">Rekening transfer BAM</h2>
+      <p>
+        Hanya Pemilik BAM yang dapat menyimpan rekening resmi. Pembeli toko dan Sales hanya
+        memilih metode pembayaran; Admin memeriksanya saat finalisasi.
+      </p>
         <form className="shared-admin-add-fields" onSubmit={save}>
           <label htmlFor="b2b-bank-selector">Bank
             <select id="b2b-bank-selector" value={bank} onChange={(event) => select(event.target.value)}>
@@ -239,7 +240,6 @@ export function AdminB2BBanks() {
         </form>
         {error && <p className="shop-warning" role="alert">{error}</p>}
         {notice && <p role="status">{notice}</p>}
-      </details>
     </section>
   );
 }

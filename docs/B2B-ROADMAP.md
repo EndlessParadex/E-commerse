@@ -4,7 +4,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 
 ## Keputusan alur, hak akses, dan dua keranjang — 21 Oktober 2026
 
-**Status: spesifikasi target, belum diimplementasikan.** Ketika keputusan ini ditulis, Admin/Pemilik masih hanya bisa mengunci, memeriksa, dan memfinalisasi keranjang bersama. Sales dan pembeli dengan hubungan B2B masih diblokir dari checkout lama. Jangan menganggap kemampuan target di bawah sudah tersedia sebelum kode dan pengujian diperbarui.
+**Status implementasi parsial:** keputusan nomor 1 sudah diterapkan: Admin/Pemilik dapat menambah, mengubah jumlah, menghapus, dan mengosongkan keranjang **open** serta memfinalisasinya mengikuti alur penguncian, review dan audit. Keputusan nomor 2–4 (dua keranjang, checkout pribadi B2B, navigasi toko) masih target. Login dan pembatasan checkout lama belum berubah.
 
 ### Keputusan bisnis
 
@@ -45,13 +45,13 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 
 ### Urutan implementasi dan pengujian
 
-1. Terapkan resolver kemampuan server dan hak edit Admin pada `sharedCarts.js`; tambah uji akses lintas toko, akun dicabut, mutasi locked, audit dan finalisasi oleh aktor yang sama.
+1. **Sebagian selesai:** hak edit Admin pada `sharedCarts.js`, UI tambah SKU, audit dan pengujian. **Berikutnya:** resolver kemampuan terpusat diperlukan untuk alur dua keranjang/checkout lintas peran.
 2. Terapkan dua keranjang paralel di `ShopProvider.jsx` dan pilihan konteks eksplisit; pertahankan isi pribadi ketika memilih toko dan sebaliknya.
 3. Batasi endpoint `/api/orders` untuk order pribadi yang sah dan endpoint Admin untuk order B2B. Tambah uji agar Sales/pembeli B2B bisa checkout pribadi tetapi tidak dapat membuat order toko langsung.
 4. Tambahkan halaman `#/toko` dan tautan utama **Daftar Toko/Toko Saya** berbasis kemampuan pada `Navbar`/`App`; cek responsif desktop/ponsel. Tidak perlu kartu Belanja biasa di `Home`.
 5. Uji dua akun dan dua perangkat, konflik revisi, perpindahan konteks dan akun, isolasi toko, finalisasi tunggal, idempotensi, serta faktur B2B tanpa harga pada tahap terpisah.
 
-**Dokumen `KERANJANG-BERSAMA.md` dan `FINALISASI-B2B.md` masih menjelaskan perilaku kode lama sampai implementasi diperbarui.**
+**Dokumen `KERANJANG-BERSAMA.md` dan `FINALISASI-B2B.md` sudah menjelaskan izin edit Admin terbaru; keputusan dua keranjang dan navigasi tetap pekerjaan berikutnya.**
 
 ## Tahap 1: Identitas toko & Sales (fondasi backend)
 
@@ -118,7 +118,7 @@ Sudah diimplementasikan. Panduan penggunaan dan pengujian: [KERANJANG-BERSAMA.md
 - Pembaruan berkala setiap 5 detik ketika halaman aktif, saat fokus kembali, serta tombol Muat terbaru. Konflik `revision` ditolak tanpa menimpa isian lain, termasuk ketika pengguna masih mengetik atau membuka konfirmasi kosongkan.
 - Setiap perubahan memakai kode unik. Respons yang terputus dapat dipastikan dengan mengirim ulang kode/perubahan yang sama tanpa menggandakan barang.
 - Nama, harga dan konversi kemasan diambil dari katalog server; SKU yang dihapus tetap terlihat sampai dikeluarkan. Harga/informasi yang berubah perlu diperbarui secara eksplisit.
-- **Saat ini** Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin, sedangkan jumlah barang hanya bisa diubah pembeli/Sales. **Target:** Admin/Pemilik juga dapat mengubah isi keranjang `open` dengan audit dan review wajib sebelum finalisasi. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
+- **Sudah diterapkan:** Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin dan dapat mengubah isi keranjang `open`, dengan audit, penguncian, dan review wajib sebelum finalisasi. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
 - Batas 100 SKU per keranjang dan 99 kemasan per SKU. Keranjang belum mencadangkan stok; reservasi dan order dibuat ketika finalisasi Admin berhasil.
 - Akun yang belum pernah dihubungkan ke toko dan belum menjadi Sales tetap memakai alur lama selama migrasi. Keranjang pribadi lama tidak otomatis digabung ke keranjang toko; foto produk dapat ditambahkan belakangan.
 

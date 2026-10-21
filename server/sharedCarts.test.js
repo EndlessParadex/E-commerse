@@ -124,6 +124,10 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
     );
     assert.deepEqual(cleared.body.cart.items, []);
     assert.equal(cleared.body.cart.events.length, 4);
+    assert.equal(cleared.body.cart.events[0].actorRole, 'buyer');
+    assert.deepEqual(cleared.body.cart.events[0].details.clearedItems, [
+      { productId: 'snack-pedas-23g', quantity: 4 },
+    ]);
   } finally {
     app.db.close();
   }

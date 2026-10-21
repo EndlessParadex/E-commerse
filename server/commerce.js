@@ -248,6 +248,8 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
         ...order.payment.proof,
         status: 'rejected',
         reason: field(body.reason, 'Alasan penolakan', 200),
+        reviewedAt: time,
+        reviewedBy: user.id,
       };
       order.payment.status = 'pending';
       if (!order.b2b) order.payment.expiresAt = time + w.policy.paymentHoldWindowMs;

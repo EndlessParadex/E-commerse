@@ -397,6 +397,15 @@ export function createApp({
         }
         return sendError(res, 405, 'method_not_allowed');
       }
+      if (path === '/api/admin/b2b/banks') {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        if (req.method === 'GET')
+          return json(res, 200, b2bFinalization.banks(actor));
+        if (req.method === 'PUT')
+          return json(res, 200, b2bFinalization.saveBank(actor, await readBody(req, 12000)));
+        return sendError(res, 405, 'method_not_allowed');
+      }
       const finalizationMatch = path.match(
         /^\/api\/admin\/b2b\/stores\/([^/]+)\/cart(?:\/(review))?$/,
       );

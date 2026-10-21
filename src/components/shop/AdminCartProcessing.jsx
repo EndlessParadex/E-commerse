@@ -164,7 +164,13 @@ export function AdminB2BBanks() {
   useEffect(() => {
     let alive = true;
     accountApi('/api/admin/b2b/banks').then(
-      (value) => { if (alive) setBanks(value.banks); },
+      (value) => {
+        if (!alive) return;
+        setBanks(value.banks);
+        const initial = value.banks.find((entry) => entry.bank === 'BCA');
+        setAccount(initial?.account || '');
+        setHolder(initial?.holder || '');
+      },
       (failure) => { if (alive) setError(failure.message); },
     );
     return () => { alive = false; };
@@ -456,8 +462,6 @@ export default function AdminCartProcessing({ shared }) {
                         : 'Rekening bank pilihan belum dikonfigurasi oleh Pemilik BAM. Finalisasi belum tersedia.'}
                     </p>
                   )}
-                  <p>
-                  </p>
                   <p className="admin-cart-total">
                     Total akhir <strong>{rupiah(review.total)}</strong>
                   </p>

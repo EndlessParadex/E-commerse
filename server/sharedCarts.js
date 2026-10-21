@@ -131,7 +131,7 @@ export class SharedCartRepository {
   }
   read(actor, storeId, date) {
     date = cartDate(date);
-    const { user, store } = this.access(actor, storeId);
+    const { store } = this.access(actor, storeId);
     const cycle = this.cycle(store.id, date);
     return {
       store,

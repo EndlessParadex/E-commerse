@@ -6,7 +6,7 @@ import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
 import PackagingSummary from './PackagingSummary';
 import './SharedCartPage.css';
-import AdminCartProcessing, { AdminCartQueue } from './AdminCartProcessing';
+import AdminCartProcessing, { AdminB2BBanks, AdminCartQueue } from './AdminCartProcessing';
 import { paymentMethod } from '../../state/paymentMethods';
 
 const dateLabel = (value) =>
@@ -249,6 +249,7 @@ export default function SharedCartPage({ adminView = false }) {
       {shared.status === 'ready' && ['admin', 'owner'].includes(shared.role) && (
         <AdminCartQueue shared={shared} />
       )}
+      {shared.status === 'ready' && shared.role === 'owner' && <AdminB2BBanks />}
       {shared.status === 'legacy' && (
         <p className="shop-warning">
           Halaman ini memerlukan server B2B terbaru. Pembeli perlu dihubungkan ke toko oleh Pemilik

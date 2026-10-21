@@ -292,7 +292,7 @@ export default function useSharedCart(user, authLoading) {
           byte.toString(16).padStart(2, '0'),
         ).join(''),
         action,
-        ...(productId ? { productId } : {}),
+        ...(action === 'payment' ? { paymentId: productId } : productId ? { productId } : {}),
         ...(quantity !== undefined ? { quantity } : {}),
       },
     };

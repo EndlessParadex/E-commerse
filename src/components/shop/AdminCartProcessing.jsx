@@ -201,7 +201,7 @@ export function AdminB2BBanks() {
       <details>
         <summary id="b2b-bank-title"><strong>Pengaturan rekening transfer BAM (Pemilik)</strong></summary>
         <p>Rekening diatur Pemilik BAM. Pembeli toko/Sales hanya memilih metode pembayaran.
-          ' Finalisasi transfer memerlukan rekening aktif sesuai bank yang dipilih.</p>
+          Finalisasi transfer memerlukan rekening aktif sesuai bank yang dipilih.</p>
         <form className="shared-admin-add-fields" onSubmit={save}>
           <label htmlFor="b2b-bank-selector">Bank
             <select id="b2b-bank-selector" value={bank} onChange={(event) => select(event.target.value)}>

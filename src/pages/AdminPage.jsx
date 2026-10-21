@@ -315,7 +315,7 @@ export default function AdminPage({ view = 'overview' }) {
             <p>
               {b2bView
                 ? view === 'sharedCarts'
-                  ? 'Periksa keranjang per toko, periode, dan riwayat perubahan pembeli/Sales.'
+                  ? 'Kelola keranjang per toko dan periode, edit barang yang masih terbuka, lalu periksa riwayat perubahan.'
                   : 'Kelola toko pelanggan, akun pembeli, dan penugasan Sales.'
                 : view === 'accounts'
                   ? 'Kelola akses akun pembeli dan admin operasional.'
@@ -347,7 +347,7 @@ export default function AdminPage({ view = 'overview' }) {
         <p className="admin-preview-notice">
           {b2bView
             ? view === 'sharedCarts'
-              ? 'Pilih antrean toko, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok dicadangkan hanya setelah pesanan berhasil dibuat.'
+              ? 'Pilih toko dan periode, tambahkan atau ubah barang saat terbuka, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok hanya dicadangkan setelah berhasil.'
               : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
             : view === 'accounts'
               ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'

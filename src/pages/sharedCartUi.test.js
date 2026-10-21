@@ -125,6 +125,14 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await openDate();
     assert.equal(container.querySelector('#shared-store').value, first.id);
     assert.equal(container.querySelectorAll('#shared-store option').length, 2);
+    await fill('#shared-cart-payment', 'transfer-bca');
+    await wait(() =>
+      api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').paymentId === 'transfer-bca',
+    );
+    assert.equal(
+      api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').events[0].actorRole,
+      'buyer',
+    );
     await navigate('/produk/snack-pedas-23g');
     await wait(() => container.querySelector('.detail-add:not(:disabled)'));
     await click(container.querySelector('.detail-add'));
@@ -142,6 +150,15 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
 
     await mount('sales');
     await openDate();
+    assert.equal(container.querySelector('#shared-cart-payment').value, 'transfer-bca');
+    await fill('#shared-cart-payment', 'transfer-mandiri');
+    await wait(() =>
+      api.sharedCarts.read(actors.sales, first.id, '2026-10-21').paymentId === 'transfer-mandiri',
+    );
+    assert.equal(
+      api.sharedCarts.read(actors.sales, first.id, '2026-10-21').events[0].actorRole,
+      'sales',
+    );
     assert.equal(container.querySelector('.shared-quantity input').value, '4');
     await fill('.shared-quantity input', '6');
     await submit('.shared-quantity');
@@ -241,6 +258,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.ok(container.querySelector('.shared-quantity'));
     assert.ok(button('Kosongkan keranjang'));
     assert.ok(container.querySelector('.shared-admin-add'));
+    assert.equal(container.querySelector('#shared-cart-payment'), null);
+    assert.match(container.textContent, /Transfer bank Mandiri/);
     await fill('#shared-admin-search', 'snack-pedas-62g');
     await fill('#shared-admin-sku', 'snack-pedas-62g');
     await fill('#shared-admin-quantity', '3');

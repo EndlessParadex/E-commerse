@@ -7,6 +7,45 @@ import './AdminB2BStoresPage.css';
 
 const emptyStore = { storeName: '', phone: '', address: '' };
 
+const weekdayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const blankDelivery = { weekday: '1', intervalWeeks: '1', anchorDate: '' };
+const scheduleLabel = (schedule) => schedule
+  ? weekdayNames[schedule.weekday] + ' · setiap ' + schedule.intervalWeeks +
+    ' minggu · mulai ' + schedule.anchorDate
+  : 'Jadwal belum ditetapkan';
+function DeliveryScheduleInputs({ schedule, onChange, prefix }) {
+  return (
+    <div className="b2b-delivery-fields">
+      <div className="admin-field">
+        <label htmlFor={prefix + '-weekday'}>Hari pengiriman tetap</label>
+        <select id={prefix + '-weekday'} value={schedule.weekday}
+          onChange={(event) => onChange({ ...schedule, weekday: event.target.value })}>
+          {weekdayNames.map((day, index) => (
+            <option key={day} value={index}>{day}</option>
+          ))}
+        </select>
+      </div>
+      <div className="admin-field">
+        <label htmlFor={prefix + '-frequency'}>Frekuensi</label>
+        <select id={prefix + '-frequency'} value={schedule.intervalWeeks}
+          onChange={(event) => onChange({ ...schedule, intervalWeeks: event.target.value })}>
+          <option value="1">Setiap 1 minggu</option>
+          <option value="2">Setiap 2 minggu</option>
+        </select>
+      </div>
+      <div className="admin-field">
+        <label htmlFor={prefix + '-anchor'}>Tanggal acuan pengiriman</label>
+        <input id={prefix + '-anchor'} type="date" required value={schedule.anchorDate}
+          onChange={(event) => onChange({ ...schedule, anchorDate: event.target.value })} />
+      </div>
+      <p className="b2b-muted b2b-full">
+        Tanggal acuan harus sesuai hari di atas. Setelah tersimpan, jadwal tidak dapat diubah.
+      </p>
+    </div>
+  );
+}
+
+
 function useResource(path, revision) {
   const [state, setState] = useState({ path: null, revision: -1 });
   useEffect(() => {
@@ -100,6 +139,8 @@ export default function AdminB2BStoresPage() {
   const owner = user?.isOwner === true;
   const staff = user?.role === 'admin';
   const [form, setForm] = useState(emptyStore);
+  const [deliveryForm, setDeliveryForm] = useState(blankDelivery);
+  const [legacyDelivery, setLegacyDelivery] = useState(blankDelivery);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState('');
@@ -139,7 +180,8 @@ export default function AdminB2BStoresPage() {
     return () => clearTimeout(timer);
   }, [accountQuery]);
   useUnsavedChanges(
-    Object.values(form).some(Boolean) || Boolean(salesId) || Boolean(change),
+    Object.values(form).some(Boolean) || deliveryForm.anchorDate !== '' ||
+      legacyDelivery.anchorDate !== '' || Boolean(salesId) || Boolean(change),
     undefined,
     busy,
   );
@@ -281,10 +323,18 @@ export default function AdminB2BStoresPage() {
               event.preventDefault();
               mutate(
                 '/api/b2b/stores/create',
-                form,
-                'Toko berhasil dibuat dan disimpan.',
+                {
+                  ...form,
+                  deliverySchedule: {
+                    weekday: Number(deliveryForm.weekday),
+                    intervalWeeks: Number(deliveryForm.intervalWeeks),
+                    anchorDate: deliveryForm.anchorDate,
+                  },
+                },
+                'Toko beserta jadwal pengiriman tetap berhasil dibuat.',
                 (result) => {
                   setForm(emptyStore);
+                  setDeliveryForm(blankDelivery);
                   setSelected(result.store.id);
                   setQuery('');
                   setStoreSearch('');
@@ -329,6 +379,14 @@ export default function AdminB2BStoresPage() {
                   onChange={(event) => setForm({ ...form, address: event.target.value })}
                 />
               </div>
+              <div className="b2b-full b2b-schedule-section">
+                <h3>Jadwal pengiriman tetap</h3>
+                <DeliveryScheduleInputs
+                  schedule={deliveryForm}
+                  onChange={setDeliveryForm}
+                  prefix="b2b-create-delivery"
+                />
+              </div>
               <div className="b2b-actions b2b-full">
                 <button className="admin-primary" type="submit">
                   {busy ? 'Menyimpan…' : 'Simpan toko'}
@@ -336,7 +394,7 @@ export default function AdminB2BStoresPage() {
                 <button
                   className="admin-secondary"
                   type="button"
-                  onClick={() => setForm(emptyStore)}
+                  onClick={() => { setForm(emptyStore); setDeliveryForm(blankDelivery); }}
                 >
                   Kosongkan form
                 </button>
@@ -409,6 +467,39 @@ export default function AdminB2BStoresPage() {
               <h2>{current.store.storeName}</h2>
               <p className="b2b-muted">{current.store.phone}</p>
               <p className="b2b-address">{current.store.address}</p>
+              <div className="b2b-schedule-section">
+                <h3>Jadwal pengiriman tetap</h3>
+                <p>{scheduleLabel(current.store.deliverySchedule)}</p>
+                {!current.store.deliverySchedule && owner && (
+                  <form
+                    className="b2b-form-grid"
+                    aria-label="Tetapkan jadwal pengiriman toko"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      mutate(
+                        '/api/b2b/stores/' + encodeURIComponent(current.store.id) + '/schedule',
+                        {
+                          ...legacyDelivery,
+                          weekday: Number(legacyDelivery.weekday),
+                          intervalWeeks: Number(legacyDelivery.intervalWeeks),
+                          revision: current.store.revision,
+                        },
+                        'Jadwal pengiriman toko ditetapkan dan dikunci.',
+                        () => setLegacyDelivery(blankDelivery),
+                      );
+                    }}
+                  >
+                    <DeliveryScheduleInputs
+                      schedule={legacyDelivery}
+                      onChange={setLegacyDelivery}
+                      prefix="b2b-legacy-delivery"
+                    />
+                    <button type="submit" className="admin-primary" disabled={busy || !legacyDelivery.anchorDate}>
+                      Tetapkan jadwal sekali
+                    </button>
+                  </form>
+                )}
+              </div>
               {owner && (
                 <button
                   type="button"

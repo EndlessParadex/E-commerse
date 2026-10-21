@@ -8,6 +8,7 @@ import PackagingSummary from './PackagingSummary';
 import './SharedCartPage.css';
 import AdminCartProcessing, { AdminB2BBanks, AdminCartQueue } from './AdminCartProcessing';
 import { paymentMethod } from '../../state/paymentMethods';
+import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
@@ -18,6 +19,14 @@ const dateLabel = (value) =>
   });
 const timeLabel = (value) => new Date(value).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 const roles = { owner: 'Pemilik BAM', admin: 'Admin', sales: 'Sales', buyer: 'Pembeli' };
+const todayID = () => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const value = (type) => parts.find((entry) => entry.type === type)?.value;
+  return value('year') + '-' + value('month') + '-' + value('day');
+};
+const weekdays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 function eventLabel(event) {
   const { name, before, after } = event.details;
   if (event.action === 'payment')
@@ -242,6 +251,10 @@ function AdminCartWorkspace({
   shop, shared, query, setQuery, storeId, setStoreId, date, setDate,
   stores, cart, frozen, selectedNotListed, clearRevision, setClearRevision,
 }) {
+  const activeStore = stores.stores.find((store) => store.id === storeId) ||
+    (cart?.store.id === storeId ? cart.store : null);
+  const fixedDate = nextStoreDelivery(activeStore?.deliverySchedule, todayID());
+  const chosenDate = fixedDate || date;
   const steps = ['Pilih toko', 'Kelola barang', 'Periksa', 'Finalisasi'];
   const stage = !cart ? 0 : cart.status === 'open' ? 1 : cart.status === 'locked' ? 2 : 3;
   return (
@@ -265,7 +278,7 @@ function AdminCartWorkspace({
               className="shared-open-form"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (storeId && date) void shared.choose({ storeId, date });
+                if (storeId && chosenDate) void shared.choose({ storeId, date: chosenDate });
               }}
             >
               <label htmlFor="shared-store">
@@ -275,7 +288,13 @@ function AdminCartWorkspace({
                   required
                   value={storeId}
                   disabled={frozen}
-                  onChange={(event) => setStoreId(event.target.value)}
+                  onChange={(event) => {
+                    const id = event.target.value;
+                    setStoreId(id);
+                    const match = stores.stores.find((store) => store.id === id);
+                    if (match?.deliverySchedule)
+                      setDate(nextStoreDelivery(match.deliverySchedule, todayID()));
+                  }}
                 >
                   <option value="">Pilih toko</option>
                   {selectedNotListed && (
@@ -286,6 +305,13 @@ function AdminCartWorkspace({
                   ))}
                 </select>
               </label>
+              {activeStore?.deliverySchedule ? (
+                <div className="shared-admin-fixed-delivery">
+                  <strong>Jadwal otomatis</strong>
+                  <span>{weekdays[activeStore.deliverySchedule.weekday]} · setiap {activeStore.deliverySchedule.intervalWeeks} minggu</span>
+                  <span>Pengiriman berikutnya: {dateLabel(fixedDate)}</span>
+                </div>
+              ) : (
               <label htmlFor="shared-date">
                 Tanggal rencana pengiriman
                 <input
@@ -299,7 +325,8 @@ function AdminCartWorkspace({
                   onChange={(event) => setDate(event.target.value)}
                 />
               </label>
-              <button className="shop-primary" disabled={frozen || !storeId || !date}>
+              )}
+              <button className="shop-primary" disabled={frozen || !storeId || !chosenDate}>
                 Buka keranjang
               </button>
             </form>
@@ -337,7 +364,9 @@ function AdminCartWorkspace({
               </details>
             </div>
             <p className="shared-admin-small-note">
-              Tanggal masih rencana pengiriman. Jadwal tetap toko akan diterapkan pada tahap kalender.
+              {activeStore?.deliverySchedule
+                ? 'Tanggal sesuai jadwal tetap toko dan tidak bisa diubah.'
+                : 'Jadwal toko belum ditetapkan. Pemilik perlu menetapkannya melalui Toko & Sales.'}
             </p>
           </section>
           {shared.reading && <p role="status">Memuat keranjang terbaru…</p>}
@@ -608,6 +637,10 @@ export default function SharedCartPage({ adminView = false }) {
   const frozen = shared.busy || shared.uncertain || shared.reading;
   const { cart, stores, cycles } = shared;
   const selectedNotListed = cart && !stores.stores.some((store) => store.id === cart.store.id);
+  const buyerStore = stores.stores.find((store) => store.id === storeId) ||
+    (cart?.store.id === storeId ? cart.store : null);
+  const buyerSchedule = buyerStore?.deliverySchedule;
+  const buyerFixedDate = nextStoreDelivery(buyerSchedule, todayID());
   const isAdmin = adminView && ['admin', 'owner'].includes(shared.role);
   const showSelection = !isAdmin || adminSection === 'history';
   const showCart = !isAdmin || adminSection === 'cart';
@@ -756,7 +789,7 @@ export default function SharedCartPage({ adminView = false }) {
               className="shared-open-form"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (storeId && date) void shared.choose({ storeId, date });
+                if (storeId && (buyerFixedDate || date)) void shared.choose({ storeId, date: buyerFixedDate || date });
               }}
             >
               <label htmlFor="shared-store">
@@ -766,7 +799,13 @@ export default function SharedCartPage({ adminView = false }) {
                   required
                   value={storeId}
                   disabled={frozen}
-                  onChange={(event) => setStoreId(event.target.value)}
+                  onChange={(event) => {
+                    const id = event.target.value;
+                    setStoreId(id);
+                    const match = stores.stores.find((store) => store.id === id);
+                    if (match?.deliverySchedule)
+                      setDate(nextStoreDelivery(match.deliverySchedule, todayID()));
+                  }
                 >
                   <option value="">Pilih toko</option>
                   {selectedNotListed && (
@@ -781,6 +820,12 @@ export default function SharedCartPage({ adminView = false }) {
                   ))}
                 </select>
               </label>
+              {buyerSchedule ? (
+                <div className="shared-admin-fixed-delivery">
+                  <strong>Jadwal tetap: {weekdays[buyerSchedule.weekday]} · setiap {buyerSchedule.intervalWeeks} minggu</strong>
+                  <span>Periode berikutnya: {dateLabel(buyerFixedDate)}</span>
+                </div>
+              ) : (
               <label htmlFor="shared-date">
                 Tanggal rencana pengiriman
                 <input
@@ -794,7 +839,8 @@ export default function SharedCartPage({ adminView = false }) {
                   onChange={(event) => setDate(event.target.value)}
                 />
               </label>
-              <button className="shop-primary" disabled={frozen || !storeId || !date}>
+              )}
+              <button className="shop-primary" disabled={frozen || !storeId || !(buyerFixedDate || date)}>
                 Buka keranjang
               </button>
             </form>

@@ -290,7 +290,7 @@ test('B2B management API: owner creates, links and appoints; admin reads; buyer 
       ['buyer', 'other'],
     );
     assert.equal(candidates.body.users[0].memberStores, 1);
-    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_audit').get().n, 4);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_audit').get().n, 5);
   } finally {
     app.db.close();
   }

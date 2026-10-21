@@ -252,6 +252,9 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(container.textContent.includes('Toko Bersama'), false);
     assert.equal(container.querySelector('.shared-item'), null);
     await mount('operator', '/admin/keranjang');
+    await wait(() => button('Isi Keranjang'));
+    assert.equal(container.querySelector('#shared-store'), null);
+    await click(button('Isi Keranjang'));
     await fill('#shared-store', first.id);
     await openDate();
     await wait(() => container.querySelector('.shared-item'));

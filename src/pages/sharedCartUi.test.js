@@ -287,6 +287,14 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
         .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 3),
     );
     await wait(() => container.querySelectorAll('.shared-item').length === 2);
+    assert.equal(container.querySelectorAll('.shared-admin-summary-stats > div').length, 4);
+    const lastStepper = [...container.querySelectorAll('.shared-admin-quantity-stepper')].at(-1);
+    assert.ok(lastStepper, 'Admin has quick +/- quantity controls');
+    await click(lastStepper.querySelector('button:last-child'));
+    await wait(() =>
+      api.sharedCarts.read(actors.operator, first.id, '2026-10-21')
+        .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 4),
+    );
     const adminCart = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
     assert.equal(adminCart.events[0].actorRole, 'admin');
     assert.equal(adminCart.events[0].actorName, 'Akun operator');

@@ -84,12 +84,19 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
     );
     assert.equal(
       (await sharedRequest(app, 'GET', url(first) + '?date=' + date, 'operator')).body.cart.canEdit,
-      false,
+      true,
     );
-    assert.equal(
-      (await sharedRequest(app, 'POST', url(first), 'operator', change({ revision: 2 }))).status,
-      403,
+    const adminEdit = await sharedRequest(
+      app,
+      'POST',
+      url(first),
+      'operator',
+      change({ revision: 2, action: 'set', quantity: 4, price: 1, actorId: 'buyer' }),
     );
+    assert.equal(adminEdit.status, 200);
+    assert.equal(adminEdit.body.cart.items[0].quantity, 4);
+    assert.equal(adminEdit.body.cart.events[0].actorRole, 'admin');
+    assert.equal(adminEdit.body.cart.events[0].actorName, 'Akun operator');
     assert.equal(
       (
         await sharedRequest(
@@ -113,10 +120,128 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
       'POST',
       url(first),
       'buyer2',
-      change({ revision: 2, action: 'clear' }),
+      change({ revision: 3, action: 'clear' }),
     );
     assert.deepEqual(cleared.body.cart.items, []);
-    assert.equal(cleared.body.cart.events.length, 3);
+    assert.equal(cleared.body.cart.events.length, 4);
+  } finally {
+    app.db.close();
+  }
+});
+
+
+test('Admin and Owner edit open carts, audit actors, cannot change locked carts, and Owner can finalize own edits', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  const { first, second } = seedSharedCart(app);
+  const path = url(first);
+  const adminPath = '/api/admin/b2b/stores/' + first.id + '/cart';
+  const adminChange = (action, revision, extra = {}) => ({
+    date,
+    action,
+    revision,
+    requestId: randomUUID(),
+    ...extra,
+  });
+  try {
+    const ownerAdd = await sharedRequest(app, 'POST', path, 'owner', change());
+    assert.equal(ownerAdd.status, 200);
+    assert.equal(ownerAdd.body.cart.events[0].actorRole, 'owner');
+
+    const adminSet = await sharedRequest(
+      app,
+      'POST',
+      path,
+      'operator',
+      change({ action: 'set', revision: 1, quantity: 4 }),
+    );
+    assert.equal(adminSet.status, 200);
+    assert.equal(adminSet.body.cart.items[0].quantity, 4);
+    assert.equal(adminSet.body.cart.events[0].actorRole, 'admin');
+    assert.equal(adminSet.body.cart.events[0].actorName, 'Akun operator');
+    assert.equal(
+      (await sharedRequest(app, 'GET', path + '?date=' + date, 'buyer')).body.cart.items[0]
+        .quantity,
+      4,
+    );
+    assert.equal(
+      (await sharedRequest(app, 'POST', path, 'other', change({ revision: 2 }))).status,
+      404,
+      'a buyer from a different store cannot edit the cart',
+    );
+    assert.equal(
+      (await sharedRequest(app, 'GET', url(second) + '?date=' + date, 'owner')).body.cart.canEdit,
+      true,
+      'Owner may edit any active store',
+    );
+
+    const locked = await sharedRequest(app, 'POST', adminPath, 'owner', adminChange('lock', 2));
+    assert.equal(locked.status, 200);
+    assert.equal(locked.body.cart.status, 'locked');
+    assert.equal(locked.body.cart.canEdit, false);
+    for (const actor of ['owner', 'operator', 'buyer', 'sales']) {
+      const blocked = await sharedRequest(
+        app,
+        'POST',
+        path,
+        actor,
+        change({ revision: locked.body.cart.revision }),
+      );
+      assert.equal(blocked.status, 409, actor + ' cannot edit a locked cart');
+    }
+
+    const unlocked = await sharedRequest(
+      app,
+      'POST',
+      adminPath,
+      'owner',
+      adminChange('unlock', locked.body.cart.revision, { reason: 'Koreksi barang toko' }),
+    );
+    assert.equal(unlocked.status, 200);
+    assert.equal(unlocked.body.cart.canEdit, true);
+    const ownerSet = await sharedRequest(
+      app,
+      'POST',
+      path,
+      'owner',
+      change({ action: 'set', revision: unlocked.body.cart.revision, quantity: 3 }),
+    );
+    assert.equal(ownerSet.status, 200);
+    assert.equal(ownerSet.body.cart.items[0].quantity, 3);
+    const relocked = await sharedRequest(
+      app,
+      'POST',
+      adminPath,
+      'owner',
+      adminChange('lock', ownerSet.body.cart.revision),
+    );
+    assert.equal(relocked.status, 200);
+    const checked = await sharedRequest(
+      app,
+      'GET',
+      adminPath + '/review?date=' + date,
+      'owner',
+    );
+    assert.equal(checked.status, 200);
+    assert.equal(checked.body.review.ready, true, JSON.stringify(checked.body.review));
+    const finalized = await sharedRequest(
+      app,
+      'POST',
+      adminPath,
+      'owner',
+      adminChange('finalize', checked.body.review.revision, {
+        reviewToken: checked.body.review.token,
+        accepted: true,
+      }),
+    );
+    assert.equal(finalized.status, 200, JSON.stringify(finalized.body));
+    assert.equal(finalized.body.cart.status, 'finalized');
+    assert.equal(finalized.body.cart.canEdit, false);
+    assert.equal(finalized.body.order.b2b.finalizedBy.id, 'owner');
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 1);
+    assert.equal(
+      (await sharedRequest(app, 'POST', path, 'owner', change({ revision: 7 }))).status,
+      409,
+    );
   } finally {
     app.db.close();
   }

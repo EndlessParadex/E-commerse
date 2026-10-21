@@ -151,6 +151,13 @@ Sudah diimplementasikan. Panduan: [Finalisasi pesanan B2B](FINALISASI-B2B.md).
 - Hak lihat/unggah bukti diperiksa di backend sesuai hubungan toko yang masih aktif, bukti tidak dibuka publik. Riwayat perubahan metode tersimpan di `cart_events`; perubahan rekening di `b2b_bank_events` tanpa menyimpan nomor rekening penuh pada log tersebut.
 - **Belum termasuk tahap ini:** perluasan metode transfer ke checkout pribadi dan implementasi dua keranjang, kalender pengiriman tetap berdasarkan toko/wilayah, dan faktur B2B tanpa harga. Status pekerjaan ini tidak boleh disamakan dengan kesiapan produksi sebelum seluruh pengujian lokal/CI lolos.
 
+### Jadwal tetap toko — implementasi awal sudah ada
+
+- **Sudah ditambahkan:** pemilik BAM dapat memasukkan hari pengiriman, interval 1/2 minggu dan tanggal acuan saat membuat toko. Untuk toko lama, jadwal ditetapkan sekali pada **Toko & Sales**; setelah itu terkunci di database dengan audit `schedule_assigned`. API menolak penggantian jadwal, perubahan oleh non-Pemilik, tanggal acuan yang salah hari, serta siklus keranjang **baru** pada tanggal di luar jadwal toko.
+- **Sudah ditambahkan pada UI:** setelah jadwal ditetapkan, Admin, pembeli toko dan Sales melihat tanggal pengiriman berikutnya secara otomatis tanpa mengedit tanggal pada formulir toko terjadwal. Periode awal diselaraskan otomatis dengan jadwal yang disimpan.
+- **Masa transisi:** toko lama yang belum diberi jadwal masih menampilkan pemilihan tanggal manual agar keranjang lama tidak rusak. Pemilik wajib menetapkan jadwal untuk mengaktifkan mode otomatis. Keranjang lama tetap dapat ditinjau melalui riwayat.
+- **Masih berikutnya:** kalender profil untuk toko/wilayah, jadwal pengiriman berdasarkan wilayah bagi pembeli tanpa toko, dan aturan cut-off pemrosesan pesanan. Tanggal otomatis adalah jadwal rutin, belum jaminan barang diterima.
+
 ### Kalender pengiriman tetap — rancangan berikutnya
 
 - Toko mempunyai hari tetap dan frekuensi pengiriman 1 atau 2 minggu, berdasarkan tanggal acuan yang tercatat; pembeli/Sales/Admin tidak mengubahnya saat belanja.

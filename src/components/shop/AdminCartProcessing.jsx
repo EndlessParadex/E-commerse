@@ -153,6 +153,82 @@ export function AdminCartQueue({ shared }) {
   );
 }
 
+export function AdminB2BBanks() {
+  const [banks, setBanks] = useState(null);
+  const [bank, setBank] = useState('BCA');
+  const [account, setAccount] = useState('');
+  const [holder, setHolder] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    let alive = true;
+    accountApi('/api/admin/b2b/banks').then(
+      (value) => { if (alive) setBanks(value.banks); },
+      (failure) => { if (alive) setError(failure.message); },
+    );
+    return () => { alive = false; };
+  }, []);
+  const current = banks?.find((item) => item.bank === bank);
+  const select = (value) => {
+    const next = banks?.find((item) => item.bank === value);
+    setBank(value);
+    setAccount(next?.account || '');
+    setHolder(next?.holder || '');
+    setError('');
+    setNotice('');
+  };
+  const save = async (event) => {
+    event.preventDefault();
+    if (busy || !current) return;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const result = await accountApi('/api/admin/b2b/banks', {
+        bank, account, holder, revision: current.revision,
+      }, 15000, 'PUT');
+      setBanks(result.banks);
+      setNotice('Rekening resmi ' + bank + ' berhasil disimpan.');
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="admin-cart-queue" aria-labelledby="b2b-bank-title">
+      <details>
+        <summary id="b2b-bank-title"><strong>Pengaturan rekening transfer BAM (Pemilik)</strong></summary>
+        <p>Rekening diatur Pemilik BAM. Pembeli toko/Sales hanya memilih metode pembayaran.
+          ' Finalisasi transfer memerlukan rekening aktif sesuai bank yang dipilih.</p>
+        <form className="shared-admin-add-fields" onSubmit={save}>
+          <label htmlFor="b2b-bank-selector">Bank
+            <select id="b2b-bank-selector" value={bank} onChange={(event) => select(event.target.value)}>
+              <option value="BCA">BCA</option>
+              <option value="BRI">BRI</option>
+              <option value="Mandiri">Mandiri</option>
+            </select>
+          </label>
+          <label htmlFor="b2b-bank-account">Nomor rekening
+            <input id="b2b-bank-account" inputMode="numeric" required
+              pattern="[0-9]{8,25}" minLength={8} maxLength={25}
+              value={account} onChange={(event) => setAccount(event.target.value)} />
+          </label>
+          <label htmlFor="b2b-bank-holder">Nama pemilik rekening
+            <input id="b2b-bank-holder" required maxLength={100}
+              value={holder} onChange={(event) => setHolder(event.target.value)} />
+          </label>
+          <button className="bam-button-secondary" disabled={busy || !current}>
+            {busy ? 'Menyimpan…' : 'Simpan rekening transfer'}
+          </button>
+        </form>
+        {error && <p className="shop-warning" role="alert">{error}</p>}
+        {notice && <p role="status">{notice}</p>}
+      </details>
+    </section>
+  );
+}
 export default function AdminCartProcessing({ shared }) {
   const cart = shared.cart;
   const [dialog, setDialog] = useState(null);

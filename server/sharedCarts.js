@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { packagingLabel, packagingSnapshot } from '../src/data/productPackaging.js';
+import { paymentMethod } from '../src/state/paymentMethods.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -42,6 +43,8 @@ export class SharedCartRepository {
     );
     CREATE INDEX IF NOT EXISTS cart_cycle_store_date ON cart_cycles(store_id,delivery_date DESC);
     CREATE INDEX IF NOT EXISTS cart_event_revision ON cart_events(cart_id,revision DESC);`);
+    if (!db.prepare('PRAGMA table_info(cart_cycles)').all().some((column) => column.name === 'payment_id'))
+      db.exec("ALTER TABLE cart_cycles ADD COLUMN payment_id TEXT NOT NULL DEFAULT 'cod'");
   }
   actor(actor) {
     const user = actor?.id && this.db.prepare('SELECT id,role FROM users WHERE id=?').get(actor.id);
@@ -136,6 +139,8 @@ export class SharedCartRepository {
       id: cycle?.id || null,
       revision: cycle?.revision || 0,
       status: cycle?.status || 'open',
+      paymentId: cycle?.payment_id || 'cod',
+      payment: paymentMethod(cycle?.payment_id || 'cod'),
       orderId: cycle ? this.orderFor?.(cycle.id) || null : null,
       canEdit: !cycle || cycle.status === 'open',
       updatedAt: cycle?.updated_at || null,
@@ -182,10 +187,17 @@ export class SharedCartRepository {
       body.revision < 0 ||
       typeof body.requestId !== 'string' ||
       !/^[a-zA-Z0-9_-]{16,100}$/.test(body.requestId) ||
-      !['add', 'set', 'remove', 'clear', 'refresh'].includes(body.action)
+      !['add', 'set', 'remove', 'clear', 'refresh', 'payment'].includes(body.action)
     )
       fail('Perubahan keranjang tidak valid. Muat ulang keranjang.');
     const { action } = body;
+    const selectedPayment =
+      action === 'payment' &&
+      ['cod', 'transfer-bca', 'transfer-bri', 'transfer-mandiri'].includes(body.paymentId)
+        ? paymentMethod(body.paymentId)
+        : null;
+    if (action === 'payment' && !selectedPayment)
+      fail('Pilih COD atau transfer BCA, BRI, atau Mandiri.', 422, 'invalid_payment');
     const productId = ['add', 'set', 'remove'].includes(action) ? body.productId : null;
     if (
       productId !== null &&
@@ -196,10 +208,12 @@ export class SharedCartRepository {
     if (quantity !== null && (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99))
       fail('Jumlah harus antara 1 dan 99 kemasan per SKU.');
     const hash = createHash('sha256')
-      .update(JSON.stringify({ date, action, productId, quantity, revision: body.revision }))
+      .update(JSON.stringify({ date, action, productId, quantity, paymentId: selectedPayment?.id || null, revision: body.revision }))
       .digest('hex');
     return this.stores.transaction(() => {
       const { user } = this.access(actor, storeId);
+      if (action === 'payment' && user.role === 'admin')
+        fail('Metode pembayaran dipilih pembeli toko atau Sales.', 403, 'payment_read_only');
       let cycle = this.cycle(storeId, date);
       const prior =
         cycle &&
@@ -243,7 +257,9 @@ export class SharedCartRepository {
       const after =
         action === 'add' ? (previous?.quantity || 0) + quantity : action === 'set' ? quantity : 0;
       if (after > 99) fail('Maksimal 99 kemasan per SKU.');
-      if (['add', 'set'].includes(action)) {
+      if (action === 'payment') {
+        this.db.prepare('UPDATE cart_cycles SET payment_id=? WHERE id=?').run(selectedPayment.id, cycle.id);
+      } else if (['add', 'set'].includes(action)) {
         if (!current && (!previous || after > previous.quantity))
           fail(
             'Produk sudah tidak tersedia. Hapus SKU ini dari keranjang.',
@@ -281,7 +297,9 @@ export class SharedCartRepository {
         .prepare('UPDATE cart_cycles SET revision=?,updated_at=? WHERE id=?')
         .run(revision, this.now(), cycle.id);
       const details =
-        action === 'clear'
+        action === 'payment'
+          ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
+          : action === 'clear'
           ? { clearedItems, before: clearedItems.length, after: 0 }
           : {
               name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),

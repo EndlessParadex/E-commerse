@@ -469,6 +469,51 @@ export default function AdminPage({ view = 'overview' }) {
                 </article>
               ))}
             </section>
+            <section className="admin-overview-grid" aria-label="Pengelolaan katalog dan akses cepat">
+              <div className="admin-overview-main">
+                <section className="admin-panel admin-overview-products" aria-labelledby="admin-overview-products-title">
+                  <div className="admin-panel-heading">
+                    <div>
+                      <h2 id="admin-overview-products-title">Daftar produk</h2>
+                      <p>Ringkasan SKU yang tersimpan dalam katalog BAM.</p>
+                    </div>
+                    <div className="admin-heading-actions">
+                      <a className="admin-secondary" href="#/admin/produk">Lihat semua produk →</a>
+                      <button type="button" className="admin-primary"
+                        disabled={Boolean(deleting || importing)}
+                        onClick={() => startEdit()}>+ Tambah produk</button>
+                    </div>
+                  </div>
+                  <div className="admin-overview-product-search">
+                    <label htmlFor="admin-overview-search">Cari produk atau SKU</label>
+                    <input id="admin-overview-search" type="search" maxLength={200}
+                      value={query} onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Nama, merek, ukuran, atau SKU" />
+                  </div>
+                  <div className="admin-overview-table-wrap">
+                    <table className="admin-overview-table">
+                      <thead><tr><th scope="col">Produk</th><th scope="col">Merek</th>
+                        <th scope="col">Pemasok</th><th scope="col">Harga</th><th scope="col">Tindakan</th>
+                      </tr></thead>
+                      <tbody>
+                        {filterAdminProducts({ query }).slice(0, 6).map((product) => (
+                          <tr key={product.id}>
+                            <td><ProductIdentity product={product} /></td>
+                            <td>{product.brand || '—'}</td>
+                            <td>{product.supplier?.name || '—'}</td>
+                            <td>{rupiah(product.price)}</td>
+                            <td><button type="button" className="admin-secondary"
+                              onClick={() => startEdit(product.groupId)}>Kelola</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filterAdminProducts({ query }).length === 0 && (
+                      <p className="admin-overview-empty">Produk tidak ditemukan.</p>
+                    )}
+                  </div>
+                  <p className="admin-overview-footer">Menampilkan hingga 6 dari {filterAdminProducts({ query }).length} SKU sesuai pencarian.</p>
+                </section>
             <section className="admin-panel">
               <div className="admin-panel-heading">
                 <div>
@@ -509,6 +554,18 @@ export default function AdminPage({ view = 'overview' }) {
                 })}
               </div>
             </section>
+              </div>
+              <aside className="admin-overview-side" aria-label="Akses cepat Admin">
+                <section className="admin-panel admin-overview-quick">
+                  <h2>Aksi cepat</h2>
+                  <div className="admin-overview-quick-links">
+                    <a href="#/admin/pesanan"><AdminIcon name="orders" /> Periksa pesanan</a>
+                    <a href="#/admin/stok"><AdminIcon name="stock" /> Kelola stok</a>
+                    <a href="#/admin/toko-sales"><AdminIcon name="b2bStores" /> Toko &amp; Sales</a>
+                    <a href="#/admin/keranjang"><AdminIcon name="sharedCarts" /> Keranjang bersama</a>
+                    <a href="#/admin/pemasok"><AdminIcon name="suppliers" /> Kelola pemasok</a>
+                  </div>
+                </section>
             <section className="admin-next">
               <h2>Kelola katalog produk</h2>
               <p>Tambahkan produk baru atau perbarui foto, informasi, dan harga setiap ukuran.</p>
@@ -520,6 +577,8 @@ export default function AdminPage({ view = 'overview' }) {
               >
                 + Tambah produk
               </button>
+            </section>
+              </aside>
             </section>
           </>
         ) : (

@@ -259,13 +259,23 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await wait(() => button('Isi Keranjang'));
     assert.equal(container.querySelector('#shared-store'), null);
     await click(button('Isi Keranjang'));
+    await wait(() => container.querySelector('.shared-admin-workspace'));
+    assert.equal(container.querySelectorAll('.shared-admin-steps li').length, 4);
+    assert.ok(container.querySelector('.shared-admin-help'));
+    assert.ok(container.querySelector('.shared-admin-sidebar'));
     await fill('#shared-store', first.id);
     await openDate();
     await wait(() => container.querySelector('.shared-item'));
+    assert.ok(container.querySelector('.shared-admin-products'));
+    assert.ok(container.querySelector('.shared-admin-payment-card'));
+    assert.ok(container.querySelector('.shared-cart-summary'));
     assert.ok(container.querySelector('.shared-quantity'));
     assert.ok(button('Kosongkan keranjang'));
     assert.ok(container.querySelector('.shared-admin-add'));
+    assert.ok(container.querySelector('#shared-admin-category'));
     assert.equal(container.querySelector('#shared-cart-payment'), null);
+    assert.match(container.querySelector('.shared-admin-payment-card').textContent,
+      /Admin hanya memeriksa pilihan pembayaran/);
     assert.match(container.textContent, /Transfer bank Mandiri/);
     await fill('#shared-admin-search', 'snack-pedas-62g');
     await fill('#shared-admin-sku', 'snack-pedas-62g');

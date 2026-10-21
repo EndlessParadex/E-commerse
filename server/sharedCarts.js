@@ -232,6 +232,12 @@ export class SharedCartRepository {
         this.db
           .prepare('SELECT quantity,snapshot FROM cart_items WHERE cart_id=? AND product_id=?')
           .get(cycle.id, productId);
+      const clearedItems =
+        action === 'clear'
+          ? this.db
+              .prepare('SELECT product_id AS productId,quantity FROM cart_items WHERE cart_id=?')
+              .all(cycle.id)
+          : [];
       const products = ['add', 'set', 'refresh'].includes(action) ? this.products() : [];
       const current = products.find((product) => product.id === productId);
       const after =
@@ -274,11 +280,14 @@ export class SharedCartRepository {
       this.db
         .prepare('UPDATE cart_cycles SET revision=?,updated_at=? WHERE id=?')
         .run(revision, this.now(), cycle.id);
-      const details = {
-        name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
-        before: previous?.quantity || 0,
-        after,
-      };
+      const details =
+        action === 'clear'
+          ? { clearedItems, before: clearedItems.length, after: 0 }
+          : {
+              name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
+              before: previous?.quantity || 0,
+              after,
+            };
       this.db
         .prepare('INSERT INTO cart_events VALUES(?,?,?,?,?,?,?,?,?,?,?)')
         .run(

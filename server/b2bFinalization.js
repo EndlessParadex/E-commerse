@@ -22,6 +22,10 @@ export class B2BFinalizationRepository {
       account TEXT NOT NULL, holder TEXT NOT NULL,
       revision INTEGER NOT NULL DEFAULT 0,
       updated_by TEXT NOT NULL REFERENCES users(id), updated_at INTEGER NOT NULL
+    ); CREATE TABLE IF NOT EXISTS b2b_bank_events (
+      id TEXT PRIMARY KEY, bank TEXT NOT NULL,
+      actor_id TEXT NOT NULL REFERENCES users(id), revision INTEGER NOT NULL,
+      account_tail TEXT NOT NULL, created_at INTEGER NOT NULL
     );`);
     carts.orderFor = (cartId) =>
       db.prepare('SELECT order_id FROM b2b_cart_orders WHERE cart_id=?').get(cartId)?.order_id ||
@@ -91,6 +95,8 @@ export class B2BFinalizationRepository {
         account=excluded.account, holder=excluded.holder, revision=excluded.revision,
         updated_by=excluded.updated_by, updated_at=excluded.updated_at`)
         .run(body.bank, body.account, body.holder.trim(), body.revision + 1, actor.id, this.carts.now());
+      this.db.prepare('INSERT INTO b2b_bank_events VALUES(?,?,?,?,?,?)')
+        .run(randomUUID(), body.bank, actor.id, body.revision + 1, body.account.slice(-4), this.carts.now());
       return this.banks(actor);
     };
     return this.carts.stores.transaction(change);

@@ -266,3 +266,26 @@
     justify-content: flex-start;
   }
 }
+
+
+.b2b-schedule-section {
+  padding: 17px;
+  margin: 14px 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+  border-radius: 12px;
+}
+.b2b-schedule-section h3 {
+  font-size: 1rem;
+  margin: 0 0 10px;
+}
+.b2b-delivery-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.b2b-delivery-fields .b2b-full { grid-column: 1 / -1; }
+.b2b-schedule-section > p { line-height: 1.6; }
+@media(max-width:700px) {
+  .b2b-delivery-fields { grid-template-columns: minmax(0, 1fr); }
+}

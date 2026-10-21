@@ -35,11 +35,14 @@ function eventLabel(event) {
 }
 function AdminCartAdd({ shared }) {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('');
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState('1');
+  const categories = [...new Set(products.map((product) => product.category).filter(Boolean))].sort();
   const search = query.trim().toLocaleLowerCase('id');
   const options = products
     .filter((product) =>
+      (!category || product.category === category) &&
       [product.baseName, product.name, product.brand, product.id, product.sizeLabel]
         .join(' ')
         .toLocaleLowerCase('id')
@@ -60,11 +63,11 @@ function AdminCartAdd({ shared }) {
         if (saved) setQuantity('1');
       }}
     >
-      <h3>Tambah barang ke keranjang toko</h3>
-      <p>
-        Admin dan Pemilik dapat menambahkan barang pada keranjang terbuka. Semua perubahan
-        dicatat dan harus diperiksa sebelum finalisasi.
-      </p>
+      <div className="shared-admin-card-heading">
+        <h3>Tambah barang</h3>
+        <span className="shared-admin-hint">Tersimpan langsung di keranjang bersama</span>
+      </div>
+      <p>Pilih produk, tentukan kemasan dan jumlah, lalu tambahkan ke keranjang toko.</p>
       <div className="shared-admin-add-fields">
         <label htmlFor="shared-admin-search">
           Cari barang atau SKU
@@ -80,6 +83,21 @@ function AdminCartAdd({ shared }) {
             }}
             placeholder="Nama produk, merek, ukuran, atau SKU"
           />
+        </label>
+        <label htmlFor="shared-admin-category">
+          Kategori
+          <select
+            id="shared-admin-category"
+            value={category}
+            disabled={!shared.canEdit}
+            onChange={(event) => {
+              setCategory(event.target.value);
+              setSku('');
+            }}
+          >
+            <option value="">Semua kategori</option>
+            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
         </label>
         <label htmlFor="shared-admin-sku">
           Produk dan kemasan
@@ -118,7 +136,7 @@ function AdminCartAdd({ shared }) {
           className="shop-primary"
           disabled={!shared.canEdit || !selected || !valid}
         >
-          Tambah ke keranjang toko
+          + Tambah barang
         </button>
       </div>
       {selected && (

@@ -140,6 +140,24 @@ Sudah diimplementasikan. Panduan: [Finalisasi pesanan B2B](FINALISASI-B2B.md).
 - Admin/Pemilik: antrean, hak edit ketika `open`, penguncian, review, finalisasi dan pengiriman.
 - Tidak menambah dua kotak Sales di beranda atau tombol **Belanja biasa** terpisah.
 
+## Pembayaran B2B: COD dan transfer manual (implementasi bertahap)
+
+**Sudah diterapkan pada keranjang dan pesanan toko:** pembeli toko/Sales yang ditugaskan memilih **COD / BCA / BRI / Mandiri** saat keranjang `open`; metode tercatat sebagai revisi dan audit. Admin/Pemilik hanya membaca dan memeriksa metode sebelum finalisasi, tanpa hak mengganti metode pembayaran. Penguncian dan review mencegah perubahan diam-diam.
+
+- Pemilik BAM memasukkan rekening dan nama pemilik bank yang benar melalui pengaturan rekening transfer di halaman keranjang Admin. Konfigurasi rekening BCA, BRI, dan Mandiri independen; transfer tanpa rekening sesuai bank **tidak dapat difinalisasi**. Review token memuat snapshot metode dan rekening tujuan.
+- Setelah finalisasi toko, instruksi rekening disimpan pada pesanan, sehingga perubahan master bank selanjutnya tidak mengubah pesanan lama.
+- **COD:** bayar saat barang diterima, Admin mencatat pelunasan melalui penyelesaian pesanan.
+- **Transfer manual:** pembeli/Sales berizin mengunggah bukti transfer berupa gambar (JPG/PNG/WebP maksimal 1 MB) lewat **Detail Pesanan**. Admin memeriksa bukti dan dana yang diterima; bila salah, bukti ditolak dengan alasan dan dapat diunggah ulang. Unggah bukti tidak otomatis menandai lunas. Pengiriman transfer ditahan sampai pembayaran dinyatakan lunas.
+- Hak lihat/unggah bukti diperiksa di backend sesuai hubungan toko yang masih aktif, bukti tidak dibuka publik. Riwayat perubahan metode tersimpan di `cart_events`; perubahan rekening di `b2b_bank_events` tanpa menyimpan nomor rekening penuh pada log tersebut.
+- **Belum termasuk tahap ini:** perluasan metode transfer ke checkout pribadi dan implementasi dua keranjang, kalender pengiriman tetap berdasarkan toko/wilayah, dan faktur B2B tanpa harga. Status pekerjaan ini tidak boleh disamakan dengan kesiapan produksi sebelum seluruh pengujian lokal/CI lolos.
+
+### Kalender pengiriman tetap — rancangan berikutnya
+
+- Toko mempunyai hari tetap dan frekuensi pengiriman 1 atau 2 minggu, berdasarkan tanggal acuan yang tercatat; pembeli/Sales/Admin tidak mengubahnya saat belanja.
+- Pembeli tanpa toko mengikuti jadwal tetap wilayah alamatnya, juga mingguan atau dua mingguan.
+- Tampilkan **kalender jadwal rutin hanya di Profil** dan **estimasi serta status pengiriman di Detail Pesanan**, bukan kalender pilihan bebas di keranjang atau checkout.
+- Tanggal rencana pengiriman yang saat ini masih dapat dipilih pada keranjang B2B harus diganti perhitungan otomatis serta pemeriksaan backend pada tahap kalender terpisah. Tidak ada fitur pengaturan jadwal sopir untuk Admin.
+
 ## Tahap 6: Faktur/daftar barang tanpa harga
 
 - Dokumen cetak **hanya nama toko, nama Sales, dan daftar barang**.

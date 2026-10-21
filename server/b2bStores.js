@@ -41,6 +41,21 @@ const pageFilter = (params) => {
   return { query, page, pageSize: 25 };
 };
 
+
+const validSchedule = (value) => {
+  const day = value?.weekday;
+  const weeks = value?.intervalWeeks;
+  const anchor = value?.anchorDate;
+  if (!Number.isInteger(day) || day < 0 || day > 6 || ![1, 2].includes(weeks) ||
+      typeof anchor !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(anchor))
+    fail('Isi hari (Minggu=0 s.d. Sabtu=6), frekuensi 1/2 minggu, dan tanggal acuan.');
+  const parsed = new Date(anchor + 'T00:00:00Z');
+  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== anchor ||
+      parsed.getUTCDay() !== day)
+    fail('Tanggal acuan harus tanggal valid dan sesuai hari pengiriman.');
+  return { weekday: day, intervalWeeks: weeks, anchorDate: anchor };
+};
+
 export class B2BStoreRepository {
   constructor(db, now = () => Date.now()) {
     Object.assign(this, { db, now });
@@ -56,6 +71,14 @@ export class B2BStoreRepository {
       created_by TEXT NOT NULL REFERENCES users(id),
       created_at INTEGER NOT NULL,
       active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1))
+    );
+    CREATE TABLE IF NOT EXISTS b2b_delivery_schedules (
+      store_id TEXT PRIMARY KEY REFERENCES b2b_stores(id) ON DELETE CASCADE,
+      weekday INTEGER NOT NULL CHECK(weekday BETWEEN 0 AND 6),
+      interval_weeks INTEGER NOT NULL CHECK(interval_weeks IN (1,2)),
+      anchor_date TEXT NOT NULL,
+      created_by TEXT NOT NULL REFERENCES users(id),
+      created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS b2b_store_members (
       store_id TEXT NOT NULL REFERENCES b2b_stores(id) ON DELETE CASCADE,
@@ -147,6 +170,37 @@ export class B2BStoreRepository {
   bump(storeId) {
     this.db.prepare('UPDATE b2b_stores SET revision=revision+1 WHERE id=?').run(storeId);
   }
+  schedule(storeId) {
+    return this.db.prepare(
+      'SELECT weekday,interval_weeks AS intervalWeeks,anchor_date AS anchorDate FROM b2b_delivery_schedules WHERE store_id=?',
+    ).get(storeId) || null;
+  }
+  deliveryDate(storeId, fromDate) {
+    const schedule = this.schedule(storeId);
+    if (!schedule) return null;
+    const anchor = Date.parse(schedule.anchorDate + 'T00:00:00Z');
+    const start = Date.parse(fromDate + 'T00:00:00Z');
+    if (!Number.isFinite(start)) fail('Tanggal awal tidak valid.');
+    const cycle = schedule.intervalWeeks * 7;
+    const elapsed = Math.ceil((start - anchor) / 86400000);
+    const steps = Math.max(0, Math.ceil(elapsed / cycle));
+    return new Date(anchor + steps * cycle * 86400000).toISOString().slice(0, 10);
+  }
+  setSchedule(actor, storeId, body) {
+    this.requireOwner(actor);
+    const schedule = validSchedule(body);
+    return this.transaction(() => {
+      this.checkRevision(storeId, body.revision, true);
+      if (this.schedule(storeId))
+        fail('Jadwal toko sudah ditetapkan dan tidak dapat diubah.', 409, 'schedule_locked');
+      this.db.prepare(
+        'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
+      ).run(storeId, schedule.weekday, schedule.intervalWeeks, schedule.anchorDate, actor.id, this.now());
+      this.bump(storeId);
+      this.record(actor, 'schedule_assigned', storeId);
+      return this.store(storeId);
+    });
+  }
   store(id) {
     const row = this.db
       .prepare(
@@ -154,7 +208,7 @@ export class B2BStoreRepository {
       )
       .get(id);
     if (!row || !row.active) fail('Toko tidak ditemukan.', 404, 'store_not_found');
-    return row;
+    return { ...row, deliverySchedule: this.schedule(row.id) };
   }
   list(actor) {
     if (actor.role === 'admin')
@@ -162,7 +216,7 @@ export class B2BStoreRepository {
         .prepare(
           'SELECT id,store_code AS storeCode,store_name AS storeName,phone,address,active,created_at AS createdAt FROM b2b_stores WHERE active=1 ORDER BY store_name,store_code LIMIT 500',
         )
-        .all();
+        .all().map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) }));
     return this.db
       .prepare(
         `SELECT s.id,s.store_code AS storeCode,s.store_name AS storeName,
@@ -172,7 +226,8 @@ export class B2BStoreRepository {
       OR EXISTS(SELECT 1 FROM b2b_sales_assignments a WHERE a.store_id=s.id AND a.sales_user_id=?))
       ORDER BY s.store_name,s.store_code LIMIT 500`,
       )
-      .all(actor.id, actor.id);
+      .all(actor.id, actor.id)
+      .map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) }));
   }
   page(actor, params) {
     const { query, page: requestedPage, pageSize } = pageFilter(params);
@@ -199,7 +254,7 @@ export class B2BStoreRepository {
       )
       .all(...args, pageSize, (page - 1) * pageSize);
     return {
-      stores,
+      stores: stores.map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) })),
       total,
       page,
       pageSize,
@@ -269,6 +324,13 @@ export class B2BStoreRepository {
           'INSERT INTO b2b_stores(id,store_code,store_name,phone,address,created_by,created_at) VALUES(?,?,?,?,?,?,?)',
         )
         .run(id, storeCode, name, phone, address, actor.id, this.now());
+      if (body?.deliverySchedule) {
+        const schedule = validSchedule(body.deliverySchedule);
+        this.db.prepare(
+          'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
+        ).run(id, schedule.weekday, schedule.intervalWeeks, schedule.anchorDate, actor.id, this.now());
+        this.record(actor, 'schedule_assigned', id);
+      }
       this.record(actor, 'store_created', id);
       return this.store(id);
     });

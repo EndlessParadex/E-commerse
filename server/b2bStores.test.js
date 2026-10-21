@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from './app.js';
+import { randomUUID } from 'node:crypto';
+import { seedSharedCart } from './sharedCartFixture.js';
 
 test('B2B store: only BAM owner creates and assigns, buyers and sales see scoped stores', () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
@@ -33,4 +35,45 @@ test('B2B store: only BAM owner creates and assigns, buyers and sales see scoped
     assert.equal(app.b2bStores.salesList(operator)[0].assignedStores,1);
     assert.ok(db.prepare('SELECT COUNT(*) n FROM b2b_store_audit').get().n>=4);
   } finally { app.db.close(); }
+});
+
+
+test('B2B delivery schedule is assigned once by Owner and server rejects off-calendar new carts', () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  try {
+    const { first, actors } = seedSharedCart(app);
+    const schedule = { weekday: 1, intervalWeeks: 2, anchorDate: '2026-10-26' };
+    const version = app.b2bStores.store(first.id).revision;
+    assert.throws(
+      () => app.b2bStores.setSchedule(actors.operator, first.id, { ...schedule, revision: version }),
+      { code: 'forbidden' },
+    );
+    assert.throws(
+      () => app.b2bStores.setSchedule(actors.owner, first.id,
+        { ...schedule, weekday: 3, revision: version }),
+      { code: 'validation_error' },
+    );
+    const saved = app.b2bStores.setSchedule(actors.owner, first.id, { ...schedule, revision: version });
+    assert.deepEqual(saved.deliverySchedule, schedule);
+    assert.equal(app.b2bStores.deliveryDate(first.id, '2026-10-21'), '2026-10-26');
+    assert.equal(app.b2bStores.deliveryDate(first.id, '2026-10-27'), '2026-11-09');
+    assert.equal(app.b2bStores.deliveryDate(first.id, '2026-11-09'), '2026-11-09');
+    assert.throws(
+      () => app.b2bStores.setSchedule(actors.owner, first.id,
+        { ...schedule, revision: saved.revision }),
+      { code: 'schedule_locked' },
+    );
+    const mutate = (date) => app.sharedCarts.mutate(actors.buyer, first.id, {
+      date, revision: 0, requestId: randomUUID(), action: 'add',
+      productId: 'snack-pedas-23g', quantity: 2,
+    });
+    assert.throws(() => mutate('2026-10-27'), { code: 'invalid_delivery_schedule' });
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_cycles WHERE store_id=?')
+      .get(first.id).n, 0);
+    const valid = mutate('2026-10-26');
+    assert.equal(valid.date, '2026-10-26');
+    assert.equal(valid.items[0].quantity, 2);
+  } finally {
+    app.db.close();
+  }
 });

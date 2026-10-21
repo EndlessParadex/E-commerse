@@ -332,8 +332,8 @@ test('review aggregates unit/pack stock, exposes changed snapshots, rejects stal
     const unlocked = app.b2bFinalization.change(actors.owner, first.id, unlockBody);
     assert.equal(
       unlocked.cart.canEdit,
-      false,
-      'Admin still cannot edit customer quantities directly',
+      true,
+      'Admin may edit an unlocked store cart before reviewing and finalizing',
     );
     assert.equal(
       app.b2bFinalization.change(actors.owner, first.id, unlockBody).cart.status,

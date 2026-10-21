@@ -10,6 +10,8 @@ export default function ConfirmDialog({
   error,
   busy = false,
   danger = true,
+  confirmDisabled = false,
+  busyLabel = 'Menyimpan…',
 }) {
   const dialogRef = useRef(null);
   const id = useId();
@@ -50,10 +52,10 @@ export default function ConfirmDialog({
           <button
             type="button"
             className={danger ? 'bam-button-danger' : 'shop-primary'}
-            disabled={busy}
+            disabled={busy || confirmDisabled}
             onClick={onConfirm}
           >
-            {busy ? 'Menyimpan…' : confirmLabel}
+            {busy ? busyLabel : confirmLabel}
           </button>
         </div>
       </div>

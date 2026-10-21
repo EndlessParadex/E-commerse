@@ -151,6 +151,11 @@ export default function OrdersPage() {
               <div className="orders-card-header">
                 <div>
                   <strong className="orders-number">{order.id}</strong>
+                  {order.b2b && (
+                    <p>
+                      {order.b2b.storeName} · {order.b2b.storeCode}
+                    </p>
+                  )}
                   <time dateTime={new Date(order.createdAt).toISOString()}>
                     {dateLabel(order.createdAt)}
                   </time>
@@ -220,7 +225,7 @@ export default function OrdersPage() {
                       Lanjutkan pembayaran
                     </a>
                   )}
-                  {!cancellationReason(order) && (
+                  {!order.b2b && !cancellationReason(order) && (
                     <button
                       className="bam-button-danger"
                       type="button"

@@ -88,7 +88,11 @@ export default function OrderConfirmationPage({ orderId }) {
         </h1>
         <p>
           Nomor pesanan <strong>{order.id}</strong> telah tercatat{' '}
-          {server ? 'di server pada akun Anda.' : 'di browser ini.'}
+          {server
+            ? order.b2b
+              ? 'sebagai pesanan toko Anda.'
+              : 'di server pada akun Anda.'
+            : 'di browser ini.'}
         </p>
         {cancelled && (
           <p className="confirmation-cancel-reason">
@@ -105,7 +109,25 @@ export default function OrderConfirmationPage({ orderId }) {
             : 'Belum ada pesan yang dikirim.'}
         </p>
       )}
-      {server && <OrderInvoice order={order} />}
+      {order.b2b && (
+        <section className="confirmation-card" aria-label="Pesanan toko B2B">
+          <h2>{order.b2b.storeName}</h2>
+          <p>
+            {order.b2b.storeCode} · Rencana pengiriman{' '}
+            {new Date(order.b2b.date + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              timeZone: 'Asia/Jakarta',
+            })}
+          </p>
+          <p>
+            Difinalisasi oleh {order.b2b.finalizedBy.name}. Perubahan atau pembatalan pesanan
+            diproses Admin BAM.
+          </p>
+        </section>
+      )}
+      {server && !order.b2b && <OrderInvoice order={order} />}
       <OrderTracking
         status={orderStatus(order)}
         server={server}
@@ -225,10 +247,14 @@ export default function OrderConfirmationPage({ orderId }) {
                   </div>
                 )}
               </dl>
-              <p>Resi dan status pengiriman pratinjau. Belum terhubung ke kurir.</p>
+              <p>
+                {server
+                  ? 'Resi dan status dicatat Admin BAM. Pelacakan otomatis ke kurir belum terhubung.'
+                  : 'Resi dan status pengiriman pratinjau. Belum terhubung ke kurir.'}
+              </p>
             </section>
           )}
-          {!cancelled && !expired && (
+          {!order.b2b && !cancelled && !expired && (
             <section className="confirmation-card cancellation-card">
               <h2>Perlu membatalkan?</h2>
               <p>

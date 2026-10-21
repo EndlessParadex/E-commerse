@@ -38,7 +38,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - Kegagalan pemuatan pesanan tidak menutup stok yang berhasil dimuat. Kegagalan stok tetap memblokir perubahan yang memerlukan ketersediaan stok; data dari sesi lama tidak boleh masuk setelah akun berganti.
 - `npm run check:local` kini memeriksa kode frontend dan kemampuan backend untuk perbaikan operasional ini. Perintah memeriksa server pengembangan pada alamat Local yang diberikan, bukan otomatis menerapkan pembaruan.
 
-**Status saat ini:** tahap 1 dan keranjang bersama tahap 3 sudah diimplementasikan. Login masih memakai email/kata sandi. Konfirmasi nomor kontak melalui OTP WhatsApp tersedia pada kode aplikasi, tetapi pengiriman sungguhan masih memerlukan konfigurasi Meta. Finalisasi khusus Admin dan faktur B2B tanpa harga dikerjakan pada tahap berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
+**Status saat ini:** tahap 1, keranjang bersama tahap 3 dan finalisasi Admin tahap 4 sudah diimplementasikan. Login masih memakai email/kata sandi. Konfirmasi nomor kontak melalui OTP WhatsApp tersedia pada kode aplikasi, tetapi pengiriman sungguhan masih memerlukan konfigurasi Meta. Faktur B2B tanpa harga dikerjakan berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
 
 ### Verifikasi halaman
 
@@ -67,16 +67,20 @@ Sudah diimplementasikan. Panduan penggunaan dan pengujian: [KERANJANG-BERSAMA.md
 - Pembaruan berkala setiap 5 detik ketika halaman aktif, saat fokus kembali, serta tombol Muat terbaru. Konflik `revision` ditolak tanpa menimpa isian lain, termasuk ketika pengguna masih mengetik atau membuka konfirmasi kosongkan.
 - Setiap perubahan memakai kode unik. Respons yang terputus dapat dipastikan dengan mengirim ulang kode/perubahan yang sama tanpa menggandakan barang.
 - Nama, harga dan konversi kemasan diambil dari katalog server; SKU yang dihapus tetap terlihat sampai dikeluarkan. Harga/informasi yang berubah perlu diperbarui secara eksplisit.
-- Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin, dengan isi dan riwayat yang hanya dapat dibaca. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
-- Batas 100 SKU per keranjang dan 99 kemasan per SKU. Keranjang tidak mencadangkan stok dan belum membuat order. Finalisasi Admin masuk tahap 4.
+- Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin. Jumlah barang tetap diubah pembeli/Sales pada keranjang terbuka; Admin memakai penguncian, pemeriksaan dan finalisasi tahap 4. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
+- Batas 100 SKU per keranjang dan 99 kemasan per SKU. Keranjang belum mencadangkan stok; reservasi dan order dibuat ketika finalisasi Admin berhasil.
 - Akun yang belum pernah dihubungkan ke toko dan belum menjadi Sales tetap memakai alur lama selama migrasi. Keranjang pribadi lama tidak otomatis digabung ke keranjang toko; foto produk dapat ditambahkan belakangan.
 
 ## Tahap 4: Finalisasi eksklusif Admin
+
+Sudah diimplementasikan. Panduan: [Finalisasi pesanan B2B](FINALISASI-B2B.md).
 
 - Admin mengunci keranjang pada jadwal pemrosesan (manual, bukan otomatis).
 - Harga disnapshot, stok dicek dan dicadangkan dalam transaksi atomik, idempotency key mencegah order ganda.
 - Hanya endpoint Admin yang membuat order final. Checkout pembeli dan Sales tidak boleh memanggil jalur pembuatan order lama.
 - Sistem COD dan pesanan historis tetap dapat dibaca.
+- Antrean per toko/periode mempunyai pencarian server dan halaman lanjutan. Pemeriksaan menampilkan harga/konversi terbaru, perubahan dari isian awal dan kebutuhan stok gabungan. Persetujuan finalisasi wajib diulang ketika snapshot berubah.
+- Pembeli/Sales membaca pesanan sesuai akses toko; perubahan order final dilakukan Admin. Pengiriman dan penyelesaian memakai workflow yang sudah ada. Faktur lama dengan harga tidak ditawarkan pada order B2B baru.
 
 ## Tahap 5: Portal Sales, Pembeli, dan Admin
 

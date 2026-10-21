@@ -17,6 +17,8 @@ export default function ProductInformation({
   subcategory,
   description,
   companyProfile,
+  sharedCart,
+  codOnly,
 }) {
   const [active, setActive] = useState('detail');
   const [expanded, setExpanded] = useState(false);
@@ -167,7 +169,11 @@ export default function ProductInformation({
         <h3 id="detail-delivery-title">Pengiriman</h3>
         <p>
           {workflowUsesServer
-            ? 'Toko menetapkan ongkir sesuai barang, tujuan, dan kurir. Anda menyetujui total akhir sebelum membayar.'
+            ? sharedCart?.enabled
+              ? 'Barang disiapkan dari keranjang toko setelah Admin memeriksa harga dan stok lalu memfinalisasi pesanan. Pengiriman gratis, pembayaran COD saat barang diterima. Tanggal keranjang adalah rencana pengiriman.'
+              : codOnly
+                ? 'Pengiriman gratis. Harga checkout sudah final; pembayaran COD dilakukan saat barang diterima.'
+                : 'Toko menetapkan ongkir sesuai barang, tujuan, dan kurir. Anda menyetujui total akhir sebelum membayar.'
             : 'Pilihan pengiriman dan ongkir ditampilkan saat checkout.'}
         </p>
         <p className="detail-description-note">

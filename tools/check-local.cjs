@@ -96,6 +96,16 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
       value.capabilities?.orderSearch === true && value.capabilities?.b2bStoreMaintenance === true
     );
   });
+  await get(
+    '/src/components/shop/AdminCartProcessing.jsx',
+    'Admin: antrean, pemeriksaan dan finalisasi keranjang',
+    (text) => text.includes('Finalisasi dan cadangkan stok') && text.includes('reviewToken'),
+  );
+  await get(
+    '/api/catalog',
+    'Server: finalisasi pesanan B2B oleh Admin',
+    (text) => JSON.parse(text).capabilities?.b2bFinalization === true,
+  );
   return { url: url.origin, checks, ok: checks.every((entry) => entry.ok) };
 }
 

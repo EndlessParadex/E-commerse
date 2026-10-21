@@ -347,7 +347,7 @@ export default function AdminPage({ view = 'overview' }) {
         <p className="admin-preview-notice">
           {b2bView
             ? view === 'sharedCarts'
-              ? 'Keranjang masih berupa daftar barang. Pemeriksaan dan finalisasi pesanan oleh Admin dikerjakan pada tahap berikutnya.'
+              ? 'Pilih antrean toko, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok dicadangkan hanya setelah pesanan berhasil dibuat.'
               : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
             : view === 'accounts'
               ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
@@ -399,7 +399,7 @@ export default function AdminPage({ view = 'overview' }) {
           </p>
         )}
         {view === 'sharedCarts' ? (
-          <SharedCartPage key={delivery?.user?.id} />
+          <SharedCartPage key={delivery?.user?.id} adminView />
         ) : view === 'b2bStores' ? (
           <AdminB2BStoresPage key={delivery?.user?.id} />
         ) : view === 'approvals' ? (

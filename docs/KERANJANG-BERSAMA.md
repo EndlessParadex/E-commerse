@@ -50,7 +50,7 @@ Nama toko pada profil akun saja belum merupakan hubungan B2B. Hubungan toko dan 
 
 ## Memeriksa dari Admin
 
-Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), cari/pilih toko dan tanggal. Admin/Pemilik dapat melihat isi, perkiraan subtotal, periode dan riwayat; tombol mengubah jumlah/mengosongkan tidak tersedia. Finalisasi pesanan oleh Admin belum diaktifkan pada tahap ini.
+Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), pilih antrean toko/tanggal. Admin/Pemilik melihat isi dan riwayat; jumlah barang tetap diubah pembeli/Sales pada keranjang terbuka. Penguncian, pemeriksaan dan finalisasi Admin sudah tersedia: lihat [Finalisasi B2B](FINALISASI-B2B.md).
 
 ## Uji penerimaan
 
@@ -72,25 +72,25 @@ Test otomatis memakai database uji, termasuk dua koneksi SQLite, kehilangan resp
 
 ## Batas tahap ini
 
-- Keranjang adalah daftar permintaan bersama, belum order final. Stok belum dicadangkan; harga dan ketersediaan diperiksa lagi ketika finalisasi Admin dibuat pada tahap 4.
+- Keranjang terbuka/dikunci adalah daftar permintaan bersama, belum order final. Stok dicadangkan ketika finalisasi Admin berhasil; harga dan isi disnapshot pada pesanan.
 - Tanggal dipilih sebagai rencana; belum ada kalender jadwal dari Admin atau batas waktu otomatis.
 - Maksimum 100 SKU berbeda dan 99 kemasan per SKU untuk satu toko/periode.
 - Akun pembeli yang sudah dihubungkan ke toko dan seluruh akun Sales diblokir dari pembuatan pesanan melalui endpoint checkout lama. Akun yang belum masuk migrasi B2B tetap memakai alur lama; pesanan historis tetap dapat dibaca.
 - Keranjang pribadi lama tetap disimpan terpisah dan tidak diimpor otomatis agar isi tidak masuk ke toko yang salah.
 - Dua perangkat harus mengakses server/database yang sama. `localhost` di HP menunjuk ke HP itu sendiri, bukan server pada PC.
-- Login masih email/kata sandi. Layanan OTP SMS, finalisasi Admin dan faktur B2B tanpa harga belum termasuk tahap ini.
+- Login masih email/kata sandi. Finalisasi Admin sudah tersedia; layanan OTP untuk login dan faktur B2B tanpa harga merupakan pekerjaan terpisah.
 
 ## API
 
 Seluruh endpoint memerlukan sesi aktif dan persetujuan akun. Mutasi memakai pemeriksaan asal permintaan dan JSON yang sudah digunakan aplikasi.
 
-| Endpoint | Fungsi |
-| --- | --- |
-| `GET /api/b2b/cart-context` | Peran, status partisipasi B2B, dan tanggal WIB saat ini |
-| `GET /api/b2b/stores?page=1&q=...` | Pencarian toko sesuai akses akun, 25 hasil per halaman |
-| `GET /api/b2b/stores/:id/cart?date=YYYY-MM-DD` | Keranjang periode dan 30 aktivitas terbaru; membaca keranjang kosong tidak membuat baris baru |
-| `POST /api/b2b/stores/:id/cart` | Mutasi atomik dengan `date`, `revision`, `requestId`, `action`, serta `productId`/`quantity` jika relevan |
-| `GET /api/b2b/stores/:id/carts?page=1` | Daftar periode toko, 25 hasil per halaman |
-| `GET /api/b2b/stores/:id/cart/events?date=...&before=...` | Riwayat sebelum nomor revision tertentu, 30 hasil per halaman |
+| Endpoint                                                  | Fungsi                                                                                                    |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `GET /api/b2b/cart-context`                               | Peran, status partisipasi B2B, dan tanggal WIB saat ini                                                   |
+| `GET /api/b2b/stores?page=1&q=...`                        | Pencarian toko sesuai akses akun, 25 hasil per halaman                                                    |
+| `GET /api/b2b/stores/:id/cart?date=YYYY-MM-DD`            | Keranjang periode dan 30 aktivitas terbaru; membaca keranjang kosong tidak membuat baris baru             |
+| `POST /api/b2b/stores/:id/cart`                           | Mutasi atomik dengan `date`, `revision`, `requestId`, `action`, serta `productId`/`quantity` jika relevan |
+| `GET /api/b2b/stores/:id/carts?page=1`                    | Daftar periode toko, 25 hasil per halaman                                                                 |
+| `GET /api/b2b/stores/:id/cart/events?date=...&before=...` | Riwayat sebelum nomor revision tertentu, 30 hasil per halaman                                             |
 
-Action yang tersedia: `add`, `set`, `remove`, `clear`, `refresh`. Server mengambil nama/harga/kemasan dari katalog; isian harga atau aktor dari klien tidak dipakai. `requestId` harus unik per perubahan dan dikirim ulang dengan isi yang sama untuk memastikan respons yang terputus. Konflik revisi mengembalikan HTTP 409. Admin/Pemilik hanya memiliki akses baca pada tahap ini.
+Action untuk pembeli/Sales: `add`, `set`, `remove`, `clear`, `refresh`. Server mengambil nama/harga/kemasan dari katalog; isian harga atau aktor dari klien tidak dipakai. `requestId` harus unik per perubahan dan dikirim ulang dengan isi yang sama untuk memastikan respons yang terputus. Konflik revisi mengembalikan HTTP 409. Admin/Pemilik tidak mengedit jumlah melalui endpoint tersebut; pemrosesan memakai endpoint Admin terpisah yang dijelaskan pada panduan finalisasi.

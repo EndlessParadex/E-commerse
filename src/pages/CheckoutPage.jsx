@@ -64,21 +64,38 @@ export default function CheckoutPage() {
   }, [savedLocation, edited]);
 
   const offeredShipping = live
-    ? codOnly ? [{ id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa biaya ongkos kirim.', cost: 0 }] : [
-        {
-          id: 'regular',
-          label: 'Ongkir dikonfirmasi toko',
-          description:
-            'Toko menghitung ongkir sesuai barang, tujuan, dan kurir. Anda menyetujui total akhir sebelum membayar.',
-          cost: 0,
-        },
-      ]
+    ? codOnly
+      ? [
+          {
+            id: 'regular',
+            label: 'Pengiriman gratis',
+            description: 'Tanpa biaya ongkos kirim.',
+            cost: 0,
+          },
+        ]
+      : [
+          {
+            id: 'regular',
+            label: 'Ongkir dikonfirmasi toko',
+            description:
+              'Toko menghitung ongkir sesuai barang, tujuan, dan kurir. Anda menyetujui total akhir sebelum membayar.',
+            cost: 0,
+          },
+        ]
     : shippingOptions;
-  const shipping = codOnly ? { id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa ongkir', cost: 0 } : offeredShipping.find((option) => option.id === shippingId) || shippingOptions[0];
-  const availableMethods = live ? (codOnly ? [paymentMethod('cod')] : livePaymentMethods(company.profile)) : null;
-  const effectivePaymentId = codOnly ? 'cod' : live
-    ? availableMethods.find((m) => m.id === paymentId)?.id || availableMethods[0]?.id
-    : paymentId;
+  const shipping = codOnly
+    ? { id: 'regular', label: 'Pengiriman gratis', description: 'Tanpa ongkir', cost: 0 }
+    : offeredShipping.find((option) => option.id === shippingId) || shippingOptions[0];
+  const availableMethods = live
+    ? codOnly
+      ? [paymentMethod('cod')]
+      : livePaymentMethods(company.profile)
+    : null;
+  const effectivePaymentId = codOnly
+    ? 'cod'
+    : live
+      ? availableMethods.find((m) => m.id === paymentId)?.id || availableMethods[0]?.id
+      : paymentId;
   const payment = paymentMethod(effectivePaymentId);
   const total = shop.subtotal + shipping.cost;
   const itemProducts = shop.cart.map((item) => ({ item, display: cartItemPresentation(item) }));
@@ -88,8 +105,8 @@ export default function CheckoutPage() {
       <div className="checkout-page">
         <h1>Keranjang bersama toko</h1>
         <p>
-          Barang B2B disimpan dalam keranjang bersama. Finalisasi pesanan dilakukan oleh Admin pada
-          tahap berikutnya.
+          Barang B2B disimpan dalam keranjang bersama. Admin memeriksa dan memfinalisasi pesanan
+          toko. Anda dapat memantau hasilnya di Pesanan saya.
         </p>
         <a className="shop-primary" href="#/keranjang">
           Buka keranjang bersama
@@ -241,7 +258,9 @@ export default function CheckoutPage() {
           <h1>{live && !codOnly ? 'Kirim permintaan pesanan' : 'Checkout COD'}</h1>
           <p>
             {live
-              ? codOnly ? 'Harga final, ongkir gratis, dan COD saat barang diterima. Pesanan langsung diproses setelah berhasil dibuat.' : 'Periksa barang dan alamat. Toko akan mengirimkan ongkir serta total akhir untuk Anda setujui.'
+              ? codOnly
+                ? 'Harga final, ongkir gratis, dan COD saat barang diterima. Pesanan langsung diproses setelah berhasil dibuat.'
+                : 'Periksa barang dan alamat. Toko akan mengirimkan ongkir serta total akhir untuk Anda setujui.'
               : 'Periksa alamat dan pilihan pengiriman sebelum membuat pesanan.'}
           </p>
         </div>
@@ -422,7 +441,11 @@ export default function CheckoutPage() {
               <span className="checkout-step">3</span>
               <div>
                 <h2 id="shipping-title">{codOnly ? 'Pengiriman gratis' : 'Pilihan pengiriman'}</h2>
-                <p>{codOnly ? 'Ongkos kirim selalu Rp0.' : 'Pilih estimasi yang sesuai kebutuhan Anda.'}</p>
+                <p>
+                  {codOnly
+                    ? 'Ongkos kirim selalu Rp0.'
+                    : 'Pilih estimasi yang sesuai kebutuhan Anda.'}
+                </p>
               </div>
             </div>
             <div className="checkout-options">
@@ -456,13 +479,25 @@ export default function CheckoutPage() {
               <span className="checkout-step">4</span>
               <div>
                 <h2 id="payment-title">Metode pembayaran</h2>
-                <p>{codOnly ? 'Metode pembayaran toko hanya COD.' : 'Pilih layanan yang ingin digunakan.'}</p>
+                <p>
+                  {codOnly
+                    ? 'Metode pembayaran toko hanya COD.'
+                    : 'Pilih layanan yang ingin digunakan.'}
+                </p>
               </div>
             </div>
-            {codOnly ? <p className="workflow-preview">COD (Bayar di Tempat) — bayar saat barang diterima.</p> : <PaymentPicker value={effectivePaymentId} onChange={setPaymentId} disabled={busy} />}
+            {codOnly ? (
+              <p className="workflow-preview">
+                COD (Bayar di Tempat) — bayar saat barang diterima.
+              </p>
+            ) : (
+              <PaymentPicker value={effectivePaymentId} onChange={setPaymentId} disabled={busy} />
+            )}
             {workflowUsesServer && (
               <p className="workflow-preview">
-                {codOnly ? 'Harga sudah final. Tidak ada konfirmasi tambahan; bayar COD saat barang diterima.' : 'Permintaan pesanan perlu disetujui toko. Stok baru ditahan setelah persetujuan. Batas pemeriksaan akan terlihat pada detail pesanan. Tunggu instruksi resmi toko untuk pembayaran; COD dibayar saat barang diterima.'}
+                {codOnly
+                  ? 'Harga sudah final. Tidak ada konfirmasi tambahan; bayar COD saat barang diterima.'
+                  : 'Permintaan pesanan perlu disetujui toko. Stok baru ditahan setelah persetujuan. Batas pemeriksaan akan terlihat pada detail pesanan. Tunggu instruksi resmi toko untuk pembayaran; COD dibayar saat barang diterima.'}
               </p>
             )}
           </section>
@@ -531,7 +566,9 @@ export default function CheckoutPage() {
             </div>
             <div>
               <span>Ongkir</span>
-              <strong>{codOnly ? 'GRATIS' : live ? 'Dikonfirmasi toko' : rupiah(shipping.cost)}</strong>
+              <strong>
+                {codOnly ? 'GRATIS' : live ? 'Dikonfirmasi toko' : rupiah(shipping.cost)}
+              </strong>
             </div>
             <div className="checkout-total">
               <span>{live && !codOnly ? 'Subtotal sementara' : 'Total pembayaran'}</span>
@@ -559,7 +596,9 @@ export default function CheckoutPage() {
           )}
           <p className="checkout-note">
             {workflowUsesServer
-              ? codOnly ? 'Harga final saat checkout. Gratis ongkir dan bayar COD saat barang diterima.' : 'Permintaan belum menjamin stok. Toko menetapkan ongkir dan total akhir; Anda menyetujuinya sebelum pembayaran. Pembaruan pesanan dikirim melalui email.'
+              ? codOnly
+                ? 'Harga final saat checkout. Gratis ongkir dan bayar COD saat barang diterima.'
+                : 'Permintaan belum menjamin stok. Toko menetapkan ongkir dan total akhir; Anda menyetujuinya sebelum pembayaran. Pembaruan pesanan dikirim melalui email.'
               : 'Pesanan dan pembayaran masih simulasi. Tidak ada pembayaran yang diproses.'}
           </p>
         </aside>
@@ -567,7 +606,9 @@ export default function CheckoutPage() {
           <div className="checkout-action-total">
             <span>{live && !codOnly ? 'Subtotal sementara' : 'Total pembayaran'}</span>
             <strong aria-live="polite">{rupiah(total)}</strong>
-            <small>{codOnly ? 'Gratis ongkir · COD' : live ? 'Belum termasuk ongkir' : 'Termasuk ongkir'}</small>
+            <small>
+              {codOnly ? 'Gratis ongkir · COD' : live ? 'Belum termasuk ongkir' : 'Termasuk ongkir'}
+            </small>
           </div>
           <button
             type="submit"

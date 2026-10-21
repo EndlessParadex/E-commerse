@@ -48,12 +48,15 @@ async function api(path, options = {}) {
       : AbortSignal.timeout(15000),
   });
   const payload = await response.json();
-  if (!response.ok)
-    throw new Error(
+  if (!response.ok) {
+    const error = new Error(
       response.status === 401
         ? 'Sesi berakhir. Masuk kembali ke akun Anda.'
         : payload.errors?.form || 'Server belum dapat memuat atau menyimpan data.',
     );
+    error.status = response.status;
+    throw error;
+  }
   return payload;
 }
 function inventory(payload) {
@@ -113,7 +116,7 @@ function listing(payload, owned = false) {
   )
     throw new Error('Daftar pesanan server tidak valid.');
   const orders = payload.orders.map(order);
-  if (owned && orders.some((entry) => entry.userId !== state.owner))
+  if (owned && orders.some((entry) => entry.userId !== state.owner && !entry.b2b))
     throw new Error('Pesanan tidak sesuai dengan akun aktif.');
   return orders;
 }
@@ -256,7 +259,7 @@ export async function loadMoreOrders(admin = false) {
 }
 function acceptOrder(value) {
   const next = order(value);
-  if (state.role !== 'admin' && next.userId !== state.owner)
+  if (state.role !== 'admin' && next.userId !== state.owner && !next.b2b)
     throw new Error('Pesanan tidak sesuai dengan akun aktif.');
   if (next.userId === state.owner) {
     try {
@@ -269,7 +272,9 @@ function acceptOrder(value) {
     }
   }
   publish({
-    orders: next.userId === state.owner ? merge(state.orders, [next]) : state.orders,
+    orders: (next.b2b ? state.role !== 'admin' : next.userId === state.owner)
+      ? merge(state.orders, [next])
+      : state.orders,
     adminOrders: state.role === 'admin' ? merge(state.adminOrders, [next]) : [],
     details: { ...state.details, [next.id]: next },
   });
@@ -282,6 +287,15 @@ export async function fetchServerOrder(id) {
     if (token !== generation) return { error: 'Akun berubah.' };
     return { order: acceptOrder(payload.order) };
   } catch (error) {
+    if (token === generation && [401, 403, 404].includes(error.status)) {
+      const details = { ...state.details };
+      delete details[id];
+      publish({
+        details,
+        orders: state.orders.filter((order) => order.id !== id),
+        adminOrders: state.adminOrders.filter((order) => order.id !== id),
+      });
+    }
     return { error: error.message };
   }
 }

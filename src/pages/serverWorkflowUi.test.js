@@ -388,10 +388,12 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await fill('#payment-reference', 'BANK-BOB-001');
     await click(button('Simpan perubahan'));
     assert.equal(api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id).payment.status, 'paid');
+    await wait(() => button('Catat pengiriman'));
     await click(button('Catat pengiriman'));
     await fill('#shipment-courier', 'JNE');
     await fill('#shipment-tracking', 'RESI-BOB-001');
     await click(button('Simpan perubahan'));
+    await wait(() => button('Selesaikan pesanan'));
     await click(button('Selesaikan pesanan'));
     await click(button('Simpan perubahan'));
     assert.equal(api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id).status, 'completed');

@@ -1,5 +1,7 @@
 import { workflowUsesServer } from '../data/adminStore';
 import useCompany from '../state/useCompany';
+import { useContext } from 'react';
+import { ShopContext } from '../state/useShop';
 import './StoreInfoPage.css';
 
 const pages = {
@@ -119,6 +121,7 @@ const pages = {
   },
 };
 export default function StoreInfoPage({ page }) {
+  const shop = useContext(ShopContext);
   const company = useCompany();
   const { profile: companyProfile } = company;
   const configured = Object.fromEntries(
@@ -203,7 +206,8 @@ export default function StoreInfoPage({ page }) {
   }
   // Keep historical order details intact, but explain the actual rules for new orders.
   if (workflowUsesServer && company.commerce?.codOnly === true) {
-    configured.pengiriman.intro = 'Periksa alamat pengiriman sebelum checkout. Ongkos kirim BAM gratis.';
+    configured.pengiriman.intro =
+      'Periksa alamat pengiriman sebelum checkout. Ongkos kirim BAM gratis.';
     configured.pengiriman.sections[1] = {
       title: 'Gratis ongkos kirim',
       text: 'Semua pesanan baru menggunakan pengiriman gratis (Rp0). Harga total sudah final sejak checkout. Toko mengatur pengiriman secara manual.',
@@ -227,6 +231,34 @@ export default function StoreInfoPage({ page }) {
     configured.privasi.sections[2] = {
       title: 'Pembayaran COD dan kontak',
       text: 'Pesanan baru dibayar COD saat barang diterima. Email digunakan untuk verifikasi, pemulihan akun, serta pembaruan pesanan. Nomor WhatsApp bersifat opsional untuk kontak manual dengan persetujuan Anda. Riwayat pesanan lama tetap disimpan sesuai transaksi awalnya.',
+    };
+  }
+  if (workflowUsesServer && shop?.shared?.enabled) {
+    configured.tentang.sections[2] = {
+      title: 'Belanja melalui toko',
+      text: 'Pembeli dan Sales mengisi keranjang bersama. Admin BAM mengunci dan memeriksa keranjang, lalu membuat pesanan final setelah harga dan stok dipastikan.',
+    };
+    configured.pengiriman.intro =
+      'Pengiriman pesanan toko dijadwalkan BAM setelah finalisasi Admin.';
+    configured.pengiriman.sections[1] = {
+      title: 'Gratis ongkos kirim',
+      text: 'Pesanan toko menggunakan pengiriman gratis dan pembayaran COD saat barang diterima. Harga final diperiksa Admin sebelum pesanan dibuat.',
+    };
+    configured.pengiriman.sections[2] = {
+      title: 'Rencana dan status pengiriman',
+      text: 'Tanggal pada keranjang adalah rencana, belum janji pengiriman. Setelah Admin memfinalisasi, pesanan berstatus Diproses dan stok dicadangkan. Lihat Pesanan saya untuk perkembangan pengiriman.',
+    };
+    configured.bantuan.sections[3] = {
+      title: 'Keranjang bersama',
+      text: 'Pembeli yang terhubung dan Sales yang ditugaskan mengisi keranjang toko yang sama. Saat keranjang dikunci Admin, barang tidak dapat diubah sampai dibuka kembali atau difinalisasi.',
+    };
+    configured.bantuan.sections[4] = {
+      title: 'Setelah diperiksa Admin',
+      text: 'Pesanan baru dibuat setelah Admin memeriksa barang, harga dan stok lalu memfinalisasi. Pesanan muncul pada Pesanan saya bagi akun yang mempunyai akses ke toko. Bayar COD ketika barang diterima.',
+    };
+    configured.pembatalan.sections[1] = {
+      title: 'Perubahan pesanan toko',
+      text: 'Sebelum dikunci, pembeli dan Sales dapat memperbaiki keranjang. Jika sedang dikunci atau sudah menjadi pesanan, hubungi Admin BAM. Admin memeriksa pembatalan dan mengembalikan stok jika pembatalan disetujui sebelum pengiriman.',
     };
   }
   const content = configured[page] || configured.bantuan;

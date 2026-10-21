@@ -10,11 +10,19 @@ export default function useOrderDetail(id) {
     if (!workflow.server || workflow.loading || workflow.owner === 'guest') return;
     let active = true;
     // Fetch detail independently of the newest 50 orders in the history list.
-    fetchServerOrder(id).then((result) => {
-      if (active) setReply({ key, error: result.error || '' });
-    });
+    const refresh = () => {
+      if (document.hidden) return;
+      return fetchServerOrder(id).then((result) => {
+        if (active) setReply({ key, error: result.error || '' });
+      });
+    };
+    void refresh();
+    const timer = window.setInterval(refresh, 15000);
+    window.addEventListener('focus', refresh);
     return () => {
       active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
     };
   }, [id, workflow.server, workflow.loading, workflow.owner, key]);
   return {

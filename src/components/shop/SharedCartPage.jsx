@@ -6,6 +6,7 @@ import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
 import PackagingSummary from './PackagingSummary';
 import './SharedCartPage.css';
+import AdminCartProcessing, { AdminCartQueue } from './AdminCartProcessing';
 
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
@@ -20,6 +21,9 @@ function eventLabel(event) {
   const { name, before, after } = event.details;
   if (event.action === 'clear') return 'Mengosongkan keranjang';
   if (event.action === 'refresh') return 'Memperbarui informasi dan harga dari katalog';
+  if (event.action === 'lock') return 'Mengunci keranjang untuk pemeriksaan Admin';
+  if (event.action === 'unlock') return 'Membuka kembali keranjang: ' + event.details.reason;
+  if (event.action === 'finalize') return 'Memfinalisasi pesanan ' + event.details.orderId;
   if (event.action === 'remove') return `Menghapus ${name} (${before} kemasan)`;
   return `${name}: ${before} → ${after} kemasan`;
 }
@@ -98,7 +102,7 @@ export function SharedCartBar() {
   );
 }
 
-export default function SharedCartPage() {
+export default function SharedCartPage({ adminView = false }) {
   const shop = useShop();
   const { shared } = shop;
   const [query, setQuery] = useState('');
@@ -116,20 +120,28 @@ export default function SharedCartPage() {
   const selectedNotListed = cart && !stores.stores.some((store) => store.id === cart.store.id);
   return (
     <div className="shop-page shared-cart-page">
-      <nav className="shop-breadcrumb" aria-label="Breadcrumb">
-        <a href="#/">Beranda</a>
-        <span>/</span>
-        <span>Keranjang bersama</span>
-      </nav>
-      <header className="shop-page-header">
-        <h1>Keranjang bersama toko</h1>
-        <p>Pembeli dan Sales yang ditugaskan mengisi daftar barang yang sama.</p>
-      </header>
-      <p className="shared-cart-explanation">
-        Perubahan disimpan di server. Tanggal di bawah adalah rencana pengiriman, belum merupakan
-        jadwal yang dikonfirmasi. Keranjang belum menjadi pesanan dan belum mencadangkan stok.
-      </p>
+      {!adminView && (
+        <>
+          <nav className="shop-breadcrumb" aria-label="Breadcrumb">
+            <a href="#/">Beranda</a>
+            <span>/</span>
+            <span>Keranjang bersama</span>
+          </nav>
+          <header className="shop-page-header">
+            <h1>Keranjang bersama toko</h1>
+            <p>Pembeli dan Sales yang ditugaskan mengisi daftar barang yang sama.</p>
+          </header>
+          <p className="shared-cart-explanation">
+            Perubahan disimpan di server. Tanggal di bawah adalah rencana pengiriman, belum
+            merupakan jadwal yang dikonfirmasi. Stok dicadangkan setelah Admin berhasil
+            memfinalisasi pesanan.
+          </p>
+        </>
+      )}
       {shared.status === 'loading' && <p role="status">Memuat toko dan keranjang…</p>}
+      {shared.status === 'ready' && ['admin', 'owner'].includes(shared.role) && (
+        <AdminCartQueue shared={shared} />
+      )}
       {shared.status === 'legacy' && (
         <p className="shop-warning">
           Halaman ini memerlukan server B2B terbaru. Pembeli perlu dihubungkan ke toko oleh Pemilik
@@ -284,9 +296,21 @@ export default function SharedCartPage() {
               {!cart.canEdit && (
                 <p className="shop-warning">
                   {shared.role === 'admin' || shared.role === 'owner'
-                    ? 'Admin dapat memeriksa isi dan riwayat. Finalisasi pesanan tersedia pada tahap berikutnya.'
-                    : 'Keranjang ini sudah dikunci dan hanya dapat dilihat.'}
+                    ? cart.status === 'finalized'
+                      ? 'Keranjang sudah menjadi pesanan. Perubahan berikutnya dikelola pada Pesanan toko.'
+                      : 'Gunakan Pemrosesan Admin untuk mengunci, memeriksa, atau memfinalisasi keranjang.'
+                    : cart.status === 'finalized'
+                      ? 'Keranjang ini sudah menjadi pesanan dan hanya dapat dilihat.'
+                      : 'Keranjang dikunci untuk pemeriksaan Admin dan hanya dapat dilihat.'}
                 </p>
+              )}
+              {cart.orderId && (
+                <p className="shared-save-notice">
+                  <a href={'#/pesanan/' + encodeURIComponent(cart.orderId)}>Lihat pesanan toko →</a>
+                </p>
+              )}
+              {['admin', 'owner'].includes(shared.role) && (
+                <AdminCartProcessing key={cart.store.id + cart.date} shared={shared} />
               )}
               {shared.busy && <p role="status">Menyimpan perubahan…</p>}
               {shop.cartReview.issues.length > 0 && (
@@ -390,8 +414,9 @@ export default function SharedCartPage() {
                     Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                   </p>
                   <p>
-                    Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat
-                    finalisasi.
+                    {cart.status === 'finalized'
+                      ? 'Harga dan barang sudah dicatat pada pesanan final.'
+                      : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
                   </p>
                   <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
                   {cart.updatedAt && <p>Terakhir disimpan: {timeLabel(cart.updatedAt)} WIB</p>}

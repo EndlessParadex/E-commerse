@@ -386,18 +386,22 @@ export class WorkflowRepository {
     });
     return this.stock();
   }
-  publicOrder(order) {
+  publicOrder(order, viewer = null) {
     const value = copy(order);
     if (!value.requestKey)
       value.requestKey = this.db
         .prepare('SELECT request_key FROM orders WHERE id=?')
         .get(order.id)?.request_key;
-    if (value.commerceVersion === 31 && this.messages)
-      value.emailUpdates = this.db
-        .prepare(
-          'SELECT kind,status,created_at AS createdAt,sent_at AS sentAt FROM order_mail WHERE order_id=? AND recipient_id=? AND admin=0 ORDER BY created_at DESC LIMIT 12',
-        )
-        .all(value.id, value.userId);
+    if (value.commerceVersion === 31 && this.messages) {
+      const recipient = value.b2b ? viewer?.id : value.userId;
+      value.emailUpdates = recipient
+        ? this.db
+            .prepare(
+              'SELECT kind,status,created_at AS createdAt,sent_at AS sentAt FROM order_mail WHERE order_id=? AND recipient_id=? AND admin=0 ORDER BY created_at DESC LIMIT 12',
+            )
+            .all(value.id, recipient)
+        : [];
+    }
     value.items.forEach((item, index) => {
       if (item.details.image)
         item.details.image = `/api/orders/${encodeURIComponent(order.id)}/images/${index}`;
@@ -406,13 +410,18 @@ export class WorkflowRepository {
   }
   owned(user, id) {
     const row = this.db.prepare('SELECT user_id,data FROM orders WHERE id=?').get(id);
-    if (!row || (row.user_id !== user.id && user.role !== 'admin'))
+    const value = row && JSON.parse(row.data);
+    if (
+      !row ||
+      (user.role !== 'admin' &&
+        (value.b2b ? !this.b2bCanRead?.(user, value.b2b.storeId) : row.user_id !== user.id))
+    )
       fail('Pesanan tidak ditemukan pada akun Anda.', 404, 'not_found');
-    return JSON.parse(row.data);
+    return value;
   }
   get(user, id) {
     this.tick();
-    return this.publicOrder(this.owned(user, id));
+    return this.publicOrder(this.owned(user, id), user);
   }
   image(user, id, index) {
     const order = this.owned(user, id);
@@ -461,8 +470,9 @@ export class WorkflowRepository {
     const where = [];
     const params = [];
     if (!admin) {
-      where.push('user_id=?');
-      params.push(user.id);
+      const scope = this.b2bOrderScope?.(user);
+      where.push(scope?.sql || 'user_id=?');
+      params.push(...(scope?.params || [user.id]));
     }
     if (status !== 'all') {
       const statuses = status === 'active' ? active : [status];
@@ -471,7 +481,7 @@ export class WorkflowRepository {
     }
     if (q.trim()) {
       // Search only the displayed identity fields; SQL wildcard characters remain literal.
-      where.push(`instr(lower(id||' '||json_extract(data,'$.recipient')||' '||
+      where.push(`instr(lower(id||' '||json_extract(data,'$.recipient')||' '||COALESCE(json_extract(data,'$.b2b.storeCode'),'')||' '||
         COALESCE((SELECT group_concat(json_extract(value,'$.name')||' '||json_extract(value,'$.id'),' ')
           FROM json_each(orders.data,'$.items')),'')),?)>0`);
       params.push(q.trim().toLowerCase());
@@ -485,7 +495,7 @@ export class WorkflowRepository {
       const cursor = this.db
         .prepare('SELECT created_at,id,user_id FROM orders WHERE id=?')
         .get(before);
-      if (!cursor || (!admin && cursor.user_id !== user.id))
+      if (!cursor || (!admin && !this.owned(user, before)))
         fail('Batas halaman tidak ditemukan pada akun Anda.', 404, 'not_found');
       where.push('(created_at<? OR (created_at=? AND id<?))');
       params.push(cursor.created_at, cursor.created_at, cursor.id);
@@ -497,10 +507,54 @@ export class WorkflowRepository {
       .all(...params);
     return {
       version: 1,
-      orders: rows.slice(0, 50).map((row) => this.publicOrder(JSON.parse(row.data))),
+      orders: rows.slice(0, 50).map((row) => this.publicOrder(JSON.parse(row.data), user)),
       nextCursor: rows.length > 50 ? JSON.parse(rows[49].data).id : null,
       total,
     };
+  }
+  snapshotItems(requested) {
+    const catalog = this.catalogItems();
+    const allocations = new Map();
+    const items = requested.map((entry) => {
+      const found = catalog.find(({ variant }) => variant.id === entry.id);
+      if (!found)
+        fail(
+          'Barang pada keranjang sudah tidak tersedia. Periksa katalog kembali.',
+          409,
+          'catalog_changed',
+        );
+      const { draft, variant, key } = found;
+      const price = Number(variant.price);
+      if (price !== entry.expectedPrice)
+        fail(
+          'Harga produk berubah. Periksa keranjang dan gunakan harga terbaru.',
+          409,
+          'price_changed',
+        );
+      const pack = packagingValues(variant);
+      const sizeLabel = `${Number(variant.sizeValue)}${variant.sizeUnit}`;
+      allocations.set(key, (allocations.get(key) || 0) + entry.quantity * pack.unitsPerPackage);
+      const photos = variant.gallery ?? draft.gallery ?? [];
+      const image = photos[0]?.src || (variant.gallery ? '' : draft.image) || '';
+      return {
+        id: variant.id,
+        name: `${draft.baseName} ${sizeLabel}${pack.packagingType === 'satuan' ? '' : ' · ' + packagingLabel(variant)}`,
+        price,
+        quantity: entry.quantity,
+        ...(Number(variant.oldPrice) > price ? { oldPrice: Number(variant.oldPrice) } : {}),
+        details: {
+          name: draft.baseName,
+          brand: draft.brand,
+          sizeLabel,
+          packaging: { ...pack, sizeLabel },
+          image: this.saveImage(image),
+          imageAlt: photos[0]?.alt || draft.imageAlt || draft.baseName,
+          icon: '📦',
+          color: draft.color,
+        },
+      };
+    });
+    return { items, allocations };
   }
   create(user, body, ip = user.id) {
     const requestKey = text(body?.requestKey, 36, 36, 'Nomor permintaan');
@@ -566,50 +620,7 @@ export class WorkflowRepository {
       }
       this.validateCheckout?.(user, body, payment);
       this.checkCheckoutSource?.(user, ip);
-      const catalog = this.catalogItems();
-      const allocations = new Map();
-      const items = requested.map((entry) => {
-        const found = catalog.find(({ variant }) => variant.id === entry.id);
-        if (!found)
-          fail(
-            'Barang pada keranjang sudah tidak tersedia. Periksa katalog kembali.',
-            409,
-            'catalog_changed',
-          );
-        const { draft, variant, key } = found;
-        const price = Number(variant.price);
-        if (price !== entry.expectedPrice)
-          fail(
-            'Harga produk berubah. Periksa keranjang dan gunakan harga terbaru.',
-            409,
-            'price_changed',
-          );
-        const pack = packagingValues(variant);
-        const sizeLabel = `${Number(variant.sizeValue)}${variant.sizeUnit}`;
-        allocations.set(key, (allocations.get(key) || 0) + entry.quantity * pack.unitsPerPackage);
-        const photos = variant.gallery ?? draft.gallery ?? [];
-        const image = photos[0]?.src || (variant.gallery ? '' : draft.image) || '';
-        const name = `${draft.baseName} ${sizeLabel}${pack.packagingType === 'satuan' ? '' : ' · ' + packagingLabel(variant)}`;
-        return {
-          id: variant.id,
-          name,
-          price,
-          ...(Number.isSafeInteger(Number(variant.oldPrice)) && Number(variant.oldPrice) > price
-            ? { oldPrice: Number(variant.oldPrice) }
-            : {}),
-          quantity: entry.quantity,
-          details: {
-            name: draft.baseName,
-            brand: draft.brand,
-            sizeLabel,
-            packaging: { ...pack, sizeLabel },
-            image: this.saveImage(image),
-            imageAlt: photos[0]?.alt || draft.imageAlt || draft.baseName,
-            icon: '📦',
-            color: draft.color,
-          },
-        };
-      });
+      const { items, allocations } = this.snapshotItems(requested);
       this.checkReservations(user, allocations);
       const id = 'BAM-' + randomUUID().toUpperCase();
       const time = this.now();
@@ -682,6 +693,12 @@ export class WorkflowRepository {
         fail('Akun ini dinonaktifkan. Hubungi pemilik toko.', 403, 'account_disabled');
       this.expireInside();
       let order = this.owned(user, id);
+      if (order.b2b && user.role !== 'admin')
+        fail(
+          'Pesanan toko yang sudah difinalisasi hanya dapat diubah Admin. Hubungi BAM untuk perubahan.',
+          403,
+          'admin_required',
+        );
       const action = body?.action;
       if (!Number.isSafeInteger(body?.revision) || body.revision !== order.revision)
         fail('Pesanan berubah. Muat data terbaru sebelum melanjutkan.', 409, 'revision_conflict');

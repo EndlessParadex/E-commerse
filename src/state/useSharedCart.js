@@ -135,6 +135,15 @@ export default function useSharedCart(user, authLoading) {
       };
     // oxlint-disable-next-line react/set-state-in-effect
     setStatus('loading');
+    snapshot.current = null;
+    pending.current = null;
+    changing.current = false;
+    setCart(null);
+    setBusy(false);
+    setUncertain(false);
+    setReading(false);
+    setError('');
+    setNotice('');
     (async () => {
       try {
         const result = await request('/api/b2b/cart-context');
@@ -207,23 +216,33 @@ export default function useSharedCart(user, authLoading) {
     setError('');
     setNotice('');
     let conflict = false;
+    let failureMessage = '';
+    const session = bootId.current;
     try {
-      const payload = await request(cartPath(operation.target), {
+      const payload = await request(operation.endpoint || cartPath(operation.target), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(operation.body),
       });
       if (!payload.cart || !Array.isArray(payload.cart.items))
         throw new Error('Status penyimpanan belum dapat dipastikan.');
-      if (!alive.current) return false;
+      if (!alive.current || session !== bootId.current) return false;
       pending.current = null;
       setUncertain(false);
       snapshot.current = payload.cart;
       setCart(payload.cart);
-      setNotice('Tersimpan di keranjang bersama.');
+      setNotice(
+        operation.admin
+          ? payload.order
+            ? payload.order.inventoryReserved
+              ? 'Pesanan berhasil difinalisasi. Stok sudah dicadangkan.'
+              : 'Pesanan toko sudah tercatat. Buka detail untuk melihat status terbaru.'
+            : 'Status pemrosesan keranjang tersimpan.'
+          : 'Tersimpan di keranjang bersama.',
+      );
       return true;
     } catch (failure) {
-      if (!alive.current) return false;
+      if (!alive.current || session !== bootId.current) return false;
       if (!failure.status || failure.status >= 500) {
         pending.current = operation;
         setUncertain(true);
@@ -234,6 +253,7 @@ export default function useSharedCart(user, authLoading) {
         pending.current = null;
         setUncertain(false);
         conflict = failure.status === 409;
+        failureMessage = failure.message;
         setError(failure.message);
         if ([401, 403, 404].includes(failure.status)) {
           snapshot.current = null;
@@ -242,18 +262,20 @@ export default function useSharedCart(user, authLoading) {
       }
       return false;
     } finally {
-      changing.current = false;
-      if (alive.current) {
+      if (session === bootId.current) changing.current = false;
+      if (alive.current && session === bootId.current) {
         setBusy(false);
         setReading(false);
         if (conflict) {
           await load(operation.target);
-          if (alive.current)
+          if (alive.current && session === bootId.current)
             setError(
-              'Keranjang sudah berubah. Isian terbaru dimuat; periksa lalu ulangi perubahan Anda.',
+              operation.admin
+                ? failureMessage
+                : 'Keranjang sudah berubah. Isian terbaru dimuat; periksa lalu ulangi perubahan Anda.',
             );
         }
-        void loadCycles(1, operation.target);
+        if (session === bootId.current) void loadCycles(1, operation.target);
       }
     }
   };
@@ -301,6 +323,30 @@ export default function useSharedCart(user, authLoading) {
       if (alive.current) setError(failure.message);
     }
   };
+  const adminAction = (action, options = {}) => {
+    if (
+      !['admin', 'owner'].includes(context?.role) ||
+      !snapshot.current ||
+      changing.current ||
+      pending.current ||
+      reading
+    )
+      return Promise.resolve(false);
+    return send({
+      target: { ...selected.current },
+      admin: true,
+      endpoint: '/api/admin/b2b/stores/' + encodeURIComponent(selected.current.storeId) + '/cart',
+      body: {
+        date: selected.current.date,
+        revision: snapshot.current.revision,
+        requestId: Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) =>
+          byte.toString(16).padStart(2, '0'),
+        ).join(''),
+        action,
+        ...options,
+      },
+    });
+  };
   return {
     enabled: active && status !== 'legacy',
     status,
@@ -322,6 +368,10 @@ export default function useSharedCart(user, authLoading) {
     loadCycles,
     olderEvents,
     mutate,
+    adminAction,
+    clearError: () => {
+      if (!pending.current) setError('');
+    },
     refresh: () => load(),
     retry: () => {
       setStatus('loading');

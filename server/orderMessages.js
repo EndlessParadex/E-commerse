@@ -36,7 +36,9 @@ export class OrderMessages {
   }
   enqueue(order, kind, time) {
     if (!labels[kind]) return;
-    const recipients = [{ id: order.userId, admin: 0 }];
+    const recipients = order.b2b
+      ? (this.b2bRecipients?.(order.b2b.storeId) || []).map((user) => ({ id: user.id, admin: 0 }))
+      : [{ id: order.userId, admin: 0 }];
     if (['orderCreated', 'proofSubmitted', 'orderCancelled'].includes(kind))
       for (const u of this.db
         .prepare(
@@ -107,6 +109,8 @@ export class OrderMessages {
       let skipReason = '';
       if (!order) skipReason = 'order_missing';
       else if (!user) skipReason = 'recipient_missing';
+      else if (order.b2b && !this.b2bCanRead?.({ id: row.recipient_id }, order.b2b.storeId))
+        skipReason = 'store_access_changed';
       else if (row.admin && !accountIsActive(this.db, row.recipient_id))
         skipReason = 'recipient_inactive';
       else if (!row.admin && !this.identity.verified(row.recipient_id))

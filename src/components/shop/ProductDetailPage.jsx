@@ -28,7 +28,7 @@ const heartPath =
   'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z';
 
 export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) {
-  const { profile: companyProfile } = useCompany();
+  const { profile: companyProfile, commerce } = useCompany();
   const [selectedId, setSelectedId] = useState(productId);
   const product = products.find((item) => item.id === selectedId);
   const variants = productVariants(productId);
@@ -286,6 +286,8 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
                 subcategory={subcategory}
                 description={description}
                 companyProfile={companyProfile}
+                sharedCart={shared}
+                codOnly={commerce?.codOnly === true}
               />
             </section>
           </div>

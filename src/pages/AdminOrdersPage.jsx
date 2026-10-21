@@ -222,8 +222,16 @@ export default function AdminOrdersPage() {
               </div>
               {order.codFixedTotal && order.status === 'processing' && (
                 <p className="workflow-preview">
-                  Harga final sejak checkout · Gratis ongkir · COD saat diterima. Stok sudah
-                  dicadangkan.
+                  {order.b2b
+                    ? 'Harga final setelah pemeriksaan Admin'
+                    : 'Harga final sejak checkout'}{' '}
+                  · Gratis ongkir · COD saat diterima. Stok sudah dicadangkan.
+                </p>
+              )}
+              {order.b2b && (
+                <p className="workflow-preview">
+                  {order.b2b.storeCode} · Rencana pengiriman {order.b2b.date} · Difinalisasi{' '}
+                  {order.b2b.finalizedBy.name}
                 </p>
               )}
               {order.status === 'awaiting_confirmation' && (

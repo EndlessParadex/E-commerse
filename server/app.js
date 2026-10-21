@@ -26,6 +26,7 @@ import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { AccountRepository } from './accounts.js';
 import { B2BStoreRepository } from './b2bStores.js';
 import { SharedCartRepository } from './sharedCarts.js';
+import { B2BFinalizationRepository } from './b2bFinalization.js';
 import { customerAccess } from './customerAccess.js';
 import { PhoneVerificationRepository } from './phoneVerification.js';
 import { createWhatsAppOtpSender } from './whatsappOtp.js';
@@ -208,6 +209,7 @@ export function createApp({
   const accounts = new AccountRepository(db, now);
   const b2bStores = new B2BStoreRepository(db, now);
   const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now);
+  const b2bFinalization = new B2BFinalizationRepository(db, sharedCarts, workflow, messages);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',
     indexHtml: siteIndexHtml,
@@ -392,6 +394,27 @@ export function createApp({
             return json(res, 200, {
               cart: sharedCarts.mutate(actor, storeId, await readBody(req)),
             });
+        }
+        return sendError(res, 405, 'method_not_allowed');
+      }
+      const finalizationMatch = path.match(
+        /^\/api\/admin\/b2b\/stores\/([^/]+)\/cart(?:\/(review))?$/,
+      );
+      if (path === '/api/admin/b2b/carts' || finalizationMatch) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        b2bFinalization.admin(actor);
+        const params = new URL(req.url, 'http://bam.local').searchParams;
+        if (path === '/api/admin/b2b/carts' && req.method === 'GET')
+          return json(res, 200, b2bFinalization.queue(actor, params));
+        if (finalizationMatch) {
+          const storeId = decodeURIComponent(finalizationMatch[1]);
+          if (finalizationMatch[2] && req.method === 'GET')
+            return json(res, 200, {
+              review: b2bFinalization.review(actor, storeId, params.get('date')),
+            });
+          if (!finalizationMatch[2] && req.method === 'POST')
+            return json(res, 200, b2bFinalization.change(actor, storeId, await readBody(req)));
         }
         return sendError(res, 405, 'method_not_allowed');
       }
@@ -915,6 +938,7 @@ export function createApp({
     accounts,
     b2bStores,
     sharedCarts,
+    b2bFinalization,
     refreshMailSettings,
   };
 }

@@ -227,7 +227,7 @@ test('shared cart website persists buyer/Sales edits, handles conflicts and lost
     await click(button('Muat terbaru'));
     await wait(() => !container.querySelector('.shared-quantity input').disabled);
     await navigate('/checkout');
-    assert.match(container.textContent, /Finalisasi pesanan dilakukan oleh Admin/);
+    assert.match(container.textContent, /Admin memeriksa dan memfinalisasi pesanan toko/);
     assert.equal(container.querySelector('#checkout-form'), null);
 
     await mount('other');
@@ -240,7 +240,8 @@ test('shared cart website persists buyer/Sales edits, handles conflicts and lost
     await wait(() => container.querySelector('.shared-item'));
     assert.equal(container.querySelector('.shared-quantity'), null);
     assert.equal(button('Kosongkan keranjang'), undefined);
-    assert.match(container.textContent, /Admin dapat memeriksa/);
+    assert.match(container.textContent, /Pemrosesan Admin/);
+    assert.ok(button('Kunci untuk diperiksa'));
     assert.ok(container.querySelector('nav a[href="#/admin/keranjang"][aria-current="page"]'));
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
     for (let i = 0; i < dom.localStorage.length; i++) {

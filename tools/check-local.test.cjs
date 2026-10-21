@@ -13,6 +13,7 @@ test('local checks identify a stale frontend and backend instead of reporting an
     '/src/state/useOrderSearch.js': 'searchServerOrders nextCursor',
     '/src/state/serverWorkflow.js': 'inventoryFailed adminOrdersFailed',
     '/src/pages/AdminB2BStoresPage.jsx': 'Ganti Sales Cabut penugasan',
+    '/src/components/shop/AdminCartProcessing.jsx': 'Finalisasi dan cadangkan stok reviewToken',
     '/src/pages/AccountRecoveryPage.jsx': 'auth-recovery-help Kirim tautan verifikasi baru',
     '/src/components/account/AccountPhone.jsx': 'account-phone Simpan nomor HP',
     '/api/auth/features': JSON.stringify({ profilePhone: true, contactVerification: true }),
@@ -25,6 +26,7 @@ test('local checks identify a stale frontend and backend instead of reporting an
         sharedCarts: true,
         orderSearch: true,
         b2bStoreMaintenance: true,
+        b2bFinalization: true,
       },
     }),
   };
@@ -36,7 +38,7 @@ test('local checks identify a stale frontend and backend instead of reporting an
   const outdated = await checkLocal('http://localhost:5174', request);
   assert.equal(outdated.ok, false);
   assert.equal(outdated.url, 'http://localhost:5174');
-  assert.equal(outdated.checks.filter((entry) => !entry.ok).length, 3);
+  assert.equal(outdated.checks.filter((entry) => !entry.ok).length, 4);
   const offline = await checkLocal('http://127.0.0.1:5173', async () => {
     throw new Error('Connection refused');
   });

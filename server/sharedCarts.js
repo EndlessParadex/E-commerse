@@ -138,6 +138,7 @@ export class SharedCartRepository {
       id: cycle?.id || null,
       revision: cycle?.revision || 0,
       status: cycle?.status || 'open',
+      orderId: cycle ? this.orderFor?.(cycle.id) || null : null,
       canEdit: user.role !== 'admin' && (!cycle || cycle.status === 'open'),
       updatedAt: cycle?.updated_at || null,
       items: cycle

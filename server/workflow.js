@@ -758,8 +758,11 @@ export class WorkflowRepository {
           order.review = { ...order.review, approvedAt: time, approvedBy: user.id };
           kind = 'orderApproved';
         } else if (action === 'paid') {
-          if (order.status !== 'awaiting_payment' || isCOD(order))
-            fail('Status pembayaran sudah berubah.', 409, 'invalid_status');
+          if (isCOD(order) ||
+            (order.b2b
+              ? order.status !== 'processing' || order.payment.status !== 'proof_submitted'
+              : order.status !== 'awaiting_payment'))
+            fail('Transfer belum memiliki bukti yang menunggu verifikasi.', 409, 'invalid_status');
           order.payment.reference = text(body.reference, 3, 100, 'Referensi pembayaran manual');
           order.payment.status = 'paid';
           if (order.payment.proof)

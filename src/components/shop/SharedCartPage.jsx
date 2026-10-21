@@ -27,6 +27,103 @@ function eventLabel(event) {
   if (event.action === 'remove') return `Menghapus ${name} (${before} kemasan)`;
   return `${name}: ${before} → ${after} kemasan`;
 }
+function AdminCartAdd({ shared }) {
+  const [query, setQuery] = useState('');
+  const [sku, setSku] = useState('');
+  const [quantity, setQuantity] = useState('1');
+  const search = query.trim().toLocaleLowerCase('id');
+  const options = products
+    .filter((product) =>
+      [product.baseName, product.name, product.brand, product.id, product.sizeLabel]
+        .join(' ')
+        .toLocaleLowerCase('id')
+        .includes(search),
+    )
+    .slice(0, 50);
+  const selected = options.find((product) => product.id === sku);
+  const valid = /^\\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= 99;
+
+  return (
+    <form
+      className="shared-admin-add"
+      aria-label="Tambah barang ke keranjang toko sebagai Admin"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (!shared.canEdit || !selected || !valid) return;
+        const saved = await shared.mutate('add', selected.id, Number(quantity));
+        if (saved) setQuantity('1');
+      }}
+    >
+      <h3>Tambah barang ke keranjang toko</h3>
+      <p>
+        Admin dan Pemilik dapat menambahkan barang pada keranjang terbuka. Semua perubahan
+        dicatat dan harus diperiksa sebelum finalisasi.
+      </p>
+      <div className="shared-admin-add-fields">
+        <label htmlFor="shared-admin-search">
+          Cari barang atau SKU
+          <input
+            id="shared-admin-search"
+            type="search"
+            maxLength={100}
+            value={query}
+            disabled={!shared.canEdit}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setSku('');
+            }}
+            placeholder="Nama produk, merek, ukuran, atau SKU"
+          />
+        </label>
+        <label htmlFor="shared-admin-sku">
+          Produk dan kemasan
+          <select
+            id="shared-admin-sku"
+            value={sku}
+            disabled={!shared.canEdit}
+            onChange={(event) => setSku(event.target.value)}
+            required
+          >
+            <option value="">Pilih SKU</option>
+            {options.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name} · {product.id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="shared-admin-quantity">
+          Jumlah kemasan
+          <input
+            id="shared-admin-quantity"
+            type="number"
+            min="1"
+            max="99"
+            step="1"
+            inputMode="numeric"
+            value={quantity}
+            disabled={!shared.canEdit}
+            onChange={(event) => setQuantity(event.target.value)}
+            required
+          />
+        </label>
+        <button type="submit" className="shop-primary" disabled={!shared.canEdit || !selected || !valid}>
+          Tambah ke keranjang toko
+        </button>
+      </div>
+      {selected && (
+        <p>
+          {selected.sizeLabel} · {selected.packagingType || 'satuan'} · {rupiah(selected.price)} per
+          kemasan
+        </p>
+      )}
+      {search && options.length === 50 && (
+        <p>Hasil dibatasi 50 SKU. Persempit pencarian untuk memilih barang yang tepat.</p>
+      )}
+    </form>
+  );
+}
+
 function CartQuantity({ item, shared }) {
   const [draft, setDraft] = useState(null);
   const value = draft?.value ?? String(item.quantity);
@@ -298,7 +395,7 @@ export default function SharedCartPage({ adminView = false }) {
                   {shared.role === 'admin' || shared.role === 'owner'
                     ? cart.status === 'finalized'
                       ? 'Keranjang sudah menjadi pesanan. Perubahan berikutnya dikelola pada Pesanan toko.'
-                      : 'Gunakan Pemrosesan Admin untuk mengunci, memeriksa, atau memfinalisasi keranjang.'
+                      : 'Keranjang dikunci. Buka kembali melalui Pemrosesan Admin untuk memperbaiki barang.'
                     : cart.status === 'finalized'
                       ? 'Keranjang ini sudah menjadi pesanan dan hanya dapat dilihat.'
                       : 'Keranjang dikunci untuk pemeriksaan Admin dan hanya dapat dilihat.'}
@@ -399,11 +496,14 @@ export default function SharedCartPage({ adminView = false }) {
                       <p>Tambahkan barang dari katalog setelah memilih toko ini.</p>
                     </div>
                   )}
-                  {cart.canEdit && (
-                    <a className="shop-primary shared-browse" href="#/cari?q=">
-                      Pilih barang dari katalog →
-                    </a>
-                  )}
+                  {cart.canEdit &&
+                    (adminView ? (
+                      <AdminCartAdd key={cart.store.id + cart.date} shared={shared} />
+                    ) : (
+                      <a className="shop-primary shared-browse" href="#/cari?q=">
+                        Pilih barang dari katalog →
+                      </a>
+                    ))}
                 </div>
                 <aside className="shared-cart-summary">
                   <h2>Ringkasan keranjang</h2>

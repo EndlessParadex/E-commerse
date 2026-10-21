@@ -482,7 +482,8 @@ function AdminCartWorkspace({
                     ? 'Setelah Admin memfinalisasi pesanan, rekening tujuan dan unggah bukti tersedia pada Detail Pesanan. Bukti diperiksa Admin sebelum dinyatakan lunas.'
                     : 'Pembayaran dilakukan ketika barang diterima. Admin mencatat pelunasan.'}
                 </p>
-  
+                <small>Admin hanya memeriksa pilihan pembayaran pembeli toko atau Sales.</small>
+              </section>
               </div>
             </>
           ) : (

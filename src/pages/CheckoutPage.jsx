@@ -6,7 +6,6 @@ import { validateDelivery } from '../state/deliveryModel';
 import { useDelivery } from '../state/useDelivery';
 import { ORDER_NOTE_MAX_LENGTH } from '../state/orderModel';
 import { placePreviewOrder } from '../state/frontendWorkflow';
-import { validateWhatsApp } from '../state/whatsappModel';
 import { useShop } from '../state/useShop';
 import { rupiah } from '../components/shop/shopPresentation';
 import ProductImage from '../components/shop/ProductImage';
@@ -35,7 +34,6 @@ export default function CheckoutPage() {
   );
   const nameRef = useRef(null);
   const addressRef = useRef(null);
-  const whatsappRef = useRef(null);
   const submitErrorRef = useRef(null);
   const [edited, setEdited] = useState(false);
   const [shippingId, setShippingId] = useState('regular');
@@ -43,8 +41,6 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [orderNote, setOrderNote] = useState('');
-  const [whatsappNumber, setWhatsAppNumber] = useState('');
-  const [whatsappOptIn, setWhatsAppOptIn] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const submitLock = useRef(false);
@@ -182,17 +178,11 @@ export default function CheckoutPage() {
     event.preventDefault();
     if (submitLock.current) return;
     const nextErrors = validateDelivery(form);
-    const phoneError = validateWhatsApp(whatsappNumber, whatsappOptIn);
-    if (phoneError) nextErrors.whatsapp = phoneError;
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
       if (nextErrors.namaToko || nextErrors.namaJalan) setAddressEditing(true);
       window.requestAnimationFrame(() => {
-        const field = nextErrors.namaToko
-          ? nameRef.current
-          : nextErrors.namaJalan
-            ? addressRef.current
-            : whatsappRef.current;
+        const field = nextErrors.namaToko ? nameRef.current : addressRef.current;
         field?.focus();
       });
       return;
@@ -216,8 +206,6 @@ export default function CheckoutPage() {
         address: form.namaJalan,
         shipping,
         payment,
-        whatsappNumber,
-        whatsappOptIn,
         note: orderNote,
       };
       const order = workflowUsesServer
@@ -500,54 +488,6 @@ export default function CheckoutPage() {
                   : 'Permintaan pesanan perlu disetujui toko. Stok baru ditahan setelah persetujuan. Batas pemeriksaan akan terlihat pada detail pesanan. Tunggu instruksi resmi toko untuk pembayaran; COD dibayar saat barang diterima.'}
               </p>
             )}
-          </section>
-
-          <section className="checkout-card" aria-labelledby="whatsapp-title">
-            <h2 id="whatsapp-title">Kontak WhatsApp (opsional)</h2>
-            <label className="checkout-whatsapp-consent">
-              <input
-                type="checkbox"
-                checked={whatsappOptIn}
-                onChange={(event) => {
-                  setWhatsAppOptIn(event.target.checked);
-                  setErrors((current) => ({ ...current, whatsapp: undefined }));
-                }}
-              />
-              <span>
-                Saya mengizinkan toko menghubungi nomor ini secara manual untuk pesanan ini.
-              </span>
-            </label>
-            {whatsappOptIn && (
-              <div className="checkout-field">
-                <label htmlFor="checkout-whatsapp">Nomor WhatsApp</label>
-                <input
-                  id="checkout-whatsapp"
-                  ref={whatsappRef}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  maxLength={25}
-                  value={whatsappNumber}
-                  onChange={(event) => {
-                    setWhatsAppNumber(event.target.value);
-                    setErrors((current) => ({ ...current, whatsapp: undefined }));
-                  }}
-                  placeholder="081234567890"
-                  aria-invalid={Boolean(errors.whatsapp)}
-                  aria-describedby={'whatsapp-hint' + (errors.whatsapp ? ' whatsapp-error' : '')}
-                />
-                {errors.whatsapp && (
-                  <p id="whatsapp-error" className="checkout-error" role="alert">
-                    {errors.whatsapp}
-                  </p>
-                )}
-              </div>
-            )}
-            <p id="whatsapp-hint" className="checkout-note">
-              {workflowUsesServer
-                ? 'Opsional dan hanya untuk pesanan ini. Nomor dicatat bersama pesanan di server; belum ada pesan WhatsApp otomatis.'
-                : 'Opsional dan hanya untuk pesanan ini, bukan promosi. Ini masih simulasi: nomor disimpan sementara di tab browser, tidak dikirim ke WhatsApp.'}
-            </p>
           </section>
         </fieldset>
 

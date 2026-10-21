@@ -237,6 +237,8 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await click(container.querySelector('.detail-buy'));
     assert.equal(dom.location.hash, '#/keranjang');
     await navigate('/checkout');
+    assert.equal(container.querySelector('#checkout-whatsapp'), null);
+    assert.equal(container.querySelector('[aria-labelledby="whatsapp-title"]'), null);
     await click(
       [...container.querySelectorAll('.payment-group-options button')].find((entry) =>
         entry.textContent.includes('Transfer bank'),
@@ -261,6 +263,8 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 1);
     const saved = api.workflow.list({ id: 'alice', role: 'user' }).orders[0];
     assert.equal(saved.total, 150000);
+    assert.equal(saved.whatsapp.optedIn, false);
+    assert.equal(saved.whatsapp.number, '');
     assert.equal(saved.items[0].details.packaging.unitsPerPackage, 10);
     assert.equal(dom.location.hash, '#/pesanan/' + saved.id);
     // The browser dispatches hashchange after the request resolves; wait for the
@@ -428,11 +432,19 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
       paymentId: 'cod',
       items: [{ id: unit.id, quantity: 1, expectedPrice: Number(unit.price) }],
     };
-    const codOrder = api.workflow.create({ id: 'bob', role: 'user' }, codInput);
-    await act(async () => {
-      await workflow.refreshServerWorkflow();
-      await settle();
-    });
+    await navigate('/produk/' + unit.id);
+    await click(container.querySelector('.detail-buy'));
+    await navigate('/checkout');
+    assert.equal(container.querySelector('[aria-labelledby="whatsapp-title"]'), null);
+    await submit();
+    await wait(() => dom.location.hash.startsWith('#/pesanan/'));
+    const codOrder = api.workflow.get(
+      { id: 'bob', role: 'user' },
+      decodeURIComponent(dom.location.hash.slice('#/pesanan/'.length)),
+    );
+    assert.equal(codOrder.payment.id, 'cod');
+    assert.equal(codOrder.whatsapp.optedIn, false);
+    assert.equal(codOrder.whatsapp.number, '');
     await navigate('/pesanan/' + codOrder.id);
     assert.match(
       container.querySelector('.confirmation-hero').textContent,

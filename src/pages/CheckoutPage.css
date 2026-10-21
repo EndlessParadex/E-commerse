@@ -35,25 +35,6 @@
   display: grid;
   gap: 18px;
 }
-.checkout-whatsapp-consent {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 16px 0;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-.checkout-whatsapp-consent input {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  accent-color: var(--color-link-bright);
-}
-.checkout-whatsapp-consent input:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
-}
 .checkout-card,
 .checkout-summary {
   background: var(--color-surface);

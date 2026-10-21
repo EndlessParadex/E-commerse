@@ -7,6 +7,7 @@ import { cartItemPresentation } from '../../data/cartItemPresentation';
 import PackagingSummary from './PackagingSummary';
 import './SharedCartPage.css';
 import AdminCartProcessing, { AdminCartQueue } from './AdminCartProcessing';
+import { paymentMethod } from '../../state/paymentMethods';
 
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
@@ -19,6 +20,8 @@ const timeLabel = (value) => new Date(value).toLocaleString('id-ID', { timeZone:
 const roles = { owner: 'Pemilik BAM', admin: 'Admin', sales: 'Sales', buyer: 'Pembeli' };
 function eventLabel(event) {
   const { name, before, after } = event.details;
+  if (event.action === 'payment')
+    return `Mengubah pembayaran: ${paymentMethod(event.details.before)?.label || 'Belum dipilih'} → ${paymentMethod(event.details.after)?.label || 'Belum dipilih'}`;
   if (event.action === 'clear')
     return event.details.clearedItems
       ? `Mengosongkan keranjang (${event.details.clearedItems.length} SKU)`
@@ -413,6 +416,36 @@ export default function SharedCartPage({ adminView = false }) {
                   <a href={'#/pesanan/' + encodeURIComponent(cart.orderId)}>Lihat pesanan toko →</a>
                 </p>
               )}
+              <section className="shared-cart-payment" aria-labelledby="shared-payment-title">
+                <h2 id="shared-payment-title">Metode pembayaran toko</h2>
+                <p>Pilihan berlaku untuk seluruh keranjang toko pada periode ini.</p>
+                {['buyer', 'sales'].includes(shared.role) && cart.status === 'open' ? (
+                  <label htmlFor="shared-cart-payment">
+                    Pilih COD atau bank transfer
+                    <select
+                      id="shared-cart-payment"
+                      value={cart.paymentId || 'cod'}
+                      disabled={!shared.canEdit}
+                      onChange={(event) => void shared.mutate('payment', event.target.value)}
+                    >
+                      <option value="cod">COD — Bayar di Tempat</option>
+                      <option value="transfer-bca">Transfer BCA</option>
+                      <option value="transfer-bri">Transfer BRI</option>
+                      <option value="transfer-mandiri">Transfer Mandiri</option>
+                    </select>
+                  </label>
+                ) : (
+                  <p><strong>{cart.payment?.label || 'COD — Bayar di Tempat'}</strong></p>
+                )}
+                <p>
+                  {cart.payment?.groupId === 'transfer'
+                    ? 'Setelah Admin memfinalisasi pesanan, rekening tujuan dan unggah bukti tersedia pada Detail Pesanan. Bukti diperiksa Admin sebelum dinyatakan lunas.'
+                    : 'Pembayaran dilakukan ketika barang diterima. Admin mencatat pelunasan.'}
+                </p>
+                {['admin', 'owner'].includes(shared.role) && (
+                  <small>Admin hanya memeriksa pilihan pembayaran pembeli toko atau Sales.</small>
+                )}
+              </section>
               {['admin', 'owner'].includes(shared.role) && (
                 <AdminCartProcessing key={cart.store.id + cart.date} shared={shared} />
               )}

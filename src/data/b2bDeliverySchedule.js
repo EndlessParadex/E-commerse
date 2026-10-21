@@ -1,0 +1,13 @@
+/** Pure ISO date arithmetic for BAM's fixed weekly / biweekly store routes. */
+export const nextStoreDelivery = (schedule, fromDate) => {
+  if (!schedule) return null;
+  const { anchorDate, intervalWeeks } = schedule;
+  const start = Date.parse(fromDate + 'T00:00:00Z');
+  const anchor = Date.parse(anchorDate + 'T00:00:00Z');
+  if (!Number.isFinite(start) || !Number.isFinite(anchor) || ![1, 2].includes(intervalWeeks))
+    return null;
+  const cycle = intervalWeeks * 7;
+  const days = Math.ceil((start - anchor) / 86400000);
+  const times = Math.max(0, Math.ceil(days / cycle));
+  return new Date(anchor + times * cycle * 86400000).toISOString().slice(0, 10);
+};

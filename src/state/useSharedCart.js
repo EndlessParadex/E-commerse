@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { companyStorageKey } from '../data/companyStore.js';
+import { nextStoreDelivery } from '../data/b2bDeliverySchedule.js';
 import { workflowUsesServer } from '../data/adminStore.js';
 import { subscribeShopRoute, shopRouteSnapshot } from './shopNavigation.js';
 
@@ -164,14 +165,18 @@ export default function useSharedCart(user, authLoading) {
         } catch {
           /* Optional preference. */
         }
+        const chosenStoreId =
+          typeof saved?.storeId === 'string'
+            ? saved.storeId
+            : page.total === 1
+              ? page.stores[0].id
+              : '';
+        const chosenStore = page.stores.find((store) => store.id === chosenStoreId);
+        const scheduledDate = nextStoreDelivery(chosenStore?.deliverySchedule, result.today);
         const target = {
-          storeId:
-            typeof saved?.storeId === 'string'
-              ? saved.storeId
-              : page.total === 1
-                ? page.stores[0].id
-                : '',
-          date: /^20\d{2}-\d{2}-\d{2}$/.test(saved?.date || '') ? saved.date : result.today,
+          storeId: chosenStoreId,
+          date: scheduledDate ||
+            (/^20\d{2}-\d{2}-\d{2}$/.test(saved?.date || '') ? saved.date : result.today),
         };
         selected.current = target;
         setSelection(target);

@@ -39,6 +39,7 @@ export default function ShopProvider({ children }) {
     stateRef.current = state;
   }, [state]);
   const workflow = useWorkflow();
+  const stockWorkflow = useWorkflow('inventory');
   const [storageError, setStorageError] = useState(false);
   useEffect(() => {
     if (workflow.failed) return;
@@ -98,7 +99,7 @@ export default function ShopProvider({ children }) {
       (action.type === 'quantity' &&
         action.quantity > (previous.cart.find((item) => item.id === action.id)?.quantity || 0))
     ) {
-      if (workflow.failed || workflow.loading) return false;
+      if (stockWorkflow.failed || stockWorkflow.loading) return false;
       try {
         if (reviewStock(next.cart, window.sessionStorage, workflow.orders).length) return false;
       } catch {
@@ -130,7 +131,7 @@ export default function ShopProvider({ children }) {
             packagingValues(product).unitsPerPackage,
         publishedSoldMinimum: statistics.publishedSoldMinimum ?? null,
         reservedUnits: statistics.reservedUnits ?? null,
-        failed: shared.enabled ? !shared.canEdit : workflow.failed || workflow.loading,
+        failed: stockWorkflow.failed || stockWorkflow.loading,
       };
     } catch {
       return { available: 0, maximum: 0, soldUnits: null, reservedUnits: null, failed: true };
@@ -145,7 +146,7 @@ export default function ShopProvider({ children }) {
   }
   if (
     !shared.enabled &&
-    workflow.failed &&
+    stockWorkflow.failed &&
     !review.issues.some((issue) => issue.type === 'stock_error')
   )
     review.issues.push({ id: 'stock-storage', type: 'stock_error' });

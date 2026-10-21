@@ -70,6 +70,32 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
     (text) =>
       JSON.parse(text).profilePhone === true && JSON.parse(text).contactVerification === true,
   );
+  await get(
+    '/src/components/shop/ProductCard.jsx',
+    'Kartu produk: tunggu simpan dan pilih toko',
+    (text) => text.includes('Menyimpan…') && text.includes('Pilih toko dahulu'),
+  );
+  await get(
+    '/src/state/useOrderSearch.js',
+    'Pencarian seluruh riwayat pesanan',
+    (text) => text.includes('searchServerOrders') && text.includes('nextCursor'),
+  );
+  await get(
+    '/src/state/serverWorkflow.js',
+    'Stok terpisah dari gangguan daftar pesanan',
+    (text) => text.includes('inventoryFailed') && text.includes('adminOrdersFailed'),
+  );
+  await get(
+    '/src/pages/AdminB2BStoresPage.jsx',
+    'Toko & Sales: ubah dan cabut penugasan',
+    (text) => text.includes('Ganti Sales') && text.includes('Cabut penugasan'),
+  );
+  await get('/api/catalog', 'Server: pencarian pesanan dan perubahan penugasan', (text) => {
+    const value = JSON.parse(text);
+    return (
+      value.capabilities?.orderSearch === true && value.capabilities?.b2bStoreMaintenance === true
+    );
+  });
   return { url: url.origin, checks, ok: checks.every((entry) => entry.ok) };
 }
 

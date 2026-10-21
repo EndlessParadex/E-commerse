@@ -1,6 +1,6 @@
-export async function accountApi(path, body, timeoutMs = 15000) {
+export async function accountApi(path, body, timeoutMs = 15000, method) {
   const response = await fetch(path, {
-    method: body === undefined ? 'GET' : 'POST',
+    method: method || (body === undefined ? 'GET' : 'POST'),
     credentials: 'include',
     cache: 'no-store',
     signal: AbortSignal.timeout(timeoutMs),

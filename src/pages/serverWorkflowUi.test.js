@@ -13,7 +13,12 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   const catalog = demo.catalog.snapshot();
   demo.db.close();
   let serverTime = Date.now();
-  const api = createApp({ dbPath: ':memory:', installMode: 'company', legacyCommerceFixture: true, now: () => serverTime });
+  const api = createApp({
+    dbPath: ':memory:',
+    installMode: 'company',
+    legacyCommerceFixture: true,
+    now: () => serverTime,
+  });
   api.catalog.save({ ...catalog, revision: 0 });
   const candidate = api.catalog.snapshot();
   const group = candidate.edits.find((row) => row.groupId === 'snack-pedas');
@@ -93,6 +98,9 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   let cookie = '';
   let loseResponse = false;
   let offline = false;
+  let failOrders = false;
+  let holdSearch = '';
+  let releaseSearch;
   const previousFetch = globalThis.fetch;
   const sentKeys = [];
   const dom = new Window({ url: 'http://backend.test/#/admin/stok' });
@@ -118,7 +126,17 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   globalThis.fetch = async (path, options = {}) => {
     if (offline && ['/api/inventory', '/api/admin/inventory'].includes(path))
       throw new Error('offline');
+    if (failOrders && path.startsWith('/api/admin/orders'))
+      return {
+        ok: false,
+        status: 503,
+        json: async () => ({ errors: { form: 'Daftar pesanan sedang terganggu.' } }),
+      };
     const response = await request(options.method || 'GET', path, options.body, cookie);
+    if (holdSearch && path.includes('q=' + holdSearch))
+      await new Promise((resolve) => {
+        releaseSearch = resolve;
+      });
     if (response.headers['set-cookie']) cookie = response.headers['set-cookie'].split(';')[0];
     if (path === '/api/orders' && options.method === 'POST') {
       sentKeys.push(JSON.parse(options.body).requestKey);
@@ -149,6 +167,11 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     const container = dom.document.createElement('div');
     dom.document.body.append(container);
     const settle = () => new Promise((resolve) => setTimeout(resolve, 35));
+    const wait = async (check) => {
+      const until = Date.now() + 5000;
+      while (!check() && Date.now() < until) await act(settle);
+      assert.ok(check(), container.textContent.slice(-2000));
+    };
     const navigate = async (path) =>
       act(async () => {
         dom.location.hash = path;
@@ -336,8 +359,14 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('SKU'), false);
     assert.equal(invoice.querySelector('.invoice-items thead').textContent.includes('No.'), true);
     assert.equal(invoice.querySelector('.invoice-product small'), null);
-    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Ongkos kirim'), false);
-    assert.equal(invoice.querySelector('.invoice-summary').textContent.includes('Total pembayaran'), true);
+    assert.equal(
+      invoice.querySelector('.invoice-summary').textContent.includes('Ongkos kirim'),
+      false,
+    );
+    assert.equal(
+      invoice.querySelector('.invoice-summary').textContent.includes('Total pembayaran'),
+      true,
+    );
     assert.ok(invoice.querySelector('.invoice-grand-total'));
     assert.equal(invoice.querySelectorAll('.invoice-items tbody tr').length, bobOrder.items.length);
     await mountAs('admin', '/admin/pesanan');
@@ -494,7 +523,86 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await navigate('/produk/snack-pedas');
     assert.equal(container.querySelector('.detail-stock-remaining').textContent, '5 satuan');
     assert.equal(container.querySelector('.detail-sold-count'), null);
+
+    // Old orders must be searchable without manually loading every preceding page.
+    const oldBase = api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id);
+    for (let index = 0; index < 61; index++) {
+      const record = {
+        ...oldBase,
+        id: 'OLD-' + String(index).padStart(3, '0'),
+        createdAt: serverTime - 86400000 * 30 + index,
+        recipient: 'Penerima Lawas ' + index,
+      };
+      api.db
+        .prepare('INSERT INTO orders VALUES(?,?,?,?,?,?,?,?)')
+        .run(
+          record.id,
+          'bob',
+          randomUUID(),
+          'fixture',
+          record.createdAt,
+          record.status,
+          record.revision,
+          JSON.stringify(record),
+        );
+    }
+    await mountAs('admin', '/admin/pesanan');
+    await wait(() => container.querySelectorAll('.workflow-order-card').length === 50);
+    assert.doesNotMatch(container.querySelector('.workflow-order-list').textContent, /OLD-000/);
+    await fill('#admin-order-search', 'Penerima Lawas 0');
+    await wait(
+      () =>
+        container.querySelectorAll('.workflow-order-card').length === 1 &&
+        container.querySelector('.workflow-order-card h3')?.textContent === 'OLD-000',
+    );
+    assert.equal(button('Muat pesanan lebih lama'), undefined);
+    await fill('#admin-order-search', 'OLD-');
+    await wait(() => container.querySelectorAll('.workflow-order-card').length === 50);
+    assert.match(container.querySelector('.admin-result-pill').textContent, /61 pesanan/);
+    await click(button('Muat pesanan lebih lama'));
+    await wait(() => container.querySelectorAll('.workflow-order-card').length === 61);
+    await act(async () => {
+      await workflow.refreshServerWorkflow();
+      await settle();
+    });
+    await wait(() => container.querySelectorAll('.workflow-order-card').length === 61);
+    // Release an older search after a newer one; the older response must be discarded.
+    holdSearch = 'OLD-000';
+    await fill('#admin-order-search', 'OLD-000');
+    await wait(() => releaseSearch);
+    holdSearch = '';
+    await fill('#admin-order-search', 'OLD-001');
+    await wait(() => container.querySelector('.workflow-order-card h3')?.textContent === 'OLD-001');
+    await act(async () => {
+      releaseSearch();
+      await settle();
+    });
+    assert.equal(container.querySelector('.workflow-order-card h3').textContent, 'OLD-001');
+    await mountAs('bob', '/pesanan');
+    await fill('#buyer-order-search', 'OLD-000');
+    await wait(
+      () =>
+        container.querySelectorAll('.orders-card').length === 1 &&
+        container.querySelector('.orders-number')?.textContent === 'OLD-000',
+    );
+    await mountAs('alice', '/pesanan');
+    await fill('#buyer-order-search', 'OLD-000');
+    await wait(() => container.textContent.includes('Belum ada pesanan pada pilihan ini'));
+    assert.equal(container.querySelector('#buyer-order-search').value, 'OLD-000');
+    assert.equal(container.querySelectorAll('.orders-card').length, 0);
+    failOrders = true;
+    await mountAs('admin', '/admin/stok');
+    assert.ok(
+      container.querySelector('.workflow-stock-card'),
+      'an order endpoint failure must not hide stock',
+    );
+    await navigate('/admin/pesanan');
+    await wait(() => container.textContent.includes('Daftar pesanan sedang terganggu.'));
+    failOrders = false;
+    await click(button('Coba lagi'));
+    await wait(() => container.querySelectorAll('.workflow-order-card').length === 50);
   } finally {
+    releaseSearch?.();
     if (root) await act(async () => root.unmount());
     await vite.close();
     api.db.close();

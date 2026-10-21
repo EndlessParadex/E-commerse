@@ -104,6 +104,91 @@ const clean = (dir) => {
   rmSync(target, { recursive: true, force: true });
 };
 
+test('order search finds older matches before pagination, filters statuses, treats wildcards literally and isolates buyers', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  users(app);
+  try {
+    const base = app.workflow.create(alice, input(app, { paymentId: 'cod' }));
+    app.db.prepare('DELETE FROM orders WHERE id=?').run(base.id);
+    const insert = app.db.prepare('INSERT INTO orders VALUES(?,?,?,?,?,?,?,?)');
+    const start = Date.now() - 100000;
+    for (let index = 0; index < 65; index++) {
+      const record = {
+        ...base,
+        id: 'HISTORY-' + String(index).padStart(3, '0'),
+        createdAt: start + index,
+        userId: index === 64 ? 'bob' : 'alice',
+        status: index < 4 ? 'completed' : 'processing',
+        recipient: index === 0 ? 'Penerima Lawas %_ Unik' : 'Penerima ' + index,
+        items: base.items.map((item) => ({
+          ...item,
+          name: index < 4 ? 'Produk Lawas' : item.name,
+        })),
+      };
+      insert.run(
+        record.id,
+        record.userId,
+        randomUUID(),
+        'fixture',
+        record.createdAt,
+        record.status,
+        record.revision,
+        JSON.stringify(record),
+      );
+    }
+    const first = await request(app, 'GET', '/api/admin/orders', undefined, admin);
+    assert.equal(first.body.total, 65);
+    assert.equal(first.body.orders.length, 50);
+    assert.ok(!first.body.orders.some((order) => order.id === 'HISTORY-000'));
+    for (const q of ['HISTORY-000', 'Penerima Lawas', '%_']) {
+      const result = await request(
+        app,
+        'GET',
+        '/api/admin/orders?q=' + encodeURIComponent(q),
+        undefined,
+        admin,
+      );
+      assert.equal(result.status, 200);
+      assert.deepEqual(
+        result.body.orders.map((order) => order.id),
+        ['HISTORY-000'],
+      );
+    }
+    const byProduct = app.workflow.list(admin, {
+      admin: true,
+      q: 'Produk Lawas',
+      status: 'completed',
+    });
+    assert.equal(byProduct.total, 4);
+    assert.equal(byProduct.orders.length, 4);
+    assert.equal(
+      app.workflow.list(admin, { admin: true, q: 'Produk Lawas', status: 'active' }).total,
+      0,
+    );
+    const own = app.workflow.list(alice);
+    assert.equal(own.total, 64);
+    const rest = app.workflow.list(alice, { before: own.nextCursor });
+    assert.equal(rest.total, 64);
+    assert.equal(rest.orders.length, 14);
+    assert.equal(new Set([...own.orders, ...rest.orders].map((order) => order.id)).size, 64);
+    assert.equal(app.workflow.list(alice, { q: 'HISTORY-064' }).total, 0);
+    assert.equal(app.workflow.list(bob, { q: 'Penerima Lawas' }).total, 0);
+    assert.throws(() => app.workflow.list(alice, { before: 'HISTORY-064' }), /akun Anda/);
+    assert.equal(
+      (await request(app, 'GET', '/api/admin/orders?q=HISTORY', undefined, alice)).status,
+      403,
+    );
+    for (const query of [
+      'q=' + 'a'.repeat(201),
+      'status=not-a-status',
+      'before=' + 'a'.repeat(101),
+    ])
+      assert.equal((await request(app, 'GET', '/api/orders?' + query)).status, 422);
+  } finally {
+    app.db.close();
+  }
+});
+
 test('stok publik: terjual hanya pesanan selesai, stok tertahan terpisah dan isi kemasan lama tetap benar', async () => {
   let time = Date.now();
   const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', now: () => time });
@@ -465,7 +550,11 @@ test('perusahaan: stok awal 0; pembayaran manual hanya admin; snapshot foto/harg
   const seed = createApp({ legacyCommerceFixture: true, dbPath: ':memory:' });
   const snapshot = seed.catalog.snapshot();
   seed.db.close();
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', installMode: 'company' });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    installMode: 'company',
+  });
   users(app);
   try {
     app.catalog.save({ ...snapshot, revision: 0 });

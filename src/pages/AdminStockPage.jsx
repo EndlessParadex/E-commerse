@@ -114,7 +114,7 @@ function StockOverview({ available, variants }) {
 }
 
 export default function AdminStockPage() {
-  const { orders, failed, loading, server, canImportPreview } = useWorkflow();
+  const { orders, failed, loading, server, canImportPreview } = useWorkflow('inventory');
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const inputRef = useRef(null);

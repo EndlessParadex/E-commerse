@@ -373,6 +373,8 @@ export class CatalogRepository {
         gallery: true,
         brandPhotos: true,
         sharedCarts: this.workflowEnabled === true,
+        orderSearch: this.workflowEnabled === true,
+        b2bStoreMaintenance: this.workflowEnabled === true,
         workflow: this.workflowEnabled === true,
       },
       ...(this.companySnapshot ? { company: this.companySnapshot() } : {}),

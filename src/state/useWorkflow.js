@@ -21,8 +21,23 @@ export default function useWorkflow(scope = 'own') {
         orders: matching ? (scope === 'admin' ? snapshot.adminOrders : snapshot.orders) : [],
         details: matching ? snapshot.details : {},
         server: true,
-        loading: !matching || snapshot.loading || delivery?.authLoading,
-        failed: matching && snapshot.failed,
+        loading:
+          !matching ||
+          (scope === 'inventory' ? snapshot.inventoryLoading : snapshot.loading) ||
+          delivery?.authLoading,
+        failed:
+          matching &&
+          (scope === 'inventory'
+            ? snapshot.inventoryFailed
+            : scope === 'admin'
+              ? snapshot.adminOrdersFailed
+              : snapshot.ordersFailed),
+        error:
+          scope === 'inventory'
+            ? snapshot.inventoryError
+            : scope === 'admin'
+              ? snapshot.adminOrdersError
+              : snapshot.ordersError,
         revision: snapshot,
         nextCursor: scope === 'admin' ? snapshot.adminCursor : snapshot.nextCursor,
       };

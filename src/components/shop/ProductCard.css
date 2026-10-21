@@ -310,3 +310,9 @@
     transform: none;
   }
 }
+.product-cart-error {
+  color: var(--color-danger-text);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 8px 0 0;
+}

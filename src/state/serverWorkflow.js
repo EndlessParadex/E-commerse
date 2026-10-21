@@ -16,6 +16,13 @@ const empty = () => ({
   loading: true,
   failed: false,
   error: '',
+  inventoryLoading: true,
+  inventoryFailed: false,
+  inventoryError: '',
+  ordersFailed: false,
+  ordersError: '',
+  adminOrdersFailed: false,
+  adminOrdersError: '',
   nextCursor: null,
   adminCursor: null,
 });
@@ -35,8 +42,10 @@ async function api(path, options = {}) {
   const response = await fetch(path, {
     credentials: 'include',
     cache: 'no-store',
-    signal: AbortSignal.timeout(15000),
     ...options,
+    signal: options.signal
+      ? AbortSignal.any([options.signal, AbortSignal.timeout(15000)])
+      : AbortSignal.timeout(15000),
   });
   const payload = await response.json();
   if (!response.ok)
@@ -125,60 +134,72 @@ export async function refreshServerWorkflow() {
   const token = generation;
   const owner = state.owner;
   const role = state.role;
-  inFlight = (async () => {
+  const fetchInventory = async () => {
     try {
-      const tasks = [
-        api(role === 'admin' ? '/api/admin/inventory' : '/api/inventory'),
-        owner !== 'guest'
-          ? api('/api/orders')
-          : Promise.resolve({ version: 1, orders: [], nextCursor: null }),
-        role === 'admin'
-          ? api('/api/admin/orders')
-          : Promise.resolve({ version: 1, orders: [], nextCursor: null }),
-      ];
-      const [stock, own, admin] = await Promise.all(tasks);
+      const payload = await api(role === 'admin' ? '/api/admin/inventory' : '/api/inventory');
       if (token !== generation) return;
-      const ownedOrders = listing(own, true);
-      const allOrders = listing(admin);
-      const details = { ...state.details };
-      for (const next of [...ownedOrders, ...allOrders])
-        if (details[next.id] && details[next.id].revision <= next.revision) details[next.id] = next;
       publish({
-        stock: inventory(stock),
-        skuAvailability: stock.skuAvailability || {},
-        publishedSales: stock.publishedSales || {},
-        details,
-        canImportPreview: stock.canImportPreview === true,
-        orders: merge(state.orders, ownedOrders),
-        adminOrders: merge(state.adminOrders, allOrders),
-        nextCursor: state.orders.length > 50 ? state.nextCursor : own.nextCursor,
-        adminCursor: state.adminOrders.length > 50 ? state.adminCursor : admin.nextCursor,
-        loading: false,
+        stock: inventory(payload),
+        skuAvailability: payload.skuAvailability || {},
+        publishedSales: payload.publishedSales || {},
+        canImportPreview: payload.canImportPreview === true,
+        inventoryLoading: false,
+        inventoryFailed: false,
+        inventoryError: '',
         failed: false,
         error: '',
       });
     } catch (error) {
       if (token === generation)
         publish({
-          orders: [],
-          adminOrders: [],
-          details: {},
           stock: {},
           skuAvailability: {},
           publishedSales: {},
-          loading: false,
+          canImportPreview: false,
+          inventoryLoading: false,
+          inventoryFailed: true,
+          inventoryError: error.message,
           failed: true,
-          error: error.message || 'Server belum dapat dihubungi.',
+          error: error.message,
         });
-    } finally {
-      if (token === generation) inFlight = null;
     }
-  })();
+  };
+  const fetchOrders = async (admin) => {
+    const key = admin ? 'adminOrders' : 'orders';
+    try {
+      const payload =
+        owner !== 'guest' && (!admin || role === 'admin')
+          ? await api(admin ? '/api/admin/orders' : '/api/orders')
+          : { version: 1, orders: [], nextCursor: null };
+      if (token !== generation) return;
+      const incoming = listing(payload, !admin);
+      const details = { ...state.details };
+      for (const next of incoming)
+        if (details[next.id] && details[next.id].revision <= next.revision) details[next.id] = next;
+      publish({
+        [key]: merge(state[key], incoming),
+        details,
+        [key + 'Failed']: false,
+        [key + 'Error']: '',
+        [admin ? 'adminCursor' : 'nextCursor']:
+          state[key].length > 50 ? state[admin ? 'adminCursor' : 'nextCursor'] : payload.nextCursor,
+      });
+    } catch (error) {
+      if (token === generation)
+        publish({ [key]: [], [key + 'Failed']: true, [key + 'Error']: error.message });
+    }
+  };
+  inFlight = Promise.all([fetchInventory(), fetchOrders(false), fetchOrders(true)]).finally(() => {
+    if (token === generation) {
+      inFlight = null;
+      publish({ loading: false });
+    }
+  });
   return inFlight;
 }
 export function serverStock(product) {
-  if (state.failed || state.loading)
-    throw new Error(state.error || 'Stok sedang dimuat dari server.');
+  if (state.inventoryFailed || state.inventoryLoading)
+    throw new Error(state.inventoryError || 'Stok sedang dimuat dari server.');
   const row = state.stock[`${product.groupId || product.id}:${sizeKey(product)}`] || {
     available: 0,
     revision: 0,
@@ -192,6 +213,22 @@ export function serverStock(product) {
         : row.available >= packagingValues(product).unitsPerPackage,
     publishedSoldMinimum: state.publishedSales[product.groupId || product.id] ?? null,
   };
+}
+export async function searchServerOrders({
+  admin = false,
+  q = '',
+  status = 'all',
+  before = '',
+  signal,
+} = {}) {
+  const token = generation;
+  const payload = await api(
+    (admin ? '/api/admin/orders?' : '/api/orders?') +
+      new URLSearchParams({ q, status, ...(before ? { before } : {}) }),
+    signal ? { signal } : {},
+  );
+  if (token !== generation) throw new Error('Akun berubah. Muat ulang pesanan.');
+  return { orders: listing(payload, !admin), nextCursor: payload.nextCursor, total: payload.total };
 }
 export async function loadMoreOrders(admin = false) {
   const cursor = admin ? state.adminCursor : state.nextCursor;
@@ -266,6 +303,9 @@ export async function setServerStock(product, amount, revision) {
       canImportPreview: payload.canImportPreview === true,
       failed: false,
       error: '',
+      inventoryFailed: false,
+      inventoryLoading: false,
+      inventoryError: '',
     });
     return { saved: true };
   } catch (error) {
@@ -282,7 +322,15 @@ export async function importServerStock(rows) {
       body: JSON.stringify({ rows }),
     });
     if (token !== generation) return { error: 'Akun berubah. Muat ulang data.' };
-    publish({ stock: inventory(payload), canImportPreview: false, failed: false, error: '' });
+    publish({
+      stock: inventory(payload),
+      canImportPreview: false,
+      failed: false,
+      error: '',
+      inventoryFailed: false,
+      inventoryLoading: false,
+      inventoryError: '',
+    });
     return { saved: true };
   } catch (error) {
     await refreshServerWorkflow();

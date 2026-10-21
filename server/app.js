@@ -403,7 +403,7 @@ export function createApp({
         path === '/api/b2b/sales/appoint' ||
         path === '/api/b2b/stores/create' ||
         b2bDetailMatch ||
-        /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)$/.test(path)
+        /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)(?:\/remove)?$/.test(path)
       ) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
@@ -425,6 +425,14 @@ export function createApp({
           );
         if (req.method === 'GET' && b2bDetailMatch && path !== '/api/b2b/stores/create')
           return json(res, 200, b2bStores.details(actor, decodeURIComponent(b2bDetailMatch[1])));
+        if (req.method === 'PUT' && b2bDetailMatch && path !== '/api/b2b/stores/create')
+          return json(res, 200, {
+            store: b2bStores.update(
+              actor,
+              decodeURIComponent(b2bDetailMatch[1]),
+              await readBody(req),
+            ),
+          });
         if (req.method === 'GET' && path === '/api/b2b/sales')
           return json(res, 200, { sales: b2bStores.salesList(actor) });
         if (req.method === 'POST' && path === '/api/b2b/stores/create')
@@ -433,16 +441,29 @@ export function createApp({
           return json(res, 200, b2bStores.appointSales(actor, (await readBody(req)).userId));
         const match = path.match(/^\/api\/b2b\/stores\/([^/]+)\/(members|sales)$/);
         if (match && req.method === 'POST') {
-          const userId = (await readBody(req)).userId;
+          const body = await readBody(req);
+          const userId = body.userId;
           const storeId = decodeURIComponent(match[1]);
           return json(
             res,
             200,
             match[2] === 'sales'
-              ? b2bStores.assignSales(actor, storeId, userId)
-              : b2bStores.addMember(actor, storeId, userId),
+              ? b2bStores.assignSales(actor, storeId, userId, body)
+              : b2bStores.addMember(actor, storeId, userId, body),
           );
         }
+        const removeMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/(members|sales)\/remove$/);
+        if (removeMatch && req.method === 'POST')
+          return json(
+            res,
+            200,
+            b2bStores.removeLink(
+              actor,
+              decodeURIComponent(removeMatch[1]),
+              removeMatch[2],
+              await readBody(req),
+            ),
+          );
         return sendError(res, 405, 'method_not_allowed');
       }
       const approvalMatch = path.match(/^\/api\/admin\/approvals(?:\/([^/]+))?$/);
@@ -584,6 +605,8 @@ export function createApp({
             workflow.list(user, {
               admin: path === '/api/admin/orders',
               before: new URL(req.url, 'http://bam.local').searchParams.get('before') || '',
+              q: new URL(req.url, 'http://bam.local').searchParams.get('q') || '',
+              status: new URL(req.url, 'http://bam.local').searchParams.get('status') || 'all',
             }),
           );
         if (req.method === 'POST' && path === '/api/orders') {

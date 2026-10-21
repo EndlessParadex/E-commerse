@@ -1,9 +1,9 @@
 import CommerceReadiness from './CommerceReadiness';
 import useCompany from '../state/useCompany';
 import { useRef, useState } from 'react';
-import { changeServerOrder, loadMoreOrders } from '../state/serverWorkflow';
+import { changeServerOrder } from '../state/serverWorkflow';
 import useUnsavedChanges from '../state/useUnsavedChanges';
-import useWorkflow from '../state/useWorkflow';
+import useOrderSearch from '../state/useOrderSearch';
 import { cancellationReason, orderStatusLabel } from '../state/orderModel';
 import { isCOD, updatePreviewOrder } from '../state/frontendWorkflow';
 import { paymentMethod } from '../state/paymentMethods';
@@ -32,26 +32,32 @@ export default function AdminOrdersPage() {
   const company = useCompany();
   const [shippingCost, setShippingCost] = useState(''),
     [rejectionReason, setRejectionReason] = useState('');
-  const { orders, failed, loading, server, nextCursor } = useWorkflow('admin');
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const [reference, setReference] = useState('');
   useUnsavedChanges(false, undefined, busy);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
+  const {
+    orders,
+    failed,
+    loading,
+    server,
+    nextCursor,
+    total,
+    loadMore,
+    moreBusy,
+    pageError,
+    error: loadError,
+    retry,
+  } = useOrderSearch('admin', query, filter);
   const [target, setTarget] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [courier, setCourier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const visible = orders.filter(
-    (order) =>
-      (filter === 'all' || (order.status || 'processing') === filter) &&
-      `${order.id} ${order.recipient} ${order.items.map((item) => `${item.name} ${item.id}`).join(' ')}`
-        .toLocaleLowerCase('id')
-        .includes(query.trim().toLocaleLowerCase('id')),
-  );
+  const visible = orders;
   const openAction = (order, action) => {
     setTarget({ order, action });
     setCourier(order.shipping.courier || '');
@@ -104,8 +110,16 @@ export default function AdminOrdersPage() {
               : 'Kelola status pesanan, pembayaran, dan resi pada pratinjau frontend.'}
           </p>
         </div>
-        <span className="admin-result-pill">{orders.length} pesanan</span>
+        <span className="admin-result-pill">
+          {loading ? 'Memuat…' : `${total ?? orders.length} pesanan`}
+        </span>
       </div>
+      {!loading && !failed && (
+        <p className="workflow-preview">
+          Menampilkan {orders.length} dari {total ?? orders.length} pesanan
+          {query.trim() || filter !== 'all' ? ' yang sesuai filter' : ''}.
+        </p>
+      )}
       <p className="workflow-preview">
         {server
           ? 'Pesanan tersimpan di database dan terhubung ke akun pelanggan. Pembayaran dicatat admin setelah diperiksa; layanan pembayaran dan kurir belum terhubung otomatis.'
@@ -149,19 +163,26 @@ export default function AdminOrdersPage() {
           <h3>{loading ? 'Memuat pesanan…' : 'Pesanan belum dapat dibuka'}</h3>
           <p>
             {server
-              ? 'Periksa koneksi server dan muat ulang halaman.'
+              ? loadError || 'Periksa koneksi server dan coba lagi.'
               : 'Penyimpanan browser tidak tersedia. Coba muat ulang halaman.'}
           </p>
+          {!loading && server && (
+            <button type="button" className="admin-secondary" onClick={retry}>
+              Coba lagi
+            </button>
+          )}
         </div>
       ) : !visible.length ? (
         <div className="admin-empty">
-          <h3>{orders.length ? 'Pesanan tidak ditemukan' : 'Belum ada pesanan'}</h3>
+          <h3>
+            {query.trim() || filter !== 'all' ? 'Pesanan tidak ditemukan' : 'Belum ada pesanan'}
+          </h3>
           <p>
-            {orders.length
+            {query.trim() || filter !== 'all'
               ? 'Ubah kata pencarian atau status pesanan.'
               : 'Buat pesanan melalui checkout untuk mencoba halaman ini.'}
           </p>
-          {orders.length ? (
+          {query.trim() || filter !== 'all' ? (
             <button
               className="admin-secondary"
               onClick={() => {
@@ -199,7 +220,12 @@ export default function AdminOrdersPage() {
                 </span>
                 <strong>{rupiah(order.total)}</strong>
               </div>
-              {order.codFixedTotal && order.status === 'processing' && <p className="workflow-preview">Harga final sejak checkout · Gratis ongkir · COD saat diterima. Stok sudah dicadangkan.</p>}
+              {order.codFixedTotal && order.status === 'processing' && (
+                <p className="workflow-preview">
+                  Harga final sejak checkout · Gratis ongkir · COD saat diterima. Stok sudah
+                  dicadangkan.
+                </p>
+              )}
               {order.status === 'awaiting_confirmation' && (
                 <p className="workflow-preview">
                   {order.codConfirmation?.legacyReview
@@ -349,16 +375,19 @@ export default function AdminOrdersPage() {
           ))}
         </ul>
       )}
+      {pageError && (
+        <p className="shop-warning" role="alert">
+          {pageError}
+        </p>
+      )}
       {nextCursor && (
         <button
           type="button"
           className="admin-secondary"
-          onClick={async () => {
-            const result = await loadMoreOrders(true);
-            if (result.error) setNotice(result.error);
-          }}
+          disabled={moreBusy || loading}
+          onClick={loadMore}
         >
-          Muat pesanan lebih lama
+          {moreBusy ? 'Memuat…' : 'Muat pesanan lebih lama'}
         </button>
       )}
       {target && (

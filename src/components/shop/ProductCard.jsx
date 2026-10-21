@@ -20,12 +20,21 @@ export default function ProductCard({
 }) {
   const [added, setAdded] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const pending = useRef(false);
+  const mounted = useRef(false);
   const timer = useRef(null);
   const variants = productVariants(product.id);
   const productName = purchaseProductName(product, variants);
   const shop = useShop();
-  const stockAvailable = variants.some((variant) => {
-    const stock = shop.stockFor(variant);
+  const stocks = variants.map((variant) => shop.stockFor(variant));
+  const stockFailed = stocks.some((stock) => stock.failed);
+  const shared = shop.shared;
+  const chooseStore = shared?.enabled && !shared.selection.storeId && shared.status === 'ready';
+  const cartBlocked = shared?.enabled && !shared.canEdit;
+  const stockAvailable = variants.some((variant, index) => {
+    const stock = stocks[index];
     return (
       !stock.failed &&
       (stock.inStock ?? stock.available >= packagingValues(variant).unitsPerPackage)
@@ -46,21 +55,50 @@ export default function ProductCard({
   const priceLabel = rupiah(minimumPrice);
   const photo = productGallery(product)[0];
   const preview = { ...product, image: photo.src, imageAlt: photo.alt };
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      window.clearTimeout(timer.current);
+    };
+  }, []);
 
-  const add = () => {
+  const add = async () => {
+    if (pending.current) return;
+    if (chooseStore || (cartBlocked && !hasVariants)) {
+      window.location.assign('#/keranjang');
+      return;
+    }
     if (hasVariants) {
       window.location.assign('#/produk/' + product.id);
       return;
     }
-    if (onAdd(product) === false) {
-      setLimitReached(true);
-      return;
-    }
+    pending.current = true;
+    setSaving(true);
+    setSaveError('');
+    setAdded(false);
     setLimitReached(false);
-    setAdded(true);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setAdded(false), 1600);
+    try {
+      const result = await onAdd(product);
+      if (!mounted.current) return;
+      if (result === false) {
+        if (shared?.enabled)
+          setSaveError(
+            'Belum tersimpan. Buka keranjang untuk memeriksa dan memastikan penyimpanan.',
+          );
+        else setLimitReached(true);
+        return;
+      }
+      setAdded(true);
+      timer.current = window.setTimeout(() => setAdded(false), 1600);
+    } catch {
+      if (mounted.current)
+        setSaveError('Belum dapat menyimpan. Periksa keranjang sebelum mencoba kembali.');
+    } finally {
+      pending.current = false;
+      if (mounted.current) setSaving(false);
+    }
   };
 
   const discounted =
@@ -147,26 +185,44 @@ export default function ProductCard({
         <button
           type="button"
           className={'add-product-button' + (added ? ' added' : '')}
-          disabled={!stockAvailable}
+          disabled={saving || shared?.busy || (!chooseStore && (stockFailed || !stockAvailable))}
+          aria-busy={saving}
           onClick={add}
           aria-label={
-            hasVariants
-              ? sizeAction + ' ' + product.baseName
-              : 'Tambah ' + productName + ' ke keranjang'
+            chooseStore
+              ? 'Pilih toko sebelum menambah ' + productName
+              : cartBlocked && !hasVariants
+                ? 'Periksa keranjang untuk ' + productName
+                : hasVariants
+                  ? sizeAction + ' ' + product.baseName
+                  : 'Tambah ' + productName + ' ke keranjang'
           }
         >
           <span role="status">
-            {!stockAvailable
-              ? 'Stok belum tersedia'
-              : hasVariants
-                ? sizeAction
-                : limitReached
-                  ? 'Jumlah tersedia sudah di keranjang'
-                  : added
-                    ? '✓ Ditambahkan'
-                    : '+ Keranjang'}
+            {saving
+              ? 'Menyimpan…'
+              : chooseStore
+                ? 'Pilih toko dahulu'
+                : stockFailed
+                  ? 'Stok belum dapat dimuat'
+                  : !stockAvailable
+                    ? 'Stok belum tersedia'
+                    : hasVariants
+                      ? sizeAction
+                      : cartBlocked
+                        ? 'Periksa keranjang'
+                        : limitReached
+                          ? 'Jumlah tersedia sudah di keranjang'
+                          : added
+                            ? '✓ Ditambahkan'
+                            : '+ Keranjang'}
           </span>
         </button>
+        {saveError && (
+          <p className="product-cart-error" role="alert">
+            {saveError} <a href="#/keranjang">Buka keranjang</a>
+          </p>
+        )}
       </div>
     </article>
   );

@@ -7,6 +7,8 @@ import {
   serverWorkflowSnapshot,
   createServerOrder,
   fetchServerOrder,
+  refreshServerWorkflow,
+  searchServerOrders,
 } from './serverWorkflow.js';
 
 test('angka penjualan tidak valid membuat stok gagal dimuat; server lama tetap dapat mengirim stok tanpa statistik', async () => {
@@ -183,6 +185,72 @@ test('checkout yang belum diketahui hasilnya memakai nomor permintaan sama meski
   }
 });
 import { serverStock } from './serverWorkflow.js';
+
+test('inventory and order failures are independent; loading and delayed responses never restore a previous session', async () => {
+  const oldFetch = globalThis.fetch;
+  let failedPath = '/api/admin/orders';
+  let release;
+  try {
+    globalThis.fetch = async (path) => {
+      if (path === '/api/orders' && release === 'hold')
+        await new Promise((resolve) => {
+          release = resolve;
+        });
+      return {
+        ok: path !== failedPath,
+        status: path === failedPath ? 503 : 200,
+        json: async () =>
+          path === failedPath
+            ? { errors: { form: 'Gangguan sementara' } }
+            : path.includes('inventory')
+              ? { version: 1, stock: { 'test:1-pcs': { available: 27, revision: 0 } } }
+              : { version: 1, orders: [], nextCursor: null, total: 0 },
+      };
+    };
+    await configureWorkflowSession({ id: 'owner', role: 'admin' });
+    assert.equal(serverWorkflowSnapshot().adminOrdersFailed, true);
+    assert.equal(serverWorkflowSnapshot().inventoryFailed, false);
+    assert.equal(serverStock({ id: 'test', sizeValue: '1', sizeUnit: 'pcs' }).available, 27);
+    failedPath = '/api/admin/inventory';
+    await refreshServerWorkflow();
+    assert.equal(serverWorkflowSnapshot().adminOrdersFailed, false);
+    assert.equal(serverWorkflowSnapshot().inventoryFailed, true);
+    assert.throws(() => serverStock({ id: 'test', sizeValue: '1', sizeUnit: 'pcs' }), /Gangguan/);
+    failedPath = '';
+    release = 'hold';
+    const delayed = configureWorkflowSession({ id: 'old', role: 'user' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(
+      serverWorkflowSnapshot().inventoryLoading,
+      false,
+      'stock becomes available while orders still load',
+    );
+    assert.equal(serverWorkflowSnapshot().loading, true);
+    const finish = release;
+    await configureWorkflowSession(null);
+    finish();
+    await delayed;
+    assert.equal(serverWorkflowSnapshot().owner, 'guest');
+    assert.deepEqual(serverWorkflowSnapshot().orders, []);
+    let finishSearch;
+    globalThis.fetch = async () => {
+      await new Promise((resolve) => {
+        finishSearch = resolve;
+      });
+      return {
+        ok: true,
+        json: async () => ({ version: 1, orders: [], nextCursor: null, total: 0 }),
+      };
+    };
+    const search = searchServerOrders({ q: 'old' });
+    await configureWorkflowSession({ id: 'new', role: 'user' }, true);
+    finishSearch();
+    await assert.rejects(search, /Akun berubah/);
+  } finally {
+    await configureWorkflowSession(null, true);
+    globalThis.fetch = oldFetch;
+  }
+});
 import { purchaseStockLabel, soldStockLabel } from '../data/productStockPresentation.js';
 test('hidden stock preserves availability per package and rounded sales; missing SKU data fails closed', async () => {
   const old = globalThis.fetch;

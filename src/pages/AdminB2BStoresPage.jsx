@@ -55,7 +55,7 @@ function Pagination({ data, onPage, busy, label }) {
   );
 }
 
-function AccountList({ accounts, empty }) {
+function AccountList({ accounts, empty, onRemove, onReplace, busy }) {
   return accounts.length ? (
     <ul className="b2b-people">
       {accounts.map((account) => (
@@ -63,6 +63,30 @@ function AccountList({ accounts, empty }) {
           <strong>{account.name}</strong>
           <span>{account.email}</span>
           {!account.active && <small>Akun tidak aktif</small>}
+          {(onRemove || onReplace) && (
+            <div className="b2b-actions">
+              {onReplace && (
+                <button
+                  type="button"
+                  className="admin-secondary"
+                  disabled={busy}
+                  onClick={() => onReplace(account)}
+                >
+                  Ganti Sales
+                </button>
+              )}
+              {onRemove && (
+                <button
+                  type="button"
+                  className="bam-button-danger"
+                  disabled={busy}
+                  onClick={() => onRemove(account)}
+                >
+                  {onReplace ? 'Cabut penugasan' : 'Lepas pembeli'}
+                </button>
+              )}
+            </div>
+          )}
         </li>
       ))}
     </ul>
@@ -87,6 +111,9 @@ export default function AdminB2BStoresPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [appointment, setAppointment] = useState(null);
+  const [change, setChange] = useState(null);
+  const [replacement, setReplacement] = useState('');
+  const [editForm, setEditForm] = useState(emptyStore);
   const pending = useRef(false);
   const mounted = useRef(false);
   const [storeSearch, setStoreSearch] = useState('');
@@ -111,7 +138,11 @@ export default function AdminB2BStoresPage() {
     }, 250);
     return () => clearTimeout(timer);
   }, [accountQuery]);
-  useUnsavedChanges(Object.values(form).some(Boolean) || Boolean(salesId), undefined, busy);
+  useUnsavedChanges(
+    Object.values(form).some(Boolean) || Boolean(salesId) || Boolean(change),
+    undefined,
+    busy,
+  );
 
   const stores = useResource(
     staff ? '/api/b2b/stores?' + new URLSearchParams({ q: storeSearch, page: String(page) }) : null,
@@ -130,14 +161,14 @@ export default function AdminB2BStoresPage() {
     revision,
   );
 
-  const mutate = async (path, body, message, onSuccess) => {
+  const mutate = async (path, body, message, onSuccess, method) => {
     if (pending.current || !owner) return;
     pending.current = true;
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const result = await accountApi(path, body);
+      const result = await accountApi(path, body, 15000, method);
       if (!mounted.current) return;
       onSuccess?.(result);
       setNotice(message);
@@ -150,6 +181,55 @@ export default function AdminB2BStoresPage() {
     }
   };
   const current = details.data;
+  const openChange = (kind, account) => {
+    setError('');
+    setReplacement('');
+    setEditForm({
+      storeName: current.store.storeName,
+      phone: current.store.phone,
+      address: current.store.address,
+    });
+    setChange({
+      kind,
+      account,
+      store: current.store,
+      otherAccess:
+        account &&
+        (kind === 'members' ? current.sales : current.members).some((row) => row.id === account.id),
+    });
+  };
+  const saveChange = () => {
+    const path = '/api/b2b/stores/' + encodeURIComponent(change.store.id);
+    const revision = change.store.revision;
+    if (change.kind === 'edit')
+      return mutate(
+        path,
+        { ...editForm, revision },
+        'Data toko berhasil diperbarui.',
+        () => setChange(null),
+        'PUT',
+      );
+    if (change.kind === 'replace') {
+      if (!replacement) {
+        setError('Pilih Sales pengganti.');
+        return;
+      }
+      return mutate(
+        path + '/sales',
+        { userId: replacement, replaceUserId: change.account.id, revision },
+        'Sales pengganti tersimpan. Penugasan Sales sebelumnya telah dicabut dari toko ini.',
+        () => setChange(null),
+      );
+    }
+    return mutate(
+      path + '/' + change.kind + '/remove',
+      { userId: change.account.id, revision },
+      change.kind === 'sales'
+        ? 'Penugasan Sales berhasil dicabut dari toko ini.'
+        : 'Pembeli berhasil dilepas dari toko ini.',
+      () => setChange(null),
+    );
+  };
   const availableSales =
     sales.data?.sales.filter(
       (account) => !current?.sales.some((assigned) => assigned.id === account.id),
@@ -181,7 +261,7 @@ export default function AdminB2BStoresPage() {
           {notice}
         </p>
       )}
-      {error && !appointment && (
+      {error && !appointment && !change && (
         <p className="b2b-error" role="alert">
           {error}
         </p>
@@ -329,17 +409,35 @@ export default function AdminB2BStoresPage() {
               <h2>{current.store.storeName}</h2>
               <p className="b2b-muted">{current.store.phone}</p>
               <p className="b2b-address">{current.store.address}</p>
+              {owner && (
+                <button
+                  type="button"
+                  className="admin-secondary"
+                  disabled={busy}
+                  onClick={() => openChange('edit')}
+                >
+                  Ubah data toko
+                </button>
+              )}
               <div className="b2b-assignment-grid">
                 <section>
                   <h3>Akun pembeli</h3>
                   <AccountList
                     accounts={current.members}
                     empty="Belum ada pembeli yang dihubungkan."
+                    busy={busy}
+                    onRemove={owner ? (account) => openChange('members', account) : undefined}
                   />
                 </section>
                 <section>
                   <h3>Sales yang ditugaskan</h3>
-                  <AccountList accounts={current.sales} empty="Belum ada Sales yang ditugaskan." />
+                  <AccountList
+                    accounts={current.sales}
+                    empty="Belum ada Sales yang ditugaskan."
+                    busy={busy}
+                    onRemove={owner ? (account) => openChange('sales', account) : undefined}
+                    onReplace={owner ? (account) => openChange('replace', account) : undefined}
+                  />
                 </section>
               </div>
               {owner && (
@@ -350,7 +448,7 @@ export default function AdminB2BStoresPage() {
                     if (!salesId) return;
                     mutate(
                       '/api/b2b/stores/' + encodeURIComponent(selectedId) + '/sales',
-                      { userId: salesId },
+                      { userId: salesId, revision: current.store.revision },
                       'Sales berhasil ditugaskan ke toko.',
                       () => setSalesId(''),
                     );
@@ -448,7 +546,7 @@ export default function AdminB2BStoresPage() {
                           onClick={() =>
                             mutate(
                               '/api/b2b/stores/' + encodeURIComponent(selectedId) + '/members',
-                              { userId: account.id },
+                              { userId: account.id, revision: current.store.revision },
                               'Pembeli berhasil dihubungkan ke toko.',
                             )
                           }
@@ -486,6 +584,127 @@ export default function AdminB2BStoresPage() {
             </>
           )}
         </section>
+      )}
+      {change && (
+        <ConfirmDialog
+          title={
+            change.kind === 'edit'
+              ? 'Ubah data toko'
+              : change.kind === 'replace'
+                ? 'Ganti Sales toko'
+                : change.kind === 'sales'
+                  ? 'Cabut penugasan Sales?'
+                  : 'Lepas pembeli dari toko?'
+          }
+          confirmLabel={
+            change.kind === 'edit' || change.kind === 'replace'
+              ? 'Simpan perubahan'
+              : change.kind === 'sales'
+                ? 'Cabut penugasan'
+                : 'Lepas hubungan pembeli'
+          }
+          danger={['sales', 'members'].includes(change.kind)}
+          busy={busy}
+          error={error}
+          onClose={() => {
+            if (!pending.current) {
+              setChange(null);
+              setError('');
+            }
+          }}
+          onConfirm={saveChange}
+        >
+          <p>
+            <strong>{change.store.storeName}</strong> · {change.store.storeCode}
+          </p>
+          {change.account && (
+            <p>
+              {change.account.name}
+              <br />
+              {change.account.email}
+            </p>
+          )}
+          {change.kind === 'edit' ? (
+            <fieldset disabled={busy} className="b2b-edit-fields">
+              <label htmlFor="b2b-edit-name">
+                Nama toko
+                <input
+                  id="b2b-edit-name"
+                  maxLength={100}
+                  value={editForm.storeName}
+                  onChange={(event) => setEditForm({ ...editForm, storeName: event.target.value })}
+                />
+              </label>
+              <label htmlFor="b2b-edit-phone">
+                Nomor HP toko
+                <input
+                  id="b2b-edit-phone"
+                  type="tel"
+                  maxLength={30}
+                  value={editForm.phone}
+                  onChange={(event) => setEditForm({ ...editForm, phone: event.target.value })}
+                />
+              </label>
+              <label htmlFor="b2b-edit-address">
+                Alamat toko
+                <textarea
+                  id="b2b-edit-address"
+                  rows={3}
+                  maxLength={500}
+                  value={editForm.address}
+                  onChange={(event) => setEditForm({ ...editForm, address: event.target.value })}
+                />
+              </label>
+            </fieldset>
+          ) : (
+            <>
+              <p>
+                {change.kind === 'members'
+                  ? 'Hubungan pembeli dengan toko ini akan dilepas.'
+                  : 'Penugasan Sales pada toko ini akan dicabut.'}{' '}
+                Riwayat keranjang dan pesanan tetap tersimpan. Penugasan pada toko lain tetap
+                berlaku.
+              </p>
+              {change.otherAccess && (
+                <p>
+                  {change.kind === 'members'
+                    ? 'Akun ini masih mempunyai penugasan Sales di toko yang sama. Cabut penugasan Sales juga untuk menghentikan seluruh aksesnya ke toko ini.'
+                    : 'Akun ini juga terhubung sebagai pembeli di toko yang sama. Hubungan pembeli tetap memberi akses; lepas hubungan tersebut juga untuk menghentikan seluruh aksesnya ke toko ini.'}
+                </p>
+              )}
+              {change.kind === 'replace' && (
+                <label htmlFor="b2b-replacement">
+                  Sales pengganti
+                  <select
+                    id="b2b-replacement"
+                    disabled={busy}
+                    value={replacement}
+                    onChange={(event) => setReplacement(event.target.value)}
+                  >
+                    <option value="">Pilih Sales</option>
+                    {availableSales.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} · {account.email}
+                      </option>
+                    ))}
+                  </select>
+                  {!availableSales.length && (
+                    <span>
+                      Belum ada Sales lain yang tersedia. Tutup formulir ini dan daftarkan akun staf
+                      lain sebagai Sales pada bagian Hubungkan akun.
+                    </span>
+                  )}
+                </label>
+              )}
+            </>
+          )}
+          {error && (
+            <p>
+              Tutup formulir ini lalu tekan Muat ulang bila data sudah berubah. Periksa kembali
+              sebelum menyimpan.
+            </p>
+          )}
+        </ConfirmDialog>
       )}
       {appointment && (
         <ConfirmDialog

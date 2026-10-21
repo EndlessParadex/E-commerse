@@ -165,10 +165,15 @@ export class WorkflowRepository {
       )
       .all(user.id)
       .map((row) => JSON.parse(row.data))
-      .filter((order) =>
-        ['awaiting_payment', 'awaiting_confirmation', 'awaiting_review', 'awaiting_acceptance'].includes(
-          order.status,
-        ) || (order.codFixedTotal && order.inventoryReserved === true),
+      .filter(
+        (order) =>
+          [
+            'awaiting_payment',
+            'awaiting_confirmation',
+            'awaiting_review',
+            'awaiting_acceptance',
+          ].includes(order.status) ||
+          (order.codFixedTotal && order.inventoryReserved === true),
       );
     const held = new Map();
     for (const order of pending)
@@ -433,8 +438,25 @@ export class WorkflowRepository {
     this.db.prepare('INSERT OR IGNORE INTO order_images VALUES(?,?,?)').run(hash, match[1], bytes);
     return hash;
   }
-  list(user, { admin = false, before = '' } = {}) {
+  list(user, { admin = false, before = '', q = '', status = 'all' } = {}) {
     if (admin && user.role !== 'admin') fail('Akses admin diperlukan.', 403, 'forbidden');
+    if (
+      typeof q !== 'string' ||
+      q.length > 200 ||
+      typeof before !== 'string' ||
+      before.length > 100
+    )
+      fail('Pencarian atau batas halaman tidak valid.');
+    const active = [
+      'awaiting_payment',
+      'awaiting_confirmation',
+      'awaiting_review',
+      'awaiting_acceptance',
+      'processing',
+      'shipped',
+    ];
+    if (!['all', 'active', ...active, 'completed', 'cancelled', 'expired'].includes(status))
+      fail('Status pesanan tidak valid.');
     this.tick();
     const where = [];
     const params = [];
@@ -442,6 +464,23 @@ export class WorkflowRepository {
       where.push('user_id=?');
       params.push(user.id);
     }
+    if (status !== 'all') {
+      const statuses = status === 'active' ? active : [status];
+      where.push('status IN (' + statuses.map(() => '?').join(',') + ')');
+      params.push(...statuses);
+    }
+    if (q.trim()) {
+      // Search only the displayed identity fields; SQL wildcard characters remain literal.
+      where.push(`instr(lower(id||' '||json_extract(data,'$.recipient')||' '||
+        COALESCE((SELECT group_concat(json_extract(value,'$.name')||' '||json_extract(value,'$.id'),' ')
+          FROM json_each(orders.data,'$.items')),'')),?)>0`);
+      params.push(q.trim().toLowerCase());
+    }
+    const total = this.db
+      .prepare(
+        'SELECT COUNT(*) AS n FROM orders' + (where.length ? ' WHERE ' + where.join(' AND ') : ''),
+      )
+      .get(...params).n;
     if (before) {
       const cursor = this.db
         .prepare('SELECT created_at,id,user_id FROM orders WHERE id=?')
@@ -460,6 +499,7 @@ export class WorkflowRepository {
       version: 1,
       orders: rows.slice(0, 50).map((row) => this.publicOrder(JSON.parse(row.data))),
       nextCursor: rows.length > 50 ? JSON.parse(rows[49].data).id : null,
+      total,
     };
   }
   create(user, body, ip = user.id) {
@@ -554,7 +594,9 @@ export class WorkflowRepository {
           id: variant.id,
           name,
           price,
-          ...(Number.isSafeInteger(Number(variant.oldPrice)) && Number(variant.oldPrice) > price ? { oldPrice: Number(variant.oldPrice) } : {}),
+          ...(Number.isSafeInteger(Number(variant.oldPrice)) && Number(variant.oldPrice) > price
+            ? { oldPrice: Number(variant.oldPrice) }
+            : {}),
           quantity: entry.quantity,
           details: {
             name: draft.baseName,

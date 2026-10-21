@@ -73,6 +73,143 @@ const newStore = (storeName = 'Toko Nusantara') => ({
   address: 'Jalan Nusantara Nomor 15',
 });
 
+test('owner can edit stores, replace and revoke Sales atomically; stale changes fail and revoked users lose only that store', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  seed(app);
+  const owner = { id: 'owner', role: 'admin' };
+  try {
+    const first = app.b2bStores.create(owner, newStore());
+    const second = app.b2bStores.create(owner, newStore('Toko Kedua'));
+    for (const id of ['sales', 'other']) app.b2bStores.appointSales(owner, id);
+    app.b2bStores.assignSales(owner, first.id, 'sales');
+    app.b2bStores.assignSales(owner, second.id, 'sales');
+    app.b2bStores.addMember(owner, first.id, 'buyer');
+    const base = '/api/b2b/stores/' + first.id;
+    const revision = () => app.b2bStores.store(first.id).revision;
+    let rev = revision();
+    for (const actor of ['operator', 'sales', 'buyer']) {
+      assert.equal(
+        (
+          await request(app, 'POST', base + '/sales/remove', actor, {
+            userId: 'sales',
+            revision: rev,
+          })
+        ).status,
+        403,
+      );
+      assert.equal(
+        (await request(app, 'PUT', base, actor, { ...newStore('Toko Baru'), revision: rev }))
+          .status,
+        403,
+      );
+    }
+    const saved = await request(app, 'PUT', base, 'owner', {
+      ...newStore('Toko Baru'),
+      revision: rev,
+    });
+    assert.equal(saved.status, 200);
+    assert.equal(saved.body.store.storeCode, first.storeCode);
+    assert.equal(saved.body.store.revision, rev + 1);
+    assert.equal(
+      (await request(app, 'PUT', base, 'owner', { ...newStore('Timpa'), revision: rev })).status,
+      409,
+    );
+    rev = revision();
+    const cart = app.sharedCarts.mutate({ id: 'sales', role: 'user' }, first.id, {
+      action: 'add',
+      productId: 'snack-pedas',
+      quantity: 1,
+      date: '2026-10-21',
+      revision: 0,
+      requestId: 'fixture-request-0001',
+    });
+    const replaced = await request(app, 'POST', base + '/sales', 'owner', {
+      userId: 'other',
+      replaceUserId: 'sales',
+      revision: rev,
+    });
+    assert.equal(replaced.status, 200);
+    assert.deepEqual(
+      app.b2bStores.details(owner, first.id).sales.map((row) => row.id),
+      ['other'],
+    );
+    assert.equal(
+      (
+        await request(app, 'POST', base + '/sales/remove', 'owner', {
+          userId: 'other',
+          revision: rev,
+        })
+      ).status,
+      409,
+    );
+    assert.equal((await request(app, 'GET', base + '/cart?date=2026-10-21', 'sales')).status, 404);
+    assert.equal(
+      (
+        await request(app, 'POST', base + '/cart', 'sales', {
+          action: 'clear',
+          date: '2026-10-21',
+          revision: cart.revision,
+          requestId: 'fixture-request-0002',
+        })
+      ).status,
+      404,
+    );
+    assert.equal(app.b2bStores.list({ id: 'sales', role: 'user' })[0].id, second.id);
+    assert.equal(
+      app.sharedCarts.read({ id: 'other', role: 'user' }, first.id, '2026-10-21').items.length,
+      1,
+    );
+    rev = revision();
+    assert.equal(
+      (
+        await request(app, 'POST', base + '/sales', 'owner', {
+          userId: 'missing',
+          replaceUserId: 'other',
+          revision: rev,
+        })
+      ).status,
+      422,
+    );
+    assert.equal(revision(), rev, 'failed replacement does not remove the previous assignment');
+    assert.equal(
+      (
+        await request(app, 'POST', base + '/sales/remove', 'owner', {
+          userId: 'other',
+          revision: rev,
+        })
+      ).status,
+      200,
+    );
+    assert.equal(
+      (
+        await request(app, 'POST', base + '/members/remove', 'owner', {
+          userId: 'buyer',
+          revision: revision(),
+        })
+      ).status,
+      200,
+    );
+    assert.equal((await request(app, 'GET', base + '/cart?date=2026-10-21', 'buyer')).status, 404);
+    assert.equal(
+      app.sharedCarts.context({ id: 'buyer', role: 'user' }).enabled,
+      true,
+      'removing the last link must not re-enable legacy checkout',
+    );
+    assert.equal((await request(app, 'POST', '/api/orders', 'buyer', {})).status, 403);
+    assert.equal(app.sharedCarts.read(owner, first.id, '2026-10-21').items.length, 1);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_events').get().n, 1);
+    const actions = app.db
+      .prepare('SELECT action FROM b2b_store_audit WHERE store_id=?')
+      .all(first.id)
+      .map((row) => row.action);
+    assert.ok(actions.includes('store_updated'));
+    assert.equal(actions.filter((action) => action === 'sales_unassigned').length, 2);
+    assert.ok(actions.includes('buyer_unlinked'));
+  } finally {
+    app.db.close();
+  }
+});
+
 test('B2B management API: owner creates, links and appoints; admin reads; buyer cannot read account details or mutate', async () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
   try {
@@ -242,10 +379,13 @@ test('B2B management keeps stores, members and sales after the database is reope
     app.b2bStores.addMember(owner, store.id, 'buyer');
     app.b2bStores.appointSales(owner, 'sales');
     app.b2bStores.assignSales(owner, store.id, 'sales');
+    // Simulate a pre-update database; startup must add the revision without losing links.
+    app.db.exec('ALTER TABLE b2b_stores DROP COLUMN revision');
     app.db.close();
     app = createApp(options);
     const details = app.b2bStores.details(owner, store.id);
     assert.equal(details.store.storeCode, store.storeCode);
+    assert.equal(details.store.revision, 0);
     assert.deepEqual(
       details.members.map((row) => row.id),
       ['buyer'],

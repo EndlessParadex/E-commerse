@@ -2,8 +2,7 @@ import { useState } from 'react';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import { orderItemPresentation } from '../data/orderItemPresentation';
 import { orderStatus, orderStatusLabel, cancellationReason } from '../state/orderModel';
-import { loadMoreOrders } from '../state/serverWorkflow';
-import useWorkflow from '../state/useWorkflow';
+import useOrderSearch from '../state/useOrderSearch';
 import { dateLabel, rupiah } from '../components/shop/shopPresentation';
 import ProductImage from '../components/shop/ProductImage';
 import './OrdersPage.css';
@@ -11,28 +10,24 @@ import '../components/shop/OrderItem.css';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 
 export default function OrdersPage() {
-  const { orders, failed, loading, server, owner, error, nextCursor } = useWorkflow();
-  const [pageError, setPageError] = useState('');
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
+  const {
+    orders,
+    failed,
+    loading,
+    server,
+    owner,
+    error,
+    nextCursor,
+    total,
+    loadMore,
+    moreBusy,
+    pageError,
+    retry,
+  } = useOrderSearch('own', query, filter);
   const [cancelTarget, setCancelTarget] = useState(null);
-  const visibleOrders = orders.filter(
-    (order) =>
-      (filter === 'all' ||
-        (filter === 'active'
-          ? [
-              'awaiting_payment',
-              'awaiting_confirmation',
-              'awaiting_review',
-              'awaiting_acceptance',
-              'processing',
-              'shipped',
-            ].includes(orderStatus(order))
-          : orderStatus(order) === filter)) &&
-      `${order.id} ${order.items.map((item) => item.name).join(' ')}`
-        .toLocaleLowerCase('id')
-        .includes(query.trim().toLocaleLowerCase('id')),
-  );
+  const visibleOrders = orders;
 
   return (
     <div className="orders-page">
@@ -46,7 +41,9 @@ export default function OrdersPage() {
           <span className="section-eyebrow">Aktivitas belanja</span>
           <h1>Pesanan saya</h1>
           <p>
-            {orders.length} {server ? 'pesanan' : 'pesanan simulasi'}
+            {loading
+              ? 'Memuat…'
+              : `${total ?? orders.length} ${server ? 'pesanan' : 'pesanan simulasi'}`}
           </p>
         </div>
         <a className="orders-shopping-link" href="#/">
@@ -58,9 +55,9 @@ export default function OrdersPage() {
           ? 'Pesanan tersimpan pada akun Anda di server. Riwayat dapat dibuka dari perangkat lain setelah masuk ke akun yang sama.'
           : 'Pesanan masih simulasi dan tersimpan sementara di tab browser ini. Riwayat dan pembatalan bertahan setelah muat ulang, tetapi belum terhubung ke akun atau toko. Menutup tab dapat menghapus riwayat.'}
       </p>
-      {!!orders.length && (
+      {(server ? owner !== 'guest' : Boolean(orders.length || query || filter !== 'all')) && (
         <>
-          <div className="admin-field">
+          <div className="orders-search-field">
             <label htmlFor="buyer-order-search">Cari pesanan</label>
             <input
               id="buyer-order-search"
@@ -68,7 +65,7 @@ export default function OrdersPage() {
               maxLength={200}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Nomor pesanan atau nama barang"
+              placeholder="Nomor pesanan, penerima, produk, atau SKU"
             />
           </div>
           <div className="orders-filter" role="group" aria-label="Filter status pesanan">
@@ -116,11 +113,15 @@ export default function OrdersPage() {
               ? error || 'Server belum dapat dihubungi. Coba muat ulang halaman.'
               : 'Penyimpanan browser tidak tersedia. Coba muat ulang halaman atau periksa pengaturan browser.'}
           </p>
-          <button className="shop-primary" type="button" onClick={() => window.location.reload()}>
+          <button
+            className="shop-primary"
+            type="button"
+            onClick={server ? retry : () => window.location.reload()}
+          >
             Coba lagi
           </button>
         </section>
-      ) : orders.length === 0 ? (
+      ) : orders.length === 0 && !query.trim() && filter === 'all' ? (
         <section className="orders-empty">
           <span aria-hidden="true">📦</span>
           <h2>Belum ada pesanan</h2>
@@ -199,8 +200,8 @@ export default function OrdersPage() {
                   </span>
                   <strong>{rupiah(order.total)}</strong>
                   <small>
-                    {order.codFixedTotal ? 'Gratis ongkir' : 'Termasuk ongkir'} · {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
-                    kemasan
+                    {order.codFixedTotal ? 'Gratis ongkir' : 'Termasuk ongkir'} ·{' '}
+                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan
                   </small>
                 </div>
                 <div className="orders-card-actions">
@@ -234,6 +235,12 @@ export default function OrdersPage() {
           ))}
         </ul>
       )}
+      {!loading && !failed && server && (
+        <p className="orders-notice">
+          Menampilkan {orders.length} dari {total ?? orders.length} pesanan
+          {query.trim() || filter !== 'all' ? ' yang sesuai filter' : ''}.
+        </p>
+      )}
       {pageError && (
         <p className="shop-warning" role="alert">
           {pageError}
@@ -243,12 +250,10 @@ export default function OrdersPage() {
         <button
           className="shop-primary"
           type="button"
-          onClick={async () => {
-            const result = await loadMoreOrders();
-            setPageError(result.error || '');
-          }}
+          disabled={moreBusy || loading}
+          onClick={loadMore}
         >
-          Muat pesanan lebih lama
+          {moreBusy ? 'Memuat…' : 'Muat pesanan lebih lama'}
         </button>
       )}
       {cancelTarget && (

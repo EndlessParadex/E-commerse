@@ -12,6 +12,10 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `POST /api/b2b/sales/appoint`: Owner BAM menunjuk akun pengguna menjadi Sales.
 - `POST /api/b2b/stores/:id/members`: Owner BAM menghubungkan pembeli dengan toko.
 - `POST /api/b2b/stores/:id/sales`: Owner BAM menugaskan Sales ke toko.
+- `PUT /api/b2b/stores/:id`: Owner mengubah nama, nomor HP dan alamat toko dengan `revision` dari detail toko. ID/kode tetap.
+- `POST /api/b2b/stores/:id/sales` dengan `replaceUserId`, `userId` pengganti dan `revision`: ganti Sales dalam satu transaksi.
+- `POST /api/b2b/stores/:id/sales/remove` dan `/members/remove` dengan `userId` serta `revision`: cabut satu penugasan atau hubungan pembeli. Riwayat keranjang/pesanan tidak dihapus.
+- Perubahan lama yang memakai revisi berbeda ditolak dengan HTTP 409. Hak Pemilik, akses akun dan akses toko tetap diperiksa di server. Jika satu akun mempunyai hubungan pembeli sekaligus penugasan Sales, cabut keduanya untuk menghentikan seluruh aksesnya ke toko tersebut. Akun yang pernah dihubungkan ke B2B tetap tidak dapat memakai checkout lama setelah hubungan terakhir dilepas.
 - Semua mutasi mencatat aktor dan perubahan di tabel `b2b_store_audit`.
 
 ### Halaman Toko & Sales
@@ -24,6 +28,15 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `GET /api/b2b/stores/:id` khusus Admin/Pemilik mengembalikan profil toko beserta akun pembeli dan Sales yang terhubung.
 - `GET /api/b2b/accounts?page=1&q=...` khusus Pemilik mencari akun non-Admin aktif yang sudah disetujui dan belum menjadi Sales.
 - Data disimpan ke SQLite. Perubahan yang gagal mempertahankan isian; pemuatan ulang yang gagal setelah penyimpanan berhasil menampilkan kesalahan pemuatan secara terpisah.
+- Pemilik dapat memilih **Ubah data toko**, **Ganti Sales**, **Cabut penugasan**, dan **Lepas pembeli** pada detail toko. Dialog menampilkan nama/kode toko dan akun yang diubah; Admin operasional tetap hanya membaca.
+
+### Perbaikan operasional 21 Oktober 2026
+
+- Kartu produk menunggu hasil penyimpanan keranjang bersama. Status memilih toko, menyimpan, berhasil, gagal dan stok dibedakan; klik ganda saat menyimpan diblokir.
+- `GET /api/orders` dan `/api/admin/orders` menerima `q`, `status`, `before`; pencarian nomor pesanan, penerima, nama produk dan SKU dilakukan sebelum pagination 50 hasil. Respons menyertakan `total` seluruh hasil yang sesuai. Pembeli tetap hanya mendapat pesanan sendiri. Karakter `%` dan `_` dicari sebagai teks biasa.
+- Hasil pencarian dipisahkan dari cache notifikasi/detail. Pergantian kata pencarian atau akun mengabaikan respons lama; refresh mempertahankan jumlah halaman hasil yang sudah dibuka.
+- Kegagalan pemuatan pesanan tidak menutup stok yang berhasil dimuat. Kegagalan stok tetap memblokir perubahan yang memerlukan ketersediaan stok; data dari sesi lama tidak boleh masuk setelah akun berganti.
+- `npm run check:local` kini memeriksa kode frontend dan kemampuan backend untuk perbaikan operasional ini. Perintah memeriksa server pengembangan pada alamat Local yang diberikan, bukan otomatis menerapkan pembaruan.
 
 **Status saat ini:** tahap 1 dan keranjang bersama tahap 3 sudah diimplementasikan. Login masih memakai email/kata sandi. Konfirmasi nomor kontak melalui OTP WhatsApp tersedia pada kode aplikasi, tetapi pengiriman sungguhan masih memerlukan konfigurasi Meta. Finalisasi khusus Admin dan faktur B2B tanpa harga dikerjakan pada tahap berikutnya. Akun pembeli yang sudah dihubungkan ke toko dan akun Sales tidak dapat membuat pesanan melalui checkout lama.
 

@@ -53,7 +53,12 @@ export class SharedCartRepository {
     return (
       this.stores.isSales(actor.id) ||
       Boolean(
-        this.db.prepare('SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1').get(actor.id),
+        this.db
+          .prepare(
+            `SELECT 1 FROM b2b_store_members WHERE user_id=?
+          UNION ALL SELECT 1 FROM b2b_store_audit WHERE target_user_id=? AND action IN ('buyer_linked','buyer_unlinked') LIMIT 1`,
+          )
+          .get(actor.id, actor.id),
       )
     );
   }

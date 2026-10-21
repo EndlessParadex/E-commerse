@@ -84,6 +84,17 @@ export class B2BStoreRepository {
     );
     CREATE INDEX IF NOT EXISTS b2b_member_user ON b2b_store_members(user_id,store_id);
     CREATE INDEX IF NOT EXISTS b2b_sales_user ON b2b_sales_assignments(sales_user_id,store_id);`);
+    this.transaction(() => {
+      if (
+        !db
+          .prepare('PRAGMA table_info(b2b_stores)')
+          .all()
+          .some((column) => column.name === 'revision')
+      )
+        db.exec(
+          'ALTER TABLE b2b_stores ADD COLUMN revision INTEGER NOT NULL DEFAULT 0 CHECK(revision>=0)',
+        );
+    });
   }
   transaction(fn) {
     this.db.exec('BEGIN IMMEDIATE');
@@ -120,10 +131,26 @@ export class B2BStoreRepository {
       .prepare('INSERT INTO b2b_store_audit VALUES(?,?,?,?,?,?)')
       .run(randomUUID(), actor.id, storeId, targetUserId, action, this.now());
   }
+  checkRevision(storeId, revision, required = false) {
+    const store = this.store(storeId);
+    if (
+      (required || revision !== undefined) &&
+      (!Number.isSafeInteger(revision) || revision !== store.revision)
+    )
+      fail(
+        'Data toko atau penugasan sudah berubah. Muat ulang, periksa, lalu ulangi perubahan.',
+        409,
+        'revision_conflict',
+      );
+    return store;
+  }
+  bump(storeId) {
+    this.db.prepare('UPDATE b2b_stores SET revision=revision+1 WHERE id=?').run(storeId);
+  }
   store(id) {
     const row = this.db
       .prepare(
-        'SELECT id,store_code AS storeCode,store_name AS storeName,phone,address,active,created_at AS createdAt FROM b2b_stores WHERE id=?',
+        'SELECT id,store_code AS storeCode,store_name AS storeName,phone,address,active,revision,created_at AS createdAt FROM b2b_stores WHERE id=?',
       )
       .get(id);
     if (!row || !row.active) fail('Toko tidak ditemukan.', 404, 'store_not_found');
@@ -259,22 +286,68 @@ export class B2BStoreRepository {
       return { userId: user.id, sales: true };
     });
   }
-  assignSales(actor, storeId, userId) {
+  update(actor, storeId, body) {
     this.requireOwner(actor);
-    const store = this.store(storeId);
+    const name = required(body?.storeName, 'Nama toko', 2, 100);
+    const phone = phoneNumber(body?.phone);
+    const address = required(body?.address, 'Alamat toko', 10, 500);
+    return this.transaction(() => {
+      this.checkRevision(storeId, body.revision, true);
+      this.db
+        .prepare(
+          'UPDATE b2b_stores SET store_name=?,phone=?,address=?,revision=revision+1 WHERE id=?',
+        )
+        .run(name, phone, address, storeId);
+      this.record(actor, 'store_updated', storeId);
+      return this.store(storeId);
+    });
+  }
+  assignSales(actor, storeId, userId, { revision, replaceUserId } = {}) {
+    this.requireOwner(actor);
     if (!this.isSales(userId)) fail('Akun belum terdaftar sebagai Sales.', 422, 'sales_required');
     validUser(this.db, userId);
     return this.transaction(() => {
-      this.db
+      const store = this.checkRevision(storeId, revision, replaceUserId !== undefined);
+      if (replaceUserId !== undefined) {
+        if (replaceUserId === userId || typeof replaceUserId !== 'string')
+          fail('Pilih Sales pengganti yang berbeda.');
+        const removed = this.db
+          .prepare('DELETE FROM b2b_sales_assignments WHERE store_id=? AND sales_user_id=?')
+          .run(store.id, replaceUserId);
+        if (!removed.changes)
+          fail('Penugasan Sales sudah berubah. Muat ulang data.', 409, 'revision_conflict');
+        this.record(actor, 'sales_unassigned', store.id, replaceUserId);
+      }
+      const inserted = this.db
         .prepare('INSERT OR IGNORE INTO b2b_sales_assignments VALUES(?,?,?,?)')
         .run(store.id, userId, actor.id, this.now());
-      this.record(actor, 'sales_assigned', store.id, userId);
+      if (inserted.changes) this.record(actor, 'sales_assigned', store.id, userId);
+      if (inserted.changes || replaceUserId !== undefined) this.bump(store.id);
       return { storeId: store.id, salesUserId: userId, assigned: true };
     });
   }
-  addMember(actor, storeId, userId) {
+  removeLink(actor, storeId, kind, body) {
     this.requireOwner(actor);
-    const store = this.store(storeId);
+    if (!['sales', 'members'].includes(kind)) fail('Jenis hubungan akun tidak valid.');
+    const userId = required(body?.userId, 'Akun tujuan', 1, 100);
+    return this.transaction(() => {
+      this.checkRevision(storeId, body.revision, true);
+      const removed = this.db
+        .prepare(
+          kind === 'sales'
+            ? 'DELETE FROM b2b_sales_assignments WHERE store_id=? AND sales_user_id=?'
+            : 'DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?',
+        )
+        .run(storeId, userId);
+      if (!removed.changes)
+        fail('Hubungan akun sudah berubah. Muat ulang data.', 409, 'revision_conflict');
+      this.bump(storeId);
+      this.record(actor, kind === 'sales' ? 'sales_unassigned' : 'buyer_unlinked', storeId, userId);
+      return { storeId, userId, removed: true };
+    });
+  }
+  addMember(actor, storeId, userId, { revision } = {}) {
+    this.requireOwner(actor);
     const user = validUser(this.db, userId);
     if (user.role !== 'user' || this.isSales(userId))
       fail(
@@ -283,10 +356,14 @@ export class B2BStoreRepository {
         'invalid_buyer_account',
       );
     return this.transaction(() => {
-      this.db
+      const store = this.checkRevision(storeId, revision);
+      const inserted = this.db
         .prepare('INSERT OR IGNORE INTO b2b_store_members VALUES(?,?,?,?)')
         .run(store.id, user.id, actor.id, this.now());
-      this.record(actor, 'buyer_linked', store.id, user.id);
+      if (inserted.changes) {
+        this.bump(store.id);
+        this.record(actor, 'buyer_linked', store.id, user.id);
+      }
       return { storeId: store.id, userId: user.id, linked: true };
     });
   }

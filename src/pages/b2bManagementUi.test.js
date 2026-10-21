@@ -261,6 +261,75 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await wait(() =>
       container.querySelector('.b2b-assignment-grid')?.textContent.includes('Akun other'),
     );
+    const buttonText = (text) =>
+      [...container.querySelectorAll('button')].find(
+        (element) => element.textContent.trim() === text,
+      );
+    await click(buttonText('Ubah data toko'));
+    await fill('#b2b-edit-name', 'Toko Kedua Diperbarui');
+    await fill('#b2b-edit-address', 'Jalan Baru Nomor 55, Kota Uji');
+    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
+    await wait(
+      () =>
+        !container.querySelector('dialog') &&
+        container.querySelector('[aria-label="Detail dan penugasan toko"] h2')?.textContent ===
+          'Toko Kedua Diperbarui',
+    );
+    assert.equal(api.b2bStores.store(second.id).address, 'Jalan Baru Nomor 55, Kota Uji');
+    // A concurrent change must preserve form input and refuse to overwrite the current store.
+    await click(buttonText('Ubah data toko'));
+    await fill('#b2b-edit-name', 'Nama dari formulir lama');
+    api.b2bStores.update({ id: 'owner', role: 'admin' }, second.id, {
+      ...api.b2bStores.store(second.id),
+      storeName: 'Perubahan perangkat lain',
+    });
+    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
+    await wait(() => container.querySelector('dialog [role=alert]'));
+    assert.equal(container.querySelector('#b2b-edit-name').value, 'Nama dari formulir lama');
+    assert.equal(api.b2bStores.store(second.id).storeName, 'Perubahan perangkat lain');
+    await click(container.querySelector('dialog .bam-dialog-actions button:first-child'));
+    await click(buttonText('Muat ulang'));
+    await wait(
+      () =>
+        container.querySelector('[aria-label="Detail dan penugasan toko"] h2')?.textContent ===
+        'Perubahan perangkat lain',
+    );
+    api.b2bStores.appointSales({ id: 'owner', role: 'admin' }, 'other');
+    await click(buttonText('Muat ulang'));
+    await wait(() => container.querySelector('#b2b-sales-choice option[value=other]'));
+    await click(buttonText('Ganti Sales'));
+    await fill('#b2b-replacement', 'other');
+    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
+    await wait(
+      () =>
+        !container.querySelector('dialog') &&
+        container
+          .querySelector('.b2b-assignment-grid section:last-child')
+          ?.textContent.includes('Akun other'),
+    );
+    assert.deepEqual(
+      api.b2bStores.details({ id: 'owner', role: 'admin' }, second.id).sales.map((row) => row.id),
+      ['other'],
+    );
+    await click(buttonText('Cabut penugasan'));
+    assert.match(container.querySelector('dialog').textContent, /Perubahan perangkat lain/);
+    assert.match(container.querySelector('dialog').textContent, /other@fixture.test/);
+    assert.match(container.querySelector('dialog').textContent, /juga terhubung sebagai pembeli/);
+    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
+    await wait(
+      () =>
+        !container.querySelector('dialog') &&
+        container.textContent.includes('Penugasan Sales berhasil dicabut'),
+    );
+    assert.equal(api.b2bStores.details({ id: 'owner', role: 'admin' }, second.id).sales.length, 0);
+    await wait(() => buttonText('Lepas pembeli'));
+    await click(buttonText('Lepas pembeli'));
+    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
+    await wait(
+      () =>
+        !container.querySelector('dialog') &&
+        container.textContent.includes('Pembeli berhasil dilepas'),
+    );
     const accountReads = requests.filter((item) =>
       item.path.startsWith('/api/b2b/accounts'),
     ).length;
@@ -271,6 +340,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.equal(container.querySelector('#b2b-create-form'), null);
     assert.equal(container.querySelector('#b2b-account-search'), null);
     assert.equal(container.querySelector('#b2b-assign-form'), null);
+    assert.equal(buttonText('Ubah data toko'), undefined);
+    assert.equal(buttonText('Cabut penugasan'), undefined);
     assert.equal(
       requests.filter((item) => item.path.startsWith('/api/b2b/accounts')).length,
       accountReads,

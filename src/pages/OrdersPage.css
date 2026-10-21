@@ -194,3 +194,25 @@
     text-align: center;
   }
 }
+.orders-search-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.orders-search-field label {
+  font-weight: 600;
+}
+.orders-search-field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: 10px;
+}
+.orders-search-field input:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 2px;
+}

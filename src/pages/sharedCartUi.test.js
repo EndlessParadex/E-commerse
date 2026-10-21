@@ -7,7 +7,7 @@ import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 import { seedSharedCart, sharedRequest } from '../../server/sharedCartFixture.js';
 
-test('shared cart website persists buyer/Sales edits, handles conflicts and lost responses, isolates stores, and gives Admin read access', async () => {
+test('shared cart website handles buyer/Sales edits and Admin editing, conflicts, retries, and store isolation', async () => {
   const api = createApp({ dbPath: ':memory:', logger: () => {} });
   const { first, second, actors } = seedSharedCart(api);
   const dom = new Window({ url: 'http://fixture.test/#/keranjang' });
@@ -238,8 +238,22 @@ test('shared cart website persists buyer/Sales edits, handles conflicts and lost
     await fill('#shared-store', first.id);
     await openDate();
     await wait(() => container.querySelector('.shared-item'));
-    assert.equal(container.querySelector('.shared-quantity'), null);
-    assert.equal(button('Kosongkan keranjang'), undefined);
+    assert.ok(container.querySelector('.shared-quantity'));
+    assert.ok(button('Kosongkan keranjang'));
+    assert.ok(container.querySelector('.shared-admin-add'));
+    await fill('#shared-admin-search', 'snack-pedas-62g');
+    await fill('#shared-admin-sku', 'snack-pedas-62g');
+    await fill('#shared-admin-quantity', '3');
+    await submit('.shared-admin-add');
+    await wait(() =>
+      api.sharedCarts
+        .read(actors.operator, first.id, '2026-10-21')
+        .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 3),
+    );
+    await wait(() => container.querySelectorAll('.shared-item').length === 2);
+    const adminCart = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    assert.equal(adminCart.events[0].actorRole, 'admin');
+    assert.equal(adminCart.events[0].actorName, 'Akun operator');
     assert.match(container.textContent, /Pemrosesan Admin/);
     assert.ok(button('Kunci untuk diperiksa'));
     assert.ok(container.querySelector('nav a[href="#/admin/keranjang"][aria-current="page"]'));

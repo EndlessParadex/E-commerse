@@ -357,7 +357,9 @@ export default function AdminOrdersPage() {
                     Minta perbaikan bukti
                   </button>
                 )}
-                {order.status === 'awaiting_payment' && paymentMethod(order.payment.id) && (
+                {(order.status === 'awaiting_payment' ||
+                  (order.b2b && order.status === 'processing' && order.payment.status === 'proof_submitted')) &&
+                  paymentMethod(order.payment.id) && (
                   <button className="admin-primary" onClick={() => openAction(order, 'paid')}>
                     {server ? 'Catat pembayaran manual' : 'Catat pembayaran simulasi'}
                   </button>

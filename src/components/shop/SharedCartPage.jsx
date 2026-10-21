@@ -216,6 +216,7 @@ export default function SharedCartPage({ adminView = false }) {
   const [storeId, setStoreId] = useState(shared.selection.storeId);
   const [date, setDate] = useState(shared.selection.date);
   const [clearRevision, setClearRevision] = useState(null);
+  const [adminSection, setAdminSection] = useState('queue');
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
     setStoreId(shared.selection.storeId);
@@ -225,6 +226,18 @@ export default function SharedCartPage({ adminView = false }) {
   const frozen = shared.busy || shared.uncertain || shared.reading;
   const { cart, stores, cycles } = shared;
   const selectedNotListed = cart && !stores.stores.some((store) => store.id === cart.store.id);
+  const isAdmin = adminView && ['admin', 'owner'].includes(shared.role);
+  const showSelection = !isAdmin || adminSection === 'cart' || adminSection === 'history';
+  const showCart = !isAdmin || adminSection === 'cart';
+  const sections = [
+    { id: 'queue', label: 'Antrean', description: 'Cari toko dan buka keranjang yang perlu diproses.' },
+    { id: 'cart', label: 'Isi Keranjang', description: 'Pilih toko, kelola barang, dan lakukan finalisasi.' },
+    { id: 'history', label: 'Riwayat', description: 'Lihat catatan perubahan dan periode keranjang toko.' },
+    ...(shared.role === 'owner'
+      ? [{ id: 'banks', label: 'Rekening Transfer', description: 'Atur rekening resmi BCA, BRI, dan Mandiri.' }]
+      : []),
+  ];
+  const activeSection = sections.find((section) => section.id === adminSection);
   return (
     <div className="shop-page shared-cart-page">
       {!adminView && (
@@ -246,10 +259,43 @@ export default function SharedCartPage({ adminView = false }) {
         </>
       )}
       {shared.status === 'loading' && <p role="status">Memuat toko dan keranjang…</p>}
-      {shared.status === 'ready' && ['admin', 'owner'].includes(shared.role) && (
-        <AdminCartQueue shared={shared} />
+      {shared.status === 'ready' && isAdmin && (
+        <div className="shared-admin-navigation">
+          <div className="shared-admin-tabs" role="tablist" aria-label="Submenu keranjang bersama">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                id={'shared-tab-' + section.id}
+                role="tab"
+                aria-selected={adminSection === section.id}
+                aria-controls={'shared-panel-' + section.id}
+                className={'shared-admin-tab' + (adminSection === section.id ? ' is-active' : '')}
+                onClick={() => setAdminSection(section.id)}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+          <p className="shared-admin-tab-description">{activeSection?.description}</p>
+        </div>
       )}
-      {shared.status === 'ready' && shared.role === 'owner' && <AdminB2BBanks />}
+      {shared.status === 'ready' && isAdmin && adminSection === 'queue' && (
+        <div id="shared-panel-queue" role="tabpanel" aria-labelledby="shared-tab-queue">
+          <AdminCartQueue
+            shared={shared}
+            onOpenCart={async (target) => {
+              const chosen = await shared.choose(target);
+              if (chosen) setAdminSection('cart');
+            }}
+          />
+        </div>
+      )}
+      {shared.status === 'ready' && isAdmin && adminSection === 'banks' && (
+        <div id="shared-panel-banks" role="tabpanel" aria-labelledby="shared-tab-banks">
+          <AdminB2BBanks />
+        </div>
+      )}
       {shared.status === 'legacy' && (
         <p className="shop-warning">
           Halaman ini memerlukan server B2B terbaru. Pembeli perlu dihubungkan ke toko oleh Pemilik
@@ -275,8 +321,12 @@ export default function SharedCartPage({ adminView = false }) {
           </button>
         </div>
       )}
-      {shared.status === 'ready' && (
-        <>
+      {shared.status === 'ready' && showSelection && (
+        <div
+          id={isAdmin ? 'shared-panel-' + adminSection : undefined}
+          role={isAdmin ? 'tabpanel' : undefined}
+          aria-labelledby={isAdmin ? 'shared-tab-' + adminSection : undefined}
+        >
           <section className="shared-cart-selection" aria-labelledby="shared-selection-title">
             <h2 id="shared-selection-title">Toko dan periode</h2>
             <form
@@ -401,6 +451,8 @@ export default function SharedCartPage({ adminView = false }) {
                   Muat terbaru
                 </button>
               </section>
+              {showCart && (
+                <>
               {!cart.canEdit && (
                 <p className="shop-warning">
                   {shared.role === 'admin' || shared.role === 'owner'
@@ -604,6 +656,10 @@ export default function SharedCartPage({ adminView = false }) {
                   )}
                 </aside>
               </div>
+                </>
+              )}
+              {(!isAdmin || adminSection === 'history') && (
+                <>
               <section className="shared-history">
                 <h2>Riwayat perubahan</h2>
                 {cart.events.length ? (
@@ -669,9 +725,11 @@ export default function SharedCartPage({ adminView = false }) {
                   </button>
                 </div>
               </section>
+                </>
+              )}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -2,6 +2,57 @@
 
 Branch: `feature/b2b-store-sales-shared-cart`.
 
+## Keputusan alur, hak akses, dan dua keranjang — 21 Oktober 2026
+
+**Status: spesifikasi target, belum diimplementasikan.** Ketika keputusan ini ditulis, Admin/Pemilik masih hanya bisa mengunci, memeriksa, dan memfinalisasi keranjang bersama. Sales dan pembeli dengan hubungan B2B masih diblokir dari checkout lama. Jangan menganggap kemampuan target di bawah sudah tersedia sebelum kode dan pengujian diperbarui.
+
+### Keputusan bisnis
+
+1. **Admin operasional dan Pemilik BAM boleh mengisi/mengubah keranjang toko serta memfinalisasinya sendiri.** Pemisahan dua pelaku bukan syarat perusahaan pada tahap ini; risiko disadari dan dikendalikan lewat penguncian, review, audit, dan konfirmasi finalisasi.
+2. **Sales dan pembeli yang terhubung ke toko mempunyai dua keranjang paralel:** pribadi (milik akun) dan bersama (milik toko/periode). Tidak ada pemindahan atau penggabungan otomatis.
+3. **Masuk ke toko melalui header utama, bukan hanya strip keranjang.** Sales melihat tautan **Daftar Toko**, pembeli yang terhubung melihat **Toko Saya**. Keduanya dapat menuju rute bersama `#/toko` yang menampilkan toko sesuai izin. Satu toko boleh dibuka langsung; banyak toko memerlukan pemilihan eksplisit. Navigasi berlaku untuk desktop dan ponsel. Header dasar konsisten, tautan khusus mengikuti kemampuan.
+4. **Tidak ada dua kotak navigasi khusus Sales di beranda dan tidak ada tombol Belanja biasa terpisah.** Beranda tetap katalog. Pengguna memilih secara jelas **Keranjang pribadi** atau **Keranjang toko** sebelum menambah barang; judul toko/periode selalu tampak saat konteks toko aktif.
+
+### Matriks kemampuan (target)
+
+| Akun | Keranjang/checkout pribadi | Toko terlihat | Isi keranjang toko terbuka | Kunci/periksa/finalisasi | Ruang Admin |
+| --- | --- | --- | --- | --- | --- |
+| Pengunjung | Keranjang pratinjau; login untuk checkout | Tidak | Tidak | Tidak | Tidak |
+| Pembeli tanpa toko | Ya | Tidak | Tidak | Tidak | Tidak |
+| Pembeli dengan toko | Ya | Toko tempat ia menjadi anggota | Toko tempat ia menjadi anggota | Tidak | Tidak |
+| Sales | Ya | Toko yang ditugaskan | Toko yang ditugaskan | Tidak | Tidak |
+| Admin operasional | Tidak termasuk alur pribadi tahap ini | Semua toko aktif | Semua toko aktif | Ya | Ya |
+| Pemilik BAM | Tidak termasuk alur pribadi tahap ini | Semua toko aktif | Semua toko aktif | Ya | Ya |
+
+- Backend harus menyediakan resolver kemampuan terpusat, minimal `boleh_belanja_pribadi`, `boleh_checkout_pribadi`, `boleh_lihat_toko`, `boleh_isi_keranjang_toko`, `boleh_kunci_keranjang`, `boleh_periksa_keranjang`, `boleh_finalisasi`, `boleh_lihat_ruang_admin`, dan `boleh_atur_toko`. Kemampuan dibatasi oleh status akun/disetujui, identitas toko, penugasan yang masih berlaku, serta status keranjang.
+- Endpoint konteks mengirim `capabilities` untuk mengatur tampilan. **Keputusan otorisasi final tetap ada di server untuk setiap request**; klien tidak boleh mengirim boolean izin yang dipercaya backend. Akses dicabut langsung berlaku pada request berikutnya, termasuk dari tab lama.
+- Admin/Pemilik dapat memutasi toko aktif walaupun bukan anggota toko. Sales/anggota pembeli hanya dapat mengubah toko terhubung/ditugaskan. Satu akun yang berperan ganda memperoleh gabungan akses sah, bukan akses seluruh toko.
+
+### Kontrol bagi Admin yang mengisi sekaligus memfinalisasi
+
+- Endpoint mutasi barang `add/set/remove/clear/refresh` boleh digunakan Admin/Pemilik selama keranjang **open**, sama seperti pembeli/Sales berizin. Tidak seorang pun boleh mengubah isi ketika **locked** atau **finalized**.
+- Jika Admin perlu mengubah isi yang sudah dikunci, lakukan **buka kembali dengan alasan → ubah → kunci lagi → review ulang → finalisasi**. Token review lama wajib gugur ketika item, harga, stok, data toko atau penugasan terkait berubah.
+- `b2b_store_audit` mencatat perubahan profil toko dan penugasan; `cart_events` mencatat perubahan item dan status keranjang termasuk tindakan Admin (aktor, peran, toko, tanggal, SKU, kuantitas sebelum/sesudah bila relevan, waktu, request ID, serta alasan membuka kembali). Snapshot dan pelaku finalisasi tetap terekam pada order. Kedua audit tersebut **tidak saling menggantikan**.
+- Pertahankan pemeriksaan `revision`, request idempotent, batas SKU/jumlah, pengecekan stok dan konversi di server, transaksi atomik, serta konfirmasi eksplisit yang merujuk snapshot terbaru. Tidak diwajibkan aktor kedua.
+
+### Dua keranjang dan jalur pembuatan pesanan
+
+- **Pribadi:** milik `userId`; tahap pertama memakai keranjang lokal per akun yang sudah ada. Tidak memiliki `storeId` atau tanggal periode B2B. Sinkronisasi pribadi lintas perangkat belum menjadi bagian fitur ini.
+- **Toko:** milik `(storeId, deliveryDate)` dalam SQLite, dapat dipakai bersama akun berizin; perubahan selalu diperiksa ulang oleh backend. Status `open` → `locked` → `finalized` dan satu order toko per periode.
+- `ShopProvider.jsx` tidak boleh lagi memilih keranjang aktif hanya dari `shared.enabled`. Simpan kedua state secara bersamaan dan aktifkan konteks `personal` atau `store` secara eksplisit. Ikon, counter, aksi tambah/ubah, dan checkout mengikuti konteks; pergantian akun/toko tidak boleh menampilkan isi milik akun sebelumnya.
+- Sales dan pembeli B2B dapat membuat **order pribadi** melalui endpoint checkout pribadi setelah otorisasi server diperbarui. Backend wajib menolak `storeId`/penyamaran identitas toko pada jalur pribadi dan menghitung harga/stok sendiri. **Order toko** tetap hanya dapat dibuat oleh endpoint finalisasi Admin. Jangan gunakan `POST /api/orders` untuk melewati finalisasi toko.
+- Riwayat dan keranjang lama tidak digabung ke keranjang toko. Data katalog/harga dapat digunakan bersama, tetapi item, kepemilikan, proses finalisasi dan audit tetap terpisah.
+
+### Urutan implementasi dan pengujian
+
+1. Terapkan resolver kemampuan server dan hak edit Admin pada `sharedCarts.js`; tambah uji akses lintas toko, akun dicabut, mutasi locked, audit dan finalisasi oleh aktor yang sama.
+2. Terapkan dua keranjang paralel di `ShopProvider.jsx` dan pilihan konteks eksplisit; pertahankan isi pribadi ketika memilih toko dan sebaliknya.
+3. Batasi endpoint `/api/orders` untuk order pribadi yang sah dan endpoint Admin untuk order B2B. Tambah uji agar Sales/pembeli B2B bisa checkout pribadi tetapi tidak dapat membuat order toko langsung.
+4. Tambahkan halaman `#/toko` dan tautan utama **Daftar Toko/Toko Saya** berbasis kemampuan pada `Navbar`/`App`; cek responsif desktop/ponsel. Tidak perlu kartu Belanja biasa di `Home`.
+5. Uji dua akun dan dua perangkat, konflik revisi, perpindahan konteks dan akun, isolasi toko, finalisasi tunggal, idempotensi, serta faktur B2B tanpa harga pada tahap terpisah.
+
+**Dokumen `KERANJANG-BERSAMA.md` dan `FINALISASI-B2B.md` masih menjelaskan perilaku kode lama sampai implementasi diperbarui.**
+
 ## Tahap 1: Identitas toko & Sales (fondasi backend)
 
 - Tabel terpisah untuk ID toko stabil (`TKB-000001`), nama, nomor HP, alamat.
@@ -15,7 +66,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 - `PUT /api/b2b/stores/:id`: Owner mengubah nama, nomor HP dan alamat toko dengan `revision` dari detail toko. ID/kode tetap.
 - `POST /api/b2b/stores/:id/sales` dengan `replaceUserId`, `userId` pengganti dan `revision`: ganti Sales dalam satu transaksi.
 - `POST /api/b2b/stores/:id/sales/remove` dan `/members/remove` dengan `userId` serta `revision`: cabut satu penugasan atau hubungan pembeli. Riwayat keranjang/pesanan tidak dihapus.
-- Perubahan lama yang memakai revisi berbeda ditolak dengan HTTP 409. Hak Pemilik, akses akun dan akses toko tetap diperiksa di server. Jika satu akun mempunyai hubungan pembeli sekaligus penugasan Sales, cabut keduanya untuk menghentikan seluruh aksesnya ke toko tersebut. Akun yang pernah dihubungkan ke B2B tetap tidak dapat memakai checkout lama setelah hubungan terakhir dilepas.
+- Perubahan lama yang memakai revisi berbeda ditolak dengan HTTP 409. Hak Pemilik, akses akun dan akses toko tetap diperiksa di server. Jika satu akun mempunyai hubungan pembeli sekaligus penugasan Sales, cabut keduanya untuk menghentikan seluruh aksesnya ke toko tersebut. **Saat ini** akun yang pernah dihubungkan B2B tetap diblokir dari checkout lama setelah hubungan terakhir dilepas. **Target:** checkout pribadi kembali diizinkan berdasarkan kemampuan, tanpa memberi izin membuat pesanan toko.
 - Semua mutasi mencatat aktor dan perubahan di tabel `b2b_store_audit`.
 
 ### Halaman Toko & Sales
@@ -67,7 +118,7 @@ Sudah diimplementasikan. Panduan penggunaan dan pengujian: [KERANJANG-BERSAMA.md
 - Pembaruan berkala setiap 5 detik ketika halaman aktif, saat fokus kembali, serta tombol Muat terbaru. Konflik `revision` ditolak tanpa menimpa isian lain, termasuk ketika pengguna masih mengetik atau membuka konfirmasi kosongkan.
 - Setiap perubahan memakai kode unik. Respons yang terputus dapat dipastikan dengan mengirim ulang kode/perubahan yang sama tanpa menggandakan barang.
 - Nama, harga dan konversi kemasan diambil dari katalog server; SKU yang dihapus tetap terlihat sampai dikeluarkan. Harga/informasi yang berubah perlu diperbarui secara eksplisit.
-- Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin. Jumlah barang tetap diubah pembeli/Sales pada keranjang terbuka; Admin memakai penguncian, pemeriksaan dan finalisasi tahap 4. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
+- **Saat ini** Admin/Pemilik melihat semua toko melalui **Keranjang bersama** di ruang Admin, sedangkan jumlah barang hanya bisa diubah pembeli/Sales. **Target:** Admin/Pemilik juga dapat mengubah isi keranjang `open` dengan audit dan review wajib sebelum finalisasi. Pencarian toko, periode dan riwayat memiliki halaman lanjutan.
 - Batas 100 SKU per keranjang dan 99 kemasan per SKU. Keranjang belum mencadangkan stok; reservasi dan order dibuat ketika finalisasi Admin berhasil.
 - Akun yang belum pernah dihubungkan ke toko dan belum menjadi Sales tetap memakai alur lama selama migrasi. Keranjang pribadi lama tidak otomatis digabung ke keranjang toko; foto produk dapat ditambahkan belakangan.
 
@@ -77,16 +128,17 @@ Sudah diimplementasikan. Panduan: [Finalisasi pesanan B2B](FINALISASI-B2B.md).
 
 - Admin mengunci keranjang pada jadwal pemrosesan (manual, bukan otomatis).
 - Harga disnapshot, stok dicek dan dicadangkan dalam transaksi atomik, idempotency key mencegah order ganda.
-- Hanya endpoint Admin yang membuat order final. Checkout pembeli dan Sales tidak boleh memanggil jalur pembuatan order lama.
+- Hanya endpoint Admin yang membuat **order toko B2B** final. **Saat ini** checkout lama diblokir bagi pembeli B2B/Sales; **target** membolehkan checkout pribadi mereka tanpa memberikan akses membuat order toko melalui checkout pribadi.
 - Sistem COD dan pesanan historis tetap dapat dibaca.
 - Antrean per toko/periode mempunyai pencarian server dan halaman lanjutan. Pemeriksaan menampilkan harga/konversi terbaru, perubahan dari isian awal dan kebutuhan stok gabungan. Persetujuan finalisasi wajib diulang ketika snapshot berubah.
 - Pembeli/Sales membaca pesanan sesuai akses toko; perubahan order final dilakukan Admin. Pengiriman dan penyelesaian memakai workflow yang sudah ada. Faktur lama dengan harga tidak ditawarkan pada order B2B baru.
 
 ## Tahap 5: Portal Sales, Pembeli, dan Admin
 
-- Sales: toko yang ditugaskan, produk, penawaran, keranjang bersama dan riwayat aktivitas.
-- Pembeli: toko sendiri, katalog, harga, diskon dan keranjang bersama.
-- Admin: antrean keranjang, jadwal, finalisasi dan persiapan pengiriman.
+- Sales: tautan **Daftar Toko** di header, toko yang ditugaskan, katalog, dua konteks keranjang pribadi/toko dan riwayat aktivitas.
+- Pembeli terhubung: tautan **Toko Saya** di header, katalog, harga/diskon, dua konteks keranjang pribadi/toko.
+- Admin/Pemilik: antrean, hak edit ketika `open`, penguncian, review, finalisasi dan pengiriman.
+- Tidak menambah dua kotak Sales di beranda atau tombol **Belanja biasa** terpisah.
 
 ## Tahap 6: Faktur/daftar barang tanpa harga
 

@@ -104,9 +104,10 @@ test('B2B buyer/Sales select payment; Owner configures banks; Admin verifies man
       action: 'submit_proof', revision: order.revision, image,
     }), { code: 'not_found' });
 
-    order = app.workflow.update(actors.sales, order.id, {
-      action: 'submit_proof', revision: order.revision, image,
-    });
+    const uploaded = await sharedRequest(app, 'POST', '/api/orders/' + order.id + '/proof',
+      'sales', { revision: order.revision, image });
+    assert.equal(uploaded.status, 200, JSON.stringify(uploaded.body));
+    order = uploaded.body.order;
     assert.equal(order.payment.status, 'proof_submitted');
     assert.equal(order.status, 'processing');
     assert.equal(order.payment.proof.status, 'pending');
@@ -118,6 +119,7 @@ test('B2B buyer/Sales select payment; Owner configures banks; Admin verifies man
     });
     assert.equal(order.payment.status, 'pending');
     assert.equal(order.payment.proof.status, 'rejected');
+    assert.equal(order.payment.proof.reviewedBy, 'operator');
     order = app.workflow.update(actors.buyer, order.id, {
       action: 'submit_proof', revision: order.revision, image,
     });

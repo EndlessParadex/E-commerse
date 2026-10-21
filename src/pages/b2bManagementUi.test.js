@@ -180,6 +180,7 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Pertama');
     await fill('#b2b-store-phone', '081234567890');
     await fill('#b2b-store-address', 'Jalan Nusantara Nomor 15');
+    await fill('#b2b-create-delivery-anchor', '2026-10-26');
     failCreate = true;
     await submit('#b2b-create-form');
     await wait(() => container.textContent.includes('Koneksi pengujian terputus.'));
@@ -206,6 +207,7 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');
+    await fill('#b2b-create-delivery-anchor', '2026-11-02');
     await submit('#b2b-create-form');
     await wait(
       () =>

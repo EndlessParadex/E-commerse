@@ -469,6 +469,15 @@ export function createApp({
               await readBody(req),
             ),
           });
+        const deliveryScheduleMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/schedule$/);
+        if (deliveryScheduleMatch && req.method === 'POST') {
+          const updated = b2bStores.setSchedule(
+            actor,
+            decodeURIComponent(deliveryScheduleMatch[1]),
+            await readBody(req, 12000),
+          );
+          return json(res, 200, { store: updated });
+        }
         if (req.method === 'GET' && path === '/api/b2b/sales')
           return json(res, 200, { sales: b2bStores.salesList(actor) });
         if (req.method === 'POST' && path === '/api/b2b/stores/create')

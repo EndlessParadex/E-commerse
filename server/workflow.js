@@ -693,13 +693,13 @@ export class WorkflowRepository {
         fail('Akun ini dinonaktifkan. Hubungi pemilik toko.', 403, 'account_disabled');
       this.expireInside();
       let order = this.owned(user, id);
-      if (order.b2b && user.role !== 'admin')
+      const action = body?.action;
+      if (order.b2b && user.role !== 'admin' && action !== 'submit_proof')
         fail(
           'Pesanan toko yang sudah difinalisasi hanya dapat diubah Admin. Hubungi BAM untuk perubahan.',
           403,
           'admin_required',
         );
-      const action = body?.action;
       if (!Number.isSafeInteger(body?.revision) || body.revision !== order.revision)
         fail('Pesanan berubah. Muat data terbaru sebelum melanjutkan.', 409, 'revision_conflict');
       const time = this.now();

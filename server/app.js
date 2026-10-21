@@ -402,8 +402,12 @@ export function createApp({
         if (!actor) return sendError(res, 401, 'unauthorized');
         if (req.method === 'GET')
           return json(res, 200, b2bFinalization.banks(actor));
-        if (req.method === 'PUT')
-          return json(res, 200, b2bFinalization.saveBank(actor, await readBody(req, 12000)));
+        if (req.method === 'PUT') {
+          b2bStores.requireOwner(actor);
+          const body = await readBody(req, 12000);
+          await confirmOwnerPassword(actor, body?.currentPassword, clientIp(req));
+          return json(res, 200, b2bFinalization.saveBank(actor, body));
+        }
         return sendError(res, 405, 'method_not_allowed');
       }
       const finalizationMatch = path.match(

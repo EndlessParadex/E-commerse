@@ -158,6 +158,7 @@ export function AdminB2BBanks() {
   const [bank, setBank] = useState('BCA');
   const [account, setAccount] = useState('');
   const [holder, setHolder] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -181,6 +182,7 @@ export function AdminB2BBanks() {
     setBank(value);
     setAccount(next?.account || '');
     setHolder(next?.holder || '');
+    setCurrentPassword('');
     setError('');
     setNotice('');
   };
@@ -192,9 +194,10 @@ export function AdminB2BBanks() {
     setNotice('');
     try {
       const result = await accountApi('/api/admin/b2b/banks', {
-        bank, account, holder, revision: current.revision,
+        bank, account, holder, revision: current.revision, currentPassword,
       }, 15000, 'PUT');
       setBanks(result.banks);
+      setCurrentPassword('');
       setNotice('Rekening resmi ' + bank + ' berhasil disimpan.');
     } catch (failure) {
       setError(failure.message);
@@ -225,7 +228,12 @@ export function AdminB2BBanks() {
             <input id="b2b-bank-holder" required maxLength={100}
               value={holder} onChange={(event) => setHolder(event.target.value)} />
           </label>
-          <button className="bam-button-secondary" disabled={busy || !current}>
+          <label htmlFor="b2b-bank-password">Kata sandi Pemilik BAM
+            <input id="b2b-bank-password" type="password" autoComplete="current-password"
+              required value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)} />
+          </label>
+          <button className="bam-button-secondary" disabled={busy || !current || !currentPassword}>
             {busy ? 'Menyimpan…' : 'Simpan rekening transfer'}
           </button>
         </form>

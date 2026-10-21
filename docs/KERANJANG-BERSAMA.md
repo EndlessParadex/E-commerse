@@ -50,7 +50,7 @@ Nama toko pada profil akun saja belum merupakan hubungan B2B. Hubungan toko dan 
 
 ## Memeriksa dari Admin
 
-Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), pilih toko/tanggal, lalu pilih **Tambah barang ke keranjang toko** untuk mencari SKU/kemasan dan mengisi jumlah. Admin/Pemilik dapat menambah, mengubah jumlah, menghapus, dan mengosongkan keranjang selama status **Terbuka**. Perubahan dicatat pada `cart_events` atas nama pelaku dan dapat dilihat pembeli/Sales yang berhak. Saat dikunci atau sudah difinalisasi, siapa pun tidak dapat mengubah isi. Untuk koreksi, Admin harus membuka kembali dengan alasan, mengubah barang, mengunci ulang, kemudian memeriksa ulang sebelum finalisasi. Baca juga [Finalisasi B2B](FINALISASI-B2B.md).
+Buka **Admin → Keranjang bersama** (`#/admin/keranjang`). Halaman Admin dibagi menjadi subbagian **Antrean**, **Isi Keranjang**, dan **Riwayat**; khusus Pemilik BAM tersedia **Rekening Transfer**. Di **Antrean**, tekan **Periksa keranjang** untuk membuka toko/periode langsung pada **Isi Keranjang**. Pada **Isi Keranjang**, pilih atau ubah toko/tanggal, lalu gunakan **Tambah barang ke keranjang toko** untuk mencari SKU/kemasan dan mengisi jumlah. Admin/Pemilik dapat menambah, mengubah jumlah, menghapus, dan mengosongkan keranjang selama status **Terbuka**. Perubahan dicatat pada `cart_events` atas nama pelaku dan dapat dilihat pembeli/Sales yang berhak. Saat dikunci atau sudah difinalisasi, siapa pun tidak dapat mengubah isi. Untuk koreksi, Admin harus membuka kembali dengan alasan, mengubah barang, mengunci ulang, kemudian memeriksa ulang sebelum finalisasi. Baca juga [Finalisasi B2B](FINALISASI-B2B.md).
 
 ## Uji penerimaan
 

@@ -312,7 +312,7 @@ export default function AdminPage({ view = 'overview' }) {
             <input id="admin-global-search" type="search" maxLength={200}
               placeholder="Cari nama produk, merek, atau SKU..."
               value={query} onChange={(event) => setQuery(event.target.value)} />
-            <button type="submit">Cari</button>
+            <button type="submit">Cari katalog</button>
           </form>
           <div className="admin-topbar-profile">
             <span className="admin-topbar-avatar" aria-hidden="true">

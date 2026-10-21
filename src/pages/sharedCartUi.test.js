@@ -113,7 +113,11 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
         root.render(createElement(App));
         await settle();
       });
-      await wait(() => container.querySelector('#shared-store'));
+      await wait(() =>
+        route === '/admin/keranjang'
+          ? container.querySelector('[role="tab"][aria-selected="true"]')
+          : container.querySelector('#shared-store'),
+      );
     };
     const openDate = async () => {
       await fill('#shared-date', '2026-10-21');

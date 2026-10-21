@@ -480,8 +480,13 @@ export function createApp({
         }
         if (req.method === 'GET' && path === '/api/b2b/sales')
           return json(res, 200, { sales: b2bStores.salesList(actor) });
-        if (req.method === 'POST' && path === '/api/b2b/stores/create')
-          return json(res, 201, { store: b2bStores.create(actor, await readBody(req)) });
+        if (req.method === 'POST' && path === '/api/b2b/stores/create') {
+          b2bStores.requireOwner(actor);
+          const body = await readBody(req);
+          if (!body?.deliverySchedule)
+            throw new CatalogError('Hari, frekuensi, dan tanggal acuan pengiriman wajib diisi.', 422, 'schedule_required');
+          return json(res, 201, { store: b2bStores.create(actor, body) });
+        }
         if (req.method === 'POST' && path === '/api/b2b/sales/appoint')
           return json(res, 200, b2bStores.appointSales(actor, (await readBody(req)).userId));
         const match = path.match(/^\/api\/b2b\/stores\/([^/]+)\/(members|sales)$/);

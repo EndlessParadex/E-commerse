@@ -76,7 +76,7 @@ export class SharedCartRepository {
       today,
     };
   }
-  access(actor, storeId, write = false) {
+  access(actor, storeId) {
     const user = this.actor(actor);
     if (
       user.role !== 'admin' &&
@@ -91,8 +91,6 @@ export class SharedCartRepository {
     )
       fail('Toko tidak ditemukan atau akses sudah berubah.', 404, 'store_not_found');
     const store = this.stores.store(storeId);
-    if (write && user.role === 'admin')
-      fail('Admin hanya memeriksa keranjang pada tahap ini.', 403, 'read_only');
     return { user, store };
   }
   cycle(storeId, date) {
@@ -139,7 +137,7 @@ export class SharedCartRepository {
       revision: cycle?.revision || 0,
       status: cycle?.status || 'open',
       orderId: cycle ? this.orderFor?.(cycle.id) || null : null,
-      canEdit: user.role !== 'admin' && (!cycle || cycle.status === 'open'),
+      canEdit: !cycle || cycle.status === 'open',
       updatedAt: cycle?.updated_at || null,
       items: cycle
         ? this.db
@@ -201,7 +199,7 @@ export class SharedCartRepository {
       .update(JSON.stringify({ date, action, productId, quantity, revision: body.revision }))
       .digest('hex');
     return this.stores.transaction(() => {
-      const { user } = this.access(actor, storeId, true);
+      const { user } = this.access(actor, storeId);
       let cycle = this.cycle(storeId, date);
       const prior =
         cycle &&

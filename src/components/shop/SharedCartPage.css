@@ -276,6 +276,270 @@
   grid-column: 1 / -1;
 }
 
+
+/* Admin workspace: a guided layout without changing buyer/Sales cart behavior. */
+.shared-admin-workflow {
+  min-width: 0;
+}
+.shared-admin-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  padding: 16px 20px;
+  margin: 16px 0 20px;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.shared-admin-steps li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
+.shared-admin-steps li > span,
+.shared-admin-step-number {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-info-soft);
+  color: var(--color-action);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.shared-admin-steps li.is-current {
+  color: var(--color-action);
+}
+.shared-admin-steps li.is-current > span {
+  color: var(--color-surface);
+  background: var(--color-action);
+}
+.shared-admin-steps li.is-complete > span {
+  border: 1px solid var(--color-action);
+}
+.shared-admin-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);
+  gap: 20px;
+  align-items: start;
+}
+.shared-admin-main,
+.shared-admin-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.shared-admin-work-card,
+.shared-admin-active-store,
+.shared-admin-empty-state,
+.shared-admin-help {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.shared-admin-work-card.shared-cart-selection {
+  margin: 0;
+}
+.shared-admin-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.shared-admin-card-heading h2,
+.shared-admin-card-heading h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.shared-admin-hint,
+.shared-admin-small-note {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.shared-admin-small-note {
+  margin: 12px 0 0;
+}
+.shared-admin-selection-bottom {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+  flex-wrap: wrap;
+  font-size: 0.83rem;
+  color: var(--color-text-secondary);
+}
+.shared-admin-store-search {
+  max-width: 100%;
+}
+.shared-admin-store-search > summary {
+  color: var(--color-action);
+  font-weight: 700;
+  cursor: pointer;
+}
+.shared-admin-store-search .shared-store-search {
+  min-width: min(100%, 300px);
+  margin-top: 12px;
+}
+.shared-admin-store-search .shared-store-search > div {
+  margin-bottom: 4px;
+}
+.shared-admin-active-store {
+  margin: 0;
+}
+.shared-admin-active-store h2 {
+  font-size: 1.22rem;
+}
+.shared-admin-products.shared-admin-work-card,
+.shared-admin-payment-card.shared-admin-work-card {
+  margin: 0;
+}
+.shared-admin-products .shared-admin-add {
+  padding: 16px;
+  margin: 0 0 20px;
+  background: var(--color-info-soft);
+}
+.shared-admin-products .shared-admin-add-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+}
+.shared-admin-products .shared-admin-add-fields button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.shared-admin-products .shared-admin-add-fields label {
+  font-size: 0.85rem;
+}
+.shared-admin-list-title {
+  font-size: 1rem;
+  margin: 8px 0 12px;
+}
+.shared-admin-products .shared-items {
+  margin: 0;
+}
+.shared-admin-products .shared-item {
+  margin: 0;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+}
+.shared-admin-products .shared-item:last-child {
+  border-bottom: none;
+}
+.shared-admin-products .shared-quantity {
+  margin-top: 10px;
+}
+.shared-admin-products .shared-quantity label {
+  max-width: 145px;
+}
+.shared-admin-products .shared-item-photo {
+  flex-basis: 52px;
+  width: 52px;
+  height: 52px;
+}
+.shared-admin-products .shared-line-total {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+.shared-admin-payment-card > .shared-cart-payment {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.shared-admin-payment-card > .shared-cart-payment h2 {
+  display: none;
+}
+.shared-admin-sidebar {
+  position: sticky;
+  top: 20px;
+  gap: 12px;
+}
+.shared-admin-sidebar .shared-cart-summary,
+.shared-admin-sidebar .admin-cart-processing {
+  margin: 0;
+  padding: 20px;
+}
+.shared-admin-sidebar .shared-cart-summary strong {
+  overflow-wrap: anywhere;
+}
+.shared-admin-help h2 {
+  font-size: 1rem;
+  margin: 0 0 12px;
+}
+.shared-admin-help ol {
+  margin: 0;
+  padding-left: 20px;
+}
+.shared-admin-help li {
+  margin: 9px 0;
+  line-height: 1.6;
+  font-size: 0.88rem;
+}
+.shared-admin-help p {
+  margin: 12px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.shared-admin-workspace button:focus-visible,
+.shared-admin-workspace summary:focus-visible {
+  outline: 2px solid var(--color-action);
+  outline-offset: 3px;
+}
+@media (max-width: 1050px) {
+  .shared-admin-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shared-admin-sidebar {
+    position: static;
+  }
+  .shared-admin-sidebar .shared-cart-summary,
+  .shared-admin-sidebar .admin-cart-processing {
+    width: 100%;
+  }
+}
+@media (max-width: 600px) {
+  .shared-admin-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 14px;
+  }
+  .shared-admin-steps li {
+    justify-content: flex-start;
+    font-size: 0.8rem;
+  }
+  .shared-admin-work-card,
+  .shared-admin-active-store,
+  .shared-admin-empty-state,
+  .shared-admin-help,
+  .shared-admin-sidebar .shared-cart-summary,
+  .shared-admin-sidebar .admin-cart-processing {
+    padding: 16px;
+  }
+  .shared-admin-products .shared-admin-add-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shared-admin-selection-bottom {
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 760px) {
   .shared-admin-tabs {
     grid-template-columns: repeat(2, minmax(0, 1fr));

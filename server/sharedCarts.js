@@ -233,6 +233,13 @@ export class SharedCartRepository {
           409,
           'cart_conflict',
         );
+      if (!cycle && this.stores.schedule(storeId) &&
+          this.stores.deliveryDate(storeId, date) !== date)
+        fail(
+          'Tanggal bukan jadwal pengiriman tetap toko. Pilih periode pengiriman yang berlaku.',
+          422,
+          'invalid_delivery_schedule',
+        );
       if (!cycle) {
         this.db
           .prepare(

@@ -221,7 +221,10 @@ test('B2B management API: owner creates, links and appoints; admin reads; buyer 
       '/api/b2b/stores/missing',
     ])
       assert.equal((await request(app, 'GET', path)).status, 401);
-    const created = await request(app, 'POST', '/api/b2b/stores/create', 'owner', newStore());
+    const created = await request(app, 'POST', '/api/b2b/stores/create', 'owner', {
+      ...newStore(),
+      deliverySchedule: { weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26' },
+    });
     assert.equal(created.status, 201);
     const store = created.body.store;
     const path = '/api/b2b/stores/' + store.id;

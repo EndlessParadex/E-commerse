@@ -41,7 +41,7 @@ function AdminCartAdd({ shared }) {
     )
     .slice(0, 50);
   const selected = options.find((product) => product.id === sku);
-  const valid = /^\\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= 99;
+  const valid = /^\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= 99;
 
   return (
     <form
@@ -107,7 +107,11 @@ function AdminCartAdd({ shared }) {
             required
           />
         </label>
-        <button type="submit" className="shop-primary" disabled={!shared.canEdit || !selected || !valid}>
+        <button
+          type="submit"
+          className="shop-primary"
+          disabled={!shared.canEdit || !selected || !valid}
+        >
           Tambah ke keranjang toko
         </button>
       </div>

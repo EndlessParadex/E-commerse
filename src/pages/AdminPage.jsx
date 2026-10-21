@@ -301,6 +301,29 @@ export default function AdminPage({ view = 'overview' }) {
         </div>
       </aside>
       <div className="admin-content">
+        <div className="admin-topbar">
+          <form className="admin-topbar-search" role="search" onSubmit={(event) => {
+            event.preventDefault();
+            if (window.location.hash !== '#/admin/produk')
+              window.location.hash = '#/admin/produk';
+          }}>
+            <AdminIcon name="products" />
+            <label htmlFor="admin-global-search" className="admin-visually-hidden">Cari produk di katalog</label>
+            <input id="admin-global-search" type="search" maxLength={200}
+              placeholder="Cari nama produk, merek, atau SKU..."
+              value={query} onChange={(event) => setQuery(event.target.value)} />
+            <button type="submit">Cari</button>
+          </form>
+          <div className="admin-topbar-profile">
+            <span className="admin-topbar-avatar" aria-hidden="true">
+              {(delivery?.user?.name || 'A').slice(0, 1).toUpperCase()}
+            </span>
+            <div>
+              <strong>{delivery?.user?.name || 'Admin BAM'}</strong>
+              <small>{delivery?.user?.isOwner ? 'Pemilik BAM' : 'Admin operasional'}</small>
+            </div>
+          </div>
+        </div>
         <header className="admin-header">
           <div>
             <span className="admin-eyebrow">

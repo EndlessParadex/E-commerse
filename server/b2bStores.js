@@ -47,7 +47,7 @@ const validSchedule = (value) => {
   const weeks = value?.intervalWeeks;
   const anchor = value?.anchorDate;
   if (!Number.isInteger(day) || day < 0 || day > 6 || ![1, 2].includes(weeks) ||
-      typeof anchor !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(anchor))
+      typeof anchor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(anchor))
     fail('Isi hari (Minggu=0 s.d. Sabtu=6), frekuensi 1/2 minggu, dan tanggal acuan.');
   const parsed = new Date(anchor + 'T00:00:00Z');
   if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== anchor ||

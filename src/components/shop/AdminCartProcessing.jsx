@@ -221,8 +221,9 @@ export default function AdminCartProcessing({ shared }) {
       {cart.status === 'open' && (
         <>
           <p>
-            Kunci isi keranjang saat mulai memeriksa. Pembeli dan Sales dapat melihat, tetapi tidak
-            dapat mengubahnya selama dikunci.
+            Admin, Pemilik, pembeli, dan Sales berizin dapat mengubah keranjang selama terbuka.
+            Kunci isi keranjang saat mulai memeriksa. Setelah dikunci, semua perubahan ditahan
+            sampai Admin membuka kembali dengan alasan.
           </p>
           <button
             type="button"

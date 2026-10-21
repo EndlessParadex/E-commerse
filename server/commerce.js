@@ -200,13 +200,16 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
       return { order, kind: order.payment.groupId === 'cod' ? 'codConfirmed' : 'orderApproved' };
     }
     if (action === 'submit_proof') {
-      if (user.id !== order.userId)
-        fail('Hanya pemilik pesanan yang dapat mengunggah bukti.', 403, 'forbidden');
+      if (order.b2b
+        ? user.role === 'admin' || !w.b2bCanRead?.(user, order.b2b.storeId)
+        : user.id !== order.userId)
+        fail('Hanya pembeli toko atau Sales berizin yang dapat mengunggah bukti.', 403, 'forbidden');
       if (
-        order.status !== 'awaiting_payment' ||
+        (order.b2b ? order.status !== 'processing' : order.status !== 'awaiting_payment') ||
         order.payment.groupId === 'cod' ||
         order.payment.status === 'proof_submitted' ||
-        order.payment.expiresAt <= time
+        order.payment.status === 'paid' ||
+        (!order.b2b && order.payment.expiresAt <= time)
       )
         fail('Pesanan tidak menerima bukti pembayaran saat ini.', 409, 'invalid_status');
       if ((order.payment.proofAttempts || 0) >= 3)
@@ -239,7 +242,7 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
     }
     if (action === 'reject_proof') {
       if (user.role !== 'admin') fail('Hanya admin yang dapat memeriksa bukti.', 403, 'forbidden');
-      if (order.status !== 'awaiting_payment' || order.payment.status !== 'proof_submitted')
+      if ((order.b2b ? order.status !== 'processing' : order.status !== 'awaiting_payment') || order.payment.status !== 'proof_submitted')
         fail('Tidak ada bukti menunggu pemeriksaan.', 409, 'invalid_status');
       order.payment.proof = {
         ...order.payment.proof,
@@ -247,7 +250,7 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
         reason: field(body.reason, 'Alasan penolakan', 200),
       };
       order.payment.status = 'pending';
-      order.payment.expiresAt = time + w.policy.paymentHoldWindowMs;
+      if (!order.b2b) order.payment.expiresAt = time + w.policy.paymentHoldWindowMs;
       delete order.payment.remindedAt;
       return { order, kind: 'proofRejected' };
     }

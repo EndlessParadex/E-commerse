@@ -4,11 +4,11 @@ Foto produk tidak wajib untuk finalisasi. Barang, ukuran, harga, isi kemasan dan
 
 ## Alur penggunaan
 
-1. Pembeli atau Sales memilih toko dan tanggal rencana pengiriman, lalu mengisi keranjang bersama.
+1. Pembeli, Sales yang ditugaskan, maupun Admin/Pemilik memilih toko dan tanggal rencana pengiriman, lalu mengisi keranjang bersama ketika masih **Terbuka**. Admin/Pemilik menambah SKU langsung dari **Admin → Keranjang bersama**.
 2. Admin/Pemilik membuka **Admin → Keranjang bersama**. Bagian **Antrean keranjang toko** menampilkan periode yang sudah dibuat. Cari nama/kode toko atau tanggal, pilih status, lalu tekan **Periksa keranjang**.
 3. Tekan **Kunci untuk diperiksa**, periksa nama/kode toko dan tanggal, lalu konfirmasi. Pembeli dan Sales tetap dapat melihat isi; perubahan jumlah, penambahan, penghapusan dan pembaruan harga ditahan selama dikunci. Penguncian belum mencadangkan stok.
 4. Tekan **Periksa dan finalisasi**. Daftar menunjukkan harga/kemasan terbaru, perubahan terhadap isian awal, jumlah satuan dasar yang diperlukan bersama oleh SKU satuan/pack/dus, dan stok yang tersedia. Produk yang dihapus atau stok kurang menahan finalisasi.
-5. Jika perlu diperbaiki, tutup pemeriksaan lalu pilih **Buka kembali untuk diperbaiki** dan isi alasan. Pembeli/Sales dapat memperbaiki isi, kemudian Admin mengunci dan memeriksa lagi. Stok fisik diperbaiki melalui menu Stok oleh petugas yang berwenang.
+5. Jika perlu diperbaiki, tutup pemeriksaan lalu pilih **Buka kembali untuk diperbaiki** dan isi alasan. Pembeli/Sales yang berhak serta Admin/Pemilik dapat memperbaiki isi saat terbuka; Admin lalu mengunci dan memeriksa ulang. Stok fisik diperbaiki melalui menu Stok oleh petugas berwenang. Admin yang mengisi sendiri boleh memfinalisasi setelah mengikuti pemeriksaan ulang dan audit yang sama.
 6. Setelah semua sesuai, centang **Saya sudah memeriksa barang, harga terbaru dan stok**, lalu tekan **Finalisasi dan cadangkan stok**. Pengiriman gratis dan pembayaran COD saat diterima; tanggal keranjang tetap merupakan rencana, bukan janji pengiriman otomatis.
 7. Tunggu pesan keberhasilan. Pesanan masuk status **Diproses** dan stok dicadangkan. Link **Lihat pesanan toko** membuka snapshot final. Periode tersebut tidak dapat diedit atau difinalisasi menjadi pesanan kedua.
 8. Admin melanjutkan pengiriman, penyelesaian atau pembatalan dari **Admin → Pesanan**. Pembatalan yang diizinkan sebelum pengiriman mengembalikan stok sekali; penyelesaian mencatat penjualan sekali. Pesanan yang dibatalkan tetap menjadi riwayat periode tersebut, bukan membuka ulang keranjang final.
@@ -22,7 +22,7 @@ Foto produk tidak wajib untuk finalisasi. Barang, ukuran, harga, isi kemasan dan
 
 ## Akses dan penyimpanan
 
-- Hanya Admin/Pemilik aktif dan disetujui yang dapat mengunci, membuka kembali atau memfinalisasi. Pembeli/Sales tidak membuat order lewat checkout lama.
+- Hanya Admin/Pemilik aktif dan disetujui yang dapat mengunci, membuka kembali atau memfinalisasi. Admin/Pemilik juga dapat mengubah isi keranjang **open** lewat endpoint keranjang umum; `cart_events` tetap mencatat aktor. Pemisahan pelaku pengisi dan pemfinalisasi tidak diwajibkan. Pembeli/Sales tidak membuat order lewat checkout lama.
 - Pembeli yang terhubung dan Sales yang sedang ditugaskan dapat membaca pesanan toko lewat Pesanan saya, termasuk dari perangkat lain. Akses yang dicabut ditolak server pada pembacaan berikutnya. Halaman detail memuat ulang saat kembali fokus dan setiap 15 detik ketika aktif.
 - Pesanan menyimpan snapshot barang, harga, foto, konversi kemasan, identitas/alamat toko, nama Sales dan Admin pemroses. Mengubah katalog/toko tidak mengubah transaksi lama.
 - `b2b_cart_orders` menjamin satu pesanan per keranjang. Penguncian, alasan dibuka kembali dan finalisasi dicatat pada `cart_events`. Transaksi finalisasi meliputi validasi, order, stok, pemetaan periode, audit dan antrean email; kegagalan salah satu langkah membatalkan semuanya.

@@ -19,7 +19,10 @@ const timeLabel = (value) => new Date(value).toLocaleString('id-ID', { timeZone:
 const roles = { owner: 'Pemilik BAM', admin: 'Admin', sales: 'Sales', buyer: 'Pembeli' };
 function eventLabel(event) {
   const { name, before, after } = event.details;
-  if (event.action === 'clear') return 'Mengosongkan keranjang';
+  if (event.action === 'clear')
+    return event.details.clearedItems
+      ? `Mengosongkan keranjang (${event.details.clearedItems.length} SKU)`
+      : 'Mengosongkan keranjang';
   if (event.action === 'refresh') return 'Memperbarui informasi dan harga dari katalog';
   if (event.action === 'lock') return 'Mengunci keranjang untuk pemeriksaan Admin';
   if (event.action === 'unlock') return 'Membuka kembali keranjang: ' + event.details.reason;

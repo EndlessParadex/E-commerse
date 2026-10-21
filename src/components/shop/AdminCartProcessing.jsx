@@ -447,7 +447,16 @@ export default function AdminCartProcessing({ shared }) {
                   </ul>
                   <p>
                     Pengiriman: <strong>Gratis</strong> · Pembayaran:{' '}
-                    <strong>COD saat diterima</strong>
+                    <strong>{review.payment?.label || 'Belum dipilih'}</strong>
+                  </p>
+                  {review.payment?.groupId === 'transfer' && (
+                    <p className={review.destination ? '' : 'shop-warning'}>
+                      {review.destination
+                        ? `Rekening tujuan: ${review.destination.bank} · ${review.destination.account} · a.n. ${review.destination.holder}`
+                        : 'Rekening bank pilihan belum dikonfigurasi oleh Pemilik BAM. Finalisasi belum tersedia.'}
+                    </p>
+                  )}
+                  <p>
                   </p>
                   <p className="admin-cart-total">
                     Total akhir <strong>{rupiah(review.total)}</strong>

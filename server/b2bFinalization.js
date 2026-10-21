@@ -17,6 +17,11 @@ export class B2BFinalizationRepository {
       actor_id TEXT NOT NULL REFERENCES users(id), request_id TEXT NOT NULL,
       request_hash TEXT NOT NULL, created_at INTEGER NOT NULL,
       UNIQUE(actor_id,request_id)
+    ); CREATE TABLE IF NOT EXISTS b2b_bank_accounts (
+      bank TEXT PRIMARY KEY CHECK(bank IN ('BCA','BRI','Mandiri')),
+      account TEXT NOT NULL, holder TEXT NOT NULL,
+      revision INTEGER NOT NULL DEFAULT 0,
+      updated_by TEXT NOT NULL REFERENCES users(id), updated_at INTEGER NOT NULL
     );`);
     carts.orderFor = (cartId) =>
       db.prepare('SELECT order_id FROM b2b_cart_orders WHERE cart_id=?').get(cartId)?.order_id ||
@@ -54,6 +59,47 @@ export class B2BFinalizationRepository {
     if (user.role !== 'admin')
       fail('Hanya Admin BAM yang dapat memproses keranjang toko.', 403, 'admin_required');
     return user;
+  }
+  banks(actor) {
+    this.admin(actor);
+    const configured = this.db
+      .prepare('SELECT bank,account,holder,revision FROM b2b_bank_accounts ORDER BY bank')
+      .all();
+    return { banks: ['BCA', 'BRI', 'Mandiri'].map((bank) =>
+      configured.find((entry) => entry.bank === bank) || {
+        bank, account: '', holder: '', revision: 0,
+      },
+    ) };
+  }
+  saveBank(actor, body) {
+    this.admin(actor);
+    this.carts.stores.requireOwner(actor);
+    if (
+      !['BCA', 'BRI', 'Mandiri'].includes(body?.bank) ||
+      !Number.isSafeInteger(body.revision) || body.revision < 0 ||
+      typeof body.account !== 'string' || !/^\d{8,25}$/.test(body.account) ||
+      typeof body.holder !== 'string' ||
+      body.holder.trim().length < 3 || body.holder.trim().length > 100
+    ) fail('Rekening bank, nomor rekening, atau nama pemilik tidak valid.');
+    const change = () => {
+      const previous = this.db.prepare('SELECT revision FROM b2b_bank_accounts WHERE bank=?')
+        .get(body.bank);
+      if ((previous?.revision || 0) !== body.revision)
+        fail('Rekening telah diperbarui pengguna lain. Muat ulang data bank.', 409, 'bank_conflict');
+      this.db.prepare(`INSERT INTO b2b_bank_accounts(bank,account,holder,revision,updated_by,updated_at)
+        VALUES(?,?,?,?,?,?) ON CONFLICT(bank) DO UPDATE SET
+        account=excluded.account, holder=excluded.holder, revision=excluded.revision,
+        updated_by=excluded.updated_by, updated_at=excluded.updated_at`)
+        .run(body.bank, body.account, body.holder.trim(), body.revision + 1, actor.id, this.carts.now());
+      return this.banks(actor);
+    };
+    return this.carts.stores.transaction(change);
+  }
+  destination(paymentId) {
+    const bank = { 'transfer-bca': 'BCA', 'transfer-bri': 'BRI', 'transfer-mandiri': 'Mandiri' }[paymentId];
+    if (!bank) return null;
+    const row = this.db.prepare('SELECT bank,account,holder FROM b2b_bank_accounts WHERE bank=?').get(bank);
+    return row ? { bank: row.bank, account: row.account, holder: row.holder } : null;
   }
   event(cycle, user, body, hash, details) {
     const revision = cycle.revision + 1;
@@ -147,6 +193,8 @@ export class B2BFinalizationRepository {
       .details(actor, storeId)
       .sales.map(({ id, name }) => ({ id, name }));
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const payment = paymentMethod(cart.paymentId);
+    const destination = this.destination(cart.paymentId);
     const review = {
       store: cart.store,
       date,
@@ -158,11 +206,13 @@ export class B2BFinalizationRepository {
       subtotal,
       total: subtotal,
       shippingCost: 0,
-      payment: 'COD saat diterima',
+      payment,
+      destination,
       ready:
         items.length > 0 &&
         !items.some((item) => item.unavailable) &&
-        stock.every((row) => row.sufficient),
+        stock.every((row) => row.sufficient) &&
+        Boolean(payment) && (payment.groupId === 'cod' || Boolean(destination)),
     };
     return {
       ...review,
@@ -290,7 +340,12 @@ export class B2BFinalizationRepository {
             simulation: false,
             plannedDate: body.date,
           },
-          payment: { ...paymentMethod('cod'), status: 'pay_on_delivery', simulation: false },
+          payment: {
+            ...review.payment,
+            status: review.payment.groupId === 'cod' ? 'pay_on_delivery' : 'pending',
+            simulation: false,
+            ...(review.destination ? { destination: review.destination } : {}),
+          },
           whatsapp: { optedIn: false, number: '', simulation: false, deliveryMode: 'manual' },
           inventory: [...allocations].map(([key, units]) => ({ key, units })),
           inventoryReleased: false,
@@ -332,6 +387,7 @@ export class B2BFinalizationRepository {
         this.db.prepare("UPDATE cart_cycles SET status='finalized' WHERE id=?").run(cycle.id);
         this.event(cycle, user, body, hash, {
           orderId: order.id,
+          paymentId: review.payment.id,
           changes: review.items
             .filter((item) => item.changed)
             .map((item) => ({

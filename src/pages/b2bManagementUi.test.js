@@ -204,6 +204,9 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     const first = api.db
       .prepare('SELECT id FROM b2b_stores WHERE store_name=?')
       .get('Toko Pertama');
+    assert.deepEqual(api.b2bStores.schedule(first.id), {
+      weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
+    });
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');

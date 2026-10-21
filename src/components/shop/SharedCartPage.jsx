@@ -186,6 +186,16 @@ function CartQuantity({ item, shared }) {
           }
         />
       </label>
+      {['admin', 'owner'].includes(shared.role) && (
+        <div className="shared-admin-quantity-stepper" role="group" aria-label={'Penyesuaian cepat ' + item.name}>
+          <button type="button" aria-label={'Kurangi ' + item.name}
+            disabled={!shared.canEdit || draft !== null || item.quantity <= 1}
+            onClick={() => void shared.mutate('set', item.id, item.quantity - 1)}>−</button>
+          <button type="button" aria-label={'Tambah ' + item.name}
+            disabled={!shared.canEdit || draft !== null || item.quantity >= 99}
+            onClick={() => void shared.mutate('set', item.id, item.quantity + 1)}>+</button>
+        </div>
+      )}
       <button
         className="bam-button-secondary"
         disabled={!shared.canEdit || !valid || Number(value) === item.quantity}
@@ -498,9 +508,17 @@ function AdminCartWorkspace({
             <>
                 <aside className="shared-cart-summary">
                   <h2>Ringkasan keranjang</h2>
-                  <p>
-                    {cart.items.length} SKU · {shop.quantity} kemasan
+                  <p className="shared-admin-summary-store">{cart.store.storeName}
+                    <small>{cart.store.storeCode} · {dateLabel(cart.date)}</small>
                   </p>
+                  <div className="shared-admin-summary-stats">
+                    <div><span>Status</span><strong className={'shared-admin-status status-' + cart.status}>
+                      {cart.status === 'open' ? 'Terbuka' : cart.status === 'locked' ? 'Dikunci' : 'Difinalisasi'}
+                    </strong></div>
+                    <div><span>Total SKU</span><strong>{cart.items.length}</strong></div>
+                    <div><span>Kemasan</span><strong>{shop.quantity}</strong></div>
+                    <div><span>Versi</span><strong>{cart.revision}</strong></div>
+                  </div>
                   <p>
                     Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                   </p>

@@ -31,7 +31,7 @@ export default function CommercePayment({ order }) {
       if (active.current) setBusy(false);
     }
   };
-  const own = user?.id === order.userId,
+  const own = order.b2b ? Boolean(user && user.role !== 'admin') : user?.id === order.userId,
     destination = order.payment.destination,
     proof = order.payment.proof,
     ended = ['cancelled', 'expired'].includes(order.status);
@@ -171,8 +171,9 @@ export default function CommercePayment({ order }) {
           ) : (
             <>
               <p>
-                Batas pembayaran: <strong>{dateLabel(order.payment.expiresAt)}</strong>. Jika sudah
-                mentransfer tetapi mengalami kendala, hubungi toko dan simpan buktinya.
+                {order.b2b
+                  ? 'Unggah bukti transfer setelah pembayaran dilakukan. Admin akan memeriksa penerimaan dana sebelum menyatakan lunas.'
+                  : <>Batas pembayaran: <strong>{dateLabel(order.payment.expiresAt)}</strong>. Jika sudah mentransfer tetapi mengalami kendala, hubungi toko dan simpan buktinya.</>}
               </p>
               {proof?.status === 'rejected' && (
                 <p className="workflow-error" role="alert">

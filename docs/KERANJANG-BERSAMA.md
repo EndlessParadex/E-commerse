@@ -50,7 +50,7 @@ Nama toko pada profil akun saja belum merupakan hubungan B2B. Hubungan toko dan 
 
 ## Memeriksa dari Admin
 
-Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), pilih antrean toko/tanggal. Admin/Pemilik melihat isi dan riwayat; jumlah barang tetap diubah pembeli/Sales pada keranjang terbuka. Penguncian, pemeriksaan dan finalisasi Admin sudah tersedia: lihat [Finalisasi B2B](FINALISASI-B2B.md).
+Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), pilih toko/tanggal, lalu pilih **Tambah barang ke keranjang toko** untuk mencari SKU/kemasan dan mengisi jumlah. Admin/Pemilik dapat menambah, mengubah jumlah, menghapus, dan mengosongkan keranjang selama status **Terbuka**. Perubahan dicatat pada `cart_events` atas nama pelaku dan dapat dilihat pembeli/Sales yang berhak. Saat dikunci atau sudah difinalisasi, siapa pun tidak dapat mengubah isi. Untuk koreksi, Admin harus membuka kembali dengan alasan, mengubah barang, mengunci ulang, kemudian memeriksa ulang sebelum finalisasi. Baca juga [Finalisasi B2B](FINALISASI-B2B.md).
 
 ## Uji penerimaan
 
@@ -59,7 +59,7 @@ Buka **Admin → Keranjang bersama** (`#/admin/keranjang`), pilih antrean toko/t
 3. Pembeli mulai mengetik jumlah baru tanpa menyimpan. Sales menyimpan jumlah berbeda. Pembeli menyimpan: perubahan lama harus ditolak dan jumlah Sales tetap ada.
 4. Pilih tanggal lain: keranjang terpisah. Buka kembali tanggal semula: isi sebelumnya tetap ada.
 5. Masuk dengan pembeli dari toko berbeda: toko pertama tidak muncul dan tidak dapat dibaca dengan menyalin alamat API.
-6. Masuk sebagai Admin dan buka Keranjang bersama: isi dan riwayat terlihat, tanpa tombol ubah/kosongkan. Pembeli/Sales yang diarahkan ke `#/checkout` tetap diminta memakai keranjang bersama.
+6. Masuk sebagai Admin dan buka Keranjang bersama: tambahkan SKU, ubah jumlah, dan hapus/kosongkan barang saat keranjang terbuka. Periksa audit pelaku. Setelah dikunci, tombol ubah tidak tersedia dan API mengembalikan 409; buka kembali dengan alasan sebelum memperbaiki isi. Pembeli/Sales yang diarahkan ke `#/checkout` tetap diminta memakai keranjang bersama.
 7. Hentikan dan hidupkan kembali server, lalu buka keranjang yang sama: barang dan riwayat tetap ada.
 
 Pengujian khusus fitur:
@@ -93,4 +93,4 @@ Seluruh endpoint memerlukan sesi aktif dan persetujuan akun. Mutasi memakai peme
 | `GET /api/b2b/stores/:id/carts?page=1`                    | Daftar periode toko, 25 hasil per halaman                                                                 |
 | `GET /api/b2b/stores/:id/cart/events?date=...&before=...` | Riwayat sebelum nomor revision tertentu, 30 hasil per halaman                                             |
 
-Action untuk pembeli/Sales: `add`, `set`, `remove`, `clear`, `refresh`. Server mengambil nama/harga/kemasan dari katalog; isian harga atau aktor dari klien tidak dipakai. `requestId` harus unik per perubahan dan dikirim ulang dengan isi yang sama untuk memastikan respons yang terputus. Konflik revisi mengembalikan HTTP 409. Admin/Pemilik tidak mengedit jumlah melalui endpoint tersebut; pemrosesan memakai endpoint Admin terpisah yang dijelaskan pada panduan finalisasi.
+Action untuk pembeli/Sales yang ditugaskan, juga Admin/Pemilik pada keranjang **open**: `add`, `set`, `remove`, `clear`, `refresh`. Server mengambil nama/harga/kemasan dari katalog; isian harga atau aktor dari klien tidak dipakai. `requestId` harus unik per perubahan dan dikirim ulang dengan isi yang sama untuk memastikan respons yang terputus. Konflik revisi mengembalikan HTTP 409. Admin/Pemilik tidak mengedit jumlah melalui endpoint tersebut; pemrosesan memakai endpoint Admin terpisah yang dijelaskan pada panduan finalisasi.

@@ -562,6 +562,10 @@ export default function AdminStockPage() {
               {stockFailed && (
                 <div className="workflow-stock-recovery" role="status">
                   <p>Isian perubahan tetap tersedia. Muat stok terbaru sebelum menyimpan.</p>
+                  {server && (
+                    <button type="button" className="admin-secondary" disabled={busy}
+                      onClick={reloadTarget}>Muat stok terbaru</button>
+                  )}
                 </div>
               )}
               {editor()}

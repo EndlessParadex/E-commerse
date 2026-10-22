@@ -21,6 +21,10 @@ import ProductImage from '../components/shop/ProductImage';
 import { savedProductPhotos } from '../data/productPhotos';
 import { productColorStyle } from '../data/catalogColors';
 import { stockBreakdown } from '../data/stockPresentation';
+import {
+  stockEditorTypes, stockEditorFactors, stockEditorCounts, stockEditorEmpty, previewStockEditor,
+} from '../data/stockEditorModel';
+import StockPackageEditor from '../components/shop/StockPackageEditor';
 import '../styles/workflow.css';
 import './AdminStockPage.css';
 
@@ -123,10 +127,17 @@ export default function AdminStockPage() {
   const [filter, setFilter] = useState('all');
   const [layout, setLayout] = useState('compact');
   const [target, setTarget] = useState(null);
-  const [amount, setAmount] = useState('');
+  const [editMode, setEditMode] = useState('replace');
+  const [quantities, setQuantities] = useState(stockEditorEmpty);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const dirty = Boolean(target && amount !== String(target.available));
+  const conversion = target ? stockEditorFactors(target.variants) : null;
+  const preview = target
+    ? previewStockEditor({ mode: editMode, counts: quantities, available: target.available, factors: conversion })
+    : null;
+  const startingQuantities = target ? stockEditorCounts(target.available, target.variants) : null;
+  const dirty = Boolean(target &&
+    (editMode !== 'replace' || stockEditorTypes.some(({ id }) => quantities[id] !== startingQuantities[id])));
   useUnsavedChanges(dirty, undefined, busy);
   const focusEditor = () =>
     window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
@@ -146,7 +157,8 @@ export default function AdminStockPage() {
   const edit = (row) =>
     changeList(() => {
       setTarget(row);
-      setAmount(String(row.available));
+      setEditMode('replace');
+      setQuantities(stockEditorCounts(row.available, row.variants));
       setNotice('');
       focusEditor();
     });
@@ -211,12 +223,12 @@ export default function AdminStockPage() {
   const save = async (event) => {
     event.preventDefault();
     if (pending.current || !target || stockFailed) return;
-    const units = Number(amount);
-    if (!/^\d+$/.test(amount) || !Number.isSafeInteger(units) || units > 1_000_000_000) {
-      setError('Isi stok dengan bilangan bulat antara 0 dan 1.000.000.000 satuan.');
+    if (preview.error) {
+      setError(preview.error);
       focusEditor();
       return;
     }
+    const units = preview.finalStock;
     const edited = target;
     pending.current = true;
     setBusy(true);
@@ -247,7 +259,8 @@ export default function AdminStockPage() {
       await refreshServerWorkflow();
       const latest = serverStock(target.product);
       setTarget({ ...target, available: latest.available, revision: latest.revision });
-      setAmount(String(latest.available));
+      setEditMode('replace');
+      setQuantities(stockEditorCounts(latest.available, target.variants));
       setError('');
       focusEditor();
     } catch (failure) {
@@ -258,53 +271,22 @@ export default function AdminStockPage() {
     }
   };
   const editor = () => (
-    <form
-      className="workflow-stock-editor"
-      onSubmit={save}
-      noValidate
-      aria-label={`Ubah stok ${target.product.baseName} ${target.product.sizeLabel}`}
-      aria-busy={busy}
-    >
-      <label htmlFor="stock-available">Total stok tersedia (satuan)</label>
-      <input
-        ref={inputRef}
-        id="stock-available"
-        type="number"
-        inputMode="numeric"
-        min="0"
-        max="1000000000"
-        step="1"
-        value={amount}
-        disabled={busy}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? 'stock-edit-error' : 'stock-edit-help'}
-        onChange={(event) => {
-          setAmount(event.target.value);
-          setError('');
-        }}
-      />
-      <p id="stock-edit-help">
-        Isi total satuan untuk pembelian baru. Stok pesanan yang sudah dibuat tetap dipertahankan.
-      </p>
-      {error && (
-        <p id="stock-edit-error" className="workflow-error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="workflow-stock-edit-actions">
-        <button type="submit" className="admin-primary" disabled={busy || stockFailed}>
-          {busy ? 'Menyimpan…' : 'Simpan stok'}
-        </button>
-        <button type="button" className="admin-secondary" disabled={busy} onClick={cancel}>
-          Batal
-        </button>
-      </div>
-      {server && error && (
-        <button type="button" className="admin-text-button" disabled={busy} onClick={reloadTarget}>
-          Muat stok terbaru ke form
-        </button>
-      )}
-    </form>
+    <StockPackageEditor
+      target={target} busy={busy} stockFailed={stockFailed} server={server}
+      mode={editMode} quantities={quantities} factors={conversion} preview={preview}
+      error={error} inputRef={inputRef} onSave={save} onCancel={cancel}
+      onReload={reloadTarget}
+      onModeChange={(mode) => {
+        setEditMode(mode);
+        setQuantities(mode === 'add' ? stockEditorEmpty()
+          : stockEditorCounts(target.available, target.variants));
+        setError('');
+      }}
+      onQuantityChange={(id, value) => {
+        setQuantities((current) => ({ ...current, [id]: value }));
+        setError('');
+      }}
+    />
   );
   return (
     <section className="admin-panel workflow-admin-stock">

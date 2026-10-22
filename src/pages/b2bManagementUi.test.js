@@ -181,6 +181,27 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-phone', '081234567890');
     await fill('#b2b-store-address', 'Jalan Nusantara Nomor 15');
     await fill('#b2b-create-delivery-anchor', '2026-10-26');
+    await wait(() => container.querySelector(
+      '.b2b-create [data-calendar-date="2026-10-26"][aria-pressed="true"]',
+    ));
+    assert.equal(
+      container.querySelector('.b2b-create [data-calendar-date="2026-10-27"]').disabled,
+      true,
+      'Dates outside the fixed Monday route cannot be selected',
+    );
+    await click(container.querySelector('.b2b-create [data-calendar-date="2026-10-19"]'));
+    assert.equal(container.querySelector('#b2b-create-delivery-anchor').value, '2026-10-19');
+    await click(container.querySelector('.b2b-create [data-calendar-date="2026-10-26"]'));
+    assert.equal(container.querySelector('#b2b-create-delivery-anchor').value, '2026-10-26');
+    assert.match(container.querySelector('.b2b-create .b2b-calendar-preview').textContent,
+      /9 November 2026|2 November 2026/);
+    await click(container.querySelector(
+      '.b2b-create [aria-label="Bulan berikutnya - b2b-create-delivery"]',
+    ));
+    assert.match(container.querySelector('.b2b-create .b2b-calendar-top strong').textContent, /November 2026/);
+    await click(container.querySelector(
+      '.b2b-create [aria-label="Bulan sebelumnya - b2b-create-delivery"]',
+    ));
     failCreate = true;
     await submit('#b2b-create-form');
     await wait(() => container.textContent.includes('Koneksi pengujian terputus.'));
@@ -207,6 +228,12 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.deepEqual(api.b2bStores.schedule(first.id), {
       weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
     });
+    await wait(() => container.querySelector(
+      '[aria-label="Detail dan penugasan toko"] .b2b-calendar-panel',
+    ));
+    assert.ok(container.querySelector(
+      '[aria-label="Detail dan penugasan toko"] [data-calendar-date="2026-10-26"]',
+    ), 'The saved store schedule remains visible as a read-only calendar');
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');

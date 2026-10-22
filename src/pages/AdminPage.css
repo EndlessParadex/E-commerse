@@ -1278,58 +1278,8 @@
 }
 
 
-/* Modern BAM Admin shell – uses the existing brand and real catalog content. */
-.admin-shell {
-  grid-template-columns: 252px minmax(0, 1fr);
-  background: #f3f7fc;
-}
-.admin-sidebar {
-  background: linear-gradient(170deg, #111f36 0%, #172840 100%);
-  border-right: 0;
-  color: #e8f1ff;
-}
-.admin-sidebar .admin-logo,
-.admin-sidebar .admin-logo > span,
-.admin-sidebar .admin-logo small,
-.admin-sidebar .admin-logo a {
-  color: #f7fbff;
-}
-.admin-sidebar .admin-logo small {
-  opacity: 0.66;
-}
-.admin-sidebar .admin-nav-heading {
-  color: #9cafce;
-}
-.admin-sidebar .admin-navigation a {
-  color: #d4e2f6;
-  font-weight: 550;
-  border: 1px solid transparent;
-}
-.admin-sidebar .admin-navigation a:hover {
-  color: #fff;
-  background: rgba(92, 157, 254, 0.14);
-  border-color: rgba(135, 177, 246, 0.18);
-}
-.admin-sidebar .admin-navigation a[aria-current='page'] {
-  color: #fff;
-  background: linear-gradient(90deg, #1454a2, #256bdd);
-  border-color: rgba(165, 198, 250, 0.28);
-  box-shadow: 0 4px 13px rgba(0, 19, 62, 0.23);
-}
-.admin-sidebar .admin-navigation .admin-store-link {
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-}
-.admin-sidebar-footer {
-  border-top: 1px solid rgba(255,255,255,0.12);
-}
-.admin-sidebar .admin-access-role {
-  color: #e3efff;
-  background: rgba(255,255,255,0.12);
-}
-.admin-sidebar .admin-sidebar-caption {
-  color: #a7bddb;
-}
+/* Shared Admin color/layout theme is defined in AdminDesign2.css. */
+
 .admin-content {
   max-width: 1640px;
   padding: 22px 28px 56px;

@@ -503,3 +503,118 @@
   .home-landing .bam-promotions { padding: 15px; }
   .home-landing .bam-suppliers { padding-top: 24px; }
 }
+
+
+/* Kategori / mitra pemasok: balanced two-column discovery row on desktop. */
+.home-landing .home-discovery-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+  gap: clamp(18px, 2vw, 30px);
+  align-items: start;
+  margin: 31px 0 0;
+}
+.home-landing .home-discovery-row > section { min-width: 0; }
+.home-landing .home-discovery-row .home-categories,
+.home-landing .home-discovery-row .bam-suppliers {
+  margin: 0;
+  padding: 0;
+}
+.home-landing .home-discovery-row .section-heading {
+  align-items: start;
+  gap: 12px;
+  min-height: 61px;
+  margin-bottom: 16px;
+}
+.home-landing .home-discovery-row .section-heading .view-all-link {
+  font-size: .77rem;
+  text-align: right;
+  white-space: normal;
+}
+.home-landing .home-discovery-row .home-category-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.home-landing .home-discovery-row .home-category-card {
+  min-height: 194px;
+}
+.home-landing .home-discovery-row .bam-suppliers-note {
+  line-height: 1.5;
+  margin: -4px 0 15px;
+  font-size: .79rem;
+}
+.home-landing .home-discovery-row .bam-supplier-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.home-landing .home-discovery-row .bam-supplier-card {
+  min-height: 194px;
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  align-items: start;
+  column-gap: 16px;
+  padding: 19px;
+}
+.home-landing .home-discovery-row .bam-supplier-top {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  margin: 0;
+}
+.home-landing .home-discovery-row .bam-supplier-logo {
+  width: 68px;
+  height: 68px;
+}
+.home-landing .home-discovery-row .bam-supplier-card h3,
+.home-landing .home-discovery-row .bam-supplier-card > p,
+.home-landing .home-discovery-row .bam-supplier-bottom {
+  grid-column: 2;
+  min-width: 0;
+}
+.home-landing .home-discovery-row .bam-supplier-card h3 {
+  grid-row: 1;
+  font-size: 1.02rem;
+  line-height: 1.4;
+}
+.home-landing .home-discovery-row .bam-supplier-card > p {
+  grid-row: 2;
+  margin: 7px 0 10px;
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+.home-landing .home-discovery-row .bam-supplier-bottom {
+  grid-row: 3;
+  align-self: end;
+  gap: 8px;
+  margin: 0;
+  padding-top: 12px;
+}
+@media (max-width: 960px) {
+  .home-landing .home-discovery-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    margin-top: 26px;
+  }
+  .home-landing .home-discovery-row .section-heading { min-height: 0; }
+  .home-landing .home-discovery-row .bam-supplier-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-landing .home-discovery-row .home-category-card { min-height: 170px; }
+}
+@media (max-width: 600px) {
+  .home-landing .home-discovery-row { gap: 22px; }
+  .home-landing .home-discovery-row .bam-supplier-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .home-landing .home-discovery-row .bam-supplier-card {
+    min-height: 170px;
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 16px;
+  }
+  .home-landing .home-discovery-row .bam-supplier-logo {
+    width: 58px;
+    height: 58px;
+  }
+  .home-landing .home-discovery-row .home-category-grid { gap: 10px; }
+  .home-landing .home-discovery-row .home-category-card { min-height: 160px; }
+}

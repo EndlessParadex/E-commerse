@@ -171,9 +171,10 @@ export class B2BStoreRepository {
     this.db.prepare('UPDATE b2b_stores SET revision=revision+1 WHERE id=?').run(storeId);
   }
   schedule(storeId) {
-    return this.db.prepare(
+    const row = this.db.prepare(
       'SELECT weekday,interval_weeks AS intervalWeeks,anchor_date AS anchorDate FROM b2b_delivery_schedules WHERE store_id=?',
-    ).get(storeId) || null;
+    ).get(storeId);
+    return row ? { ...row } : null;
   }
   deliveryDate(storeId, fromDate) {
     const schedule = this.schedule(storeId);

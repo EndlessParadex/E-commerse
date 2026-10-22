@@ -13,6 +13,7 @@ import ProductImage from '../components/shop/ProductImage';
 import AdminIcon from '../components/admin/AdminIcon';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import './AdminPage.css';
+import './AdminDesign2.css';
 import AdminProductForm from './AdminProductForm';
 import {
   catalogLoadError,

@@ -345,6 +345,10 @@ test('account website: buyer security summary, admin password settings, registra
       await settle();
     });
     await wait(() => container.querySelector('#account-tab-security'));
+    assert.ok(container.querySelector('.account-premium-hero .account-premium-role').textContent.includes('Admin'),
+      'Admin profile displays the actual account role');
+    assert.ok(container.querySelector('.account-premium .account-menu a[href="#/admin"]'),
+      'Admin retains access to the admin dashboard');
     assert.equal(
       container.querySelector('#account-phone').value,
       '+6281234567890',

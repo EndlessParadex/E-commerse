@@ -129,11 +129,12 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     assert.equal(container.querySelectorAll('[role="tabpanel"]:not([hidden])').length, 1);
     assert.match(container.querySelector('.account-biodata').textContent, /first@example.com/);
     for (const [key, id] of [
-      ['ArrowLeft', 'security'],
-      ['Home', 'profile'],
-      ['ArrowRight', 'address'],
-      ['End', 'security'],
       ['ArrowLeft', 'appearance'],
+      ['Home', 'profile'],
+      ['ArrowDown', 'address'],
+      ['ArrowRight', 'security'],
+      ['ArrowRight', 'calendar'],
+      ['End', 'appearance'],
     ]) {
       await act(async () => {
         container

@@ -501,3 +501,47 @@
     flex: 1 1 100%;
   }
 }
+
+
+/* Compact stock cards: one primary stock total instead of three competing counters. */
+.is-compact .workflow-stock-compact-total {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 14px 17px;
+  border: 1px solid var(--color-border-info);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.is-compact .workflow-stock-compact-total > span {
+  font-size: .8rem;
+  color: var(--color-text-secondary);
+}
+.is-compact .workflow-stock-compact-total > strong {
+  color: var(--color-link);
+  font-size: 1.55rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.is-compact .workflow-stock-compact-total > strong small {
+  font-size: .85rem;
+  color: var(--color-text-secondary);
+}
+.is-compact .workflow-stock-compact-total > p {
+  color: var(--color-text-secondary);
+  font-size: .84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.is-compact .workflow-stock-card .workflow-stock-footer > button {
+  width: 100%;
+  max-width: 260px;
+  min-height: 44px;
+  font-weight: 700;
+}
+.is-compact .workflow-stock-card.is-editing .workflow-stock-package-editor {
+  max-width: none;
+}
+@media(max-width: 700px) {
+  .is-compact .workflow-stock-card .workflow-stock-footer > button { max-width: none; }
+}

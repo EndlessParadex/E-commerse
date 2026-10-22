@@ -125,7 +125,8 @@ test('beranda: kategori admin menghitung produk, foto tetap dalam kategori/SKU, 
   categories.splice(
     0,
     categories.length,
-    { id: 'snack', name: 'Snack & Makanan', icon: '🍫', children: [] },
+    { id: 'snack', name: 'Snack & Makanan', icon: '🍫',
+      children: [{ id: 'keripik', name: 'Keripik' }] },
     { id: 'qa-custom', name: 'Kategori Baru dari Admin', icon: '📦', children: [] },
     { id: 'qa-empty', name: 'Kategori Kosong', icon: '🧼', children: [] },
   );
@@ -176,6 +177,7 @@ test('beranda: kategori admin menghitung produk, foto tetap dalam kategori/SKU, 
     const shortcuts = [...container.querySelectorAll('.home-category-card')];
     assert.equal(shortcuts.length, 3);
     assert.equal(shortcuts[0].getAttribute('href'), '#/kategori/snack');
+    assert.match(shortcuts[0].textContent, /Keripik/, 'kategori menampilkan pratinjau subkategori');
     assert.match(shortcuts[0].textContent, /1 produk/, 'two sizes remain one product');
     assert.equal(shortcuts[0].querySelector('img').getAttribute('alt'), 'Foto camilan ukuran 62g');
     assert.equal(shortcuts[1].getAttribute('href'), '#/kategori/qa-custom');
@@ -312,17 +314,19 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(!container.querySelector('.catalog-status'));
     assert.ok(container.querySelector('.home-categories'));
     assert.ok(container.querySelector('.bam-promotions'));
+    assert.ok(container.querySelector('.store-featured-products'));
     const sections = [...container.querySelector('.home-container').children];
     const featureRail = container.querySelector('.home-feature-rail');
     const categoriesSection = container.querySelector('.home-categories');
     const promotionSection = container.querySelector('.bam-promotions');
+    const featuredSection = container.querySelector('.store-featured-products');
     assert.ok(featureRail, 'Banner utama dan promo vertikal tampil di beranda');
     assert.ok(featureRail.querySelector('.bam-promo'), 'Banner katalog utama tetap ada');
     assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
     assert.deepEqual(
       [sections.indexOf(featureRail), sections.indexOf(categoriesSection),
-        sections.indexOf(promotionSection)],
-      [0, 1, 2],
+        sections.indexOf(promotionSection), sections.indexOf(featuredSection)],
+      [0, 1, 2, 3],
       'Beranda menampilkan banner/promo vertikal, kategori, lalu promo katalog',
     );
   } finally {

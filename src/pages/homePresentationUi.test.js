@@ -336,10 +336,12 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
       'Beranda menampilkan banner, kategori/pemasok, promo katalog, lalu produk',
     );
     const discoveryStyles = await readFile(new URL('./StorefrontDesign2.css', import.meta.url), 'utf8');
-    assert.match(discoveryStyles, /\\.home-discovery-row\\s*\\{/,
+    assert.ok(discoveryStyles.includes('.home-landing .home-discovery-row {'),
       'Layout kategori dan mitra pemasok mempunyai CSS grid');
-    assert.match(discoveryStyles, /grid-template-columns:\\s*minmax\\(0, 1\\.12fr\\) minmax\\(0, \\.88fr\\)/,
+    assert.ok(discoveryStyles.includes('grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr)'),
       'Desktop membagi kategori dan pemasok menjadi dua kolom');
+    assert.ok(discoveryStyles.includes('@media (max-width: 960px)'),
+      'Tablet dan HP mempunyai aturan tata letak responsif');
   } finally {
     await act(async () => root.unmount());
     await server.close();

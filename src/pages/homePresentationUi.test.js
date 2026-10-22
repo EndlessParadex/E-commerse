@@ -317,18 +317,29 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(container.querySelector('.store-featured-products'));
     const sections = [...container.querySelector('.home-container').children];
     const featureRail = container.querySelector('.home-feature-rail');
-    const categoriesSection = container.querySelector('.home-categories');
+    const discoveryRow = container.querySelector('.home-discovery-row');
+    const categoriesSection = discoveryRow?.querySelector('.home-categories');
+    const supplierSection = discoveryRow?.querySelector('.bam-suppliers');
     const promotionSection = container.querySelector('.bam-promotions');
     const featuredSection = container.querySelector('.store-featured-products');
     assert.ok(featureRail, 'Banner utama dan promo vertikal tampil di beranda');
     assert.ok(featureRail.querySelector('.bam-promo'), 'Banner katalog utama tetap ada');
     assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
+    assert.ok(categoriesSection, 'Kategori berada dalam baris penemuan produk');
+    assert.ok(supplierSection, 'Mitra pemasok berada dalam baris yang sama');
+    assert.deepEqual([...discoveryRow.children], [categoriesSection, supplierSection],
+      'Kategori di kiri dan mitra pemasok di kanan');
     assert.deepEqual(
-      [sections.indexOf(featureRail), sections.indexOf(categoriesSection),
+      [sections.indexOf(featureRail), sections.indexOf(discoveryRow),
         sections.indexOf(promotionSection), sections.indexOf(featuredSection)],
       [0, 1, 2, 3],
-      'Beranda menampilkan banner/promo vertikal, kategori, lalu promo katalog',
+      'Beranda menampilkan banner, kategori/pemasok, promo katalog, lalu produk',
     );
+    const discoveryStyles = await readFile(new URL('./StorefrontDesign2.css', import.meta.url), 'utf8');
+    assert.match(discoveryStyles, /\\.home-discovery-row\\s*\\{/,
+      'Layout kategori dan mitra pemasok mempunyai CSS grid');
+    assert.match(discoveryStyles, /grid-template-columns:\\s*minmax\\(0, 1\\.12fr\\) minmax\\(0, \\.88fr\\)/,
+      'Desktop membagi kategori dan pemasok menjadi dua kolom');
   } finally {
     await act(async () => root.unmount());
     await server.close();

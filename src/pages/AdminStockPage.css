@@ -288,3 +288,216 @@
     padding: 16px;
   }
 }
+
+
+/* Modern, compact packaging-based stock editor. Existing inventory math remains server-authoritative. */
+.workflow-stock-card.is-editing .workflow-stock-footer {
+  min-width: 0;
+}
+.is-compact .workflow-stock-card.is-editing > .workflow-stock-footer {
+  grid-column: 1 / -1;
+}
+.workflow-stock-package-editor {
+  width: 100%;
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border-info-strong);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 6px 20px rgba(30, 70, 125, .05);
+}
+.workflow-stock-editor-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.workflow-stock-editor-title h4 {
+  font-size: 1.05rem;
+  color: var(--color-text);
+  letter-spacing: -.015em;
+}
+.workflow-stock-editor-title p {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: .83rem;
+}
+.workflow-stock-before {
+  border: 1px solid var(--color-border-info);
+  background: var(--color-surface-soft);
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  font-size: .85rem;
+}
+.workflow-stock-before strong { color: var(--color-text); }
+.workflow-stock-editor-mode {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.workflow-stock-editor-mode legend {
+  display: block;
+  width: 100%;
+  padding-bottom: 7px;
+  color: var(--color-text);
+  font-size: .87rem;
+  font-weight: 750;
+}
+.workflow-stock-editor-mode label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 45px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  font-size: .85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.workflow-stock-editor-mode label:has(input:checked) {
+  border-color: var(--color-action);
+  background: var(--color-info-soft);
+  color: var(--color-link);
+}
+.workflow-stock-editor-mode label:focus-within {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.workflow-stock-editor-mode input { accent-color: var(--color-action); }
+.workflow-stock-quantity-heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.workflow-stock-quantity-heading strong { font-size: .92rem; }
+.workflow-stock-quantity-heading small {
+  font-size: .79rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.workflow-stock-quantity-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.workflow-stock-quantity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.workflow-stock-quantity label {
+  color: var(--color-text);
+  font-weight: 750;
+  font-size: .85rem;
+}
+.workflow-stock-quantity input {
+  min-width: 0;
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 11px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 1.05rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-variant-numeric: tabular-nums;
+}
+.workflow-stock-quantity input:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.workflow-stock-quantity input:disabled {
+  opacity: .68;
+  background: var(--color-surface-soft);
+  cursor: not-allowed;
+}
+.workflow-stock-quantity small {
+  font-size: .75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+.workflow-stock-editor-explanation,
+.workflow-stock-package-editor .workflow-stock-editor-note {
+  color: var(--color-text-secondary);
+  font-size: .82rem;
+  line-height: 1.55;
+  margin: 0;
+}
+.workflow-stock-calc {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 13px;
+  border: 1px solid var(--color-border-info);
+  background: var(--color-surface-soft);
+}
+.workflow-stock-calc-rows { display: grid; gap: 7px; }
+.workflow-stock-calc-rows > div {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: .81rem;
+}
+.workflow-stock-calc-rows > div span:last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.workflow-stock-calc > p {
+  color: var(--color-text-secondary);
+  font-size: .81rem;
+  margin-top: 5px;
+}
+.workflow-stock-calc-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-info);
+}
+.workflow-stock-calc-total strong { font-size: .94rem; }
+.workflow-stock-calc-total output {
+  color: var(--color-link);
+  font-size: clamp(1.15rem, 1.8vw, 1.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+}
+.workflow-stock-package-editor .workflow-stock-edit-actions {
+  justify-content: end;
+  gap: 10px;
+}
+.workflow-stock-package-editor .workflow-stock-edit-actions button {
+  flex: 0 1 auto;
+  min-width: 138px;
+}
+@media (max-width: 1000px) {
+  .workflow-stock-quantity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .workflow-stock-package-editor { padding: 14px; gap: 12px; }
+  .workflow-stock-calc-rows > div { gap: 8px; }
+}
+@media (max-width: 420px) {
+  .workflow-stock-package-editor .workflow-stock-edit-actions button {
+    flex: 1 1 100%;
+  }
+}

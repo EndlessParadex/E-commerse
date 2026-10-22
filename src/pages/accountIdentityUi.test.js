@@ -218,7 +218,8 @@ test('account website: buyer security summary, admin password settings, registra
       'buyer cannot see the Admin route');
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
-    assert.equal(accountCenter.querySelectorAll('.account-premium-shortcut').length, 3);
+    assert.equal(container.querySelectorAll('.account-premium-shortcuts .account-premium-shortcut').length, 3,
+      'Quick links are rendered after the account workspace, at full page width');
     await act(async () => {
       container.querySelector('#account-tab-calendar').click();
       await settle();

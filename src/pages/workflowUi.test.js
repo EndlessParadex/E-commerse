@@ -280,7 +280,8 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
         .querySelector('.workflow-stock-photo img').src,
       stockPhoto,
     );
-    assert.equal(container.querySelector('dialog'), null, 'stok diubah langsung pada baris produk');
+    assert.ok(container.querySelector('dialog.workflow-stock-dialog[open]'),
+      'stok diedit melalui pop-up tanpa memanjangkan daftar');
     await fillStockUnits('10');
     await click(button('Simpan stok'));
     assert.equal(

@@ -322,7 +322,11 @@ test('perusahaan: halaman kosong, pengaturan tersimpan, logo tampil, guard isian
     assert.equal(workflow.availableStock(catalog.products[0], dom.sessionStorage), 0);
     await route('/admin/stok');
     assert.match(container.textContent, /Stok tersimpan di database/);
-    assert.equal(container.querySelector('.workflow-stock-amount strong').textContent, '0');
+    assert.match(
+      container.querySelector('.workflow-stock-compact-total strong').textContent,
+      /^0\s+satuan$/,
+      'stok kosong ditampilkan sebagai 0 satuan pada tampilan ringkas',
+    );
     await act(async () => {
       await adminStore.initializeCatalog();
       await settle();

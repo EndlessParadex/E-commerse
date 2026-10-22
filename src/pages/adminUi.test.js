@@ -77,6 +77,16 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   };
   try {
     await render('overview');
+    assert.ok(container.querySelector('.admin-home-hero'), 'Design 2 hero is rendered on the Admin dashboard');
+    assert.equal(container.querySelectorAll('.admin-metric').length, 4);
+    assert.ok(container.querySelector('.admin-overview-table'), 'dashboard uses the real catalog table');
+    assert.ok(container.querySelector('.admin-topbar-search'), 'catalog search is available in the Admin toolbar');
+    assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"]'));
+    assert.ok(container.querySelector('nav a[href="#/admin/keranjang"]'));
+    assert.ok(container.querySelector('nav a[href="#/admin/produk"]'));
+    const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
+    assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);
+    assert.match(adminTheme, /\.admin-shell \.admin-home-hero\s*\{/);
     await click(button('+ Tambah produk'));
     await fill('#product-baseName', 'Isian belum disimpan');
     await click(container.querySelector('nav a[href="#/admin"]'));

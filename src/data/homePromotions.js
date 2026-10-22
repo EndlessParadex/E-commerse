@@ -22,8 +22,7 @@ export function homePromotions(catalog, limit = 4) {
   }
   const rows = [...groups.values()].sort((a, b) =>
     Number(b.discounted) - Number(a.discounted) ||
-    b.discount - a.discount ||
-    a.product.price - b.product.price,
+    b.discount - a.discount,
   );
   return {
     items: rows.slice(0, limit),

@@ -9,15 +9,6 @@ export default function StockPackageEditor({
     <form className="workflow-stock-editor workflow-stock-package-editor"
       aria-label={'Ubah stok ' + target.product.baseName + ' ' + target.product.sizeLabel}
       aria-busy={busy} noValidate onSubmit={onSave}>
-      <div className="workflow-stock-editor-title">
-        <div>
-          <h4>Ubah stok produk</h4>
-          <p>{target.product.baseName} · {target.product.sizeLabel}</p>
-        </div>
-        <span className="workflow-stock-before">
-          Stok saat ini: <strong>{number(target.available)} satuan</strong>
-        </span>
-      </div>
       <fieldset className="workflow-stock-editor-mode" disabled={busy}>
         <legend>Jenis perubahan stok</legend>
         <label>

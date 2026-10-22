@@ -78,6 +78,9 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   try {
     await render('overview');
     assert.ok(container.querySelector('.admin-home-hero'), 'Design 2 hero is rendered on the Admin dashboard');
+    assert.ok(container.querySelector('.admin-ops-orders'), 'live order activity panel is present');
+    assert.ok(container.querySelector('.admin-ops-inventory'), 'real inventory summary panel is present');
+    assert.ok(container.querySelector('.admin-navigation a[aria-current="page"]'), 'current route remains accessible');
     assert.equal(container.querySelectorAll('.admin-metric').length, 4);
     assert.ok(container.querySelector('.admin-overview-table'), 'dashboard uses the real catalog table');
     assert.ok(container.querySelector('.admin-topbar-search'), 'catalog search is available in the Admin toolbar');
@@ -87,6 +90,9 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
     assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);
     assert.match(adminTheme, /\.admin-shell \.admin-home-hero\s*\{/);
+    assert.match(adminTheme, /\.admin-shell \.workflow-order-card/);
+    assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
+    assert.match(adminTheme, /@media\(max-width:950px\)/);
     await click(button('+ Tambah produk'));
     await fill('#product-baseName', 'Isian belum disimpan');
     await click(container.querySelector('nav a[href="#/admin"]'));

@@ -154,6 +154,12 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
       [...container.querySelectorAll('.workflow-stock-card')].find((row) =>
         row.textContent.includes('EDIT-DUS'),
       );
+    const fillUnits = async (value) => {
+      await fill('#stock-dus', '0');
+      await fill('#stock-pack', '0');
+      await fill('#stock-satuan', value);
+    };
+    const preview = () => container.querySelector('#stock-total-preview')?.textContent.trim();
     assert.ok(container.querySelector('.workflow-stock-list.is-compact'));
     assert.deepEqual(
       [...card().querySelectorAll('.workflow-stock-stat dd strong')].map((row) => row.textContent),
@@ -166,45 +172,50 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     const beforeEditScroll = scrollCalls;
     await click(card().querySelector('button'));
     assert.equal(container.querySelector('dialog'), null);
-    assert.ok(card().querySelector('#stock-available'));
+    assert.ok(card().querySelector('#stock-satuan'));
+    assert.ok(card().querySelector('#stock-dus'));
+    assert.equal(card().querySelector('#stock-karton').disabled, true);
+    assert.match(card().textContent, /Jenis karton belum tersedia di katalog/);
+    assert.equal(preview(), '119 satuan', 'Default kemasan sesuai stok awal');
     assert.equal(scrollCalls, beforeEditScroll);
-    await fill('#stock-available', '150');
+    await fillUnits('150');
+    assert.equal(preview(), '150 satuan');
     await fill('#admin-stock-search', 'Laptop');
     assert.equal(container.querySelector('#admin-stock-search').value, '');
-    assert.equal(container.querySelector('#stock-available').value, '150');
+    assert.equal(container.querySelector('#stock-satuan').value, '150');
     await click(container.querySelector('.admin-navigation a[href="#/admin/produk"]'));
     assert.equal(dom.location.hash, '#/admin/stok');
-    assert.equal(container.querySelector('#stock-available').value, '150');
+    assert.equal(container.querySelector('#stock-satuan').value, '150');
     const current = api.workflow.stock().stock[key];
     api.workflow.setStock(owner, { key, available: 120, revision: current.revision });
     await click(button('Simpan stok'));
     assert.equal(api.workflow.stock().stock[key].available, 120);
-    assert.equal(container.querySelector('#stock-available').value, '150');
+    assert.equal(container.querySelector('#stock-satuan').value, '150');
     assert.ok(container.querySelector('#stock-edit-error'));
     await click(button('Muat stok terbaru ke form'));
-    assert.equal(container.querySelector('#stock-available').value, '120');
-    await fill('#stock-available', '119');
+    assert.equal(preview(), '120 satuan');
+    await fillUnits('119');
     await click(button('Simpan stok'));
     assert.equal(api.workflow.stock().stock[key].available, 119);
-    assert.equal(container.querySelector('#stock-available'), null);
+    assert.equal(container.querySelector('#stock-satuan'), null);
     await click(card().querySelector('button'));
-    await fill('#stock-available', '1.5');
+    await fillUnits('1.5');
     await click(button('Simpan stok'));
     assert.match(container.querySelector('#stock-edit-error').textContent, /bilangan bulat/);
     assert.equal(api.workflow.stock().stock[key].available, 119);
-    await fill('#stock-available', '150');
+    await fillUnits('150');
     offline = true;
     await click(button('Simpan stok'));
-    assert.equal(container.querySelector('#stock-available').value, '150');
+    assert.equal(container.querySelector('#stock-satuan').value, '150');
     assert.ok(container.querySelector('.workflow-stock-recovery'));
     assert.equal(button('Simpan stok').disabled, true);
     offline = false;
     await click(button('Muat stok terbaru'));
-    assert.equal(container.querySelector('#stock-available').value, '150');
+    assert.equal(container.querySelector('#stock-satuan').value, '150');
     await click(button('Batal'));
     assert.equal(api.workflow.stock().stock[key].available, 119);
     await click(card().querySelector('button'));
-    await fill('#stock-available', '130');
+    await fillUnits('130');
     holdSave = true;
     await click(button('Simpan stok'));
     const writesDuringSave = writes;
@@ -215,7 +226,7 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
       await settle();
     });
     assert.equal(writes, writesDuringSave);
-    assert.equal(container.querySelector('#stock-available').disabled, true);
+    assert.equal(container.querySelector('#stock-satuan').disabled, true);
     assert.equal(container.querySelector('#admin-stock-search').disabled, true);
     await act(async () => {
       await releaseSave();
@@ -223,14 +234,26 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     });
     holdSave = false;
     assert.equal(api.workflow.stock().stock[key].available, 130);
-    assert.equal(container.querySelector('#stock-available'), null);
+    assert.equal(container.querySelector('#stock-satuan'), null);
     await click(card().querySelector('button'));
-    await fill('#stock-available', '140');
+    await fillUnits('140');
     accepted = true;
     await fill('#admin-stock-search', 'EDIT-DUS');
-    assert.equal(container.querySelector('#stock-available'), null);
+    assert.equal(container.querySelector('#stock-satuan'), null);
     assert.equal(container.querySelectorAll('.workflow-stock-card').length, 1);
     assert.equal(api.workflow.stock().stock[key].available, 130);
+
+    // New warehouse receipts add only actual additional packages to the latest stock.
+    await click(card().querySelector('button'));
+    await click(container.querySelector('input[name="stock-mode"][value="add"]'));
+    assert.equal(preview(), '130 satuan');
+    await fill('#stock-dus', '1');
+    await fill('#stock-pack', '2');
+    await fill('#stock-satuan', '4');
+    assert.equal(preview(), '194 satuan', '40 + 20 + 4 added to 130');
+    await click(button('Simpan stok'));
+    assert.equal(api.workflow.stock().stock[key].available, 194);
+    assert.equal(container.querySelector('#stock-satuan'), null);
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

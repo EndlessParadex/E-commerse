@@ -805,7 +805,7 @@ export default function SharedCartPage({ adminView = false }) {
                     const match = stores.stores.find((store) => store.id === id);
                     if (match?.deliverySchedule)
                       setDate(nextStoreDelivery(match.deliverySchedule, todayID()));
-                  }
+                  }}
                 >
                   <option value="">Pilih toko</option>
                   {selectedNotListed && (

@@ -30,17 +30,30 @@
   margin-bottom: 23px;
   gap: 8px;
 }
-.home-landing .bam-promo-brand .bam-promo-brand-icon {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  background: #176adb;
-  color: #fff;
-  border-radius: 9px;
-  font-size: 17px;
-  letter-spacing: 0;
+.home-landing .bam-promo-brand .company-brand {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: #155ab4;
+}
+.home-landing .bam-promo-brand .company-brand-logo {
+  width: 37px;
+  height: 37px;
+  border: 1px solid #c2dcfb;
+  border-radius: 11px;
+  background: #fff;
+}
+.home-landing .bam-promo-brand .company-brand-text {
+  color: #155ab4;
+  font-size: .94rem;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: -.02em;
+}
+.home-landing .bam-promo-brand .company-brand-text .logo-accent {
+  color: #176adb;
 }
 .home-landing .bam-promo-brand > span:last-child {
   flex-basis: auto;

@@ -511,7 +511,8 @@ export default function AdminB2BStoresPage() {
                 />
               </div>
               <div className="b2b-actions b2b-full">
-                <button className="admin-primary" type="submit">
+                <button className="admin-primary" type="submit"
+                  disabled={busy || !validAnchorWeekday(deliveryForm)}>
                   {busy ? 'Menyimpan…' : 'Simpan toko'}
                 </button>
                 <button

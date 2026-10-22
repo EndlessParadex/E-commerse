@@ -158,10 +158,18 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     [...container.querySelectorAll('.workflow-stock-card')].find(
       (card) => /Keripik Singkong Balado/.test(card.textContent) && /180g/.test(card.textContent),
     );
+  const fillStockUnits = async (value) => {
+    await fill('#stock-dus', '0');
+    await fill('#stock-pack', '0');
+    await fill('#stock-satuan', value);
+  };
+  const stockAmountText = () =>
+    (stockCard().querySelector('.workflow-stock-amount') ||
+      stockCard().querySelector('.workflow-stock-compact-total')).textContent;
   const setStock = async (value) => {
     await navigate('/admin/stok');
     await click(stockCard().querySelector('button'));
-    await fill('#stock-available', value);
+    await fillStockUnits(value);
     await click(button('Simpan stok'));
   };
   const checkout = async () => {
@@ -194,6 +202,8 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await click(button('Coba lagi'));
     await waitForAdmin(container, act);
     assert.ok(stockCard());
+    assert.match(stockCard().querySelector('.workflow-stock-compact-total').textContent, /120 satuan/);
+    await click(container.querySelector('input[name="stock-layout"][value="full"]'));
     assert.equal(stockCard().querySelector('.workflow-stock-photo img').src, stockPhoto);
     const packagingRow = (sku) =>
       [...stockCard().querySelectorAll('.workflow-stock-packages > li')].find(
@@ -225,14 +235,14 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
       );
     assert.deepEqual(breakdownCounts(), ['3', '0', '0']);
     await click(stockCard().querySelector('button'));
-    await fill('#stock-available', '119');
+    await fillStockUnits('119');
     await click(button('Simpan stok'));
     assert.deepEqual(
       breakdownCounts(),
       ['2', '3', '9'],
       'summary divides shared stock, instead of showing three independent balances',
     );
-    assert.match(stockCard().querySelector('.workflow-stock-amount').textContent, /119/);
+    assert.match(stockAmountText(), /119/);
     assert.equal(
       packagingRow('QA-PACK-10').querySelector('.workflow-stock-package-count').textContent,
       '11 pack',
@@ -247,7 +257,7 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
       '119 satuan',
     );
     await click(stockCard().querySelector('button'));
-    await fill('#stock-available', '120');
+    await fillStockUnits('120');
     await click(button('Simpan stok'));
     const noPhotoCard = [...container.querySelectorAll('.workflow-stock-card')].find(
       (card) =>
@@ -265,13 +275,13 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await click(stockCard().querySelector('button'));
     assert.equal(
       container
-        .querySelector('#stock-available')
+        .querySelector('#stock-satuan')
         .closest('.workflow-stock-card')
         .querySelector('.workflow-stock-photo img').src,
       stockPhoto,
     );
     assert.equal(container.querySelector('dialog'), null, 'stok diubah langsung pada baris produk');
-    await fill('#stock-available', '10');
+    await fillStockUnits('10');
     await click(button('Simpan stok'));
     assert.equal(
       packagingRow('QA-PACK').querySelector('.workflow-stock-package-count').textContent,
@@ -336,7 +346,7 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     assert.equal(orderModel.readOrder(second.id, dom.sessionStorage).status, 'expired');
     assert.equal(button('Simulasikan pembayaran berhasil'), undefined);
     await navigate('/admin/stok');
-    assert.match(stockCard().querySelector('.workflow-stock-amount').textContent, /12/);
+    assert.match(stockAmountText(), /12/);
     await navigate('/produk/QA-PACK');
     await click(button('Beli sekarang'));
     await checkout();
@@ -415,7 +425,7 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     );
     assert.equal(orderModel.readOrders(dom.sessionStorage).length, 3);
     await navigate('/admin/stok');
-    assert.match(stockCard().querySelector('.workflow-stock-amount').textContent, /12/);
+    assert.match(stockAmountText(), /12/);
     await navigate('/produk/QA-PACK');
     await click(button('Beli sekarang'));
     await act(async () =>

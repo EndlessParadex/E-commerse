@@ -1,4 +1,5 @@
 import useCompany from '../../state/useCompany';
+import CompanyBrand from '../layout/CompanyBrand';
 import { useEffect, useState } from 'react';
 import { promoSlides } from '../../data/promoSlides';
 import './PromoCarousel.css';
@@ -94,8 +95,8 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
       >
         <div className="bam-promo-copy">
           <div className="bam-promo-brand">
-            <span className="bam-promo-brand-icon" aria-hidden="true">✦</span>
-            <span>{companyProfile.shortName} · {companyProfile.legalName}</span>
+            <CompanyBrand />
+            <span>{companyProfile.legalName}</span>
           </div>
           <span className="bam-promo-eyebrow">
             <span aria-hidden="true" />

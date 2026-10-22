@@ -496,7 +496,8 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     dom.confirm = () => true;
     await navigate('/admin');
     assert.equal(container.querySelector('#product-baseName'), null);
-    assert.match(container.querySelector('h1').textContent, /Ringkasan/);
+    assert.equal(container.querySelector('h1').textContent, 'Dashboard Admin');
+    assert.equal(dom.location.hash, '#/admin');
   } finally {
     await act(async () => root.unmount());
     await server.close();

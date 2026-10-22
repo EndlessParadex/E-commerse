@@ -161,14 +161,19 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     };
     const preview = () => container.querySelector('#stock-total-preview')?.textContent.trim();
     assert.ok(container.querySelector('.workflow-stock-list.is-compact'));
+    assert.match(card().querySelector('.workflow-stock-compact-total').textContent,
+      /119\s*satuan/);
+    assert.match(card().querySelector('.workflow-stock-compact-total').textContent,
+      /2 dus \+ 3 pack \+ 9 satuan/);
+    await click(container.querySelector('input[name="stock-layout"][value="full"]'));
+    assert.equal(card().querySelector('details').open, true);
     assert.deepEqual(
       [...card().querySelectorAll('.workflow-stock-stat dd strong')].map((row) => row.textContent),
       ['2', '3', '9'],
     );
-    await click(container.querySelector('input[name="stock-layout"][value="full"]'));
-    assert.equal(card().querySelector('details').open, true);
     await click(container.querySelector('input[name="stock-layout"][value="compact"]'));
     assert.equal(card().querySelector('details').open, false);
+    assert.ok(card().querySelector('.workflow-stock-compact-total'));
     const beforeEditScroll = scrollCalls;
     await click(card().querySelector('button'));
     assert.equal(container.querySelector('dialog'), null);

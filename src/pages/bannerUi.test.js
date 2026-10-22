@@ -142,17 +142,24 @@ test('banner: harga panjang, foto, SKU termurah, navigasi, jeda keyboard, geraka
     assert.equal(container.querySelector('.bam-promo-price strong').textContent, '3.500');
     assert.equal(container.querySelector('.bam-promo-discount').textContent, 'Hemat 22%');
     assert.equal(
-      container.querySelector('.bam-promo-artwork-note').textContent,
-      'Gambar contoh kategori',
-    );
-    assert.equal(
-      container.querySelector('.bam-promo-product-visual .bam-promo-artwork-note'),
+      container.querySelector('.bam-promo-artwork-note'),
       null,
-      'the disclosure never overlays the image',
+      'redesigned banner must not reuse a generic category illustration',
+    );
+    const missingPhoto = container.querySelector(
+      '.bam-promo-product.is-spotlight .bam-promo-product-monogram',
+    );
+    assert.ok(missingPhoto, 'the selected SKU without a photo gets a clean fallback');
+    assert.equal(missingPhoto.getAttribute('role'), 'img');
+    assert.match(
+      missingPhoto.getAttribute('aria-label'),
+      /Foto Camilan belum tersedia/,
+      'fallback explains that the product photo is unavailable',
     );
     assert.equal(
-      container.querySelector('.bam-product-media--hero img').getAttribute('alt'),
-      'Ilustrasi kategori Snack & Makanan',
+      container.querySelector('.bam-promo-product.is-spotlight img'),
+      null,
+      'a SKU without its own photo cannot borrow a decorative image',
     );
     await click('Pilihan berikutnya');
     assert.equal(
@@ -230,7 +237,12 @@ test('banner: harga panjang, foto, SKU termurah, navigasi, jeda keyboard, geraka
       null,
       'a custom category never gets unrelated food artwork',
     );
-    assert.ok(container.querySelector('.bam-product-media--hero .bam-product-fallback'));
+    assert.equal(
+      container.querySelector('.bam-promo-product.is-spotlight .bam-promo-product-monogram')
+        .getAttribute('aria-label'),
+      'Foto Kategori baru belum tersedia',
+      'custom categories without photos use a product-specific fallback',
+    );
     await act(async () => {
       root.render(createElement(Banner, { catalog: [], categoryList }));
       await settle();

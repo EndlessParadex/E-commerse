@@ -3,6 +3,7 @@ import { accountApi } from '../components/account/accountApi';
 import { useDelivery } from '../state/useDelivery';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
+import { nextStoreDelivery } from '../data/b2bDeliverySchedule';
 import './AdminB2BStoresPage.css';
 
 const emptyStore = { storeName: '', phone: '', address: '' };
@@ -38,12 +39,13 @@ const validAnchorWeekday = (schedule) => {
 function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
   const anchor = parseDeliveryDate(schedule?.anchorDate);
   const [month, setMonth] = useState(() => {
-    const date = anchor || new Date();
+    const date = (readOnly ? null : anchor) || new Date();
     return { year: date.getUTCFullYear(), month: date.getUTCMonth() };
   });
   useEffect(() => {
-    if (anchor) setMonth({ year: anchor.getUTCFullYear(), month: anchor.getUTCMonth() });
-  }, [schedule?.anchorDate]);
+    if (anchor && !readOnly)
+      setMonth({ year: anchor.getUTCFullYear(), month: anchor.getUTCMonth() });
+  }, [schedule?.anchorDate, readOnly]);
   const firstDay = new Date(Date.UTC(month.year, month.month, 1));
   const offset = (firstDay.getUTCDay() + 6) % 7; // Monday is the first calendar column.
   const dayCount = new Date(Date.UTC(month.year, month.month + 1, 0)).getUTCDate();
@@ -61,9 +63,12 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
   };
   const currentDate = new Date();
   const today = isoDate(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
-  const exampleDates = validAnchor
+  const startPreviewDate = readOnly && validAnchor
+    ? nextStoreDelivery(schedule, today) : schedule?.anchorDate;
+  const startPreview = parseDeliveryDate(startPreviewDate);
+  const exampleDates = startPreview
     ? Array.from({ length: 3 }, (_, index) => {
-      const next = new Date(anchor.getTime() + index * stepDays * 86400000);
+      const next = new Date(startPreview.getTime() + index * stepDays * 86400000);
       return next.toISOString().slice(0, 10);
     }) : [];
   return (
@@ -115,7 +120,7 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
       </div>
       {validAnchor && (
         <div className="b2b-calendar-preview">
-          <strong>{readOnly ? 'Contoh siklus pengiriman' : 'Pratinjau jadwal berdasarkan tanggal acuan'}</strong>
+          <strong>{readOnly ? 'Tiga jadwal pengiriman berikutnya' : 'Pratinjau jadwal berdasarkan tanggal acuan'}</strong>
           <div>{exampleDates.map((date) => <span key={date}>{calendarDateLabel(date)}</span>)}</div>
           <small>Tanggal berikutnya akan dihitung otomatis setiap {stepDays} hari.</small>
         </div>

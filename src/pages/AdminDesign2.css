@@ -1,0 +1,400 @@
+/* BAM Admin — Design 2 | Calm light SaaS design system
+   Scoped to the Admin shell: storefront/checkout styles are untouched. */
+.admin-shell {
+  color-scheme: light;
+  --color-background: #f5f9ff;
+  --color-admin-background: #f5f9ff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8fbff;
+  --color-surface-muted: #eef5ff;
+  --color-surface-hover: #eef5ff;
+  --color-surface-tint: #f6faff;
+  --color-surface-menu: #ffffff;
+  --color-text: #112348;
+  --color-text-strong: #192f56;
+  --color-text-muted: #64799a;
+  --color-text-secondary: #506681;
+  --color-text-subtle: #91a2b8;
+  --color-border: #e1eaf7;
+  --color-border-soft: #ebf0f8;
+  --color-border-info: #d9e9fe;
+  --color-border-info-strong: #b8d6fd;
+  --color-input-border: #cfdef0;
+  --color-link: #095bd3;
+  --color-link-bright: #0864ee;
+  --color-action: #1168e5;
+  --color-action-hover: #0754bb;
+  --color-info-soft: #e9f2ff;
+  --color-info-text: #0c57bb;
+  --color-success-soft: #e9f8f1;
+  --color-success-pill: #d9f4e6;
+  --color-success-text: #117e52;
+  --color-warning-soft: #fff9e9;
+  --color-warning-pill: #fff1ca;
+  --color-warning-text: #875a13;
+  --color-danger-soft: #fff1f1;
+  --color-danger-subtle: #fff8f8;
+  --color-danger-text: #b53445;
+  --shadow-card: 0 10px 32px rgba(33,68,114,.045);
+  background: #f5f9ff;
+  color: #112348;
+  grid-template-columns: 236px minmax(0,1fr);
+}
+.admin-shell .admin-sidebar {
+  background: #fff;
+  color: #122647;
+  border-right: 1px solid #e1eaf7;
+  box-shadow: 5px 0 25px rgba(30,65,107,.018);
+  padding: 23px 12px 18px;
+}
+.admin-shell .admin-logo,
+.admin-shell .admin-logo > span,
+.admin-shell .admin-logo a { color: #0b1d3e; }
+.admin-shell .admin-logo small { color: #7689a8; opacity: 1; }
+.admin-shell .admin-nav-heading { color: #8b9db7; }
+.admin-shell .admin-navigation { gap: 19px; }
+.admin-shell .admin-nav-group { gap: 3px; }
+.admin-shell .admin-navigation a {
+  color: #48607f;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  box-shadow: none;
+  font-weight: 550;
+  padding: 10px 12px;
+  min-height: 43px;
+}
+.admin-shell .admin-navigation a:hover {
+  background: #f0f6ff;
+  border-color: #e4eefb;
+  color: #095bd3;
+}
+.admin-shell .admin-navigation a[aria-current='page'] {
+  background: #eaf2ff;
+  color: #075fd8;
+  border-color: #e1edff;
+  box-shadow: inset 3px 0 #1677f7;
+  font-weight: 760;
+}
+.admin-shell .admin-navigation .admin-store-link {
+  background: #fff;
+  color: #275b9d;
+  border-color: #d9e5f4;
+}
+.admin-shell .admin-navigation .admin-store-link:hover { background: #f4f8ff; }
+.admin-shell .admin-sidebar-footer { border-top: 1px solid #e7edf6; padding-top: 15px; }
+.admin-shell .admin-sidebar .admin-access-role {
+  color: #1d5fb8;
+  background: #eaf3ff;
+}
+.admin-shell .admin-sidebar .admin-sidebar-caption { color: #8293ab; }
+.admin-shell .admin-content {
+  background: transparent;
+  padding: 22px clamp(18px,2.1vw,38px) 60px;
+  max-width: 1660px;
+}
+.admin-shell .admin-topbar {
+  margin-bottom: 23px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e5edf8;
+}
+.admin-shell .admin-topbar-search {
+  width: min(100%,580px);
+  border-color: #dce8f7;
+  border-radius: 12px;
+  box-shadow: 0 3px 9px rgba(40,73,115,.035);
+}
+.admin-shell .admin-topbar-search input {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.admin-shell .admin-topbar-search button {
+  color: #1557b7;
+  background: #ebf3ff;
+}
+.admin-shell .admin-topbar-avatar {
+  background: linear-gradient(135deg,#82b4ff,#2575e5);
+}
+.admin-shell .admin-header { margin-bottom: 20px; }
+.admin-shell .admin-header h1 { font-size: clamp(1.65rem,2.8vw,2.2rem); letter-spacing: -.045em; }
+.admin-shell .admin-eyebrow { color: #2876de; }
+.admin-shell .admin-demo-badge,
+.admin-shell .admin-result-pill {
+  background: #eaf4ff;
+  border-color: #cde4ff;
+  color: #1262c6;
+}
+.admin-shell .admin-preview-notice {
+  background: #eaf4ff;
+  border: 1px solid #cce3ff;
+  border-left: 3px solid #308cf4;
+  border-radius: 12px;
+  color: #375f92;
+  margin-bottom: 20px;
+}
+.admin-shell .admin-panel,
+.admin-shell .admin-metric,
+.admin-shell .admin-next,
+.admin-shell .admin-form-section,
+.admin-shell .workflow-order-card,
+.admin-shell .workflow-stock-card,
+.admin-shell .b2b-panel,
+.admin-shell .accounts-page,
+.admin-shell .admin-cart-queue,
+.admin-shell .admin-cart-processing,
+.admin-shell .shared-cart-selection,
+.admin-shell .shared-admin-navigation,
+.admin-shell .shared-admin-work-card,
+.admin-shell .company-mode-note {
+  background: #fff;
+  border: 1px solid #e1eaf7;
+  border-radius: 17px;
+  box-shadow: 0 8px 26px rgba(29,68,118,.045);
+}
+.admin-shell .admin-panel-heading {
+  border-bottom-color: #ebf1f9;
+}
+.admin-shell .admin-panel-heading h2,
+.admin-shell .admin-next h2 { letter-spacing: -.02em; }
+.admin-shell .admin-primary,
+.admin-shell .shop-primary {
+  color: #fff;
+  background: #1367e3;
+  border: 1px solid #1367e3;
+  border-radius: 10px;
+  box-shadow: 0 3px 9px rgba(19,103,227,.13);
+}
+.admin-shell .admin-primary:hover,
+.admin-shell .shop-primary:hover:not(:disabled) {
+  color: #fff;
+  background: #0756c6;
+}
+.admin-shell .admin-secondary,
+.admin-shell .bam-button-secondary {
+  border: 1px solid #d3e2f5;
+  background: #fff;
+  color: #1a579d;
+  border-radius: 10px;
+}
+.admin-shell .admin-secondary:hover,
+.admin-shell .bam-button-secondary:hover:not(:disabled) {
+  background: #f3f8ff;
+  border-color: #b9d6f8;
+}
+.admin-shell :is(input:not([type='radio']):not([type='checkbox']), textarea, select) {
+  border-radius: 10px;
+  border-color: #cedef0;
+  background: #fff;
+  color: #152948;
+}
+.admin-shell :is(input, select, textarea, button, a, summary):focus-visible {
+  outline: 3px solid #77aeff;
+  outline-offset: 2px;
+}
+.admin-shell .admin-metrics { gap: 15px; }
+.admin-shell .admin-metric { box-shadow: 0 8px 25px rgba(29,68,118,.05); }
+.admin-shell .admin-metric:nth-child(4n+1) {
+  background: linear-gradient(140deg,#f1f8ff,#fff);
+}
+.admin-shell .admin-metric:nth-child(4n+2) {
+  background: linear-gradient(140deg,#f7f3ff,#fff);
+}
+.admin-shell .admin-metric:nth-child(4n+3) {
+  background: linear-gradient(140deg,#edfbf6,#fff);
+}
+.admin-shell .admin-metric:nth-child(4n+4) {
+  background: linear-gradient(140deg,#fff8f1,#fff);
+}
+.admin-shell .admin-metric:nth-child(4n+2) .admin-metric-label .admin-icon {
+  background: #ede6ff; color: #7556ce;
+}
+.admin-shell .admin-metric:nth-child(4n+3) .admin-metric-label .admin-icon {
+  background: #dbf7e9; color: #188b61;
+}
+.admin-shell .admin-metric:nth-child(4n+4) .admin-metric-label .admin-icon {
+  background: #fff0dc; color: #c66a22;
+}
+/* Dashboard hero: illustration is CSS, not fictitious business data. */
+.admin-shell .admin-home-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0,1.45fr) minmax(210px,.8fr);
+  min-height: 238px;
+  padding: 32px 34px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  background: linear-gradient(116deg,#dbeafe 0%,#e8f2ff 58%,#d1e5ff 100%);
+  border: 1px solid #cce2fc;
+  border-radius: 19px;
+}
+.admin-shell .admin-home-hero-copy { z-index: 1; align-self: center; }
+.admin-shell .admin-home-hero-eyebrow {
+  display: inline-block;
+  color: #2569bf;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  font-size: .75rem;
+  font-weight: 800;
+}
+.admin-shell .admin-home-hero h2 {
+  max-width: 660px;
+  color: #102c58;
+  font-size: clamp(1.35rem,2.2vw,2rem);
+  letter-spacing: -.045em;
+  line-height: 1.24;
+  margin: 10px 0 12px;
+}
+.admin-shell .admin-home-hero p {
+  max-width: 590px;
+  color: #4d6b91;
+  line-height: 1.6;
+  font-size: .91rem;
+}
+.admin-shell .admin-home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 19px;
+}
+.admin-shell .admin-home-hero-visual {
+  position: relative;
+  isolation: isolate;
+  min-height: 185px;
+}
+.admin-shell .admin-home-hero-orbit {
+  position: absolute;
+  width: 310px;
+  height: 310px;
+  right: -24px;
+  top: -85px;
+  background: radial-gradient(circle,#a5ceff99,#cbe3ff15 66%);
+  border: 1px solid #c4deff;
+  border-radius: 50%;
+}
+.admin-shell .admin-home-hero-cube {
+  position: absolute;
+  width: 92px;
+  height: 92px;
+  right: 18%;
+  bottom: 14px;
+  background: linear-gradient(145deg,#8dbaff,#2d78e6);
+  border-radius: 15px;
+  transform: rotate(-10deg);
+  box-shadow: 15px 16px 18px #286cc72b;
+}
+.admin-shell .admin-home-hero-cube.two {
+  width: 70px;
+  height: 70px;
+  right: 46%;
+  bottom: 29px;
+  background: linear-gradient(145deg,#fefeff,#95c5ff);
+  transform: rotate(14deg);
+}
+.admin-shell .admin-home-hero-cube.three {
+  width: 51px;
+  height: 51px;
+  right: 9%;
+  bottom: 105px;
+  background: linear-gradient(145deg,#d4eaff,#4f95ec);
+  transform: rotate(9deg);
+}
+.admin-shell .admin-home-hero-float {
+  position: absolute;
+  display: grid;
+  gap: 3px;
+  right: 18%;
+  top: 16px;
+  width: 145px;
+  border-radius: 12px;
+  padding: 13px;
+  background: #ffffffeb;
+  color: #29527e;
+  box-shadow: 0 14px 30px rgba(23,84,163,.12);
+  transform: rotate(3deg);
+}
+.admin-shell .admin-home-hero-float .admin-icon { color: #216cd0; }
+.admin-shell .admin-home-hero-float span { font-size: .72rem; }
+.admin-shell .admin-home-hero-float strong { font-size: .89rem; }
+.admin-shell .admin-overview-quick-links a,
+.admin-shell .b2b-store-list button,
+.admin-shell .shared-admin-tab {
+  border-radius: 12px;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.admin-shell .admin-overview-quick-links a:hover,
+.admin-shell .b2b-store-list button:hover,
+.admin-shell .shared-admin-tab:hover {
+  border-color: #bbd9ff;
+  background: #eef6ff;
+}
+.admin-shell .admin-overview-table th,
+.admin-shell .admin-table th,
+.admin-shell .accounts-table th {
+  background: #f2f7fe;
+  color: #456284;
+}
+.admin-shell .admin-overview-table tbody tr:hover td,
+.admin-shell .admin-table tbody tr:hover td,
+.admin-shell .accounts-table tbody tr:hover td {
+  background: #f8fbff;
+}
+.admin-shell .shared-admin-tabs {
+  background: #f8fbff;
+  border-radius: 13px;
+}
+.admin-shell .shared-admin-tab.is-active {
+  background: #e9f3ff;
+  color: #075bd3;
+  border-color: #b9d7ff;
+}
+.admin-shell .shared-admin-steps li.is-current > span {
+  color: #fff;
+  background: #136ee6;
+}
+.admin-shell .b2b-schedule-section,
+.admin-shell .company-settings-section,
+.admin-shell .email-settings-state,
+.admin-shell .accounts-explanation {
+  background: #f8fbff;
+  border-color: #e4edf8;
+}
+.admin-shell .workflow-stock-toolbar {
+  background: #fff;
+  border-color: #e1eaf7;
+  border-radius: 16px;
+}
+.admin-shell :is(.workflow-order-card,.workflow-stock-card,.b2b-panel,.company-settings-section,.admin-form-section) {
+  min-width: 0;
+}
+@media(max-width:1180px) {
+  .admin-shell .admin-home-hero { grid-template-columns: minmax(0,1fr) minmax(160px,.5fr); }
+}
+@media(max-width:950px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-shell .admin-sidebar {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding: 14px 16px;
+    box-shadow: 0 4px 14px #15335b0d;
+  }
+  .admin-shell .admin-navigation:not(.is-open) { display: none; }
+  .admin-shell .admin-navigation.is-open { display: grid; margin-top: 16px; }
+  .admin-shell .admin-menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  .admin-shell .admin-sidebar-footer { display: none; }
+  .admin-shell .admin-content { padding: 18px 18px 45px; }
+}
+@media(max-width:650px) {
+  .admin-shell .admin-home-hero { display: block; min-height: 0; padding: 22px; }
+  .admin-shell .admin-home-hero-visual { display: none; }
+  .admin-shell .admin-home-hero-actions { flex-direction: column; align-items: stretch; }
+  .admin-shell .admin-home-hero-actions a { width: 100%; }
+  .admin-shell .admin-topbar-profile > div { display: none; }
+  .admin-shell .admin-topbar-search button { padding: 8px; font-size: .7rem; }
+  .admin-shell .admin-overview-side { grid-template-columns: 1fr; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-shell .admin-navigation a,
+  .admin-shell .admin-metric,
+  .admin-shell .admin-overview-quick-links a { transition: none; transform: none; }
+}

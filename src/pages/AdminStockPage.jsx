@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { products } from '../data/products';
 import {
   availableStock,
@@ -135,6 +135,7 @@ export default function AdminStockPage() {
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const inputRef = useRef(null);
+  const stockDialogRef = useRef(null);
   const [importOpen, setImportOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -152,6 +153,18 @@ export default function AdminStockPage() {
   const dirty = Boolean(target &&
     (editMode !== 'replace' || stockEditorTypes.some(({ id }) => quantities[id] !== startingQuantities[id])));
   useUnsavedChanges(dirty, undefined, busy);
+  const editorOpen = Boolean(target);
+  useEffect(() => {
+    if (!editorOpen) return undefined;
+    const dialog = stockDialogRef.current;
+    if (!dialog) return undefined;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    return () => {
+      if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+      else dialog.removeAttribute('open');
+    };
+  }, [editorOpen]);
   const focusEditor = () =>
     window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   const focusEditButton = (key) =>
@@ -176,6 +189,8 @@ export default function AdminStockPage() {
       focusEditor();
     });
   const cancel = () => {
+    if (pending.current) return;
+    if (dirty && !window.confirm('Perubahan stok belum disimpan. Batalkan pengeditan?')) return;
     const key = target?.key;
     setTarget(null);
     setError('');
@@ -455,9 +470,8 @@ export default function AdminStockPage() {
       ) : (
         <ul className={'workflow-stock-list is-' + layout}>
           {visible.map((row) => {
-            const editing = target?.key === row.key;
             return (
-              <li className={'workflow-stock-card' + (editing ? ' is-editing' : '')} key={row.key}>
+              <li className="workflow-stock-card" key={row.key}>
                 <header>
                   <StockProductIdentity product={row.product} variants={row.variants} />
                   <span
@@ -476,21 +490,18 @@ export default function AdminStockPage() {
                 <StockOverview available={row.available} variants={row.variants}
                   compact={layout === 'compact'} />
                 <footer className="workflow-stock-footer">
-                  {editing ? (
-                    editor()
-                  ) : (
-                    <button
-                      id={'stock-edit-' + encodeURIComponent(row.key)}
-                      type="button"
-                      className="admin-secondary"
-                      disabled={busy}
-                      onClick={() => edit(row)}
-                      aria-label={`Ubah stok ${row.product.baseName} ${row.product.sizeLabel}`}
-                      aria-expanded="false"
-                    >
-                      Ubah stok
-                    </button>
-                  )}
+                  <button
+                    id={'stock-edit-' + encodeURIComponent(row.key)}
+                    type="button"
+                    className="admin-secondary"
+                    disabled={busy}
+                    onClick={() => edit(row)}
+                    aria-label={`Ubah stok ${row.product.baseName} ${row.product.sizeLabel}`}
+                    aria-haspopup="dialog"
+                    aria-controls={target?.key === row.key ? 'stock-editor-dialog' : undefined}
+                  >
+                    Ubah stok
+                  </button>
                 </footer>
                 <details
                   className="workflow-stock-details"
@@ -522,12 +533,41 @@ export default function AdminStockPage() {
           })}
         </ul>
       )}
-      {stockFailed && target && (
-        <div className="workflow-stock-recovery">
-          <StockProductIdentity product={target.product} variants={target.variants} />
-          <p>Isian perubahan tetap tersedia. Muat stok terbaru sebelum menyimpan.</p>
-          {editor()}
-        </div>
+      {target && (
+        <dialog
+          id="stock-editor-dialog"
+          ref={stockDialogRef}
+          className="workflow-stock-dialog"
+          aria-labelledby="stock-dialog-title"
+          aria-describedby="stock-dialog-description"
+          onCancel={(event) => {
+            event.preventDefault();
+            cancel();
+          }}
+        >
+          <div className="workflow-stock-dialog-content">
+            <header className="workflow-stock-dialog-header">
+              <h2 id="stock-dialog-title">Ubah Stok Produk</h2>
+              <button type="button" className="workflow-stock-dialog-close"
+                aria-label="Tutup pop-up ubah stok" disabled={busy} onClick={cancel}>×</button>
+            </header>
+            <div className="workflow-stock-dialog-product" id="stock-dialog-description">
+              <StockProductIdentity product={target.product} variants={target.variants} />
+              <div className="workflow-stock-dialog-current">
+                <small>Stok saat ini</small>
+                <strong>{target.available.toLocaleString('id-ID')} satuan</strong>
+              </div>
+            </div>
+            <div className="workflow-stock-dialog-body">
+              {stockFailed && (
+                <div className="workflow-stock-recovery" role="status">
+                  <p>Isian perubahan tetap tersedia. Muat stok terbaru sebelum menyimpan.</p>
+                </div>
+              )}
+              {editor()}
+            </div>
+          </div>
+        </dialog>
       )}
       {importOpen && (
         <ConfirmDialog

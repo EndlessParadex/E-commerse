@@ -10,6 +10,7 @@ import {
 } from '../data/catalog';
 import ProductCard from '../components/shop/ProductCard';
 import PromoCarousel from '../components/shop/PromoCarousel';
+import VerticalPromoPanel from '../components/shop/VerticalPromoPanel';
 import PromotionSection from '../components/shop/PromotionSection';
 import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
@@ -23,10 +24,13 @@ export default function Home({ catalog = null }) {
   const [filterOpen, setFilterOpen] = useState(false);
   if (!catalog)
     return (
-      <div className="home-container">
-        <PromoCarousel />
-        <PromotionSection />
+      <div className="home-container home-landing">
+        <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
+          <PromoCarousel />
+          <VerticalPromoPanel />
+        </div>
         <CategoryShortcuts />
+        <PromotionSection />
         <SupplierSection />
       </div>
     );

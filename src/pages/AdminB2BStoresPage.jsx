@@ -17,6 +17,11 @@ const scheduleLabel = (schedule) => schedule
 const isoDate = (year, month, day) =>
   String(year).padStart(4, '0') + '-' + String(month).padStart(2, '0') + '-' +
   String(day).padStart(2, '0');
+// Capture the local date once when this module loads, not during React render.
+const calendarToday = (() => {
+  const date = new Date();
+  return isoDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+})();
 const parseDeliveryDate = (value) => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(value + 'T00:00:00Z');
@@ -39,13 +44,9 @@ const validAnchorWeekday = (schedule) => {
 function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
   const anchor = parseDeliveryDate(schedule?.anchorDate);
   const [month, setMonth] = useState(() => {
-    const date = (readOnly ? null : anchor) || new Date();
+    const date = (readOnly ? null : anchor) || parseDeliveryDate(calendarToday);
     return { year: date.getUTCFullYear(), month: date.getUTCMonth() };
   });
-  useEffect(() => {
-    if (anchor && !readOnly)
-      setMonth({ year: anchor.getUTCFullYear(), month: anchor.getUTCMonth() });
-  }, [schedule?.anchorDate, readOnly]);
   const firstDay = new Date(Date.UTC(month.year, month.month, 1));
   const offset = (firstDay.getUTCDay() + 6) % 7; // Monday is the first calendar column.
   const dayCount = new Date(Date.UTC(month.year, month.month + 1, 0)).getUTCDate();
@@ -61,8 +62,7 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
     const days = Math.round((date.getTime() - anchor.getTime()) / 86400000);
     return days >= 0 && days % stepDays === 0;
   };
-  const currentDate = new Date();
-  const today = isoDate(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+  const today = calendarToday;
   const startPreviewDate = readOnly && validAnchor
     ? nextStoreDelivery(schedule, today) : schedule?.anchorDate;
   const startPreview = parseDeliveryDate(startPreviewDate);
@@ -157,7 +157,8 @@ function DeliveryScheduleInputs({ schedule, onChange, prefix }) {
         </select>
       </div>
       <div className="b2b-full">
-        <DeliveryCalendar schedule={schedule} onChange={onChange} prefix={prefix} />
+        <DeliveryCalendar key={prefix + ':' + schedule.anchorDate}
+          schedule={schedule} onChange={onChange} prefix={prefix} />
       </div>
       <div className="b2b-date-fallback b2b-full">
         <label htmlFor={prefix + '-anchor'}>Atau masukkan tanggal acuan secara manual</label>
@@ -601,6 +602,7 @@ export default function AdminB2BStoresPage() {
                 <p>{scheduleLabel(current.store.deliverySchedule)}</p>
                 {current.store.deliverySchedule && (
                   <DeliveryCalendar
+                    key={current.store.id + ':' + current.store.deliverySchedule.anchorDate}
                     schedule={current.store.deliverySchedule}
                     prefix="b2b-saved-delivery"
                     readOnly

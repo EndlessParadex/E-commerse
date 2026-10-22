@@ -208,6 +208,27 @@ test('account website: buyer security summary, admin password settings, registra
     await wait(() => dom.location.hash === '#/');
     await route('/akun', () => container.querySelector('#account-tab-security'));
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Pembeli Website');
+    const accountCenter = container.querySelector('.account-premium');
+    assert.ok(accountCenter, 'Premium Account Center is visible for signed-in accounts');
+    assert.match(accountCenter.querySelector('.account-premium-hero').textContent,
+      /Halo, Pembeli Website/);
+    assert.equal(accountCenter.querySelector('.account-tabs').getAttribute('aria-orientation'),
+      'vertical');
+    assert.equal(accountCenter.querySelectorAll('.account-menu a[href="#/admin"]').length, 0,
+      'buyer cannot see the Admin route');
+    assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
+    assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
+    assert.equal(accountCenter.querySelectorAll('.account-premium-shortcut').length, 3);
+    await act(async () => {
+      container.querySelector('#account-tab-calendar').click();
+      await settle();
+    });
+    assert.match(container.querySelector('#account-panel-calendar').textContent,
+      /Tidak ada tanggal perkiraan yang dibuat otomatis/);
+    await act(async () => {
+      container.querySelector('#account-tab-profile').click();
+      await settle();
+    });
     await fill('#account-phone', '0812abc');
     await submit('.account-phone-form');
     assert.match(container.querySelector('#account-phone-error').textContent, /nomor HP Indonesia/);

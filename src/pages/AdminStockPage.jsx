@@ -130,6 +130,52 @@ function StockOverview({ available, variants, compact = false }) {
     </section>
   );
 }
+// Local dialog state avoids re-rendering every inventory card on each keystroke.
+function StockEditorSession({
+  target, busy, stockFailed, server, inputRef, error,
+  onSave, onCancel, onReload, onDirtyChange, onFocusError,
+}) {
+  const [mode, setMode] = useState('replace');
+  const [quantities, setQuantities] = useState(() => stockEditorCounts(target.available, target.variants));
+  const [inputError, setInputError] = useState('');
+  const factors = stockEditorFactors(target.variants);
+  const initial = stockEditorCounts(target.available, target.variants);
+  const preview = previewStockEditor({
+    mode, counts: quantities, available: target.available, factors,
+  });
+  const changeMode = (value) => {
+    setMode(value);
+    setQuantities(value === 'add' ? stockEditorEmpty() : initial);
+    onDirtyChange(value !== 'replace');
+    setInputError('');
+  };
+  const changeQuantity = (id, value) => {
+    const next = { ...quantities, [id]: value };
+    setQuantities(next);
+    onDirtyChange(mode !== 'replace' ||
+      stockEditorTypes.some((item) => next[item.id] !== initial[item.id]));
+    setInputError('');
+  };
+  const submit = (event) => {
+    event.preventDefault();
+    if (preview.error) {
+      setInputError(preview.error);
+      onFocusError();
+      return;
+    }
+    onSave(preview.finalStock);
+  };
+  return (
+    <StockPackageEditor
+      target={target} busy={busy} stockFailed={stockFailed} server={server}
+      mode={mode} quantities={quantities} factors={factors} preview={preview}
+      error={inputError || error} inputRef={inputRef} onSave={submit}
+      onCancel={onCancel} onReload={onReload}
+      onModeChange={changeMode} onQuantityChange={changeQuantity}
+    />
+  );
+}
+
 export default function AdminStockPage() {
   const { orders, failed, loading, server, canImportPreview } = useWorkflow('inventory');
   const [busy, setBusy] = useState(false);
@@ -141,17 +187,9 @@ export default function AdminStockPage() {
   const [filter, setFilter] = useState('all');
   const [layout, setLayout] = useState('compact');
   const [target, setTarget] = useState(null);
-  const [editMode, setEditMode] = useState('replace');
-  const [quantities, setQuantities] = useState(stockEditorEmpty);
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const conversion = target ? stockEditorFactors(target.variants) : null;
-  const preview = target
-    ? previewStockEditor({ mode: editMode, counts: quantities, available: target.available, factors: conversion })
-    : null;
-  const startingQuantities = target ? stockEditorCounts(target.available, target.variants) : null;
-  const dirty = Boolean(target &&
-    (editMode !== 'replace' || stockEditorTypes.some(({ id }) => quantities[id] !== startingQuantities[id])));
   useUnsavedChanges(dirty, undefined, busy);
   const editorOpen = Boolean(target);
   useEffect(() => {
@@ -177,14 +215,14 @@ export default function AdminStockPage() {
     if (pending.current) return;
     if (dirty && !window.confirm('Perubahan stok belum disimpan. Tinggalkan isian ini?')) return;
     setTarget(null);
+    setDirty(false);
     setError('');
     change();
   };
   const edit = (row) =>
     changeList(() => {
       setTarget(row);
-      setEditMode('replace');
-      setQuantities(stockEditorCounts(row.available, row.variants));
+      setDirty(false);
       setNotice('');
       focusEditor();
     });
@@ -193,6 +231,7 @@ export default function AdminStockPage() {
     if (dirty && !window.confirm('Perubahan stok belum disimpan. Batalkan pengeditan?')) return;
     const key = target?.key;
     setTarget(null);
+    setDirty(false);
     setError('');
     if (key) focusEditButton(key);
   };
@@ -248,15 +287,13 @@ export default function AdminStockPage() {
         .toLocaleLowerCase('id')
         .includes(query.trim().toLocaleLowerCase('id')),
   );
-  const save = async (event) => {
-    event.preventDefault();
+  const save = async (units) => {
     if (pending.current || !target || stockFailed) return;
-    if (preview.error) {
-      setError(preview.error);
+    if (!Number.isSafeInteger(units) || units < 0 || units > 1_000_000_000) {
+      setError('Jumlah stok tidak valid.');
       focusEditor();
       return;
     }
-    const units = preview.finalStock;
     const edited = target;
     pending.current = true;
     setBusy(true);
@@ -272,6 +309,7 @@ export default function AdminStockPage() {
         `Stok ${edited.product.baseName} ${edited.product.sizeLabel} disimpan: ${units.toLocaleString('id-ID')} satuan tersedia.`,
       );
       setTarget(null);
+      setDirty(false);
       setError('');
       focusEditButton(edited.key);
     } finally {
@@ -287,8 +325,7 @@ export default function AdminStockPage() {
       await refreshServerWorkflow();
       const latest = serverStock(target.product);
       setTarget({ ...target, available: latest.available, revision: latest.revision });
-      setEditMode('replace');
-      setQuantities(stockEditorCounts(latest.available, target.variants));
+      setDirty(false);
       setError('');
       focusEditor();
     } catch (failure) {
@@ -299,21 +336,11 @@ export default function AdminStockPage() {
     }
   };
   const editor = () => (
-    <StockPackageEditor
+    <StockEditorSession
+      key={target.key + ':' + target.revision}
       target={target} busy={busy} stockFailed={stockFailed} server={server}
-      mode={editMode} quantities={quantities} factors={conversion} preview={preview}
       error={error} inputRef={inputRef} onSave={save} onCancel={cancel}
-      onReload={reloadTarget}
-      onModeChange={(mode) => {
-        setEditMode(mode);
-        setQuantities(mode === 'add' ? stockEditorEmpty()
-          : stockEditorCounts(target.available, target.variants));
-        setError('');
-      }}
-      onQuantityChange={(id, value) => {
-        setQuantities((current) => ({ ...current, [id]: value }));
-        setError('');
-      }}
+      onReload={reloadTarget} onDirtyChange={setDirty} onFocusError={focusEditor}
     />
   );
   return (

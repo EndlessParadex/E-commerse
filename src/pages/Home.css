@@ -653,3 +653,134 @@
   background: var(--color-surface-tint);
   margin-bottom: 18px;
 }
+
+
+/* BAM homepage: hero at left, stacked promotions at right. */
+.home-landing {
+  max-width: 1580px;
+  margin: 18px auto;
+  padding: 0 clamp(16px, 2vw, 30px);
+}
+.home-feature-rail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(350px, .95fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.home-feature-rail > * { min-width: 0; }
+.home-feature-rail .bam-promo {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 530px;
+  border-radius: 24px;
+}
+.home-feature-rail .bam-promo-slide {
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+  gap: 16px;
+  padding: 26px 28px 18px;
+}
+.home-feature-rail .bam-promo-brand {
+  margin-bottom: 16px;
+}
+.home-feature-rail .bam-promo-brand > span:last-child {
+  font-size: clamp(.9rem,1.2vw,1.2rem);
+}
+.home-feature-rail .bam-promo-copy h1 {
+  font-size: clamp(1.85rem, 2.7vw, 3.15rem);
+  line-height: 1.1;
+  letter-spacing: -1.2px;
+  margin: 12px 0 16px;
+}
+.home-feature-rail .bam-promo-copy > p {
+  margin-bottom: 18px;
+}
+.home-feature-rail .bam-promo-products {
+  --promo-stage-height: 220px;
+}
+.home-feature-rail .bam-promo-products.is-single {
+  --promo-stage-height: 300px;
+}
+.home-feature-rail .bam-promo-product.is-spotlight .bam-product-media--hero {
+  height: var(--promo-stage-height);
+}
+.home-feature-rail .bam-promo-product.is-secondary {
+  padding: 8px 10px;
+}
+.home-feature-rail .bam-promo-product.is-secondary .bam-product-media--promo {
+  max-height: 62px;
+}
+.home-feature-rail .bam-promo-footer {
+  padding: 6px 24px;
+}
+.home-landing .home-categories {
+  margin-top: 26px;
+}
+.home-landing .bam-promotions {
+  margin-top: 28px;
+}
+@media (max-width: 1190px) {
+  .home-feature-rail {
+    grid-template-columns: minmax(0, 1.35fr) minmax(315px, .85fr);
+    gap: 12px;
+  }
+  .home-feature-rail .bam-promo-slide {
+    padding: 22px 20px 15px;
+    gap: 12px;
+  }
+  .home-feature-rail .bam-promo-copy h1 {
+    font-size: clamp(1.55rem,2.5vw,2.35rem);
+  }
+}
+@media (max-width: 960px) {
+  .home-feature-rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+  .home-feature-rail .bam-promo {
+    min-height: 0;
+  }
+  .home-feature-rail .bam-promo-slide {
+    padding: 28px;
+    gap: 22px;
+  }
+  .home-feature-rail .bam-promo-copy h1 {
+    font-size: clamp(2rem,4vw,2.9rem);
+  }
+  .home-feature-rail .bam-promo-products {
+    --promo-stage-height: 240px;
+  }
+  .home-feature-rail .bam-vertical-promos-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+  .home-feature-rail .bam-vertical-promo-item {
+    grid-template-columns: 68px minmax(0,1fr) auto;
+  }
+  .home-feature-rail .bam-vertical-promo-action {
+    grid-column: auto;
+    flex-direction: column;
+  }
+}
+@media (max-width: 650px) {
+  .home-landing {
+    margin: 12px auto;
+    padding: 0 14px;
+  }
+  .home-feature-rail .bam-promo-slide {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 22px 19px 18px;
+  }
+  .home-feature-rail .bam-promo-copy h1 {
+    font-size: clamp(1.9rem, 7vw, 2.35rem);
+  }
+  .home-feature-rail .bam-vertical-promos-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .home-feature-rail .bam-vertical-promo-item {
+    grid-template-columns: 72px minmax(0,1fr) auto;
+  }
+  .home-landing .home-categories { margin-top: 20px; }
+  .home-landing .bam-promotions { margin-top: 22px; }
+}

@@ -231,9 +231,12 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await wait(() => container.querySelector(
       '[aria-label="Detail dan penugasan toko"] .b2b-calendar-panel',
     ));
-    assert.ok(container.querySelector(
-      '[aria-label="Detail dan penugasan toko"] [data-calendar-date="2026-10-26"]',
-    ), 'The saved store schedule remains visible as a read-only calendar');
+    const savedCalendar = container.querySelector(
+      '[aria-label="Detail dan penugasan toko"] .b2b-calendar-panel',
+    );
+    assert.match(savedCalendar.textContent, /Tiga jadwal pengiriman berikutnya/);
+    assert.equal(savedCalendar.querySelectorAll('button[data-calendar-date]').length, 0,
+      'A saved store schedule is visible but no longer editable');
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');

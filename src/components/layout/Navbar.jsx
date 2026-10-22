@@ -188,6 +188,7 @@ const Navbar = () => {
               <span id="logo-text">
                 <CompanyBrand />
               </span>
+              <span className="navbar-brand-subtitle">Grosir &amp; Kebutuhan Toko</span>
             </a>
           </div>
 
@@ -434,6 +435,7 @@ const Navbar = () => {
         <div className="secondary-navbar-container">
           <div className="secondary-nav-left">
             <CatalogMenu />
+            <a className="navbar-catalog-link" href="#/cari?q=">Jelajahi produk</a>
           </div>
 
           <div className="secondary-nav-right">

@@ -155,13 +155,15 @@ export default function ProductCard({
           </a>
         </h3>
         <div className="product-rating">
-          <span
-            aria-label={
-              product.rating > 0 ? 'Rating ' + product.rating + ' dari 5' : 'Belum ada ulasan'
-            }
-          >
-            {product.rating > 0 ? `★ ${product.rating}` : 'Belum ada ulasan'}
-          </span>
+          {!workflowUsesServer && (
+            <span
+              aria-label={
+                product.rating > 0 ? 'Rating ' + product.rating + ' dari 5' : 'Belum ada ulasan'
+              }
+            >
+              {product.rating > 0 ? `★ ${product.rating}` : 'Belum ada ulasan'}
+            </span>
+          )}
           {(workflowUsesServer
             ? groupSoldStockLabel(variants, shop.stockFor)
             : `${product.sold} terjual`) && (

@@ -1,9 +1,10 @@
 import { workflowUsesServer } from '../../data/adminStore';
+import AccountCenterIcon from './AccountCenterIcon';
 import { useDelivery } from '../../state/useDelivery';
 import './AccountMenu.css';
 import { canLeaveRoute, approveNextRoute } from '../../state/routeGuards';
 
-export default function AccountMenu({ onNavigate, profileActive = false }) {
+export default function AccountMenu({ onNavigate, profileActive = false, hideProfile = false }) {
   const { user, logout, loggingOut, logoutError } = useDelivery();
   const exit = async () => {
     if (!canLeaveRoute('/')) return;
@@ -17,40 +18,45 @@ export default function AccountMenu({ onNavigate, profileActive = false }) {
   return (
     <>
       <nav className="account-menu" aria-label="Menu akun">
-        <a
-          href={user ? '#/akun' : '#/login'}
-          aria-current={user && profileActive ? 'page' : undefined}
-          onClick={onNavigate}
-        >
-          <strong>Profil</strong>
-          <small>{user ? 'Nama dan alamat' : 'Masuk untuk mengelola profil'}</small>
-        </a>
+        {!hideProfile && (
+          <a
+            href={user ? '#/akun' : '#/login'}
+            aria-current={user && profileActive ? 'page' : undefined}
+            onClick={onNavigate}
+          >
+            <AccountCenterIcon name="user" />
+            <span><strong>Profil</strong>
+              <small>{user ? 'Nama dan alamat' : 'Masuk untuk mengelola profil'}</small></span>
+          </a>
+        )}
         {user?.role === 'admin' && (
           <a href="#/admin" onClick={onNavigate}>
-            <strong>Ruang admin</strong>
-            <small>Kelola katalog dan pemasok</small>
+            <AccountCenterIcon name="admin" />
+            <span><strong>Ruang admin</strong>
+              <small>Kelola katalog dan pemasok</small></span>
           </a>
         )}
         {user?.canViewCustomers && (
           <a href="#/pelanggan" onClick={onNavigate}>
-            <strong>Daftar pembeli</strong>
-            <small>Lihat akun dan status pendaftaran</small>
+            <AccountCenterIcon name="user" />
+            <span><strong>Daftar pembeli</strong>
+              <small>Lihat akun dan status pendaftaran</small></span>
           </a>
         )}
         <a href="#/pesanan" onClick={onNavigate}>
-          <strong>Pesanan saya</strong>
-          <small>
-            {workflowUsesServer ? 'Riwayat pesanan akun Anda' : 'Riwayat simulasi di tab ini'}
-          </small>
+          <AccountCenterIcon name="orders" />
+          <span><strong>Pesanan saya</strong>
+            <small>{workflowUsesServer ? 'Riwayat pesanan akun Anda' : 'Riwayat simulasi di tab ini'}</small></span>
         </a>
         <a href="#/favorit" onClick={onNavigate}>
-          <strong>Favorit</strong>
-          <small>Produk tersimpan di browser</small>
+          <AccountCenterIcon name="favorite" />
+          <span><strong>Favorit</strong><small>Produk tersimpan di browser</small></span>
         </a>
         {user && (
           <button type="button" disabled={loggingOut} onClick={exit}>
-            <strong>{loggingOut ? 'Keluar…' : 'Keluar'}</strong>
-            <small>Akhiri sesi akun</small>
+            <AccountCenterIcon name="logout" />
+            <span><strong>{loggingOut ? 'Keluar…' : 'Keluar'}</strong>
+              <small>Akhiri sesi akun</small></span>
           </button>
         )}
       </nav>

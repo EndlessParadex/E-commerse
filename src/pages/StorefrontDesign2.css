@@ -465,3 +465,41 @@
 @media(prefers-reduced-motion:reduce) {
   .home-landing .home-category-card { transition: none; }
 }
+
+/* Companion wholesale sections, aligned with the modern-light homepage. */
+.home-landing .bam-suppliers {
+  padding: 36px 0 32px;
+  margin-top: 12px;
+}
+.home-landing .bam-supplier-grid { gap: 16px; }
+.home-landing .bam-supplier-card {
+  min-height: 225px;
+  border-radius: 19px;
+  border-color: var(--color-border-store);
+  box-shadow: 0 9px 28px #1a579412;
+}
+.home-landing .bam-supplier-logo { border-radius: 14px; }
+.home-landing .bam-supplier-bottom strong { color: var(--color-link-bright); }
+.home-landing .bam-promotions {
+  background: linear-gradient(120deg, #f0f6ff, #f9fcff);
+  border-color: var(--color-border-info);
+  border-radius: 22px;
+  padding: 22px;
+}
+.home-landing .bam-promotions-intro {
+  border-radius: 16px;
+  background: linear-gradient(155deg, #155fb9, #3287e9);
+}
+.home-landing .bam-promotions-heading h2 { letter-spacing: -.045em; }
+.home-landing .bam-promotions-count {
+  font-variant-numeric: tabular-nums;
+  background: var(--color-surface);
+}
+.home-landing .bam-promotions-track .product-card {
+  border-color: var(--color-border-store);
+  border-radius: 15px;
+}
+@media (max-width: 700px) {
+  .home-landing .bam-promotions { padding: 15px; }
+  .home-landing .bam-suppliers { padding-top: 24px; }
+}

@@ -2,23 +2,10 @@ import useCompany from '../../state/useCompany';
 import { useEffect, useState } from 'react';
 import { promoSlides } from '../../data/promoSlides';
 import './PromoCarousel.css';
-import CompanyBrand from '../layout/CompanyBrand';
-import { companySnapshot } from '../../data/companyStore';
 import ProductImage from './ProductImage';
 import { productVariants } from '../../data/products';
 import { packagingOptionLabel } from '../../data/packagingPresentation';
 import { productGallery } from '../../data/productGallery';
-import snackArtwork from '../../assets/banner-snack-v2.webp';
-import spiceArtwork from '../../assets/banner-spice-v2.webp';
-import beautyArtwork from '../../assets/banner-beauty-v2.webp';
-import homeArtwork from '../../assets/banner-home-v2.webp';
-
-const categoryArtwork = {
-  snack: snackArtwork,
-  bumbu: spiceArtwork,
-  beauty: beautyArtwork,
-  rumah: homeArtwork,
-};
 const rupiah = (value) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -107,8 +94,8 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
       >
         <div className="bam-promo-copy">
           <div className="bam-promo-brand">
-            <CompanyBrand />
-            <span>{companyProfile.legalName}</span>
+            <span className="bam-promo-brand-icon" aria-hidden="true">✦</span>
+            <span>{companyProfile.shortName} · {companyProfile.legalName}</span>
           </div>
           <span className="bam-promo-eyebrow">
             <span aria-hidden="true" />
@@ -146,10 +133,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
                     : 0;
                   const photo = firstPhoto(product);
-                  const artwork =
-                    companySnapshot().mode === 'demo' && i === 0 && !photo
-                      ? categoryArtwork[slide.id]
-                      : null;
+
                   return (
                     <a
                       className={
@@ -157,7 +141,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                       }
                       href={`#/produk/${encodeURIComponent(product.id)}`}
                       key={product.id}
-                      aria-label={`Lihat ${name}${product.sizeLabel ? ', ' + product.sizeLabel : ''}, ${packaging}, ${rupiah(product.price)}${artwork ? '. Gambar adalah ilustrasi kategori' : ''}`}
+                      aria-label={`Lihat ${name}${product.sizeLabel ? ', ' + product.sizeLabel : ''}, ${packaging}, ${rupiah(product.price)}`}
                     >
                       <div className={'bam-promo-product-visual' + (photo ? ' has-photo' : '')}>
                         {i === 0 && (
@@ -172,25 +156,22 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                             {saving > 0 ? `Hemat ${saving}%` : 'Harga promo'}
                           </span>
                         )}
-                        {artwork ? (
-                          <div className="bam-product-media bam-product-media--hero">
-                            <img
-                              src={artwork}
-                              alt={`Ilustrasi kategori ${slide.category}`}
-                              loading="eager"
-                              decoding="async"
-                            />
-                          </div>
-                        ) : (
+                        {photo ? (
                           <ProductImage
-                            product={
-                              photo
-                                ? { ...product, image: photo.src, imageAlt: photo.alt }
-                                : product
-                            }
+                            product={{ ...product, image: photo.src, imageAlt: photo.alt }}
                             variant={i === 0 ? 'hero' : 'promo'}
                             loading="eager"
                           />
+                        ) : (
+                          <div className="bam-promo-product-monogram"
+                            role="img" aria-label={'Foto ' + name + ' belum tersedia'}>
+                            <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
+                              <rect x="24" y="31" width="48" height="44" rx="12" fill="currentColor" opacity=".10" />
+                              <path d="M30 39h36v30H30zM38 39v-8a10 10 0 0 1 20 0v8M30 51h36" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M40 59h16" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+                            </svg>
+                            <span>{product.brand || slide.category}</span>
+                          </div>
                         )}
                       </div>
                       <div className="bam-promo-product-info">
@@ -228,11 +209,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                   );
                 })}
               </div>
-              {companySnapshot().mode === 'demo' &&
-                categoryArtwork[slide.id] &&
-                !firstPhoto(featured[0]) && (
-                  <p className="bam-promo-artwork-note">Gambar contoh kategori</p>
-                )}
+
             </>
           ) : (
             <div className="bam-promo-empty">

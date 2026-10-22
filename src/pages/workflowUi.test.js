@@ -273,15 +273,17 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     assert.equal(stockCard().querySelector('.workflow-stock-photo img').src, stockPhoto);
     await fill('#admin-stock-search', '');
     await click(stockCard().querySelector('button'));
+    const stockDialog = container.querySelector('dialog.workflow-stock-dialog[open]');
+    assert.ok(stockDialog, 'stok diedit melalui pop-up tanpa memanjangkan daftar');
+    assert.ok(stockDialog.querySelector('#stock-satuan'),
+      'isian satuan berada di dalam pop-up');
     assert.equal(
-      container
-        .querySelector('#stock-satuan')
-        .closest('.workflow-stock-card')
-        .querySelector('.workflow-stock-photo img').src,
+      stockDialog.querySelector('.workflow-stock-dialog-product .workflow-stock-photo img').src,
       stockPhoto,
+      'foto produk yang diedit tetap ditampilkan di header pop-up',
     );
-    assert.ok(container.querySelector('dialog.workflow-stock-dialog[open]'),
-      'stok diedit melalui pop-up tanpa memanjangkan daftar');
+    assert.equal(stockCard().querySelector('.workflow-stock-package-editor'), null,
+      'daftar stok tidak memuat form di dalam kartu produk');
     await fillStockUnits('10');
     await click(button('Simpan stok'));
     assert.equal(

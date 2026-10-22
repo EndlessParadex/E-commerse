@@ -13,38 +13,161 @@ const scheduleLabel = (schedule) => schedule
   ? weekdayNames[schedule.weekday] + ' · setiap ' + schedule.intervalWeeks +
     ' minggu · mulai ' + schedule.anchorDate
   : 'Jadwal belum ditetapkan';
+const isoDate = (year, month, day) =>
+  String(year).padStart(4, '0') + '-' + String(month).padStart(2, '0') + '-' +
+  String(day).padStart(2, '0');
+const parseDeliveryDate = (value) => {
+  if (typeof value !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return null;
+  const date = new Date(value + 'T00:00:00Z');
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+    ? date : null;
+};
+const calendarDateLabel = (value) => {
+  const date = parseDeliveryDate(value);
+  return date ? new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(date) : value;
+};
+const calendarMonthLabel = (year, month) => new Intl.DateTimeFormat('id-ID', {
+  timeZone: 'UTC', month: 'long', year: 'numeric',
+}).format(new Date(Date.UTC(year, month, 1)));
+const validAnchorWeekday = (schedule) => {
+  const date = parseDeliveryDate(schedule?.anchorDate);
+  return Boolean(date && date.getUTCDay() === Number(schedule.weekday));
+};
+function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
+  const anchor = parseDeliveryDate(schedule?.anchorDate);
+  const [month, setMonth] = useState(() => {
+    const date = anchor || new Date();
+    return { year: date.getUTCFullYear(), month: date.getUTCMonth() };
+  });
+  useEffect(() => {
+    if (anchor) setMonth({ year: anchor.getUTCFullYear(), month: anchor.getUTCMonth() });
+  }, [schedule?.anchorDate]);
+  const firstDay = new Date(Date.UTC(month.year, month.month, 1));
+  const offset = (firstDay.getUTCDay() + 6) % 7; // Monday is the first calendar column.
+  const dayCount = new Date(Date.UTC(month.year, month.month + 1, 0)).getUTCDate();
+  const cellCount = Math.ceil((offset + dayCount) / 7) * 7;
+  const stepDays = Number(schedule?.intervalWeeks) * 7;
+  const validAnchor = validAnchorWeekday(schedule);
+  const moveMonth = (direction) => {
+    const next = new Date(Date.UTC(month.year, month.month + direction, 1));
+    setMonth({ year: next.getUTCFullYear(), month: next.getUTCMonth() });
+  };
+  const isScheduled = (date) => {
+    if (!validAnchor || !Number.isInteger(stepDays) || stepDays < 7) return false;
+    const days = Math.round((date.getTime() - anchor.getTime()) / 86400000);
+    return days >= 0 && days % stepDays === 0;
+  };
+  const currentDate = new Date();
+  const today = isoDate(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+  const exampleDates = validAnchor
+    ? Array.from({ length: 3 }, (_, index) => {
+      const next = new Date(anchor.getTime() + index * stepDays * 86400000);
+      return next.toISOString().slice(0, 10);
+    }) : [];
+  return (
+    <div className="b2b-calendar-panel" aria-label={readOnly ? 'Kalender jadwal pengiriman tetap' : 'Kalender pilih tanggal acuan'}>
+      <div className="b2b-calendar-top">
+        <div>
+          <strong>{calendarMonthLabel(month.year, month.month)}</strong>
+          <small>{readOnly ? 'Tanggal pengiriman rutin' : 'Pilih tanggal pada hari ' + weekdayNames[Number(schedule.weekday)]}</small>
+        </div>
+        <div className="b2b-calendar-navigation">
+          <button type="button" className="admin-secondary"
+            aria-label={'Bulan sebelumnya - ' + prefix} onClick={() => moveMonth(-1)}>‹</button>
+          <button type="button" className="admin-secondary"
+            aria-label={'Bulan berikutnya - ' + prefix} onClick={() => moveMonth(1)}>›</button>
+        </div>
+      </div>
+      <div className="b2b-calendar-grid" aria-label={calendarMonthLabel(month.year, month.month)}>
+        {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((name) => (
+          <span key={name} className="b2b-calendar-weekday">{name}</span>
+        ))}
+        {Array.from({ length: cellCount }, (_, index) => {
+          const day = index - offset + 1;
+          if (day < 1 || day > dayCount)
+            return <span className="b2b-calendar-empty" key={'empty-' + index} aria-hidden="true" />;
+          const date = new Date(Date.UTC(month.year, month.month, day));
+          const value = isoDate(month.year, month.month + 1, day);
+          const chosen = value === schedule.anchorDate;
+          const eligible = date.getUTCDay() === Number(schedule.weekday);
+          const recurring = isScheduled(date);
+          const className = 'b2b-calendar-date' +
+            (chosen ? ' is-selected' : '') +
+            (recurring ? ' is-scheduled' : '') +
+            (value === today ? ' is-today' : '');
+          return readOnly
+            ? <span className={className + (recurring ? '' : ' is-unavailable')}
+                key={value} aria-label={calendarDateLabel(value) + (recurring ? ', pengiriman tetap' : '')}
+                data-calendar-date={value}>{day}</span>
+            : <button type="button" key={value} className={className}
+                data-calendar-date={value} aria-pressed={chosen}
+                aria-label={'Pilih ' + calendarDateLabel(value)}
+                title={eligible ? 'Pilih tanggal acuan' : 'Hanya hari ' + weekdayNames[Number(schedule.weekday)] + ' yang dapat dipilih'}
+                disabled={!eligible}
+                onClick={() => onChange({ ...schedule, anchorDate: value })}>{day}</button>;
+        })}
+      </div>
+      <div className="b2b-calendar-legend">
+        <span><i className="b2b-calendar-key eligible" />{readOnly ? 'Tanggal pengiriman' : 'Hari yang dapat dipilih'}</span>
+        <span><i className="b2b-calendar-key selected" />{readOnly ? 'Tanggal acuan' : 'Pilihan Anda'}</span>
+      </div>
+      {validAnchor && (
+        <div className="b2b-calendar-preview">
+          <strong>{readOnly ? 'Contoh siklus pengiriman' : 'Pratinjau jadwal berdasarkan tanggal acuan'}</strong>
+          <div>{exampleDates.map((date) => <span key={date}>{calendarDateLabel(date)}</span>)}</div>
+          <small>Tanggal berikutnya akan dihitung otomatis setiap {stepDays} hari.</small>
+        </div>
+      )}
+      {!validAnchor && !readOnly && (
+        <p className="b2b-calendar-help">Tanggal acuan belum dipilih. Pilih salah satu tanggal yang tersedia pada kalender.</p>
+      )}
+    </div>
+  );
+}
 function DeliveryScheduleInputs({ schedule, onChange, prefix }) {
+  const isValid = !schedule.anchorDate || validAnchorWeekday(schedule);
   return (
     <div className="b2b-delivery-fields">
       <div className="admin-field">
         <label htmlFor={prefix + '-weekday'}>Hari pengiriman tetap</label>
         <select id={prefix + '-weekday'} value={schedule.weekday}
-          onChange={(event) => onChange({ ...schedule, weekday: event.target.value })}>
+          onChange={(event) => {
+            const weekday = event.target.value;
+            const matches = parseDeliveryDate(schedule.anchorDate)?.getUTCDay() === Number(weekday);
+            onChange({ ...schedule, weekday, anchorDate: matches ? schedule.anchorDate : '' });
+          }}>
           {weekdayNames.map((day, index) => (
             <option key={day} value={index}>{day}</option>
           ))}
         </select>
       </div>
       <div className="admin-field">
-        <label htmlFor={prefix + '-frequency'}>Frekuensi</label>
+        <label htmlFor={prefix + '-frequency'}>Frekuensi pengiriman</label>
         <select id={prefix + '-frequency'} value={schedule.intervalWeeks}
           onChange={(event) => onChange({ ...schedule, intervalWeeks: event.target.value })}>
           <option value="1">Setiap 1 minggu</option>
           <option value="2">Setiap 2 minggu</option>
         </select>
       </div>
-      <div className="admin-field">
-        <label htmlFor={prefix + '-anchor'}>Tanggal acuan pengiriman</label>
-        <input id={prefix + '-anchor'} type="date" required value={schedule.anchorDate}
-          onChange={(event) => onChange({ ...schedule, anchorDate: event.target.value })} />
+      <div className="b2b-full">
+        <DeliveryCalendar schedule={schedule} onChange={onChange} prefix={prefix} />
       </div>
-      <p className="b2b-muted b2b-full">
-        Tanggal acuan harus sesuai hari di atas. Setelah tersimpan, jadwal tidak dapat diubah.
-      </p>
+      <div className="b2b-date-fallback b2b-full">
+        <label htmlFor={prefix + '-anchor'}>Atau masukkan tanggal acuan secara manual</label>
+        <input id={prefix + '-anchor'} type="date" required value={schedule.anchorDate}
+          aria-invalid={!isValid}
+          aria-describedby={prefix + '-date-help'}
+          onChange={(event) => onChange({ ...schedule, anchorDate: event.target.value })} />
+        <small id={prefix + '-date-help'} className={!isValid ? 'b2b-calendar-error' : ''}>
+          {!isValid ? 'Tanggal harus sesuai hari ' + weekdayNames[Number(schedule.weekday)] + '.' :
+            'Tanggal hanya dapat ditetapkan satu kali. Setelah disimpan, jadwal terkunci.'}
+        </small>
+      </div>
     </div>
   );
 }
-
 
 function useResource(path, revision) {
   const [state, setState] = useState({ path: null, revision: -1 });
@@ -470,9 +593,16 @@ export default function AdminB2BStoresPage() {
               <div className="b2b-schedule-section">
                 <h3>Jadwal pengiriman tetap</h3>
                 <p>{scheduleLabel(current.store.deliverySchedule)}</p>
+                {current.store.deliverySchedule && (
+                  <DeliveryCalendar
+                    schedule={current.store.deliverySchedule}
+                    prefix="b2b-saved-delivery"
+                    readOnly
+                  />
+                )}
                 {!current.store.deliverySchedule && owner && (
                   <form
-                    className="b2b-form-grid"
+                    className="b2b-form-grid b2b-schedule-assignment"
                     aria-label="Tetapkan jadwal pengiriman toko"
                     onSubmit={(event) => {
                       event.preventDefault();
@@ -494,7 +624,8 @@ export default function AdminB2BStoresPage() {
                       onChange={setLegacyDelivery}
                       prefix="b2b-legacy-delivery"
                     />
-                    <button type="submit" className="admin-primary" disabled={busy || !legacyDelivery.anchorDate}>
+                    <button type="submit" className="admin-primary"
+                      disabled={busy || !validAnchorWeekday(legacyDelivery)}>
                       Tetapkan jadwal sekali
                     </button>
                   </form>

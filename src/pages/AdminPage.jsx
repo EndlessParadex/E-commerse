@@ -67,7 +67,7 @@ const navigationGroups = [
     id: 'daily',
     label: 'Utama',
     items: [
-      { view: 'overview', label: 'Ringkasan', href: '#/admin' },
+      { view: 'overview', label: 'Dashboard', href: '#/admin' },
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
     ],
@@ -122,7 +122,10 @@ function ProductIdentity({ product }) {
 export default function AdminPage({ view = 'overview' }) {
   const delivery = useContext(DeliveryContext);
   const { profile: companyProfile } = useCompany();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => {
+    try { return window.sessionStorage.getItem('bam.admin.catalog-search') || ''; }
+    catch { return ''; }
+  });
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -171,6 +174,8 @@ export default function AdminPage({ view = 'overview' }) {
   const hasFilters = Boolean(query || supplierId || brandId);
   const reset = () => {
     setQuery('');
+    try { window.sessionStorage.removeItem('bam.admin.catalog-search'); }
+    catch { /* Private browsing may prevent storage. */ }
     setSupplierId('');
     setBrandId('');
   };
@@ -179,7 +184,7 @@ export default function AdminPage({ view = 'overview' }) {
   const workflowView = view === 'orders' || view === 'stock';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const pageTitle = {
-    overview: 'Ringkasan katalog',
+    overview: 'Dashboard Admin',
     products: 'Daftar produk',
     suppliers: 'PT pemasok',
     brands: 'Merek',
@@ -312,6 +317,8 @@ export default function AdminPage({ view = 'overview' }) {
         <div className="admin-topbar">
           <form className="admin-topbar-search" role="search" onSubmit={(event) => {
             event.preventDefault();
+            try { window.sessionStorage.setItem('bam.admin.catalog-search', query); }
+            catch { /* Search still works in the current page. */ }
             if (window.location.hash !== '#/admin/produk')
               window.location.hash = '#/admin/produk';
           }}>

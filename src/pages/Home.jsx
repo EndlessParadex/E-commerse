@@ -31,10 +31,12 @@ export default function Home({ catalog = null }) {
           <PromoCarousel />
           <VerticalPromoPanel />
         </div>
-        <CategoryShortcuts />
+        <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
+          <CategoryShortcuts />
+          <SupplierSection />
+        </div>
         <PromotionSection />
         <FeaturedProducts />
-        <SupplierSection />
       </div>
     );
   const category = categoryBy(catalog.categoryId);

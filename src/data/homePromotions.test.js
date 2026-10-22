@@ -11,7 +11,7 @@ test('home promo rail selects distinct catalog products, prioritizing only valid
     { id: 'd', price: 100, oldPrice: 100 },
   ];
   const result = homePromotions(catalog, 3);
-  assert.deepEqual(result.items.map((entry) => entry.product.id), ['c', 'a-small', 'd']);
+  assert.deepEqual(result.items.map((entry) => entry.product.id), ['c', 'a-small', 'b']);
   assert.equal(result.discountedCount, 2);
   assert.equal(result.items[0].discount, 50);
   assert.equal(result.items[1].discount, 25);

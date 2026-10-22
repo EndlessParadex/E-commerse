@@ -5,8 +5,6 @@ import { products } from '../data/products';
 import { dateLabel } from '../components/shop/shopPresentation';
 import { orderStatusLabel } from '../state/orderModel';
 
-const inventoryProducts = [...new Map(products.map((product) => [stockKey(product), product])).values()];
-
 function RecentOrders() {
   const { orders = [], loading, failed, error } = useWorkflow('admin');
   const recent = [...orders].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 5);
@@ -52,6 +50,7 @@ function RecentOrders() {
 
 function InventorySummary() {
   const inventory = useWorkflow('inventory');
+  const inventoryProducts = [...new Map(products.map((product) => [stockKey(product), product])).values()];
   let counts = null;
   if (!inventory.loading && !inventory.failed && inventory.server) {
     try {

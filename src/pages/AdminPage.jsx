@@ -63,13 +63,11 @@ const getMetrics = () => [
 const navigationGroups = [
   {
     id: 'daily',
-    label: 'Operasional',
+    label: 'Utama',
     items: [
       { view: 'overview', label: 'Ringkasan', href: '#/admin' },
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
-      { view: 'b2bStores', label: 'Toko & Sales', href: '#/admin/toko-sales' },
-      { view: 'sharedCarts', label: 'Keranjang bersama', href: '#/admin/keranjang' },
     ],
   },
   {
@@ -80,6 +78,14 @@ const navigationGroups = [
       { view: 'suppliers', label: 'PT pemasok', href: '#/admin/pemasok' },
       { view: 'brands', label: 'Merek', href: '#/admin/merek' },
       { view: 'categories', label: 'Kategori', href: '#/admin/kategori' },
+    ],
+  },
+  {
+    id: 'b2b',
+    label: 'B2B',
+    items: [
+      { view: 'b2bStores', label: 'Toko & Sales', href: '#/admin/toko-sales' },
+      { view: 'sharedCarts', label: 'Keranjang bersama', href: '#/admin/keranjang' },
     ],
   },
   {
@@ -247,7 +253,7 @@ export default function AdminPage({ view = 'overview' }) {
           onClick={leaveEditor}
         >
           <CompanyBrand />
-          <small>Ruang admin</small>
+          <small>Admin Panel</small>
         </a>
         <button
           className="admin-menu-toggle"
@@ -295,7 +301,7 @@ export default function AdminPage({ view = 'overview' }) {
         </nav>
         <div className="admin-sidebar-footer">
           <span className="admin-access-role">
-            {delivery?.user?.isOwner ? 'Pemilik toko' : 'Admin operasional'}
+            {delivery?.user?.isOwner ? 'Pemilik BAM' : 'Admin operasional'}
           </span>
           <p className="admin-sidebar-caption">{companyProfile.legalName}</p>
         </div>
@@ -480,6 +486,29 @@ export default function AdminPage({ view = 'overview' }) {
                 </p>
               </section>
             )}
+            <section className="admin-home-hero" aria-labelledby="admin-hero-title">
+              <div className="admin-home-hero-copy">
+                <span className="admin-home-hero-eyebrow">Dashboard BAM · Katalog &amp; B2B</span>
+                <h2 id="admin-hero-title">Kelola katalog, stok, dan kemitraan B2B dengan lebih mudah</h2>
+                <p>Pusat kerja untuk memantau produk dan mengakses pengelolaan pesanan, stok,
+                  toko, serta Sales dalam satu tempat.</p>
+                <div className="admin-home-hero-actions">
+                  <a href="#/admin/pesanan" className="admin-primary">Lihat pesanan <span aria-hidden="true">→</span></a>
+                  <a href="#/admin/toko-sales" className="admin-secondary">Kelola toko &amp; Sales</a>
+                </div>
+              </div>
+              <div className="admin-home-hero-visual" aria-hidden="true">
+                <div className="admin-home-hero-orbit" />
+                <div className="admin-home-hero-cube one" />
+                <div className="admin-home-hero-cube two" />
+                <div className="admin-home-hero-cube three" />
+                <div className="admin-home-hero-float">
+                  <AdminIcon name="products" />
+                  <span>Katalog BAM</span>
+                  <strong>{metrics[0].value} produk utama</strong>
+                </div>
+              </div>
+            </section>
             <section className="admin-metrics" aria-label="Ringkasan katalog">
               {metrics.map((metric) => (
                 <article className="admin-metric" key={metric.label}>

@@ -1,3 +1,12 @@
+## Tampilan Admin BAM — Desain 2 (Modern Light)
+
+**Sudah diterapkan sebagai tema bersama pada branch B2B:** sidebar putih dan menu bertingkat Utama/Katalog/B2B/Pengaturan, aksen biru, header profil/pencarian katalog, banner dashboard, kartu metrik katalog, panel pesanan terbaru dan ringkasan stok, tabel serta formulir modern, tata letak responsif. Tema diimplementasikan pada `src/pages/AdminDesign2.css` dan hanya aktif dalam `.admin-shell` sehingga tidak mengubah halaman storefront/pembeli.
+
+- Seluruh rute Admin memakai tema yang sama, termasuk pesanan, stok, toko & Sales, keranjang bersama, katalog dan pengaturan.
+- Metrik produk/pemasok/merek, daftar pesanan, serta ringkasan stok dihitung dari data yang tersedia; tidak menggunakan angka ilustrasi pada mockup. Tampilkan loading, error, dan empty state ketika data belum tersedia.
+- Tidak ada perubahan hak akses, pembayaran COD/transfer, penguncian, review, pencadangan stok, atau finalisasi karena penyegaran tampilan.
+- **Wajib verifikasi lokal sebelum rilis:** `npm test`, `npm run lint`, `npm run build`, kemudian pengujian manual navigasi desktop/mobile dan transaksi B2B. Penyegaran tampilan yang sudah di-commit belum sama dengan verifikasi produksi.
+
 # BAM B2B — Rencana migrasi bertahap
 
 Branch: `feature/b2b-store-sales-shared-cart`.

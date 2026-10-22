@@ -245,9 +245,7 @@ export default function AccountPage() {
                         <AccountCenterIcon name="edit" size={16} /> Edit profil
                       </button>
                     </div>
-                  <p>Informasi akun yang Anda gunakan untuk berbelanja.</p>
-                </div>
-                <div className="account-profile-layout">
+                    <div className="account-profile-layout">
                   <div className="account-avatar-card">
                     <AccountAvatar user={user} className="account-avatar-large" />
                     <PhotoUpload

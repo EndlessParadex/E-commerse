@@ -81,42 +81,55 @@ function StockPackagingRow({ variant, available }) {
   );
 }
 
-function StockOverview({ available, variants }) {
+function StockOverview({ available, variants, compact = false }) {
   const breakdown = stockBreakdown(available, variants);
+  const summary = breakdown.items
+    .filter((item) => item.quantity > 0)
+    .map((item) => `${item.quantity.toLocaleString('id-ID')} ${item.name.toLowerCase()}`)
+    .join(' + ') || 'Stok kosong';
   return (
     <section className="workflow-stock-overview" aria-label="Ringkasan pembagian stok">
-      <div className="workflow-stock-overview-heading">
-        <h4>Ringkasan stok</h4>
-        <p className="workflow-stock-amount">
-          Total <strong>{available.toLocaleString('id-ID')}</strong> satuan
-        </p>
-      </div>
-      <dl className="workflow-stock-summary">
-        {breakdown.items.map((item) => (
-          <div
-            className={'workflow-stock-stat' + (!item.unitsPerPackage ? ' is-unconfigured' : '')}
-            data-packaging={item.type}
-            key={item.type}
-          >
-            <dt>{item.name}</dt>
-            <dd>
-              <strong>{item.quantity.toLocaleString('id-ID')}</strong>
-              <small>
-                {item.type === 'satuan'
-                  ? 'Satuan lepas'
-                  : item.unitsPerPackage
-                    ? `Isi ${item.unitsPerPackage.toLocaleString('id-ID')} satuan`
-                    : 'Belum diatur'}
-              </small>
-            </dd>
+      {compact ? (
+        <div className="workflow-stock-compact-total">
+          <span>Total stok</span>
+          <strong>{available.toLocaleString('id-ID')} <small>satuan</small></strong>
+          <p>{summary}</p>
+        </div>
+      ) : (
+        <>
+          <div className="workflow-stock-overview-heading">
+            <h4>Ringkasan stok</h4>
+            <p className="workflow-stock-amount">
+              Total <strong>{available.toLocaleString('id-ID')}</strong> satuan
+            </p>
           </div>
-        ))}
-      </dl>
-      <p className="workflow-stock-hint">Total stok dibagi ke dus, pack, lalu satuan lepas.</p>
+          <dl className="workflow-stock-summary">
+            {breakdown.items.map((item) => (
+              <div
+                className={'workflow-stock-stat' + (!item.unitsPerPackage ? ' is-unconfigured' : '')}
+                data-packaging={item.type}
+                key={item.type}
+              >
+                <dt>{item.name}</dt>
+                <dd>
+                  <strong>{item.quantity.toLocaleString('id-ID')}</strong>
+                  <small>
+                    {item.type === 'satuan'
+                      ? 'Satuan lepas'
+                      : item.unitsPerPackage
+                        ? `Isi ${item.unitsPerPackage.toLocaleString('id-ID')} satuan`
+                        : 'Belum diatur'}
+                  </small>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="workflow-stock-hint">Total stok dibagi ke dus, pack, lalu satuan lepas.</p>
+        </>
+      )}
     </section>
   );
 }
-
 export default function AdminStockPage() {
   const { orders, failed, loading, server, canImportPreview } = useWorkflow('inventory');
   const [busy, setBusy] = useState(false);
@@ -460,7 +473,8 @@ export default function AdminStockPage() {
                     {row.available ? (row.available <= 12 ? 'Menipis' : 'Tersedia') : 'Habis'}
                   </span>
                 </header>
-                <StockOverview available={row.available} variants={row.variants} />
+                <StockOverview available={row.available} variants={row.variants}
+                  compact={layout === 'compact'} />
                 <footer className="workflow-stock-footer">
                   {editing ? (
                     editor()
@@ -474,7 +488,7 @@ export default function AdminStockPage() {
                       aria-label={`Ubah stok ${row.product.baseName} ${row.product.sizeLabel}`}
                       aria-expanded="false"
                     >
-                      Ubah stok tersedia
+                      Ubah stok
                     </button>
                   )}
                 </footer>

@@ -32,6 +32,7 @@ import AdminOrdersPage from './AdminOrdersPage';
 import AdminCompanyPage from './AdminCompanyPage';
 import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
+import AdminOpsOverview from './AdminOpsOverview';
 import { approveNextRoute } from '../state/routeGuards';
 
 const getMetrics = () => [
@@ -522,6 +523,7 @@ export default function AdminPage({ view = 'overview' }) {
                 </article>
               ))}
             </section>
+            <AdminOpsOverview />
             <section className="admin-overview-grid" aria-label="Pengelolaan katalog dan akses cepat">
               <div className="admin-overview-main">
                 <section className="admin-panel admin-overview-products" aria-labelledby="admin-overview-products-title">

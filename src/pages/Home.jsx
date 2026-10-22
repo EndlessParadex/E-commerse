@@ -14,10 +14,12 @@ import VerticalPromoPanel from '../components/shop/VerticalPromoPanel';
 import PromotionSection from '../components/shop/PromotionSection';
 import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
+import FeaturedProducts from '../components/shop/FeaturedProducts';
 import SupplierBrandsPage from './SupplierBrandsPage';
 import { brandsForSupplier } from '../data/catalogMasters';
 import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
+import './StorefrontDesign2.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite } = useShop();
@@ -31,6 +33,7 @@ export default function Home({ catalog = null }) {
         </div>
         <CategoryShortcuts />
         <PromotionSection />
+        <FeaturedProducts />
         <SupplierSection />
       </div>
     );
@@ -87,15 +90,37 @@ export default function Home({ catalog = null }) {
             ← Kembali ke merek {supplier.name}
           </a>
         )}
-        <div className="section-heading">
-          <div>
-            <span className="section-eyebrow">Temukan pilihanmu</span>
+        <div className="store-category-intro">
+          <div className="store-category-intro-copy">
+            <span className="section-eyebrow">Katalog BAM / Belanja sesuai kebutuhan</span>
             <h1 id="catalog-title">{title}</h1>
+            <p>
+              {visible.length
+                ? 'Temukan pilihan produk, ukuran, dan kemasan dari katalog BAM.'
+                : 'Coba pilih kategori atau hapus filter untuk menemukan produk lainnya.'}
+            </p>
+            <span className="store-category-intro-count">{visible.length} produk ditampilkan</span>
           </div>
-          <a href={searchHref('')} className="view-all-link">
-            Seluruh katalog →
-          </a>
+          <div className="store-category-intro-symbol" aria-hidden="true">
+            <span>{category?.icon || '✦'}</span>
+            <span>BAM.</span>
+          </div>
         </div>
+        {category && category.children.length > 0 && (
+          <nav className="store-subcategory-nav" aria-label={'Subkategori ' + category.name}>
+            <a className={!sub ? 'is-current' : ''}
+              aria-current={!sub ? 'page' : undefined}
+              href={href({ subcategoryId: '' })}>Semua {category.name}</a>
+            {category.children.map((item) => (
+              <a key={item.id}
+                className={sub?.id === item.id ? 'is-current' : ''}
+                aria-current={sub?.id === item.id ? 'page' : undefined}
+                href={href({ subcategoryId: item.id })}>
+                {item.name}
+              </a>
+            ))}
+          </nav>
+        )}
         <div className="category-layout">
           <aside
             className={'category-filter' + (filterOpen ? ' is-expanded' : '')}
@@ -110,7 +135,7 @@ export default function Home({ catalog = null }) {
                 aria-controls="catalog-filter-options"
                 onClick={() => setFilterOpen((value) => !value)}
               >
-                <span>Filter produk</span>
+                <span>Filter & Urutkan</span>
                 <span className="supplier-filter-toggle-action">
                   {filterOpen ? 'Tutup' : 'Ubah'}
                 </span>
@@ -208,7 +233,7 @@ export default function Home({ catalog = null }) {
                   value={scopes.sort}
                   onChange={(event) => setFilter({ sort: event.target.value })}
                 >
-                  <option value="popular">Rating tertinggi</option>
+                  <option value="popular">Pilihan katalog</option>
                   <option value="low">Harga terendah</option>
                   <option value="high">Harga tertinggi</option>
                 </select>

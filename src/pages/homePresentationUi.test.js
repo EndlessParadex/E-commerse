@@ -313,9 +313,17 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(container.querySelector('.home-categories'));
     assert.ok(container.querySelector('.bam-promotions'));
     const sections = [...container.querySelector('.home-container').children];
-    assert.ok(
-      sections.indexOf(container.querySelector('.bam-promotions')) <
-        sections.indexOf(container.querySelector('.home-categories')),
+    const featureRail = container.querySelector('.home-feature-rail');
+    const categoriesSection = container.querySelector('.home-categories');
+    const promotionSection = container.querySelector('.bam-promotions');
+    assert.ok(featureRail, 'Banner utama dan promo vertikal tampil di beranda');
+    assert.ok(featureRail.querySelector('.bam-promo'), 'Banner katalog utama tetap ada');
+    assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
+    assert.deepEqual(
+      [sections.indexOf(featureRail), sections.indexOf(categoriesSection),
+        sections.indexOf(promotionSection)],
+      [0, 1, 2],
+      'Beranda menampilkan banner/promo vertikal, kategori, lalu promo katalog',
     );
   } finally {
     await act(async () => root.unmount());

@@ -398,3 +398,146 @@
   .admin-shell .admin-metric,
   .admin-shell .admin-overview-quick-links a { transition: none; transform: none; }
 }
+
+
+/* Operational panels: real orders and stock, no illustrative fake values. */
+.admin-shell .admin-ops-overview {
+  display: grid;
+  grid-template-columns: minmax(0,1.55fr) minmax(270px,.9fr);
+  gap: 18px;
+  margin: 0 0 20px;
+  align-items: stretch;
+}
+.admin-shell .admin-ops-overview .admin-panel { min-width: 0; }
+.admin-shell .admin-ops-overview .admin-panel-heading {
+  flex-wrap: wrap;
+  padding: 19px 21px;
+}
+.admin-shell .admin-ops-overview .admin-panel-heading h2 {
+  font-size: 1.07rem;
+}
+.admin-shell .admin-ops-table-wrap {
+  overflow-x: auto;
+  margin: 0 17px;
+}
+.admin-shell .admin-ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+  min-width: 485px;
+}
+.admin-shell .admin-ops-table th {
+  padding: 12px;
+  text-align: left;
+  color: #4f6687;
+  background: #f3f7fd;
+  font-weight: 700;
+}
+.admin-shell .admin-ops-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eaf0f9;
+  vertical-align: middle;
+}
+.admin-shell .admin-ops-table tr:hover td {
+  background: #f8fbff;
+}
+.admin-shell .admin-ops-order-id {
+  color: #1564c7;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.admin-shell .admin-ops-table .workflow-badge {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: .75rem;
+}
+.admin-shell .admin-ops-placeholder {
+  padding: 22px;
+  margin: 0;
+  color: #657995;
+  line-height: 1.55;
+}
+.admin-shell .admin-ops-footnote {
+  margin: 0;
+  padding: 13px 20px 18px;
+  color: #7588a2;
+  font-size: .75rem;
+  line-height: 1.55;
+}
+.admin-shell .admin-ops-stock-visual {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 25px 19px 18px;
+}
+.admin-shell .admin-ops-stock-donut {
+  width: 152px;
+  height: 152px;
+  padding: 20px;
+  flex: 0 0 152px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transform: rotate(-90deg);
+}
+.admin-shell .admin-ops-stock-donut > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform: rotate(90deg);
+  background: #fff;
+  box-shadow: 0 0 0 6px #fff;
+}
+.admin-shell .admin-ops-stock-donut strong {
+  font-size: 1.65rem;
+  letter-spacing: -.04em;
+}
+.admin-shell .admin-ops-stock-donut small {
+  font-size: .75rem;
+  color: #657b9b;
+}
+.admin-shell .admin-ops-stock-legend {
+  display: grid;
+  gap: 14px;
+  min-width: 142px;
+  margin: 0;
+}
+.admin-shell .admin-ops-stock-legend > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.admin-shell .admin-ops-stock-legend dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .83rem;
+  color: #4d6381;
+}
+.admin-shell .admin-ops-stock-legend dd {
+  margin: 0;
+  font-weight: 750;
+  font-size: .92rem;
+}
+.admin-shell .admin-ops-stock-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.admin-shell .admin-ops-stock-dot.available { background: #22b885; }
+.admin-shell .admin-ops-stock-dot.empty { background: #fb6b78; }
+.admin-shell .admin-ops-stock-dot.unknown { background: #c9d7e8; }
+@media(max-width:1210px) {
+  .admin-shell .admin-ops-overview { grid-template-columns: minmax(0,1fr); }
+}

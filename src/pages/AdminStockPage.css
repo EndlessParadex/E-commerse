@@ -545,3 +545,236 @@
 @media(max-width: 700px) {
   .is-compact .workflow-stock-card .workflow-stock-footer > button { max-width: none; }
 }
+
+
+/* Stock edit popup, Modern Light BAM: modal stays above the compact stock list. */
+.workflow-stock-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: min(660px, calc(100vw - 32px));
+  max-width: 660px;
+  max-height: min(92dvh, 930px);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 24px 80px #061a3e45;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.workflow-stock-dialog::backdrop {
+  background: rgba(12, 27, 54, .59);
+  backdrop-filter: blur(2px);
+}
+.workflow-stock-dialog-content {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.workflow-stock-dialog-header {
+  padding: 20px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.workflow-stock-dialog-header h2 {
+  font-size: clamp(1.08rem, 2vw, 1.3rem);
+  line-height: 1.3;
+  color: var(--color-text);
+  letter-spacing: -.025em;
+}
+.workflow-stock-dialog-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.workflow-stock-dialog-close:hover { background: var(--color-surface-soft); }
+.workflow-stock-dialog-close:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.workflow-stock-dialog-product {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 91px;
+  padding: 16px 25px;
+  border-bottom: 1px solid var(--color-border);
+}
+.workflow-stock-dialog-product .workflow-stock-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+.workflow-stock-dialog-product .workflow-stock-photo {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 12px;
+}
+.workflow-stock-dialog-product .workflow-stock-name { min-width: 0; }
+.workflow-stock-dialog-product .workflow-stock-name h3 {
+  font-size: .94rem;
+  overflow-wrap: anywhere;
+}
+.workflow-stock-dialog-product .workflow-stock-name p {
+  font-size: .8rem;
+  margin-top: 5px;
+  color: var(--color-text-secondary);
+}
+.workflow-stock-dialog-current {
+  display: grid;
+  gap: 4px;
+  min-width: 116px;
+  text-align: right;
+}
+.workflow-stock-dialog-current small {
+  color: var(--color-text-secondary);
+  font-size: .73rem;
+}
+.workflow-stock-dialog-current strong {
+  color: var(--color-link);
+  font-size: 1.06rem;
+  font-variant-numeric: tabular-nums;
+}
+.workflow-stock-dialog-body {
+  padding: 22px 25px 25px;
+}
+.workflow-stock-dialog .workflow-stock-package-editor {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  gap: 18px;
+}
+.workflow-stock-dialog .workflow-stock-editor-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 13px;
+}
+.workflow-stock-dialog .workflow-stock-editor-mode legend {
+  padding-bottom: 12px;
+}
+.workflow-stock-dialog .workflow-stock-editor-mode label {
+  align-items: center;
+  padding: 12px;
+  min-width: 0;
+  line-height: 1.45;
+  border-radius: 11px;
+  font-size: .84rem;
+  background: var(--color-surface);
+}
+.workflow-stock-dialog .workflow-stock-editor-mode label:has(input:checked) {
+  background: var(--color-info-soft);
+  border-color: var(--color-action);
+  box-shadow: inset 0 0 0 1px var(--color-border-info-strong);
+}
+.workflow-stock-dialog .workflow-stock-quantity-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+.workflow-stock-dialog .workflow-stock-quantity input {
+  height: 45px;
+}
+.workflow-stock-dialog .workflow-stock-editor-explanation {
+  margin-top: -3px;
+  font-size: .76rem;
+}
+.workflow-stock-dialog .workflow-stock-calc {
+  gap: 11px;
+  padding: 17px 19px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--color-info-soft);
+}
+.workflow-stock-dialog .workflow-stock-calc-total {
+  border-color: var(--color-border-info);
+}
+.workflow-stock-dialog .workflow-stock-calc-total strong {
+  color: var(--color-text);
+}
+.workflow-stock-dialog .workflow-stock-calc-total output {
+  color: var(--color-link);
+  font-size: 1.34rem;
+}
+.workflow-stock-dialog .workflow-stock-edit-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.workflow-stock-dialog .workflow-stock-edit-actions .admin-primary {
+  order: 2;
+  min-width: 150px;
+  border-radius: 10px;
+}
+.workflow-stock-dialog .workflow-stock-edit-actions .admin-secondary {
+  order: 1;
+  min-width: 110px;
+  border-radius: 10px;
+}
+.workflow-stock-dialog .workflow-stock-recovery {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--color-warning-soft);
+}
+.workflow-stock-dialog .workflow-stock-recovery p {
+  color: var(--color-warning-text);
+  font-size: .83rem;
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .workflow-stock-dialog {
+    width: calc(100vw - 20px);
+    max-width: none;
+    max-height: 94dvh;
+    border-radius: 15px;
+  }
+  .workflow-stock-dialog-header { padding: 14px 16px; }
+  .workflow-stock-dialog-product {
+    padding: 13px 16px;
+  }
+  .workflow-stock-dialog-body { padding: 16px; }
+  .workflow-stock-dialog .workflow-stock-package-editor { gap: 14px; }
+  .workflow-stock-dialog .workflow-stock-editor-mode { gap: 9px; }
+  .workflow-stock-dialog .workflow-stock-editor-mode label {
+    padding: 10px;
+    font-size: .77rem;
+  }
+  .workflow-stock-dialog .workflow-stock-quantity-grid { gap: 11px; }
+  .workflow-stock-dialog .workflow-stock-calc { padding: 13px; }
+  .workflow-stock-dialog .workflow-stock-calc-rows > div { font-size: .76rem; }
+}
+@media (max-width: 350px) {
+  .workflow-stock-dialog .workflow-stock-editor-mode {
+    grid-template-columns: 1fr;
+  }
+  .workflow-stock-dialog-current {
+    text-align: left;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workflow-stock-dialog, .workflow-stock-dialog::backdrop {
+    scroll-behavior: auto;
+  }
+}

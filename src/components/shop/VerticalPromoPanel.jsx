@@ -15,7 +15,7 @@ export default function VerticalPromoPanel() {
             {discountedCount ? 'Harga khusus di katalog' : 'Pilihan dari katalog BAM'}
           </span>
           <h2 id="bam-vertical-promos-title">
-            {discountedCount ? 'Pilihan Hemat' : 'Pilihan Produk'}
+            {discountedCount ? 'Promo & Penawaran' : 'Pilihan untuk Tokomu'}
           </h2>
         </div>
         <a href="#/cari?q=">Lihat semua <span aria-hidden="true">→</span></a>
@@ -31,7 +31,14 @@ export default function VerticalPromoPanel() {
             <article className="bam-vertical-promo-item" key={product.groupId || product.id}>
               <a className="bam-vertical-promo-photo" href={href}
                 aria-label={'Lihat ' + (product.baseName || product.name)}>
-                <ProductImage product={preview} variant="promo" />
+                {photo ? (
+                  <ProductImage product={preview} variant="promo" />
+                ) : (
+                  <span className="bam-vertical-promo-monogram"
+                    role="img" aria-label={'Foto ' + (product.baseName || product.name) + ' belum tersedia'}>
+                    {(product.brand || product.baseName || 'BAM').slice(0, 2).toUpperCase()}
+                  </span>
+                )}
               </a>
               <div className="bam-vertical-promo-detail">
                 <span className="bam-vertical-promo-brand">{product.brand || product.category}</span>
@@ -57,7 +64,9 @@ export default function VerticalPromoPanel() {
         )}
       </div>
       <p className="bam-vertical-promos-disclaimer">
-        Harga mengikuti katalog BAM. Detail kemasan dan ketersediaan dapat diperiksa pada produk.
+        {discountedCount
+          ? 'Potongan harga mengikuti data katalog. Periksa detail produk dan kemasannya.'
+          : 'Pilihan produk dari katalog BAM. Belum ada diskon khusus yang berlaku.'}
       </p>
     </section>
   );

@@ -1392,3 +1392,95 @@
     max-width: 44px;
   }
 }
+
+
+/* Design No.2: shared modern-light BAM storefront navigation. */
+.store-navigation {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.store-navigation.is-scrolled {
+  box-shadow: 0 10px 30px rgba(16, 49, 91, .09);
+}
+.navbar {
+  padding: 12px 0;
+}
+.navbar-container,
+.secondary-navbar-container {
+  max-width: 1540px;
+  padding-left: clamp(16px, 2.2vw, 30px);
+  padding-right: clamp(16px, 2.2vw, 30px);
+}
+.navbar-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+.navbar-brand-subtitle {
+  font-size: .65rem;
+  line-height: 1.3;
+  letter-spacing: .045em;
+  color: var(--color-text-secondary);
+  font-weight: 680;
+  white-space: nowrap;
+}
+.navbar-search {
+  border: 1px solid var(--color-border-info-strong);
+  border-radius: 13px;
+  background: var(--color-surface);
+  box-shadow: 0 3px 12px rgba(30, 74, 125, .04);
+}
+.navbar-search:focus-within {
+  border-color: var(--color-link-bright);
+  box-shadow: 0 0 0 3px rgba(44, 126, 232, .11);
+}
+.navbar-actions {
+  gap: 10px;
+}
+.deliver-to {
+  padding: 4px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+.secondary-navbar {
+  box-shadow: none;
+  background: var(--color-surface);
+}
+.secondary-navbar-container {
+  min-height: 48px;
+}
+.secondary-nav-left { gap: 20px; }
+.navbar-catalog-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  text-decoration: none;
+  font-size: .81rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  border-radius: 9px;
+}
+.navbar-catalog-link:hover,
+.navbar-orders-link:hover {
+  color: var(--color-link-bright);
+  background: var(--color-surface-soft);
+}
+.store-navigation :is(.navbar-catalog-link,.navbar-logo,.navbar-search input):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+@media(max-width:960px) {
+  .navbar-brand-subtitle { display: none; }
+  .navbar-catalog-link { display: none; }
+  .deliver-to { border: 0; }
+}
+@media(max-width:600px) {
+  .navbar { padding: 9px 0; }
+  .navbar-container, .secondary-navbar-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .navbar-search { border-radius: 10px; }
+}

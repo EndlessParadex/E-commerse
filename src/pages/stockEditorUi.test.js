@@ -8,7 +8,7 @@ import { createServer } from 'vite';
 import { act, createElement } from 'react';
 import { createApp } from '../../server/app.js';
 
-test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filter dan penyimpanan tunggal', async () => {
+test('stok ringkas: edit modal, konflik perangkat, isian offline, guard filter dan penyimpanan tunggal', async () => {
   const api = createApp({ dbPath: ':memory:' });
   const candidate = api.catalog.snapshot();
   const group = candidate.edits.find((row) => row.groupId === 'snack-pedas');
@@ -67,6 +67,12 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
   let releaseSave;
   let writes = 0;
   dom.confirm = () => accepted;
+  dom.HTMLDialogElement.prototype.showModal = function () {
+    this.setAttribute('open', '');
+  };
+  dom.HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute('open');
+  };
   dom.scrollTo = () => {
     scrollCalls += 1;
   };
@@ -176,11 +182,16 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     assert.ok(card().querySelector('.workflow-stock-compact-total'));
     const beforeEditScroll = scrollCalls;
     await click(card().querySelector('button'));
-    assert.equal(container.querySelector('dialog'), null);
-    assert.ok(card().querySelector('#stock-satuan'));
-    assert.ok(card().querySelector('#stock-dus'));
-    assert.equal(card().querySelector('#stock-karton').disabled, true);
-    assert.match(card().textContent, /Jenis karton belum tersedia di katalog/);
+    const stockDialog = () => container.querySelector('dialog.workflow-stock-dialog');
+    assert.ok(stockDialog(), 'stok ditampilkan pada pop-up');
+    assert.equal(stockDialog().hasAttribute('open'), true);
+    assert.match(stockDialog().querySelector('#stock-dialog-title').textContent, /Ubah Stok Produk/);
+    assert.ok(stockDialog().querySelector('#stock-satuan'));
+    assert.ok(stockDialog().querySelector('#stock-dus'));
+    assert.equal(stockDialog().querySelector('#stock-karton').disabled, true);
+    assert.match(stockDialog().textContent, /Jenis karton belum tersedia di katalog/);
+    assert.equal(card().querySelector('.workflow-stock-package-editor'), null,
+      'kartu stok tidak memanjang saat pop-up dibuka');
     assert.equal(preview(), '119 satuan', 'Default kemasan sesuai stok awal');
     assert.equal(scrollCalls, beforeEditScroll);
     await fillUnits('150');
@@ -203,6 +214,7 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     await click(button('Simpan stok'));
     assert.equal(api.workflow.stock().stock[key].available, 119);
     assert.equal(container.querySelector('#stock-satuan'), null);
+    assert.equal(stockDialog(), null, 'pop-up menutup setelah penyimpanan berhasil');
     await click(card().querySelector('button'));
     await fillUnits('1.5');
     await click(button('Simpan stok'));
@@ -218,6 +230,11 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     await click(button('Muat stok terbaru'));
     assert.equal(container.querySelector('#stock-satuan').value, '150');
     await click(button('Batal'));
+    assert.ok(stockDialog(), 'Batal meminta konfirmasi jika angka belum disimpan');
+    accepted = true;
+    await click(button('Batal'));
+    accepted = false;
+    assert.equal(stockDialog(), null);
     assert.equal(api.workflow.stock().stock[key].available, 119);
     await click(card().querySelector('button'));
     await fillUnits('130');
@@ -259,6 +276,7 @@ test('stok ringkas: edit di tempat, konflik perangkat, isian offline, guard filt
     await click(button('Simpan stok'));
     assert.equal(api.workflow.stock().stock[key].available, 194);
     assert.equal(container.querySelector('#stock-satuan'), null);
+    assert.equal(stockDialog(), null);
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

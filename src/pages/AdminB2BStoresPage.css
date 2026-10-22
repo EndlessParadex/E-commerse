@@ -289,3 +289,199 @@
 @media(max-width:700px) {
   .b2b-delivery-fields { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Persistent monthly delivery calendar for the Owner's fixed store schedule. */
+.b2b-schedule-section { min-width: 0; }
+.b2b-schedule-section .b2b-delivery-fields { gap: 12px 18px; }
+.b2b-schedule-assignment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.b2b-schedule-assignment > .admin-primary {
+  justify-self: start;
+  align-self: start;
+  width: auto;
+  min-height: 43px;
+  padding: 10px 18px;
+}
+.b2b-calendar-panel {
+  width: 100%;
+  max-width: 600px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--color-border-info, var(--color-border));
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 5px 16px rgba(30, 73, 132, 0.04);
+}
+.b2b-calendar-top,
+.b2b-calendar-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.b2b-calendar-top strong {
+  display: block;
+  color: var(--color-text, #112348);
+  font-size: 1.04rem;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+}
+.b2b-calendar-top small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-text-secondary, #657b97);
+  font-size: 0.77rem;
+}
+.b2b-calendar-navigation { gap: 6px; }
+.b2b-calendar-navigation button.admin-secondary {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.b2b-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin: 17px 0 12px;
+}
+.b2b-calendar-weekday,
+.b2b-calendar-empty,
+.b2b-calendar-date {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  aspect-ratio: 1;
+}
+.b2b-calendar-weekday {
+  aspect-ratio: auto;
+  padding: 6px 0;
+  color: var(--color-text-secondary, #657b97);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+.b2b-calendar-date {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text, #112348);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.b2b-calendar-date:not(:disabled):hover {
+  background: var(--color-info-soft, #eaf3ff);
+  border-color: var(--color-border-info-strong, #c0dbff);
+}
+.b2b-calendar-date:not(:disabled) {
+  background: #eef6ff;
+  color: #1260bf;
+}
+.b2b-calendar-date.is-selected,
+.b2b-calendar-date.is-selected:not(:disabled) {
+  background: var(--color-action, #136ce5);
+  color: #fff;
+  border-color: var(--color-action, #136ce5);
+  font-weight: 800;
+  opacity: 1;
+}
+.b2b-calendar-date.is-scheduled:not(.is-selected) {
+  background: #dff5ec;
+  border: 1px solid #acdcca;
+  color: #167451;
+  opacity: 1;
+}
+.b2b-calendar-date.is-today:not(.is-selected) {
+  border: 1px solid var(--color-action, #136ce5);
+}
+.b2b-calendar-date.is-unavailable {
+  color: var(--color-text-secondary, #7c8da3);
+  opacity: 0.65;
+}
+.b2b-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  color: var(--color-text-secondary, #657b97);
+  font-size: 0.77rem;
+}
+.b2b-calendar-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.b2b-calendar-key {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 4px;
+}
+.b2b-calendar-key.eligible { background: #dff5ec; border: 1px solid #acdcca; }
+.b2b-calendar-key.selected { background: var(--color-action, #136ce5); }
+.b2b-calendar-preview {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 13px;
+  border-radius: 10px;
+  background: var(--color-info-soft, #edf6ff);
+  color: var(--color-text, #112348);
+  font-size: 0.82rem;
+}
+.b2b-calendar-preview > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.b2b-calendar-preview > div span {
+  padding: 6px 9px;
+  border: 1px solid var(--color-border-info-strong, #bdd7fb);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.79rem;
+  color: #225f9d;
+}
+.b2b-calendar-preview small,
+.b2b-calendar-help {
+  color: var(--color-text-secondary, #657b97);
+  line-height: 1.5;
+  font-size: 0.78rem;
+}
+.b2b-date-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.8rem;
+}
+.b2b-date-fallback input[type='date'] {
+  width: min(100%, 230px);
+  min-height: 43px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-input-border, #d0dded);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #112348);
+}
+.b2b-date-fallback small { color: var(--color-text-secondary, #657b97); }
+.b2b-date-fallback .b2b-calendar-error {
+  color: var(--color-danger-text, #b53445);
+}
+@media(max-width: 600px) {
+  .b2b-calendar-panel { padding: 11px; }
+  .b2b-calendar-grid { gap: 3px; }
+  .b2b-calendar-date { font-size: 0.79rem; border-radius: 7px; }
+  .b2b-calendar-weekday { font-size: 0.7rem; }
+  .b2b-schedule-assignment > .admin-primary { width: 100%; }
+}
+@media(prefers-reduced-motion: reduce) {
+  .b2b-calendar-date { transition: none; }
+}

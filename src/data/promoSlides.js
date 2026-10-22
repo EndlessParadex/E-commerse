@@ -5,21 +5,21 @@ import { categories } from './catalog.js';
 const themes = { snack: 'snack', beauty: 'beauty', bumbu: 'spice', rumah: 'home' };
 const copy = {
   snack: {
-    title: 'Camilan favorit.\nSaatnya santai.',
+    title: 'Stok camilan,\ntoko makin lengkap.',
     description:
-      'Dari renyah hingga manis. Pilih camilan, ukuran, dan kemasan untuk menemani harimu.',
+      'Lengkapi rak tokomu dengan pilihan camilan, ukuran, dan kemasan dari katalog BAM.',
   },
   beauty: {
-    title: 'Rawat diri.\nNikmati harimu.',
-    description: 'Temukan pilihan perawatan dan kecantikan untuk rutinitas sehari-harimu.',
+    title: 'Produk perawatan\nuntuk kebutuhan toko.',
+    description: 'Jelajahi kategori perawatan dan kecantikan untuk melengkapi kebutuhan pelanggan.',
   },
   bumbu: {
-    title: 'Bumbu pilihan.\nRasa istimewa.',
-    description: 'Lengkapi dapurmu dengan pilihan bumbu. Sesuaikan ukuran dan kemasannya.',
+    title: 'Lengkapi pilihan\nbumbu dan dapur.',
+    description: 'Pilih bumbu, ukuran, dan kemasan sesuai kebutuhan usaha dan rumah tangga.',
   },
   rumah: {
-    title: 'Rumah nyaman.\nPilihanmu di sini.',
-    description: 'Jelajahi perlengkapan rumah dan kebutuhan sehari-hari dari katalog BAM.',
+    title: 'Kebutuhan rumah,\ntersedia di BAM.',
+    description: 'Temukan perlengkapan rumah serta kebutuhan harian dalam berbagai pilihan kemasan.',
   },
 };
 export function promoSlides(catalog = products, categoryList = categories) {
@@ -40,7 +40,7 @@ export function promoSlides(catalog = products, categoryList = categories) {
         theme: themes[category.id] || 'snack',
         category: category.name,
         label: `PILIHAN DARI KATALOG ${profile.shortName.toUpperCase()}`,
-        title: copy[category.id]?.title || `Temukan pilihan\n${category.name}.`,
+        title: copy[category.id]?.title || `Temukan produk\n${category.name}.`,
         description:
           copy[category.id]?.description?.replace('BAM', profile.shortName) ||
           'Pilih produk, ukuran, dan kemasan yang sesuai kebutuhan Anda.',
@@ -60,7 +60,7 @@ export function promoSlides(catalog = products, categoryList = categories) {
           category: `Katalog ${profile.shortName}`,
           label: profile.legalName.toUpperCase(),
           title: catalog.length
-            ? 'Temukan pilihan\nuntuk kebutuhanmu.'
+            ? 'Semua kebutuhan\ndalam satu katalog.'
             : 'Katalog sedang\ndipersiapkan.',
           description: catalog.length
             ? `Jelajahi seluruh produk yang tersedia di ${profile.shortName}.`

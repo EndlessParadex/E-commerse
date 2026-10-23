@@ -16,6 +16,7 @@ import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
 import FeaturedProducts from '../components/shop/FeaturedProducts';
 import B2BHomeExperience from '../components/shop/B2BHomeExperience';
+import CatalogSearchDropdown from '../components/shop/CatalogSearchDropdown';
 import SupplierBrandsPage from './SupplierBrandsPage';
 import { brandsForSupplier } from '../data/catalogMasters';
 import { suppliers, supplierBy } from '../data/suppliers';
@@ -155,22 +156,20 @@ export default function Home({ catalog = null }) {
               </div>
             </div>
             <div className="filter-group" id="catalog-filter-options">
-              <label className="catalog-select-filter">
-                Kategori
-                <select
-                  value={category?.id || ''}
-                  onChange={(event) =>
-                    setFilter({ categoryId: event.target.value, subcategoryId: '' })
-                  }
-                >
-                  <option value="">Semua kategori</option>
-                  {categories.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({count({ categoryId: item.id, subcategoryId: '' })})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <CatalogSearchDropdown
+                label="Kategori"
+                value={category?.id || ''}
+                placeholder="Cari kategori..."
+                options={[
+                  { id: '', name: 'Semua kategori', icon: '▦',
+                    count: count({ categoryId: '', subcategoryId: '' }) },
+                  ...categories.map((item) => ({
+                    id: item.id, name: item.name, icon: item.icon,
+                    count: count({ categoryId: item.id, subcategoryId: '' }),
+                  })),
+                ]}
+                onChange={(categoryId) => setFilter({ categoryId, subcategoryId: '' })}
+              />
               {category && (
                 <label className="catalog-select-filter">
                   Subkategori
@@ -210,20 +209,20 @@ export default function Home({ catalog = null }) {
                   ))}
                 </select>
               </label>
-              <label className="catalog-select-filter">
-                Merek
-                <select
-                  value={brand?.id || ''}
-                  onChange={(event) => setFilter({ brandId: event.target.value })}
-                >
-                  <option value="">Semua merek</option>
-                  {brands.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({count({ brandId: item.id })})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <CatalogSearchDropdown
+                label="Merek"
+                value={brand?.id || ''}
+                placeholder="Cari merek..."
+                options={[
+                  { id: '', name: 'Semua merek', icon: '✦',
+                    count: count({ brandId: '' }) },
+                  ...brands.map((item) => ({
+                    id: item.id, name: item.name, icon: item.name.slice(0, 2).toUpperCase(),
+                    count: count({ brandId: item.id }),
+                  })),
+                ]}
+                onChange={(brandId) => setFilter({ brandId })}
+              />
               <a className="catalog-clear-filters" href={resetHref}>
                 Hapus seluruh filter
               </a>

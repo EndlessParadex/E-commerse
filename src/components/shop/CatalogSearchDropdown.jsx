@@ -63,7 +63,7 @@ export default function CatalogSearchDropdown({
       <button type="button" ref={trigger}
         className="catalog-search-trigger"
         aria-label={label + ': ' + (selected?.name || 'Pilih')}
-        aria-haspopup="true" aria-expanded={open} aria-controls={panelId}
+        aria-haspopup="dialog" aria-expanded={open} aria-controls={panelId}
         onClick={() => {
           if (!open) setSearch('');
           setOpen((previous) => !previous);
@@ -87,7 +87,8 @@ export default function CatalogSearchDropdown({
         </svg>
       </button>
       {open && (
-        <div id={panelId} className="catalog-search-panel">
+        <div id={panelId} className="catalog-search-panel"
+          role="dialog" aria-label={'Pilih ' + label.toLowerCase()}>
           <label className="catalog-search-input-wrap">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

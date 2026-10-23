@@ -63,6 +63,7 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       name: 'User Test',
       address: 'Alamat pengguna contoh',
       email: 'user@test.id',
+      phone: '081234560001',
       password,
       role: 'admin',
     });
@@ -106,6 +107,7 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
           name: 'User Test',
           address: 'Alamat pengguna contoh',
           email: 'USER@test.id',
+          phone: '081234560001',
           password,
         })
       ).status,
@@ -354,6 +356,7 @@ test('asal permintaan, JSON, batas ukuran dan percobaan login diperiksa', async 
     const fields = {
       name: 'User Test',
       email: 'test@test.id',
+      phone: '081234560002',
       address: 'Alamat lengkap test',
       password,
     };

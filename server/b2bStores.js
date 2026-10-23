@@ -405,9 +405,11 @@ export class B2BStoreRepository {
     const user = validUser(this.db, userId);
     if (user.role !== 'user')
       fail('Akun Sales harus merupakan akun staf non-Admin.', 422, 'invalid_sales_account');
-    if (this.db.prepare('SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1').get(user.id))
-      fail('Akun masih terhubung sebagai pembeli. Lepas hubungan toko sebelum mengangkatnya menjadi Sales.',
-        409, 'buyer_still_linked');
+    // Keep existing buyer + Sales memberships compatible; only the explicit
+    // responsible owner must hand over ownership before switching to Sales.
+    if (this.db.prepare('SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1').get(user.id))
+      fail('Pindahkan kepemilikan toko terlebih dahulu sebelum akun ini menjadi Sales.',
+        409, 'store_owner_sales_conflict');
     return this.transaction(() => {
       this.db
         .prepare('INSERT OR IGNORE INTO b2b_sales_agents VALUES(?,?,?)')

@@ -24,9 +24,9 @@ const validPassword = (value) =>
 export class IdentityRepository {
   constructor(
     db,
-    { now, mailer, config = {}, queue, limiter, passwordCheck, hashPassword, logger },
+    { now, mailer, config = {}, queue, limiter, passwordCheck, hashPassword, logger, phoneDirectory },
   ) {
-    Object.assign(this, { db, now, mailer, queue, limiter, passwordCheck, hashPassword, logger });
+    Object.assign(this, { db, now, mailer, queue, limiter, passwordCheck, hashPassword, logger, phoneDirectory });
     this.configureMail(mailer, config);
     db.exec(approvalSchema);
     db.exec(`CREATE TABLE IF NOT EXISTS auth_account_state(user_id TEXT PRIMARY KEY REFERENCES users(id),verified_at INTEGER,credential_revision INTEGER NOT NULL DEFAULT 0);
@@ -165,6 +165,12 @@ export class IdentityRepository {
             new Date(this.now()).toISOString(),
           );
         this.db.prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')").run(user.id);
+        if (fields.phone && this.phoneDirectory) {
+          this.phoneDirectory.claim(user.id, fields.phone);
+          this.db.prepare(
+            'INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)',
+          ).run(user.id, fields.phone, randomUUID());
+        }
         if (this.ready) this.issue('verify', fields.email, user);
       } else if (this.ready) this.issue('reset', fields.email, user);
     });

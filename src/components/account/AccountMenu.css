@@ -1,61 +1,151 @@
+/* Premium Modern account navigation used by the header preview and account sidebar. */
 .account-menu {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   text-align: left;
 }
-.account-menu a,
-.account-menu button {
+.account-menu .account-menu-link {
   display: grid;
-  gap: 4px;
-  min-height: 60px;
-  min-width: 0;
+  grid-template-columns: 42px minmax(0, 1fr) 17px;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 12px 14px;
+  min-width: 0;
+  min-height: 66px;
+  padding: 10px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
+  box-sizing: border-box;
+  transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
-.account-menu strong {
-  font-size: 0.875rem;
+.account-menu .account-menu-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #2563eb;
+  background: #e4efff;
+  flex: 0 0 42px;
 }
-.account-menu small {
-  font-size: 0.6875rem;
-  line-height: 1.5;
+.account-menu .account-menu-icon.is-admin {
+  background: #eee7ff;
+  color: #6542cd;
+}
+.account-menu .account-menu-icon.is-customers {
+  background: #dff9e8;
+  color: #13884e;
+}
+.account-menu .account-menu-icon.is-orders {
+  background: #fff0e1;
+  color: #c5631e;
+}
+.account-menu .account-menu-icon.is-favorite {
+  background: #ffe5eb;
+  color: #d83b65;
+}
+.account-menu .account-menu-icon.is-logout {
+  background: #ffe1e4;
+  color: #d82d3c;
+}
+.account-menu .account-menu-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+  align-self: center;
+}
+.account-menu .account-menu-copy strong {
+  display: block;
+  font-size: .84rem;
+  line-height: 1.35;
+  font-weight: 750;
+  letter-spacing: -.01em;
+  overflow-wrap: anywhere;
+}
+.account-menu .account-menu-copy small {
+  display: block;
+  font-size: .72rem;
+  line-height: 1.4;
   color: var(--color-text-muted);
+  overflow-wrap: anywhere;
 }
-.account-menu a:hover,
-.account-menu button:hover {
+.account-menu .account-menu-chevron {
+  justify-self: end;
+  color: var(--color-text-muted);
+  flex: 0 0 17px;
+}
+.account-menu .account-menu-link:hover {
   background: var(--color-surface-hover);
   border-color: var(--color-border-info-strong);
+  box-shadow: 0 3px 13px #25509a10;
 }
-.account-menu a[aria-current='page'] {
-  background: var(--color-notice-soft);
+.account-menu .account-menu-link[aria-current='page'] {
+  background: var(--color-info-soft);
   border-color: var(--color-border-info-strong);
-  color: var(--color-notice-text);
+  color: var(--color-link);
 }
-.account-menu button strong {
+.account-menu .account-menu-link[aria-current='page'] .account-menu-chevron {
+  color: var(--color-link);
+}
+.account-menu .account-menu-logout {
+  margin-top: 11px;
+  position: relative;
+  background: var(--color-danger-soft);
+  border-color: transparent;
+}
+.account-menu .account-menu-logout::before {
+  content: '';
+  height: 1px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  background: var(--color-border);
+}
+.account-menu .account-menu-logout .account-menu-copy strong,
+.account-menu .account-menu-logout .account-menu-chevron {
   color: var(--color-danger-text);
 }
-.account-menu button:disabled {
-  opacity: 0.65;
+.account-menu .account-menu-logout:hover {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-text);
+}
+.account-menu .account-menu-link:disabled {
+  opacity: .6;
   cursor: wait;
 }
-.account-menu a:focus-visible,
-.account-menu button:focus-visible {
+.account-menu .account-menu-link:focus-visible {
   outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 .account-menu-error {
   background: var(--color-danger-soft);
   color: var(--color-danger-text);
   padding: 12px;
-  border-radius: 8px;
-  font-size: 0.8125rem;
+  border-radius: 10px;
+  font-size: .8125rem;
   line-height: 1.6;
   margin-top: 12px;
   text-align: left;
+}
+@media (max-width: 400px) {
+  .account-menu .account-menu-link {
+    padding: 9px;
+    gap: 10px;
+    grid-template-columns: 38px minmax(0, 1fr) 15px;
+    min-height: 60px;
+  }
+  .account-menu .account-menu-icon { width: 38px; height: 38px; }
+  .account-menu .account-menu-copy strong { font-size: .81rem; }
+  .account-menu .account-menu-copy small { font-size: .7rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-menu .account-menu-link { transition: none; }
 }

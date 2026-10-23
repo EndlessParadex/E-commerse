@@ -14,7 +14,7 @@ function HexControl({ title, value, fallback, onSave, disabled = false }) {
   const [draft, setDraft] = useState(value || fallback);
   const valid = Boolean(normalizeHex(draft));
   return (
-    <label className="appearance-hex-control">
+    <div className="appearance-hex-control">
       <span>{title}</span>
       <span className="appearance-hex-inputs">
         <input type="color" aria-label={'Pilih ' + title.toLowerCase()} value={value || fallback}
@@ -31,7 +31,7 @@ function HexControl({ title, value, fallback, onSave, disabled = false }) {
           }} />
       </span>
       {!valid && !disabled && <small className="appearance-hex-hint">Gunakan #RRGGBB.</small>}
-    </label>
+    </div>
   );
 }
 

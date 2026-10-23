@@ -157,6 +157,7 @@ test('only an explicitly granted owner can read or write mail settings; forged o
           name: 'Pengunjung baru',
           address: 'Alamat lengkap pengunjung',
           email: 'new@fixture.test',
+          phone: '081234560007',
           password,
           isOwner: true,
           role: 'admin',

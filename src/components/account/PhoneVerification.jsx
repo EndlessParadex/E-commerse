@@ -128,7 +128,7 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
         <>
           <p className="account-profile-help">
             Konfirmasi membuktikan kode diterima pada saat itu, bukan jaminan nomor akan selalu
-            aktif. Login tetap memakai email dan kata sandi.
+            aktif. Login dapat memakai email atau nomor HP dengan kata sandi.
           </p>
           {!user.phoneVerified && (
             <>

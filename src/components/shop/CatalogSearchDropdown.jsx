@@ -7,6 +7,7 @@ import './CatalogSearchDropdown.css';
  */
 export default function CatalogSearchDropdown({
   label, value = '', options, onChange, placeholder = 'Cari pilihan...',
+  searchable = true, showCounts = true, compact = false,
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -23,7 +24,8 @@ export default function CatalogSearchDropdown({
 
   useEffect(() => {
     if (!open) return undefined;
-    input.current?.focus();
+    if (searchable) input.current?.focus();
+    else choices.current?.querySelector('.catalog-search-option[aria-pressed="true"]')?.focus();
     const closeOnOutside = (event) => {
       if (!wrapper.current?.contains(event.target)) setOpen(false);
     };
@@ -40,7 +42,7 @@ export default function CatalogSearchDropdown({
       document.removeEventListener('pointerdown', closeOnOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [open]);
+  }, [open, searchable]);
 
   const choose = (item) => {
     setOpen(false);
@@ -58,7 +60,8 @@ export default function CatalogSearchDropdown({
   };
 
   return (
-    <div className={'catalog-search-dropdown' + (open ? ' is-open' : '')} ref={wrapper}>
+    <div className={'catalog-search-dropdown' + (open ? ' is-open' : '') +
+      (compact ? ' is-compact' : '')} ref={wrapper}>
       <span className="catalog-search-label">{label}</span>
       <button type="button" ref={trigger}
         className="catalog-search-trigger"
@@ -89,21 +92,23 @@ export default function CatalogSearchDropdown({
       {open && (
         <div id={panelId} className="catalog-search-panel"
           role="dialog" aria-label={'Pilih ' + label.toLowerCase()}>
-          <label className="catalog-search-input-wrap">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/>
-            </svg>
-            <input ref={input} type="search" value={search} autoComplete="off"
-              placeholder={placeholder} aria-label={'Cari ' + label.toLowerCase()}
-              onChange={(event) => setSearch(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                  event.preventDefault();
-                  moveToOption(event.key === 'ArrowDown' ? 1 : -1);
-                }
-              }}/>
-          </label>
+          {searchable && (
+            <label className="catalog-search-input-wrap">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/>
+              </svg>
+              <input ref={input} type="search" value={search} autoComplete="off"
+                placeholder={placeholder} aria-label={'Cari ' + label.toLowerCase()}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    moveToOption(event.key === 'ArrowDown' ? 1 : -1);
+                  }
+                }}/>
+            </label>
+          )
           <div className="catalog-search-options" ref={choices}
             role="group" aria-label={'Pilihan ' + label.toLowerCase()}>
             {matches.length ? matches.map((item) => (
@@ -121,7 +126,7 @@ export default function CatalogSearchDropdown({
                 </span>
                 <span className="catalog-search-option-content">
                   <span className="catalog-search-option-name">{item.name}</span>
-                  <small>{item.count} produk</small>
+                  {showCounts && <small>{item.count} produk</small>}
                 </span>
                 {item.id === value && <span className="catalog-search-check" aria-hidden="true">✓</span>}
               </button>
@@ -131,7 +136,9 @@ export default function CatalogSearchDropdown({
               </p>
             )}
           </div>
-          <div className="catalog-search-footer">{matches.length} pilihan ditampilkan</div>
+          {searchable && (
+            <div className="catalog-search-footer">{matches.length} pilihan ditampilkan</div>
+          )}
         </div>
       )}
     </div>

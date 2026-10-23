@@ -44,3 +44,22 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Radius override only when a user explicitly changes it from default. */
+:root[data-appearance-corners='custom'] .workflow-stock-card,
+:root[data-appearance-corners='custom'] .bam-role-home-card,
+:root[data-appearance-corners='custom'] .account-premium-shortcut,
+:root[data-appearance-corners='custom'] .account-menu .account-menu-link,
+:root[data-appearance-corners='custom'] .bam-product-card,
+:root[data-appearance-corners='custom'] .shop-preview {
+  border-radius: var(--bam-custom-radius);
+}
+:root[data-appearance-density='compact'] .account-menu .account-menu-link {
+  min-height: 54px;
+  padding: 8px;
+}
+:root[data-appearance-density='spacious'] .account-menu .account-menu-link {
+  min-height: 82px;
+  padding: 18px;
+}

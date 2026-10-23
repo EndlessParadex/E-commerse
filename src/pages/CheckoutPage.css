@@ -154,7 +154,7 @@
   position: absolute;
   inset: 3px;
   border-radius: 50%;
-  background: #0284c7;
+  background: var(--color-action);
 }
 .checkout-option-copy {
   min-width: 0;
@@ -220,28 +220,28 @@
   font-size: 1.75rem;
 }
 .checkout-item-image.coral {
-  background: #ffe4e6;
+  background: var(--catalog-tint-coral);
 }
 .checkout-item-image.lilac {
-  background: #ede9fe;
+  background: var(--catalog-tint-lilac);
 }
 .checkout-item-image.amber {
-  background: #fef3c7;
+  background: var(--catalog-tint-amber);
 }
 .checkout-item-image.rose {
-  background: #fce7f3;
+  background: var(--catalog-tint-rose);
 }
 .checkout-item-image.brown {
-  background: #f3e8dc;
+  background: var(--catalog-tint-brown);
 }
 .checkout-item-image.mint {
-  background: #ccfbf1;
+  background: var(--catalog-tint-mint);
 }
 .checkout-item-image.red {
-  background: #fee2e2;
+  background: var(--catalog-tint-red);
 }
 .checkout-item-image.sand {
-  background: #ffedd5;
+  background: var(--catalog-tint-sand);
 }
 .checkout-item-copy {
   min-width: 0;

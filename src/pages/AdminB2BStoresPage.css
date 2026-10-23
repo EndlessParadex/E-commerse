@@ -386,21 +386,21 @@
   border-color: var(--color-border-info-strong, #c0dbff);
 }
 button.b2b-calendar-date:not(:disabled) {
-  background: #eef6ff;
-  color: #1260bf;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
 }
 .b2b-calendar-date.is-selected,
 .b2b-calendar-date.is-selected:not(:disabled) {
   background: var(--color-action, #136ce5);
-  color: #fff;
+  color: var(--color-on-action);
   border-color: var(--color-action, #136ce5);
   font-weight: 800;
   opacity: 1;
 }
 .b2b-calendar-date.is-scheduled:not(.is-selected) {
-  background: #dff5ec;
-  border: 1px solid #acdcca;
-  color: #167451;
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success-text);
   opacity: 1;
 }
 .b2b-calendar-date.is-today:not(.is-selected) {
@@ -429,7 +429,7 @@ button.b2b-calendar-date:not(:disabled) {
   height: 11px;
   border-radius: 4px;
 }
-.b2b-calendar-key.eligible { background: #dff5ec; border: 1px solid #acdcca; }
+.b2b-calendar-key.eligible { background: var(--color-success-soft); border: 1px solid var(--color-success-border); }
 .b2b-calendar-key.selected { background: var(--color-action, #136ce5); }
 .b2b-calendar-preview {
   display: grid;
@@ -446,9 +446,9 @@ button.b2b-calendar-date:not(:disabled) {
   padding: 6px 9px;
   border: 1px solid var(--color-border-info-strong, #bdd7fb);
   border-radius: 999px;
-  background: #fff;
+  background: var(--color-surface);
   font-size: 0.79rem;
-  color: #225f9d;
+  color: var(--color-info-text);
 }
 .b2b-calendar-preview small,
 .b2b-calendar-help {

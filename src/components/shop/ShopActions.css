@@ -15,12 +15,12 @@
   display: grid;
   place-items: center;
   border-radius: 20px;
-  background: #dc2626;
+  background: var(--color-danger-bright);
   color: white;
   font-size: 0.625rem;
   font-weight: 700;
   line-height: 1.25;
-  border: 2px solid white;
+  border: 2px solid var(--color-surface);
 }
 .shop-panel-header {
   display: flex;
@@ -69,8 +69,8 @@
 .shop-primary {
   border: 0;
   background: var(--color-action);
-  color: white;
-  border-radius: 10px;
+  color: var(--color-on-action);
+  border-radius: var(--bam-ui-radius-control);
   padding: 12px 18px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -118,28 +118,28 @@
   font-size: 2.625rem;
 }
 .cart-product-media.coral {
-  background: #ffe4e6;
+  background: var(--catalog-tint-coral);
 }
 .cart-product-media.lilac {
-  background: #ede9fe;
+  background: var(--catalog-tint-lilac);
 }
 .cart-product-media.amber {
-  background: #fef3c7;
+  background: var(--catalog-tint-amber);
 }
 .cart-product-media.rose {
-  background: #fce7f3;
+  background: var(--catalog-tint-rose);
 }
 .cart-product-media.brown {
-  background: #f3e8dc;
+  background: var(--catalog-tint-brown);
 }
 .cart-product-media.mint {
-  background: #ccfbf1;
+  background: var(--catalog-tint-mint);
 }
 .cart-product-media.red {
-  background: #fee2e2;
+  background: var(--catalog-tint-red);
 }
 .cart-product-media.sand {
-  background: #ffedd5;
+  background: var(--catalog-tint-sand);
 }
 .cart-product h3,
 .notification-item h3 {
@@ -712,12 +712,12 @@
 /* Premium Modern account dropdown: never change cart / notifications previews. */
 .shop-preview--account {
   width: min(394px, calc(100vw - 24px));
-  border-radius: 20px;
+  border-radius: var(--bam-ui-radius-popover);
   box-shadow: 0 18px 50px #18345b29;
 }
 .shop-preview--account .shop-preview-inner {
   scrollbar-width: thin;
-  scrollbar-color: #afc6e8 transparent;
+  scrollbar-color: var(--color-input-border) transparent;
 }
 .shop-preview--account .account-preview-body.is-signed-in {
   padding: 13px;

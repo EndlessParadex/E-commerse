@@ -14,7 +14,7 @@
   min-height: 66px;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--bam-ui-radius-card);
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
@@ -29,30 +29,30 @@
   place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  color: #2563eb;
-  background: #e4efff;
+  border-radius: var(--bam-ui-radius-control);
+  color: var(--color-info-text);
+  background: var(--color-info-soft);
   flex: 0 0 42px;
 }
 .account-menu .account-menu-icon.is-admin {
-  background: #eee7ff;
-  color: #6542cd;
+  background: var(--catalog-tint-violet);
+  color: var(--color-wallet-purple);
 }
 .account-menu .account-menu-icon.is-customers {
-  background: #dff9e8;
-  color: #13884e;
+  background: var(--color-success-pill);
+  color: var(--color-success-text);
 }
 .account-menu .account-menu-icon.is-orders {
-  background: #fff0e1;
-  color: #c5631e;
+  background: var(--color-warning-pill);
+  color: var(--color-warning-text);
 }
 .account-menu .account-menu-icon.is-favorite {
-  background: #ffe5eb;
-  color: #d83b65;
+  background: var(--catalog-tint-rose);
+  color: var(--color-favorite);
 }
 .account-menu .account-menu-icon.is-logout {
-  background: #ffe1e4;
-  color: #d82d3c;
+  background: var(--color-danger-pill);
+  color: var(--color-danger-text);
 }
 .account-menu .account-menu-copy {
   display: flex;

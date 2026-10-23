@@ -36,3 +36,23 @@ test('storefront has dark-mode readable promo surfaces', () => {
   assert.match(storefront, /:root\[data-theme='dark'\]/);
   assert.match(storefront, /background: linear-gradient\(120deg, var\(--color-surface-soft\)/);
 });
+
+
+test('account icons and calendar use semantic theme colors', () => {
+  const account = read('../components/account/AccountMenu.css');
+  const calendar = read('./AdminB2BStoresPage.css');
+  assert.match(account, /var\(--color-success-pill\)/);
+  assert.match(account, /var\(--catalog-tint-violet\)/);
+  assert.match(calendar, /background: var\(--color-success-soft\)/);
+  assert.match(calendar, /color: var\(--color-on-action\)/);
+});
+
+test('cart and checkout share the same product color palette', () => {
+  const cart = read('../components/shop/ShopActions.css');
+  const checkout = read('./CheckoutPage.css');
+  for (const token of ['--catalog-tint-coral','--catalog-tint-lilac','--catalog-tint-amber',
+    '--catalog-tint-rose','--catalog-tint-brown','--catalog-tint-mint','--catalog-tint-red','--catalog-tint-sand']) {
+    assert.ok(cart.includes('var(' + token + ')'));
+    assert.ok(checkout.includes('var(' + token + ')'));
+  }
+});

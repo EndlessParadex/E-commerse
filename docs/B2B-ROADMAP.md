@@ -1,3 +1,7 @@
+## Beranda Sales dan Pembeli Toko — Design No. 2 role-aware (23 Oktober 2026)
+
+**Sudah ditambahkan pada frontend:** `B2BHomeExperience.jsx` membedakan hero dan tiga kartu akses cepat untuk akun Sales dan pembeli yang terhubung ke B2B. Sales melihat toko yang ditugaskan, pembeli melihat toko terhubung dan jadwal mingguan/dua mingguan dari `deliverySchedule` server. Nama toko, hitungan penugasan, dan tanggal tidak dibuat sebagai data demo. Header menampilkan **Daftar Toko** atau **Toko Saya** sesuai peran, sementara pembeli biasa/Admin tetap melihat beranda katalog lama. Keduanya menuju `#/keranjang` untuk pemilihan toko dan keranjang bersama yang sudah tersedia. Implementasi navigasi halaman `#/toko` khusus dan dua keranjang pribadi/toko yang berjalan paralel tetap menjadi tahap selanjutnya.
+
 ## Tampilan Admin BAM — Desain 2 (Modern Light)
 
 **Sudah diterapkan sebagai tema bersama pada branch B2B:** sidebar putih dan menu bertingkat Utama/Katalog/B2B/Pengaturan, aksen biru, header profil/pencarian katalog, banner dashboard, kartu metrik katalog, panel pesanan terbaru dan ringkasan stok, tabel serta formulir modern, tata letak responsif. Tema diimplementasikan pada `src/pages/AdminDesign2.css` dan hanya aktif dalam `.admin-shell` sehingga tidak mengubah halaman storefront/pembeli.
@@ -20,7 +24,7 @@ Branch: `feature/b2b-store-sales-shared-cart`.
 1. **Admin operasional dan Pemilik BAM boleh mengisi/mengubah keranjang toko serta memfinalisasinya sendiri.** Pemisahan dua pelaku bukan syarat perusahaan pada tahap ini; risiko disadari dan dikendalikan lewat penguncian, review, audit, dan konfirmasi finalisasi.
 2. **Sales dan pembeli yang terhubung ke toko mempunyai dua keranjang paralel:** pribadi (milik akun) dan bersama (milik toko/periode). Tidak ada pemindahan atau penggabungan otomatis.
 3. **Masuk ke toko melalui header utama, bukan hanya strip keranjang.** Sales melihat tautan **Daftar Toko**, pembeli yang terhubung melihat **Toko Saya**. Keduanya dapat menuju rute bersama `#/toko` yang menampilkan toko sesuai izin. Satu toko boleh dibuka langsung; banyak toko memerlukan pemilihan eksplisit. Navigasi berlaku untuk desktop dan ponsel. Header dasar konsisten, tautan khusus mengikuti kemampuan.
-4. **Tidak ada dua kotak navigasi khusus Sales di beranda dan tidak ada tombol Belanja biasa terpisah.** Beranda tetap katalog. Pengguna memilih secara jelas **Keranjang pribadi** atau **Keranjang toko** sebelum menambah barang; judul toko/periode selalu tampak saat konteks toko aktif.
+4. **Keputusan visual terbaru (23 Oktober 2026): Home memiliki hero dan kartu akses cepat berbeda bagi Sales dan Pembeli Toko, tetapi tetap satu storefront dan satu katalog.** Sales melihat Daftar Toko/Produk/Keranjang Toko, pembeli terhubung melihat Toko Saya/Jadwal/Keranjang Toko. Tautan toko sementara menuju halaman keranjang bersama (`#/keranjang`) yang sudah memiliki pemilihan toko berbasis server. Keranjang pribadi paralel belum tersedia bagi akun B2B; jangan membuat tombol atau klaim checkout pribadi sebelum alurnya selesai. Tidak ada tombol Belanja biasa palsu. Ketika dua keranjang selesai, konteks pribadi/toko harus dipilih secara jelas.
 
 ### Matriks kemampuan (target)
 
@@ -147,7 +151,7 @@ Sudah diimplementasikan. Panduan: [Finalisasi pesanan B2B](FINALISASI-B2B.md).
 - Sales: tautan **Daftar Toko** di header, toko yang ditugaskan, katalog, dua konteks keranjang pribadi/toko dan riwayat aktivitas.
 - Pembeli terhubung: tautan **Toko Saya** di header, katalog, harga/diskon, dua konteks keranjang pribadi/toko.
 - Admin/Pemilik: antrean, hak edit ketika `open`, penguncian, review, finalisasi dan pengiriman.
-- Tidak menambah dua kotak Sales di beranda atau tombol **Belanja biasa** terpisah.
+- Beranda kini memakai kartu cepat berbasis peran sesuai keputusan visual terbaru; tidak ada tombol pribadi B2B yang belum berfungsi.
 
 ## Pembayaran B2B: COD dan transfer manual (implementasi bertahap)
 

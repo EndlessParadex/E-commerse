@@ -1299,15 +1299,16 @@
   gap: 10px;
   width: min(100%, 540px);
   min-width: 0;
-  padding: 6px 10px 6px 15px;
-  background: #fff;
-  border: 1px solid #dfebf7;
-  border-radius: 12px;
+  min-height: 48px;
+  padding: 5px 6px 5px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--bam-ui-radius-control, 12px);
   box-shadow: 0 2px 8px rgba(23, 53, 84, 0.035);
 }
 .admin-topbar-search .admin-icon {
   flex: 0 0 20px;
-  color: #7188a7;
+  color: var(--color-text-muted);
 }
 .admin-topbar-search input {
   min-width: 0;
@@ -1318,13 +1319,14 @@
   border: 0;
   outline: 0;
   padding: 7px 0;
+  box-shadow: none;
 }
 .admin-topbar-search button {
   border: 0;
-  background: #edf4ff;
-  color: #1454a2;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
   padding: 8px 11px;
-  border-radius: 8px;
+  border-radius: var(--bam-ui-radius-xs, 8px);
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
@@ -1489,7 +1491,7 @@
 .admin-overview-side .admin-next { margin: 0; }
 .admin-topbar-search:focus-within,
 .admin-overview-product-search input:focus-visible {
-  outline: 2px solid #3182e9;
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 @media(max-width: 1160px) {

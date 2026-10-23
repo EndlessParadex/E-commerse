@@ -68,9 +68,18 @@ export default function AdminApprovalsPage() {
         <span className="admin-result-pill">{data?.total ?? '…'} pendaftaran</span>
       </div>
       <div className="accounts-content">
-        <div className="accounts-filters">
-          <div className="admin-field"><label htmlFor="approval-search">Cari nama atau email</label>
-            <input id="approval-search" type="search" value={query} maxLength={200} onChange={event => {setQuery(event.target.value);setPage(1);}} />
+        <div className="accounts-filters accounts-filters--approvals">
+          <div className="admin-field">
+            <label htmlFor="approval-search">Cari nama atau email</label>
+            <div className="accounts-filter-search">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" />
+              </svg>
+              <input id="approval-search" type="search" value={query} maxLength={200}
+                placeholder="Cari nama atau email pendaftar"
+                onChange={event => {setQuery(event.target.value);setPage(1);}} />
+            </div>
           </div>
           <div className="admin-field"><label htmlFor="approval-status">Status persetujuan</label>
             <select id="approval-status" value={status} onChange={event => {setStatus(event.target.value);setPage(1);}}>
@@ -79,7 +88,14 @@ export default function AdminApprovalsPage() {
               <option value="all">Semua perlu ditinjau</option>
             </select>
           </div>
-          <button className="admin-secondary" type="button" onClick={() => setReload(value => value + 1)}>Muat ulang</button>
+          <button className="admin-secondary accounts-approvals-refresh" type="button"
+            onClick={() => setReload(value => value + 1)}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 11a8 8 0 0 0-14.9-4M4 4v4h4M4 13a8 8 0 0 0 14.9 4M20 20v-4h-4" />
+            </svg>
+            Muat ulang
+          </button>
         </div>
         {notice && <p className="accounts-notice" role="status">{notice}</p>}
         {error && !target && <p className="accounts-error" role="alert">{error}</p>}

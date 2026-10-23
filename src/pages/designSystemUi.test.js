@@ -56,3 +56,18 @@ test('cart and checkout share the same product color palette', () => {
     assert.ok(checkout.includes('var(' + token + ')'));
   }
 });
+
+
+test('admin approval toolbar and global search share theme-aware controls', () => {
+  const approval = read('./AdminApprovalsPage.jsx');
+  const accounts = read('./AdminAccountsPage.css');
+  const admin = read('./AdminPage.css');
+  assert.match(approval, /accounts-filters--approvals/);
+  assert.match(approval, /accounts-filter-search/);
+  assert.match(approval, /accounts-approvals-refresh/);
+  assert.match(accounts, /\.accounts-filters--approvals #approval-status/);
+  assert.match(accounts, /\.accounts-filter-search:focus-within/);
+  assert.match(accounts, /height: 48px/);
+  assert.match(accounts, /@media \(max-width: 600px\)/);
+  assert.match(admin, /\.admin-topbar-search \{[\s\S]*?background: var\(--color-surface\)/);
+});

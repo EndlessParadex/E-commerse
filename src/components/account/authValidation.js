@@ -1,4 +1,5 @@
 import { validateDelivery } from '../../state/deliveryModel.js';
+import { normalizeWhatsApp } from '../../state/whatsappModel.js';
 
 export function validateAuth(values, mode) {
   const errors = {};
@@ -10,8 +11,15 @@ export function validateAuth(values, mode) {
     const deliveryErrors = validateDelivery({ namaToko: values.name, namaJalan: values.address });
     if (deliveryErrors.namaJalan) errors.address = deliveryErrors.namaJalan;
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()) || values.email.trim().length > 254)
-    errors.email = 'Masukkan alamat email yang valid.';
+  const loginText = typeof values.email === 'string' ? values.email.trim() : '';
+  const isPhoneLogin = !isRegister && Boolean(normalizeWhatsApp(loginText));
+  if (!isPhoneLogin &&
+      (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginText) || loginText.length > 254))
+    errors.email = isRegister
+      ? 'Masukkan alamat email yang valid.'
+      : 'Masukkan email atau nomor HP Indonesia yang valid.';
+  if (isRegister && !normalizeWhatsApp(values.phone))
+    errors.phone = 'Masukkan nomor HP Indonesia yang aktif, misalnya 081234567890.';
   if (!values.password.trim()) errors.password = 'Masukkan kata sandi.';
   if (isRegister && values.password.length < 8)
     errors.password = 'Gunakan kata sandi minimal 8 karakter.';

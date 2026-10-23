@@ -87,7 +87,7 @@ export default function AccountPhone() {
             aria-describedby={'account-phone-help' + (error ? ' account-phone-error' : '')}
           />
           <p className="account-profile-help" id="account-phone-help">
-            Nomor ini disimpan sebagai kontak akun. Konfirmasikan melalui kode WhatsApp di bawah.
+            Nomor ini bisa digunakan untuk masuk dengan kata sandi setelah disimpan. Konfirmasi WhatsApp tersedia di bawah.
             Kosongkan lalu simpan untuk menghapus nomor.
           </p>
           {error && (

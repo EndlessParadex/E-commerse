@@ -15,6 +15,7 @@ import PromotionSection from '../components/shop/PromotionSection';
 import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
 import FeaturedProducts from '../components/shop/FeaturedProducts';
+import B2BHomeExperience from '../components/shop/B2BHomeExperience';
 import SupplierBrandsPage from './SupplierBrandsPage';
 import { brandsForSupplier } from '../data/catalogMasters';
 import { suppliers, supplierBy } from '../data/suppliers';
@@ -22,13 +23,17 @@ import './Home.css';
 import './StorefrontDesign2.css';
 
 export default function Home({ catalog = null }) {
-  const { addItem, favoriteIds, toggleFavorite } = useShop();
+  const { addItem, favoriteIds, toggleFavorite, shared } = useShop();
+  const b2bHome = !catalog && shared?.status === 'ready' &&
+    ['sales', 'buyer'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
   if (!catalog)
     return (
-      <div className="home-container home-landing">
+      <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
-          <PromoCarousel />
+          {b2bHome
+            ? <B2BHomeExperience shared={shared} />
+            : <PromoCarousel />}
           <VerticalPromoPanel />
         </div>
         <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">

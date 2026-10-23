@@ -32,6 +32,7 @@ export default function AuthPage({ mode }) {
   const formRef = useRef(null);
   const [values, setValues] = useState({
     name: '',
+    phone: '',
     address: '',
     email: '',
     password: '',
@@ -81,6 +82,7 @@ export default function AuthPage({ mode }) {
           name: values.name,
           address: values.address,
           email: values.email,
+          ...(isRegister ? { phone: values.phone } : {}),
           password: values.password,
         }),
       });
@@ -170,9 +172,10 @@ export default function AuthPage({ mode }) {
             required
             aria-invalid={Boolean(errors[name])}
             aria-describedby={describedBy}
-            maxLength={isPassword ? 128 : name === 'name' ? 100 : 254}
-            autoCapitalize={type === 'email' || isPassword ? 'none' : undefined}
-            spellCheck={type === 'email' || isPassword ? false : undefined}
+            maxLength={isPassword ? 128 : name === 'name' ? 100 : name === 'phone' ? 40 : 254}
+            inputMode={name === 'phone' ? 'tel' : undefined}
+            autoCapitalize={name === 'email' || isPassword ? 'none' : undefined}
+            spellCheck={name === 'email' || isPassword ? false : undefined}
           />
           {isPassword && (
             <button
@@ -227,7 +230,7 @@ export default function AuthPage({ mode }) {
             <p>
               {isRegister
                 ? 'Daftar sebagai pembeli. Akun harus disetujui Admin atau Pemilik sebelum dapat masuk.'
-                : 'Gunakan email dan kata sandi Anda.'}
+                : 'Gunakan email atau nomor HP dengan kata sandi Anda.'}
             </p>
           </header>
           {!registrationSent && (
@@ -277,7 +280,9 @@ export default function AuthPage({ mode }) {
           ) : (
             <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy}>
               {isRegister && field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
+              {isRegister && field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890')}
               {isRegister && (
+
                 <div className="auth-field">
                   <label htmlFor="auth-address">Alamat lengkap</label>
                   <div className={`auth-input-wrap${errors.address ? ' has-error' : ''}`}>
@@ -308,10 +313,10 @@ export default function AuthPage({ mode }) {
               )}
               {field(
                 'email',
-                'Email',
-                'email',
+                isRegister ? 'Email' : 'Email atau Nomor HP',
+                isRegister ? 'email' : 'text',
                 isRegister ? 'email' : 'username',
-                'nama@contoh.com',
+                isRegister ? 'nama@contoh.com' : 'nama@contoh.com atau 081234567890',
               )}
               {field(
                 'password',

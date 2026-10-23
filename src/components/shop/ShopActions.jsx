@@ -190,7 +190,8 @@ export default function ShopActions({ onOpen }) {
                         </>
                       )}
                       <div className="account-preview-menu">
-                        <AccountMenu onNavigate={close} />
+                        <AccountMenu onNavigate={close}
+                          profileActive={window.location.hash === '#/akun'} />
                       </div>
                     </div>
                   ) : isCart ? (

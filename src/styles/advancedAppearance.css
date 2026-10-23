@@ -1,0 +1,46 @@
+/* Optional advanced preferences. Keep the existing design tokens as safe defaults. */
+:root[data-appearance-font='classic'] body,
+:root[data-appearance-font='classic'] button,
+:root[data-appearance-font='classic'] input,
+:root[data-appearance-font='classic'] select,
+:root[data-appearance-font='classic'] textarea {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+:root[data-appearance-font='mono'] body,
+:root[data-appearance-font='mono'] button,
+:root[data-appearance-font='mono'] input,
+:root[data-appearance-font='mono'] select,
+:root[data-appearance-font='mono'] textarea {
+  font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+}
+:root[data-appearance-density='compact'] .home-container,
+:root[data-appearance-density='compact'] .account-page {
+  --bam-content-gap: 12px;
+}
+:root[data-appearance-density='spacious'] .home-container,
+:root[data-appearance-density='spacious'] .account-page {
+  --bam-content-gap: 24px;
+}
+:root[data-appearance-density='compact'] .bam-product-card,
+:root[data-appearance-density='compact'] .workflow-stock-card {
+  padding: 10px;
+}
+:root[data-appearance-density='spacious'] .bam-product-card,
+:root[data-appearance-density='spacious'] .workflow-stock-card {
+  padding: 24px;
+}
+:root[data-appearance-motion='off'] *,
+:root[data-appearance-motion='off'] *::before,
+:root[data-appearance-motion='off'] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root *, :root *::before, :root *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

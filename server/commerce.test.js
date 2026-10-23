@@ -276,6 +276,7 @@ test('v31: no SMTP accepts an unverified registration using its original passwor
     const fields = {
       name: 'Pendaftar Baru',
       email: 'new@fixture.test',
+      phone: '081234560005',
       address: 'Alamat pendaftar lengkap',
       password: pass,
     };

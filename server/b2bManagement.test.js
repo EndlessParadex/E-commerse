@@ -402,3 +402,40 @@ test('B2B management keeps stores, members and sales after the database is reope
     rmSync(folder, { recursive: true, force: true });
   }
 });
+
+
+test('B2B account ownership API: create, protect, transfer and show account-store links', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  seed(app);
+  try {
+    const created = await request(app, 'POST', '/api/b2b/stores/create', 'owner', {
+      ...newStore('Toko Akun Pertama'),
+      ownerUserId: 'buyer',
+      deliverySchedule: { weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26' },
+    });
+    assert.equal(created.status, 201);
+    const store = created.body.store;
+    assert.equal(store.owner.id, 'buyer');
+    const target = '/api/b2b/stores/' + store.id;
+    assert.equal((await request(app, 'POST', target + '/members/remove', 'owner',
+      { userId: 'buyer', revision: store.revision })).status, 409);
+    assert.equal((await request(app, 'PUT', target + '/owner', 'operator',
+      { userId: 'other', revision: store.revision })).status, 403);
+    assert.equal((await request(app, 'PUT', target + '/owner', 'owner',
+      { userId: 'other', revision: -1 })).status, 409);
+    const changed = await request(app, 'PUT', target + '/owner', 'owner', {
+      userId: 'other', revision: store.revision,
+    });
+    assert.equal(changed.status, 200);
+    assert.equal(changed.body.store.owner.id, 'other');
+    assert.equal((await request(app, 'GET', '/api/b2b/stores?page=1', 'buyer')).body.total, 0);
+    assert.equal((await request(app, 'GET', '/api/b2b/stores?page=1', 'other')).body.total, 1);
+    const accounts = await request(app, 'GET', '/api/admin/accounts?q=other', 'owner');
+    assert.equal(accounts.status, 200);
+    const account = accounts.body.users.find(row => row.id === 'other');
+    assert.equal(account.linkedStoreCount, 1);
+    assert.equal(account.linkedStores[0].storeRole, 'owner');
+    assert.equal(account.linkedStores[0].storeCode, store.storeCode);
+    assert.equal(account.canDelete, false);
+  } finally { app.db.close(); }
+});

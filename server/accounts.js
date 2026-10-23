@@ -38,6 +38,15 @@ export class AccountRepository {
   }
   present(row, actor) {
     if (!row) return null;
+    // Explicit store ownership differs from BAM administration permissions.
+    // One account may be a buyer at multiple stores; show its actual relations.
+    const linkedStores = this.db.prepare(`SELECT s.store_code AS storeCode,
+      s.store_name AS storeName,CASE WHEN own.user_id=m.user_id THEN 'owner' ELSE 'member' END AS storeRole
+      FROM b2b_store_members m JOIN b2b_stores s ON s.id=m.store_id
+      LEFT JOIN b2b_store_owners own ON own.store_id=m.store_id
+      WHERE m.user_id=? AND s.active=1 ORDER BY s.store_name,s.store_code LIMIT 6`).all(row.id);
+    const linkedStoreCount = this.db.prepare(`SELECT COUNT(*) AS n FROM b2b_store_members m
+      JOIN b2b_stores s ON s.id=m.store_id WHERE m.user_id=? AND s.active=1`).get(row.id).n;
     const protectedReason =
       row.id === actor.id
         ? 'Akun yang sedang digunakan.'
@@ -50,7 +59,9 @@ export class AccountRepository {
         ? 'Akun memiliki riwayat pesanan. Gunakan Nonaktifkan agar riwayat tetap tersedia.'
         : row.settingsReferences
           ? 'Akun tercatat dalam pengaturan toko. Gunakan Nonaktifkan.'
-          : '');
+          : linkedStoreCount
+            ? 'Lepas dahulu hubungan akun dengan toko melalui Toko & Sales sebelum menghapus akun.'
+            : '');
     return {
       id: row.id,
       name: row.name,
@@ -70,6 +81,8 @@ export class AccountRepository {
       phoneVerified: row.phoneVerifiedAt != null,
       phoneVerifiedAt: row.phoneVerifiedAt ?? null,
       orderCount: row.orderCount,
+      linkedStores,
+      linkedStoreCount,
       protectedReason,
       deleteBlockedReason,
       canDisable: !protectedReason && row.disabledAt == null && row.approvalStatus === 'approved',

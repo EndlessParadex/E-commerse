@@ -308,6 +308,20 @@ export default function AdminAccountsPage() {
                             Buka WhatsApp ↗
                           </a>
                         )}
+                        {account.linkedStoreCount > 0 && (
+                          <div className="accounts-store-links">
+                            <strong>{account.linkedStoreCount} toko terhubung</strong>
+                            {account.linkedStores.map((store) => (
+                              <a key={store.storeCode} href="#/admin/toko-sales">
+                                {store.storeName} · {store.storeCode}
+                                {store.storeRole === 'owner' ? ' · Penanggung jawab' : ' · Anggota'}
+                              </a>
+                            ))}
+                            {account.linkedStoreCount > account.linkedStores.length && (
+                              <span>Dan {account.linkedStoreCount - account.linkedStores.length} toko lainnya</span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td data-label="Peran">
                         <strong>

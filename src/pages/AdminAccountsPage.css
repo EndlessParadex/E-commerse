@@ -330,3 +330,12 @@
   .admin-shell .accounts-filters--approvals > .admin-field:first-child { grid-column: auto; }
   .admin-shell .accounts-filters--approvals .accounts-approvals-refresh { width: 100%; }
 }
+
+/* Store membership summary for account review. */
+.accounts-store-links { display: grid; gap: 4px; padding: 10px 12px; margin-top: 10px;
+  background: var(--color-surface-soft); border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-control,12px); font-size: .8rem; }
+.accounts-store-links > strong { color: var(--color-text); font-size: .8rem; }
+.accounts-store-links > a { color: var(--color-link); overflow-wrap: anywhere; text-decoration: none; }
+.accounts-store-links > a:hover { text-decoration: underline; }
+.accounts-store-links > span { color: var(--color-text-muted); }

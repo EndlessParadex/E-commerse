@@ -71,6 +71,12 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     await type(search, 'cookies');
     assert.equal(container.querySelectorAll('.catalog-search-option').length, 1);
     assert.match(container.querySelector('.catalog-search-option').textContent, /Snack Cookies/);
+    await act(async () => {
+      search.dispatchEvent(new dom.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await settle();
+    });
+    assert.equal(document.activeElement, container.querySelector('.catalog-search-option'),
+      'ArrowDown moves focus from search to the first matching choice');
     await click(container.querySelector('.catalog-search-option'));
     assert.deepEqual(selected, ['cookies']);
     assert.equal(trigger.getAttribute('aria-expanded'), 'false');

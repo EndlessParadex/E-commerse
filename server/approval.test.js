@@ -36,6 +36,7 @@ async function register(app, email) {
   return request(app, 'POST', '/api/auth/register', {
     name: 'Pelanggan Baru',
     email,
+    phone: '0812' + String([...email].reduce((n, c) => n + c.charCodeAt(0), 0)).padStart(8, '0'),
     address: 'Alamat pelanggan yang lengkap',
     password: secret,
     role: 'admin',

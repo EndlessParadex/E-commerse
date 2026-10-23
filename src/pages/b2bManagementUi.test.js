@@ -180,6 +180,10 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Pertama');
     await fill('#b2b-store-phone', '081234567890');
     await fill('#b2b-store-address', 'Jalan Nusantara Nomor 15');
+    await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
+      .some(button => button.textContent.includes('buyer@fixture.test')));
+    await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
+      .find(button => button.textContent.includes('buyer@fixture.test')));
     await fill('#b2b-create-delivery-anchor', '2026-10-26');
     await wait(() => container.querySelector(
       '.b2b-create [data-calendar-date="2026-10-26"][aria-pressed="true"]',
@@ -240,6 +244,10 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');
+    await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
+      .some(button => button.textContent.includes('buyer@fixture.test')));
+    await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
+      .find(button => button.textContent.includes('buyer@fixture.test')));
     await fill('#b2b-create-delivery-anchor', '2026-11-02');
     await submit('#b2b-create-form');
     await wait(
@@ -249,8 +257,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     );
     await wait(() => account('buyer'));
     const second = api.db.prepare('SELECT id FROM b2b_stores WHERE store_name=?').get('Toko Kedua');
-    await click(account('buyer').querySelector('button'));
     await wait(() => account('buyer')?.querySelector('button')?.textContent === 'Sudah terhubung');
+    assert.equal(api.b2bStores.store(second.id).owner.id, 'buyer');
     assert.equal(
       api.db.prepare('SELECT store_id FROM b2b_store_members WHERE user_id=?').get('buyer')
         .store_id,
@@ -259,7 +267,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.equal(
       api.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_members WHERE store_id=?').get(first.id)
         .n,
-      0,
+      1,
+      'the first store owner remains linked even when another store is created',
     );
     await click(account('sales').querySelector('button:last-child'));
     await wait(() => container.querySelector('dialog'));

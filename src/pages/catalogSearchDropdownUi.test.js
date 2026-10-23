@@ -141,7 +141,7 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     assert.ok(!home.includes('<select'), 'catalog uses one consistent dropdown style');
     for (const label of ['Kategori', 'Subkategori', 'PT pemasok', 'Merek', 'Urutkan'])
       assert.ok(home.includes('label="' + label + '"'));
-    assert.match(home, /onChange=\\{\\(sort\\) => setFilter\\(\\{ sort \\}\\)\\}/);
+    assert.ok(home.includes('onChange={(sort) => setFilter({ sort })}'));
     assert.match(home, /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/);
     assert.match(home, /onChange=\{\(brandId\) => setFilter\(\{ brandId \}\)\}/);
   } finally {

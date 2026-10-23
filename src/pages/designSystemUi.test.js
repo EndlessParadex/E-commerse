@@ -71,3 +71,15 @@ test('admin approval toolbar and global search share theme-aware controls', () =
   assert.match(accounts, /@media \(max-width: 600px\)/);
   assert.match(admin, /\.admin-topbar-search \{[\s\S]*?background: var\(--color-surface\)/);
 });
+
+
+test('B2B account ownership selection is visible in creation and edit flows', () => {
+  const ui = read('./AdminB2BStoresPage.jsx');
+  const style = read('./AdminB2BStoresPage.css');
+  assert.match(ui, /ownerUserId: newOwner\?\.id/);
+  assert.match(ui, /BuyerAccountPicker/);
+  assert.match(ui, /Tinjau perubahan pemilik/);
+  assert.match(ui, /keepPreviousMember/);
+  assert.match(style, /\.b2b-owner-overview/);
+  assert.match(style, /\.b2b-owner-option:focus-visible/);
+});

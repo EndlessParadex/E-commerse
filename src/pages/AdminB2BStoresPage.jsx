@@ -223,12 +223,69 @@ function Pagination({ data, onPage, busy, label }) {
   );
 }
 
+function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
+  const [query, setQuery] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    const timer = setTimeout(() => { setSearch(query.trim()); setPage(1); }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+  const result = useResource('/api/b2b/accounts?' +
+    new URLSearchParams({ q: search, page: String(page) }), revision);
+  return (
+    <div className="b2b-owner-picker">
+      {selected ? (
+        <div className="b2b-owner-selected">
+          <div>
+            <strong>{selected.name}</strong><span>{selected.email}</span>
+            {!selected.emailVerified && <small>Email belum diverifikasi; belum dapat checkout.</small>}
+          </div>
+          <button type="button" className="admin-secondary" disabled={disabled}
+            onClick={() => onSelect(null)}>Ganti pilihan</button>
+        </div>
+      ) : (
+        <>
+          <label htmlFor={id + '-search'}>Cari akun berdasarkan nama atau email</label>
+          <input id={id + '-search'} type="search" value={query} maxLength={200}
+            placeholder="Cari akun pembeli yang sudah disetujui" disabled={disabled}
+            onChange={event => setQuery(event.target.value)}
+            onKeyDown={event => { if (event.key === 'Enter') event.preventDefault(); }} />
+          {result.loading && <p role="status">Memuat akun…</p>}
+          {result.error && <p className="b2b-error" role="alert">{result.error}</p>}
+          {result.data && (
+            <>
+              <ul className="b2b-owner-options">
+                {result.data.users.map(account => (
+                  <li key={account.id}>
+                    <button type="button" className="b2b-owner-option"
+                      disabled={disabled} onClick={() => onSelect(account)}>
+                      <strong>{account.name}</strong><span>{account.email}</span>
+                      <small>{account.ownedStores} toko dimiliki · {account.memberStores} toko terhubung
+                        {!account.emailVerified && ' · Email belum diverifikasi'}</small>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {!result.data.total && <p className="b2b-muted">
+                Tidak ditemukan akun aktif. Setujui pendaftaran melalui Persetujuan akun terlebih dahulu.
+              </p>}
+              <Pagination data={result.data} onPage={setPage} busy={disabled} label="Pilih pemilik toko" />
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function AccountList({ accounts, empty, onRemove, onReplace, busy }) {
   return accounts.length ? (
     <ul className="b2b-people">
       {accounts.map((account) => (
         <li key={account.id}>
           <strong>{account.name}</strong>
+          {account.isStoreOwner && <span className="b2b-owner-tag">Penanggung jawab toko</span>}
           <span>{account.email}</span>
           {!account.active && <small>Akun tidak aktif</small>}
           {(onRemove || onReplace) && (
@@ -243,7 +300,7 @@ function AccountList({ accounts, empty, onRemove, onReplace, busy }) {
                   Ganti Sales
                 </button>
               )}
-              {onRemove && (
+              {onRemove && !account.isStoreOwner && (
                 <button
                   type="button"
                   className="bam-button-danger"
@@ -268,6 +325,10 @@ export default function AdminB2BStoresPage() {
   const owner = user?.isOwner === true;
   const staff = user?.role === 'admin';
   const [form, setForm] = useState(emptyStore);
+  const [newOwner, setNewOwner] = useState(null);
+  const [ownerEditor, setOwnerEditor] = useState(false);
+  const [transferOwner, setTransferOwner] = useState(null);
+  const [keepPreviousMember, setKeepPreviousMember] = useState(false);
   const [deliveryForm, setDeliveryForm] = useState(blankDelivery);
   const [legacyDelivery, setLegacyDelivery] = useState(blankDelivery);
   const [query, setQuery] = useState('');
@@ -310,7 +371,8 @@ export default function AdminB2BStoresPage() {
   }, [accountQuery]);
   useUnsavedChanges(
     Object.values(form).some(Boolean) || deliveryForm.anchorDate !== '' ||
-      legacyDelivery.anchorDate !== '' || Boolean(salesId) || Boolean(change),
+      legacyDelivery.anchorDate !== '' || Boolean(salesId) || Boolean(change) ||
+      Boolean(newOwner) || Boolean(transferOwner),
     undefined,
     busy,
   );
@@ -380,6 +442,14 @@ export default function AdminB2BStoresPage() {
         () => setChange(null),
         'PUT',
       );
+    if (change.kind === 'owner') {
+      if (!change.account?.id) { setError('Pilih akun penanggung jawab.'); return; }
+      return mutate(path + '/owner',
+        { userId: change.account.id, revision, keepPreviousMember },
+        'Penanggung jawab toko berhasil diubah. Akses akun telah disesuaikan.',
+        () => { setChange(null); setOwnerEditor(false); setTransferOwner(null); setKeepPreviousMember(false); },
+        'PUT');
+    }
     if (change.kind === 'replace') {
       if (!replacement) {
         setError('Pilih Sales pengganti.');
@@ -454,6 +524,7 @@ export default function AdminB2BStoresPage() {
                 '/api/b2b/stores/create',
                 {
                   ...form,
+                  ownerUserId: newOwner?.id,
                   deliverySchedule: {
                     weekday: Number(deliveryForm.weekday),
                     intervalWeeks: Number(deliveryForm.intervalWeeks),
@@ -463,6 +534,7 @@ export default function AdminB2BStoresPage() {
                 'Toko beserta jadwal pengiriman tetap berhasil dibuat.',
                 (result) => {
                   setForm(emptyStore);
+                  setNewOwner(null);
                   setDeliveryForm(blankDelivery);
                   setSelected(result.store.id);
                   setQuery('');
@@ -508,6 +580,13 @@ export default function AdminB2BStoresPage() {
                   onChange={(event) => setForm({ ...form, address: event.target.value })}
                 />
               </div>
+              <div className="b2b-full b2b-owner-section">
+                <h3>Pilih penanggung jawab utama</h3>
+                <p className="b2b-muted">Akun pembeli akan langsung dihubungkan ke toko.
+                  Daftarkan atau setujui akunnya terlebih dahulu jika belum tersedia.</p>
+                <BuyerAccountPicker id="create-owner" selected={newOwner}
+                  onSelect={setNewOwner} disabled={busy} revision={revision} />
+              </div>
               <div className="b2b-full b2b-schedule-section">
                 <h3>Jadwal pengiriman tetap</h3>
                 <DeliveryScheduleInputs
@@ -518,13 +597,13 @@ export default function AdminB2BStoresPage() {
               </div>
               <div className="b2b-actions b2b-full">
                 <button className="admin-primary" type="submit"
-                  disabled={busy || !validAnchorWeekday(deliveryForm)}>
+                  disabled={busy || !newOwner || !validAnchorWeekday(deliveryForm)}>
                   {busy ? 'Menyimpan…' : 'Simpan toko'}
                 </button>
                 <button
                   className="admin-secondary"
                   type="button"
-                  onClick={() => { setForm(emptyStore); setDeliveryForm(blankDelivery); }}
+                  onClick={() => { setForm(emptyStore); setNewOwner(null); setDeliveryForm(blankDelivery); }}
                 >
                   Kosongkan form
                 </button>
@@ -572,6 +651,7 @@ export default function AdminB2BStoresPage() {
                     >
                       <strong>{store.storeName}</strong>
                       <span>{store.storeCode}</span>
+                      <span>{store.owner ? 'Pemilik: ' + store.owner.name : 'Belum ada penanggung jawab'}</span>
                       <span>{store.phone}</span>
                     </button>
                   </li>
@@ -648,6 +728,40 @@ export default function AdminB2BStoresPage() {
                 >
                   Ubah data toko
                 </button>
+              )}
+              <section className="b2b-owner-overview" aria-label="Penanggung jawab toko">
+                <div>
+                  <h3>Penanggung jawab toko</h3>
+                  {current.store.owner ? (
+                    <>
+                      <strong>{current.store.owner.name}</strong>
+                      <span>{current.store.owner.email}</span>
+                      {!current.store.owner.active && <small className="b2b-owner-warning">Akun tidak aktif.</small>}
+                    </>
+                  ) : <p className="b2b-owner-warning">Belum ditetapkan. Pilih pemilik toko yang benar.</p>}
+                </div>
+                {owner && <button type="button" className="admin-secondary" disabled={busy}
+                  onClick={() => {
+                    setOwnerEditor(!ownerEditor); setTransferOwner(null); setKeepPreviousMember(false);
+                  }}>{ownerEditor ? 'Tutup' : current.store.owner ? 'Ganti pemilik' : 'Tetapkan pemilik'}</button>}
+              </section>
+              {owner && ownerEditor && (
+                <div className="b2b-owner-editor">
+                  <BuyerAccountPicker id="transfer-owner" selected={transferOwner}
+                    onSelect={setTransferOwner} disabled={busy} revision={revision} />
+                  {current.store.owner && (
+                    <label className="b2b-keep-previous">
+                      <input type="checkbox" checked={keepPreviousMember} disabled={busy}
+                        onChange={event => setKeepPreviousMember(event.target.checked)} />
+                      Pertahankan pemilik sebelumnya sebagai anggota toko (tetap mempunyai akses).
+                    </label>
+                  )}
+                  <p className="b2b-muted">Secara default akses pemilik sebelumnya dicabut dari toko ini.
+                    Riwayat keranjang dan pesanan tidak dihapus.</p>
+                  <button className="admin-primary" type="button"
+                    disabled={busy || !transferOwner || transferOwner.id === current.store.owner?.id}
+                    onClick={() => openChange('owner', transferOwner)}>Tinjau perubahan pemilik</button>
+                </div>
               )}
               <div className="b2b-assignment-grid">
                 <section>
@@ -820,14 +934,16 @@ export default function AdminB2BStoresPage() {
           title={
             change.kind === 'edit'
               ? 'Ubah data toko'
-              : change.kind === 'replace'
+              : change.kind === 'owner'
+                ? 'Konfirmasi pemilik toko'
+                : change.kind === 'replace'
                 ? 'Ganti Sales toko'
                 : change.kind === 'sales'
                   ? 'Cabut penugasan Sales?'
                   : 'Lepas pembeli dari toko?'
           }
           confirmLabel={
-            change.kind === 'edit' || change.kind === 'replace'
+            change.kind === 'edit' || change.kind === 'replace' || change.kind === 'owner'
               ? 'Simpan perubahan'
               : change.kind === 'sales'
                 ? 'Cabut penugasan'
@@ -854,7 +970,13 @@ export default function AdminB2BStoresPage() {
               {change.account.email}
             </p>
           )}
-          {change.kind === 'edit' ? (
+          {change.kind === 'owner' ? (
+            <p>Pastikan akun pemilik baru benar. Akun baru langsung mendapat akses toko.
+              {change.store.owner && (keepPreviousMember
+                ? ' Pemilik sebelumnya tetap mempunyai akses sebagai anggota.'
+                : ' Hubungan pemilik sebelumnya sebagai anggota akan dicabut.')}
+              Perubahan tercatat dalam audit.</p>
+          ) : change.kind === 'edit' ? (
             <fieldset disabled={busy} className="b2b-edit-fields">
               <label htmlFor="b2b-edit-name">
                 Nama toko

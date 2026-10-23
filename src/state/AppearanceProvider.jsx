@@ -83,6 +83,7 @@ export default function AppearanceProvider({ children }) {
     const root = document.documentElement;
     const attrs = {
       'data-appearance-font': advanced.font,
+      'data-appearance-corners': advanced.radius === 16 ? 'default' : 'custom',
       'data-appearance-density': advanced.density,
       'data-appearance-motion': advanced.motion ? 'on' : 'off',
     };

@@ -185,3 +185,36 @@ select {
 dialog {
   color: var(--color-text);
 }
+
+/*
+ * Shared native-control fallback for existing admin/checkout forms.
+ * The storefront catalog now uses custom themed popovers; leave native selects
+ * in sensitive forms to preserve established keyboard, validation and handlers.
+ * Browser-managed expanded select menus are OS-specific.
+ */
+:root { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+:where(select) {
+  min-height: 42px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 11px;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  font: inherit;
+  cursor: pointer;
+}
+:where(select option, select optgroup) {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+:where(select):hover:not(:disabled) {
+  border-color: var(--color-border-info-strong);
+}
+:where(select):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+:where(select):disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}

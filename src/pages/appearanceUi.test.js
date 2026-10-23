@@ -337,6 +337,41 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       defaultAppearance,
     );
     Object.defineProperty(dom, 'localStorage', { configurable: true, value: storage });
+
+    // Studio baru mempertahankan pilihan lama dan menyimpan tema lanjutan terpisah.
+    await openTab('appearance');
+    assert.ok(container.querySelector('.appearance-studio-grid'));
+    assert.equal(container.querySelectorAll('.appearance-preset').length, 6);
+    await act(async () => {
+      [...container.querySelectorAll('.appearance-preset')]
+        .find((button) => button.textContent.includes('Forest Green')).click();
+      await settle();
+    });
+    assert.equal(current().mode, 'light');
+    assert.equal(page.getAttribute('data-appearance-font'), 'modern');
+    assert.ok(page.style.getPropertyValue('--color-action'));
+    assert.ok(container.querySelector('.appearance-demo-products'));
+    await act(async () => {
+      container.querySelector('.appearance-studio-tabs button:last-child').click();
+      await settle();
+    });
+    assert.equal(container.querySelector('.appearance-studio-advanced').hidden, false);
+    const radius = container.querySelector('input[aria-label="Sudut kartu"]');
+    await act(async () => {
+      radius.value = '24';
+      radius.dispatchEvent(new dom.Event('input', { bubbles: true }));
+      radius.dispatchEvent(new dom.Event('change', { bubbles: true }));
+      await settle();
+    });
+    assert.ok(container.querySelector('input[aria-label="Warna aksen (HEX)"]'));
+    assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 4);
+    await act(async () => {
+      container.querySelector('.appearance-reset').click();
+      await settle();
+    });
+    assert.equal(current().mode, 'light');
+    assert.equal(page.style.getPropertyValue('--color-action'), '');
+    assert.equal(container.querySelector('.appearance-reset').disabled, true);
   } finally {
     await act(async () => root.unmount());
     await server.close();

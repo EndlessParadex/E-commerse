@@ -91,7 +91,7 @@ function authFields(body, registration) {
   if (registration && (name.length < 2 || name.length > 100))
     errors.name = 'Nama harus berisi 2–100 karakter.';
   if (registration || !phone) {
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
       errors.email = registration ? 'Email tidak valid.' : 'Email atau nomor HP tidak valid.';
   }
   if (registration && !phone)

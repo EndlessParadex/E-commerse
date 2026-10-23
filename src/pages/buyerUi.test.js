@@ -115,7 +115,11 @@ test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembat
     assert.equal(container.querySelector('.product-back-link').getAttribute('href'), '#' + start);
     await click(container.querySelector('.product-back-link'));
     assert.equal(dom.location.hash, '#' + start);
-    assert.equal(container.querySelector('.catalog-toolbar select').value, 'low');
+    // Sort is now a theme-aware custom dropdown rather than a native <select>.
+    assert.equal(
+      container.querySelector('.catalog-toolbar .catalog-search-trigger .catalog-search-current-name')?.textContent,
+      'Harga terendah',
+    );
     assert.equal(container.querySelectorAll('.catalog-filter-chips a').length, 4);
     await click(container.querySelector('.product-image'));
     await click(container.querySelector('input[name="product-size"][value="snack-pedas-23g"]'));

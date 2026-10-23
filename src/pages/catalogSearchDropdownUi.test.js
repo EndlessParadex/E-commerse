@@ -142,6 +142,13 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     for (const label of ['Kategori', 'Subkategori', 'PT pemasok', 'Merek', 'Urutkan'])
       assert.ok(home.includes('label="' + label + '"'));
     assert.ok(home.includes('onChange={(sort) => setFilter({ sort })}'));
+    const themes = await readFile(new URL('../styles/themes.css', import.meta.url), 'utf8');
+    assert.match(themes, /@supports \(appearance: base-select\)/);
+    assert.match(themes, /::picker\(select\)/);
+    assert.match(themes, /option:checked/);
+    assert.match(themes, /:root\[data-theme='dark'\] \{ color-scheme: dark; \}/);
+    const audit = await readFile(new URL('../../docs/UI-DROPDOWN-AUDIT.md', import.meta.url), 'utf8');
+    assert.match(audit, /30 native/);
     assert.match(home, /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/);
     assert.match(home, /onChange=\{\(brandId\) => setFilter\(\{ brandId \}\)\}/);
   } finally {

@@ -318,6 +318,7 @@ test('self registration appears in the buyer directory without role selection or
     const response = await request(app, 'POST', '/api/auth/register', {
       name: 'Pembeli Baru',
       email: 'new@fixture.test',
+      phone: '081234560003',
       address: 'Alamat pembeli baru lengkap',
       password: 'new-customer-password',
       role: 'admin',
@@ -504,6 +505,7 @@ test('deactivation revokes sessions and recovery links, cannot be bypassed throu
       (
         await request(app, 'POST', '/api/auth/register', {
           email: 'buyer@fixture.test',
+          phone: '081234560004',
           name: 'Nama penimpa',
           address: 'Alamat lengkap penimpa',
           password: 'new-registration-password',

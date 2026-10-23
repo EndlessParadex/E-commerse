@@ -149,7 +149,8 @@ export class IdentityRepository {
   async register(fields, ip) {
     if (!this.limiter.take('register', ip, fields.email)) return this.registrationMessage();
     const encoded = await this.queue.run(ip, () => this.hashPassword(fields.password));
-    this.transaction(() => {
+    try {
+      this.transaction(() => {
       this.cleanup();
       let user = this.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
       if (!user) {
@@ -173,7 +174,13 @@ export class IdentityRepository {
         }
         if (this.ready) this.issue('verify', fields.email, user);
       } else if (this.ready) this.issue('reset', fields.email, user);
-    });
+      });
+    } catch (error) {
+      // Registration has always been generic, including already-registered email.
+      // Do not introduce phone-based account enumeration. Transaction rolls back
+      // both the new user and phone claim if the phone is unavailable.
+      if (error?.code !== 'phone_unavailable') throw error;
+    }
     return this.registrationMessage();
   }
   registrationMessage() {

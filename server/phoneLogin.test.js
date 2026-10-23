@@ -70,7 +70,7 @@ test('phone login shares password, approval rules and cookies with normal email 
 
     const duplicate = await request(app, '/api/auth/register',
       signup('other@fixture.test', '+6281234567890'));
-    assert.equal(duplicate.status, 409);
+    assert.equal(duplicate.status, 202, 'registration response does not reveal whether a phone belongs to another account');
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM users').get().n, 1);
   } finally {
     app.db.close();
@@ -143,7 +143,9 @@ test('historical duplicate phone aliases are ambiguous and cannot resolve an arb
     assert.equal((await request(app, '/api/auth/login',
       { identifier: '081234567890', password })).status, 401);
     assert.equal((await request(app, '/api/auth/register',
-      signup('new@fixture.test', '081234567890'))).status, 409);
+      signup('new@fixture.test', '081234567890'))).status, 202);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM users').get().n, 2,
+      'a collision cannot silently create a third account');
     assert.equal((await request(app, '/api/auth/login',
       { identifier: 'old-a@fixture.test', password })).status, 200);
   } finally {

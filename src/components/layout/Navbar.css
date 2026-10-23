@@ -1484,3 +1484,34 @@
   }
   .navbar-search { border-radius: 10px; }
 }
+
+
+/* Visible only for backend-recognized B2B Sales/shop buyers. */
+.secondary-nav-left .navbar-b2b-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+  font-size: .82rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.secondary-nav-left .navbar-b2b-link:hover {
+  background: var(--color-border-info);
+}
+.secondary-nav-left .navbar-b2b-link:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+@media(max-width:600px) {
+  .secondary-nav-left .navbar-b2b-link {
+    min-height: 35px;
+    font-size: .75rem;
+    padding: 5px 10px;
+  }
+}

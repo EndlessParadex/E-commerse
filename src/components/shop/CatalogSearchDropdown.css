@@ -28,7 +28,7 @@
   border: 1px solid var(--color-input-border);
   background: var(--color-surface);
   color: var(--color-text);
-  border-radius: 12px;
+  border-radius: var(--bam-ui-radius-control);
   text-align: left;
   font: inherit;
   font-size: .81rem;
@@ -79,10 +79,10 @@
   max-width: min(360px, calc(100vw - 48px));
   box-sizing: border-box;
   padding: 10px;
-  border-radius: 15px;
+  border-radius: var(--bam-ui-radius-popover);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
-  box-shadow: 0 18px 42px #081b3350;
+  box-shadow: var(--bam-ui-shadow-popover);
 }
 .catalog-search-input-wrap {
   display: flex;
@@ -137,7 +137,7 @@
   text-align: left;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 10px;
+  border-radius: var(--bam-ui-radius-control);
   color: var(--color-text);
   font: inherit;
   cursor: pointer;
@@ -280,4 +280,24 @@
   .category-page .catalog-toolbar .catalog-search-dropdown.is-compact .catalog-search-panel {
     width: 100%;
   }
+}
+
+/* Shared active, hover and compact states. Keeps the entire popover theme-aware. */
+.category-page .catalog-search-trigger:hover:not(:disabled) {
+  border-color: var(--color-border-info-strong);
+  background: var(--color-surface-hover);
+}
+.category-page .catalog-search-option[aria-pressed='true'] .catalog-search-option-icon {
+  background: var(--color-surface);
+  color: var(--color-info-text);
+}
+.category-page .catalog-search-option:active:not(:disabled) {
+  background: var(--color-info-soft);
+}
+.category-page .catalog-toolbar .catalog-search-dropdown.is-compact .catalog-search-panel {
+  box-shadow: var(--bam-ui-shadow-popover);
+  border-color: var(--color-border-info);
+}
+.category-page .catalog-toolbar .catalog-search-dropdown.is-compact .catalog-search-option {
+  border-radius: var(--bam-ui-radius-control);
 }

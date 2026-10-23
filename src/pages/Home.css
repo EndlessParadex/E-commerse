@@ -378,7 +378,7 @@
 }
 .catalog-toolbar select {
   border: 1px solid var(--color-border-store);
-  border-radius: 8px;
+  border-radius: var(--bam-ui-radius-control);
   padding: 8px 10px;
   background: var(--color-surface);
   color: var(--color-text);

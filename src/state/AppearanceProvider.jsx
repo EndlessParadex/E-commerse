@@ -17,6 +17,7 @@ import {
   normalizeAdvancedAppearance, readAdvancedAppearance, writeAdvancedAppearance,
 } from './appearanceAdvanced.js';
 import '../styles/advancedAppearance.css';
+import '../styles/uiConsistency.css';
 
 function browserStorage() {
   try {

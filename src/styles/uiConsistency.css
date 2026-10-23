@@ -1,0 +1,86 @@
+/* BAM shared UI primitives — use semantic theme variables instead of page-specific colors.
+ * Applies to buyer, sales and admin; the appearance provider owns the actual palette.
+ */
+:root {
+  --bam-ui-radius-xs: 8px;
+  --bam-ui-radius-control: 12px;
+  --bam-ui-radius-card: 16px;
+  --bam-ui-radius-popover: 16px;
+  --bam-ui-control-min-height: 44px;
+  --bam-ui-shadow-popover: 0 18px 44px #07182f30;
+  --bam-ui-focus-ring: 0 0 0 3px var(--color-info-soft);
+}
+:root[data-theme='dark'] {
+  --bam-ui-shadow-popover: 0 18px 44px #030c1bcc;
+}
+:root[data-appearance-corners='custom'] {
+  --bam-ui-radius-xs: var(--bam-custom-radius);
+  --bam-ui-radius-control: var(--bam-custom-radius);
+  --bam-ui-radius-card: var(--bam-custom-radius);
+  --bam-ui-radius-popover: var(--bam-custom-radius);
+}
+:where(button, input, select, textarea) { font-family: inherit; }
+:where(.page-main) :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']), select, textarea) {
+  min-width: 0;
+  border-radius: var(--bam-ui-radius-control);
+  color: var(--color-text);
+}
+:where(.page-main) :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']), select, textarea):not(:disabled) {
+  accent-color: var(--color-action);
+}
+:where(.page-main) :where(input, select, textarea, button, a, summary, [role='button']):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+:where(.page-main) :where(input, textarea, select):disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+:where(.page-main) :where(button):disabled {
+  cursor: not-allowed;
+}
+:where(.page-main) :where(.product-card, .bam-product-card, .checkout-card, .admin-panel,
+  .admin-metric, .admin-form-section, .b2b-panel, .workflow-order-card, .workflow-stock-card,
+  .account-menu, .shared-cart-selection, .shared-admin-work-card, .shop-preview) {
+  border-radius: var(--bam-ui-radius-card);
+}
+:where(.page-main) :where(dialog, .bam-confirm-dialog) {
+  border-radius: var(--bam-ui-radius-popover);
+  color: var(--color-text);
+}
+:where(.page-main) :where(.shop-primary, .admin-primary, .bam-button-secondary, .admin-secondary,
+  .add-product-button, .catalog-search-trigger) {
+  border-radius: var(--bam-ui-radius-control);
+}
+:where(.page-main) :where(input, textarea)::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+:where(.page-main) :where(select option, select optgroup) {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+:where(.page-main) :where(.catalog-search-panel, .navbar-dropdown, .deliver-popup) {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  border-radius: var(--bam-ui-radius-popover);
+  box-shadow: var(--bam-ui-shadow-popover);
+}
+:where(.page-main) :where(.catalog-search-option, .catalog-search-trigger):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+:where(.page-main) :where(.shop-primary, .admin-primary, .add-product-button):disabled {
+  opacity: .6;
+  box-shadow: none;
+}
+:where(.page-main) :where(.checkout-card, .admin-panel, .admin-form-section, .product-card) {
+  background-color: var(--color-surface);
+  border-color: var(--color-border-store);
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.page-main) :where(button, input, select, textarea, dialog) {
+    scroll-behavior: auto;
+  }
+}

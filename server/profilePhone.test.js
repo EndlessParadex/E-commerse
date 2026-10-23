@@ -124,10 +124,17 @@ test('account contact phones are private, persist, validate, and never grant aut
     );
     assert.equal(profile.status, 200);
     assert.equal(profile.body.user.phone, '+6281234567890');
-    // An unverified contact is not an identity: neither login nor shared-store access is created.
-    assert.notEqual(
+    // A saved phone is an alternate username only when accompanied by the account password.
+    // It does not provide OTP-verification evidence or shared-store permissions.
+    assert.equal(
       (await request('POST', '/api/auth/login', { email: '+6281234567890', password })).status,
       200,
+    );
+    assert.equal(
+      (await request('POST', '/api/auth/login', {
+        email: '+6281234567890', password: 'incorrect',
+      })).status,
+      401,
     );
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_members').get().n, 0);
     app.db.close();
@@ -142,11 +149,17 @@ test('account contact phones are private, persist, validate, and never grant aut
     assert.equal(login.body.user.phone, '+6281234567890');
     assert.equal(
       (await request('PUT', '/api/profile/phone', { phone: '081234567890' }, 'second')).status,
-      200,
+      409,
+      'another account cannot claim an existing phone even if unverified',
     );
     assert.equal(
       (await request('PUT', '/api/profile/phone', { phone: '   ' }, 'first')).body.user.phone,
       '',
+    );
+    assert.equal(
+      (await request('PUT', '/api/profile/phone', { phone: '081234567890' }, 'second')).status,
+      200,
+      'the phone can be reassigned after its former owner explicitly removes it',
     );
     assert.equal(
       (await request('GET', '/api/auth/me', undefined, 'second')).body.user.phone,

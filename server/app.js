@@ -29,6 +29,8 @@ import { SharedCartRepository } from './sharedCarts.js';
 import { B2BFinalizationRepository } from './b2bFinalization.js';
 import { customerAccess } from './customerAccess.js';
 import { PhoneVerificationRepository } from './phoneVerification.js';
+import { PhoneLoginDirectory } from './phoneLoginDirectory.js';
+import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { createWhatsAppOtpSender } from './whatsappOtp.js';
 
 const scrypt = promisify(scryptCallback);
@@ -73,19 +75,32 @@ export function readBody(req, limit = 100000) {
 }
 function authFields(body, registration) {
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
-  const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+  // Older login clients still submit "email"; new clients submit "identifier".
+  const rawLogin = typeof body?.identifier === 'string' ? body.identifier.trim()
+    : typeof body?.email === 'string' ? body.email.trim() : '';
+  const email = (registration
+    ? typeof body?.email === 'string' ? body.email.trim() : ''
+    : rawLogin).toLowerCase();
   const address = typeof body?.address === 'string' ? body.address.trim() : '';
   const password = typeof body?.password === 'string' ? body.password : '';
+  const phone = registration
+    ? normalizeWhatsApp(body?.phone)
+    : normalizeWhatsApp(rawLogin);
+  const loginKey = phone || email;
   const errors = {};
   if (registration && (name.length < 2 || name.length > 100))
     errors.name = 'Nama harus berisi 2–100 karakter.';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
-    errors.email = 'Email tidak valid.';
+  if (registration || !phone) {
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254)
+      errors.email = registration ? 'Email tidak valid.' : 'Email atau nomor HP tidak valid.';
+  }
+  if (registration && !phone)
+    errors.phone = 'Isi nomor HP Indonesia yang valid, misalnya 081234567890.';
   if (!password || password.length > 128 || (registration && password.length < 8))
     errors.password = registration ? 'Kata sandi harus 8–128 karakter.' : 'Kata sandi tidak valid.';
   if (registration && (address.length < 10 || address.length > 500))
     errors.address = 'Alamat harus berisi 10–500 karakter.';
-  return { errors, name, email, address, password };
+  return { errors, name, email, address, phone, password, loginKey };
 }
 export async function hashPassword(password) {
   const salt = randomBytes(16);
@@ -160,8 +175,10 @@ export function createApp({
     transportFactory: mailTransportFactory,
     logger,
   });
+  const phoneDirectory = new PhoneLoginDirectory(db);
   const initialMail = emailSettings.runtime();
   const identity = new IdentityRepository(db, {
+    phoneDirectory,
     now,
     mailer: initialMail.mailer,
     config: initialMail.config,
@@ -184,6 +201,7 @@ export function createApp({
   });
   const messages = new OrderMessages(db, identity, company, now, logger);
   const phoneVerification = new PhoneVerificationRepository(db, {
+    phoneDirectory,
     now,
     sender: whatsappSender ?? createWhatsAppOtpSender(),
     queue: passwordQueue,
@@ -776,13 +794,15 @@ export function createApp({
         const fields = authFields(await readBody(req), false);
         if (Object.keys(fields.errors).length)
           return sendError(res, 422, 'validation_error', fields.errors);
-        const user = db.prepare('SELECT * FROM users WHERE email=?').get(fields.email);
+        const user = fields.phone
+          ? db.prepare('SELECT * FROM users WHERE id=?').get(phoneDirectory.find(fields.phone))
+          : db.prepare('SELECT * FROM users WHERE email=?').get(fields.email);
         const storedHashValid = validPasswordHash(user?.password_hash);
         const ip = clientIp(req);
         const matches = await passwordQueue.run(ip, async () => {
           // Slow a source after repeated failures; a correct password still works.
           // The bounded queue also bounds delayed work and its concurrency per IP.
-          const delay = limiter.loginDelay(ip, fields.email);
+          const delay = limiter.loginDelay(ip, fields.loginKey);
           if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
           return passwordCheck(
             fields.password,
@@ -796,14 +816,14 @@ export function createApp({
           db.prepare('SELECT password_hash FROM users WHERE id=?').get(user.id)?.password_hash !==
             user.password_hash
         ) {
-          const allowed = limiter.take('login', ip, fields.email);
+          const allowed = limiter.take('login', ip, fields.loginKey);
           return sendError(
             res,
             allowed ? 401 : 429,
             allowed ? 'invalid_credentials' : 'too_many_attempts',
             {
               form: allowed
-                ? 'Email atau kata sandi salah.'
+                ? 'Email, nomor HP, atau kata sandi salah.'
                 : 'Terlalu banyak percobaan gagal dari koneksi ini. Coba kembali nanti atau gunakan pemulihan akun.',
             },
           );
@@ -816,7 +836,7 @@ export function createApp({
           return sendError(res, 403, 'approval_required', {
             form: 'Akun belum dapat masuk karena persetujuan pengelola masih diperlukan. Jika Anda sudah mendaftar, periksa email verifikasi dan hubungi Admin atau Pemilik toko untuk bantuan.',
           });
-        limiter.clearLoginPair(ip, fields.email);
+        limiter.clearLoginPair(ip, fields.loginKey);
         return json(res, 200, { user: publicUser(user) }, sessionHeaders(user.id));
       }
       if (req.method === 'POST' && path === '/api/auth/logout') {

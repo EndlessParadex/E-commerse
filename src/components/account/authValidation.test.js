@@ -6,6 +6,7 @@ const valid = {
   name: 'Pengguna Contoh',
   address: 'Jalan Contoh nomor 10, Tangerang, Banten 15810',
   email: 'demo@example.com',
+  phone: '081234567890',
   password: 'contoh1234',
   confirmPassword: 'contoh1234',
 };
@@ -62,4 +63,18 @@ test('alamat wajib pada pendaftaran tetapi tidak wajib pada login', () => {
     assert.ok(validateAuth({ ...valid, address }, 'register').address);
     assert.deepEqual(validateAuth({ ...valid, address }, 'login'), {});
   }
+});
+
+test('login accepts phone aliases but rejects incomplete Indonesian numbers', () => {
+  for (const email of ['081234567890', '6281234567890', '+6281234567890', '0812-3456-7890'])
+    assert.deepEqual(validateAuth({ ...valid, email }, 'login'), {});
+  for (const email of ['0812', '628123', '+620012345678', '1234567890'])
+    assert.ok(validateAuth({ ...valid, email }, 'login').email);
+});
+
+test('new registration requires a valid phone and still requires email', () => {
+  assert.ok(validateAuth({ ...valid, phone: '' }, 'register').phone);
+  assert.ok(validateAuth({ ...valid, phone: '0812' }, 'register').phone);
+  assert.deepEqual(validateAuth({ ...valid, phone: '+6281234567890' }, 'register'), {});
+  assert.ok(validateAuth({ ...valid, email: '' }, 'register').email);
 });

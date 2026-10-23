@@ -140,21 +140,17 @@ export default function ShopActions({ onOpen }) {
             </a>
             {expanded && (
               <section
-                className="shop-preview"
+                className={'shop-preview' + (isAccount ? ' shop-preview--account' : '')}
                 id={`preview-${kind}`}
                 aria-label={`Ringkasan ${title.toLowerCase()}`}
               >
                 <div className="shop-preview-inner">
-                  <header className="shop-preview-header">
-                    <h2>{title}</h2>
-                    <span>
-                      {!isAccount && (
-                        <>
-                          {count} {isCart ? 'barang' : 'belum dibaca'}
-                        </>
-                      )}
-                    </span>
-                  </header>
+                  {!isAccount && (
+                    <header className="shop-preview-header">
+                      <h2>{title}</h2>
+                      <span>{count} {isCart ? 'barang' : 'belum dibaca'}</span>
+                    </header>
+                  )}
                   {!isCart && !isAccount && shop.notifications.length > 0 && (
                     <div className="preview-notification-toolbar">
                       <button
@@ -168,15 +164,21 @@ export default function ShopActions({ onOpen }) {
                     </div>
                   )}
                   {isAccount ? (
-                    <div className="account-preview-body">
-                      <AccountAvatar user={user} className="account-preview-avatar" />
+                    <div className={'account-preview-body' + (user ? ' is-signed-in' : '')}>
                       {user ? (
-                        <>
-                          <h3>Halo, {user.name}</h3>
-                          <p>{user.email}</p>
-                        </>
+                        <div className="account-preview-identity">
+                          <AccountAvatar user={user} className="account-preview-avatar" />
+                          <div className="account-preview-info">
+                            <h3>Halo, {user.name}</h3>
+                            <p>{user.email}</p>
+                            <span className="account-preview-role">
+                              {user.role === 'admin' ? 'Admin BAM' : 'Akun BAM'}
+                            </span>
+                          </div>
+                        </div>
                       ) : (
                         <>
+                          <AccountAvatar user={user} className="account-preview-avatar" />
                           <h3>Selamat datang di {companyProfile.shortName}.</h3>
                           <p>Masuk atau buat akun untuk pengalaman belanja Anda.</p>
                           <a className="shop-primary" href="#/login" onClick={close}>

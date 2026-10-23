@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import './Navbar.css';
 import ShopActions from '../shop/ShopActions';
 import { useDelivery } from '../../state/useDelivery';
+import { useShop } from '../../state/useShop';
 import { normalizeDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
 import CompanyBrand from './CompanyBrand';
@@ -55,6 +56,10 @@ const Navbar = () => {
   // Deliver To State
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
+  const { shared } = useShop();
+  const b2bNavLabel = shared?.status === 'ready'
+    ? shared.role === 'sales' ? 'Daftar Toko' : shared.role === 'buyer' ? 'Toko Saya' : ''
+    : '';
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
@@ -435,6 +440,12 @@ const Navbar = () => {
         <div className="secondary-navbar-container">
           <div className="secondary-nav-left">
             <CatalogMenu />
+            {b2bNavLabel && (
+              <a className="navbar-b2b-link" href="#/keranjang"
+                aria-label={b2bNavLabel + ' dan keranjang bersama'}>
+                {b2bNavLabel}
+              </a>
+            )}
             <a className="navbar-catalog-link" href="#/cari?q=">Jelajahi produk</a>
           </div>
 

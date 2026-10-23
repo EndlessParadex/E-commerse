@@ -10,8 +10,8 @@ const fail = (message, status = 400, code = 'invalid_phone_code') => {
 const invalid = () =>
   fail('Kode tidak sesuai, sudah digunakan, atau kedaluwarsa. Periksa kode atau minta kode baru.');
 export class PhoneVerificationRepository {
-  constructor(db, { now, sender, queue, hashPassword }) {
-    Object.assign(this, { db, now, sender, queue, hashPassword });
+  constructor(db, { now, sender, queue, hashPassword, phoneDirectory }) {
+    Object.assign(this, { db, now, sender, queue, hashPassword, phoneDirectory });
     const columns = db
       .prepare('PRAGMA table_info(user_contact_phones)')
       .all()
@@ -68,6 +68,7 @@ export class PhoneVerificationRepository {
       if (phone) {
         const previous = this.contact(userId);
         if (previous.phone !== phone) {
+          this.phoneDirectory?.claim(userId, phone);
           this.db.prepare('DELETE FROM phone_otp_challenges WHERE user_id=?').run(userId);
           this.db
             .prepare(
@@ -76,7 +77,10 @@ export class PhoneVerificationRepository {
             )
             .run(userId, phone, randomUUID());
         }
-      } else this.db.prepare('DELETE FROM user_contact_phones WHERE user_id=?').run(userId);
+      } else {
+        this.phoneDirectory?.claim(userId, '');
+        this.db.prepare('DELETE FROM user_contact_phones WHERE user_id=?').run(userId);
+      }
       return this.contact(userId);
     });
   }

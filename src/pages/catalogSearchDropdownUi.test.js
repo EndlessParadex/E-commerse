@@ -103,12 +103,45 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     });
     assert.equal(container.querySelector('.catalog-search-panel'), null, 'klik luar menutup dropdown');
 
+    await render({
+      label: 'Urutkan',
+      value: 'popular',
+      options: [
+        { id: 'popular', name: 'Pilihan katalog', icon: '✦' },
+        { id: 'low', name: 'Harga terendah', icon: '↑' },
+        { id: 'high', name: 'Harga tertinggi', icon: '↓' },
+      ],
+      searchable: false,
+      showCounts: false,
+      compact: true,
+    });
+    await click(container.querySelector('.catalog-search-trigger'));
+    assert.equal(container.querySelector('input[type="search"]'), null,
+      'sort has only three options, so no redundant search');
+    assert.equal(container.querySelector('.catalog-search-dropdown').classList.contains('is-compact'), true);
+    assert.equal(container.querySelectorAll('.catalog-search-option').length, 3);
+    assert.ok(container.querySelector('.catalog-search-option[aria-pressed="true"]'));
+    assert.equal(document.activeElement,
+      container.querySelector('.catalog-search-option[aria-pressed="true"]'),
+      'selected sort option receives keyboard focus');
+    assert.ok(!container.querySelector('.catalog-search-option small'),
+      'sort labels do not invent product counts');
+    const high = Array.from(container.querySelectorAll('.catalog-search-option'))
+      .find((option) => option.textContent.includes('Harga tertinggi'));
+    await click(high);
+    assert.equal(selected.at(-1), 'high');
+    assert.equal(container.querySelector('.catalog-search-panel'), null);
+
     const css = await readFile(new URL('../components/shop/CatalogSearchDropdown.css', import.meta.url), 'utf8');
     assert.match(css, /--color-surface/);
     assert.match(css, /@media \(max-width: 520px\)/);
     assert.match(css, /prefers-reduced-motion/);
     const home = await readFile(new URL('./Home.jsx', import.meta.url), 'utf8');
-    assert.equal((home.match(/<CatalogSearchDropdown/g) || []).length, 2);
+    assert.equal((home.match(/<CatalogSearchDropdown/g) || []).length, 5);
+    assert.ok(!home.includes('<select'), 'catalog uses one consistent dropdown style');
+    for (const label of ['Kategori', 'Subkategori', 'PT pemasok', 'Merek', 'Urutkan'])
+      assert.ok(home.includes('label="' + label + '"'));
+    assert.match(home, /onChange=\\{\\(sort\\) => setFilter\\(\\{ sort \\}\\)\\}/);
     assert.match(home, /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/);
     assert.match(home, /onChange=\{\(brandId\) => setFilter\(\{ brandId \}\)\}/);
   } finally {

@@ -798,11 +798,13 @@ export function createApp({
           ? db.prepare('SELECT * FROM users WHERE id=?').get(phoneDirectory.find(fields.phone))
           : db.prepare('SELECT * FROM users WHERE email=?').get(fields.email);
         const storedHashValid = validPasswordHash(user?.password_hash);
+        // Email and phone aliases for a known account share the same throttling budget.
+        const rateKey = user ? user.email.toLowerCase() : fields.loginKey;
         const ip = clientIp(req);
         const matches = await passwordQueue.run(ip, async () => {
           // Slow a source after repeated failures; a correct password still works.
           // The bounded queue also bounds delayed work and its concurrency per IP.
-          const delay = limiter.loginDelay(ip, fields.loginKey);
+          const delay = limiter.loginDelay(ip, rateKey);
           if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
           return passwordCheck(
             fields.password,
@@ -816,7 +818,7 @@ export function createApp({
           db.prepare('SELECT password_hash FROM users WHERE id=?').get(user.id)?.password_hash !==
             user.password_hash
         ) {
-          const allowed = limiter.take('login', ip, fields.loginKey);
+          const allowed = limiter.take('login', ip, rateKey);
           return sendError(
             res,
             allowed ? 401 : 429,
@@ -836,7 +838,7 @@ export function createApp({
           return sendError(res, 403, 'approval_required', {
             form: 'Akun belum dapat masuk karena persetujuan pengelola masih diperlukan. Jika Anda sudah mendaftar, periksa email verifikasi dan hubungi Admin atau Pemilik toko untuk bantuan.',
           });
-        limiter.clearLoginPair(ip, fields.loginKey);
+        limiter.clearLoginPair(ip, rateKey);
         return json(res, 200, { user: publicUser(user) }, sessionHeaders(user.id));
       }
       if (req.method === 'POST' && path === '/api/auth/logout') {

@@ -108,7 +108,7 @@ export default function CatalogSearchDropdown({
                   }
                 }}/>
             </label>
-          )
+          )}
           <div className="catalog-search-options" ref={choices}
             role="group" aria-label={'Pilihan ' + label.toLowerCase()}>
             {matches.length ? matches.map((item) => (

@@ -155,6 +155,7 @@ test('admin saja dapat menyimpan; konflik, origin, logo palsu dan field tidak va
     const registration = await request(app, 'POST', '/api/auth/register', {
       name: 'Pelanggan',
       email: 'user@test.id',
+      phone: '081234560006',
       password: 'test-password',
       address: 'Alamat pelanggan lengkap',
       role: 'admin',

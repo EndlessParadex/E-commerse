@@ -501,7 +501,9 @@ test('failed-login limits persist on the same source; registration throttling do
     };
     for (const email of ['first@test.id', 'second@test.id'])
       assert.equal(
-        (await request(app, 'POST', '/api/auth/register', { ...fields, email })).status,
+        (await request(app, 'POST', '/api/auth/register', {
+          ...fields, email, phone: email.startsWith('first') ? '081234560008' : '081234560009',
+        })).status,
         202,
       );
     assert.equal(
@@ -510,7 +512,9 @@ test('failed-login limits persist on the same source; registration throttling do
     );
     time += 60000;
     assert.equal(
-      (await request(app, 'POST', '/api/auth/register', { ...fields, email: 'second@test.id' }))
+      (await request(app, 'POST', '/api/auth/register', {
+          ...fields, email: 'second@test.id', phone: '081234560009',
+        }))
         .status,
       202,
     );

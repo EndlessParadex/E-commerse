@@ -299,6 +299,7 @@ test('unconfigured email stores an unverified account without pretending deliver
       name: 'Fixture New',
       address: 'Alamat fixture lengkap',
       email: 'new@fixture.test',
+      phone: '081234560010',
       password,
     });
     assert.equal(response.status, 202);
@@ -316,10 +317,12 @@ test('registration is generic; verification requires ownership token and passwor
     const known = await request(app, 'POST', '/api/auth/register', {
       ...fields,
       email: alice.id + '@fixture.test',
+      phone: '081234560011',
     });
     const fresh = await request(app, 'POST', '/api/auth/register', {
       ...fields,
       email: 'new@fixture.test',
+      phone: '081234560012',
     });
     assert.equal(known.status, 202);
     assert.deepEqual(fresh.body, known.body);
@@ -445,7 +448,8 @@ test('independent customers behind a trusted proxy have independent registration
             app,
             'POST',
             '/api/auth/register',
-            { ...fields, email },
+            { ...fields, email,
+              phone: '0812' + String([...email].reduce((n, ch) => n + ch.charCodeAt(0), 0)).padStart(8, '0') },
             null,
             '127.0.0.1',
             { 'x-forwarded-for': ip },
@@ -469,6 +473,7 @@ test('registration retains the original password; repeat registration cannot ove
       name: 'Recipient',
       address: 'Alamat penerima lengkap',
       email: 'recipient@fixture.test',
+      phone: '081234560013',
       password: 'registration-original-password',
     };
     await request(app, 'POST', '/api/auth/register', fields);

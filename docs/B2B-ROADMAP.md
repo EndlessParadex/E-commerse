@@ -1,3 +1,11 @@
+## Masuk menggunakan email atau nomor HP (23 Oktober 2026)
+
+- **Pendaftaran baru:** nama, alamat, email, nomor HP Indonesia aktif, dan kata sandi. Nomor dinormalisasi ke format `+628...` dan disimpan tanpa status terverifikasi sampai OTP WhatsApp dikonfirmasi.
+- **Masuk:** satu kolom menerima email atau nomor `08...`, `628...`, atau `+628...` dengan **kata sandi akun yang sama**. OTP bukan pengganti kata sandi; verifikasi email dan persetujuan akun tetap berlaku menurut ketentuan yang sudah ada.
+- **Akun lama:** masih dapat masuk lewat email. Nomor yang ditambahkan melalui **Akun Saya → Profil → Nomor HP** langsung menjadi alias login dengan kata sandi; status verifikasi WhatsApp tetap terpisah.
+- **Perlindungan:** klaim nomor baru dicegah jika nomor tersebut sudah terkait akun lain. Pendaftaran akun tidak membocorkan apakah nomor sudah digunakan; bila nomor tidak tersedia pendaftaran tidak membuat akun baru. Nomor lama yang ambigu karena sudah digunakan beberapa akun tidak dapat digunakan untuk login lewat nomor sampai konflik diselesaikan, tetapi login lewat email tetap berfungsi.
+- **Penyimpanan:** tabel `phone_login_numbers` hanya merupakan indeks nomor ternormalisasi dari `user_contact_phones`; data kontak dan bukti verifikasi yang lama tidak dihapus saat aplikasi melakukan migrasi. Pastikan melakukan backup SQLite sebelum upgrade seperti biasa.
+
 ## Beranda Sales dan Pembeli Toko — Design No. 2 role-aware (23 Oktober 2026)
 
 **Sudah ditambahkan pada frontend:** `B2BHomeExperience.jsx` membedakan hero dan tiga kartu akses cepat untuk akun Sales dan pembeli yang terhubung ke B2B. Sales melihat toko yang ditugaskan, pembeli melihat toko terhubung dan jadwal mingguan/dua mingguan dari `deliverySchedule` server. Nama toko, hitungan penugasan, dan tanggal tidak dibuat sebagai data demo. Header menampilkan **Daftar Toko** atau **Toko Saya** sesuai peran, sementara pembeli biasa/Admin tetap melihat beranda katalog lama. Keduanya menuju `#/keranjang` untuk pemilihan toko dan keranjang bersama yang sudah tersedia. Implementasi navigasi halaman `#/toko` khusus dan dua keranjang pribadi/toko yang berjalan paralel tetap menjadi tahap selanjutnya.

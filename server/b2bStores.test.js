@@ -77,3 +77,54 @@ test('B2B delivery schedule is assigned once by Owner and server rejects off-cal
     app.db.close();
   }
 });
+
+
+test('B2B store owner: create, transfer and preserve legacy stores without guessing ownership', () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  try {
+    const { db, b2bStores: stores } = app;
+    const actors = [
+      ['manager', 'admin'], ['buyer-one', 'user'],
+      ['buyer-two', 'user'], ['sales-only', 'user'],
+    ];
+    for (const [id, role] of actors) {
+      db.prepare('INSERT INTO users(id,name,email,address,password_hash,created_at,role) VALUES(?,?,?,?,?,?,?)')
+        .run(id, id, id+'@fixture.test', 'Jalan Test 1234', 'fixture', '2026-10-23', role);
+    }
+    db.prepare('INSERT INTO store_owners(user_id,granted_at) VALUES(?,?)')
+      .run('manager', '2026-10-23');
+    const manager = { id: 'manager', role: 'admin' };
+    const form = { storeName: 'Toko Test Satu', phone: '081234567890', address: 'Jalan Simulasi 100' };
+    const legacy = stores.create(manager, form);
+    stores.addMember(manager, legacy.id, 'buyer-one');
+    assert.equal(stores.store(legacy.id).owner, null, 'do not infer legacy owner from members');
+    const owned = stores.create(manager, { ...form, ownerUserId: 'buyer-one' });
+    assert.equal(owned.owner.id, 'buyer-one');
+    assert.equal(stores.list({id:'buyer-one',role:'user'}).length, 2);
+    assert.equal(stores.details(manager, owned.id).members[0].isStoreOwner, true);
+    const rev = stores.store(owned.id).revision;
+    assert.throws(() => stores.removeLink(manager, owned.id, 'members',
+      {userId:'buyer-one', revision:rev}), {code:'store_owner_required'});
+    assert.throws(() => stores.setOwner({id:'buyer-one',role:'user'}, owned.id,
+      {userId:'buyer-two',revision:rev}), {code:'forbidden'});
+    stores.appointSales(manager, 'sales-only');
+    assert.throws(() => stores.setOwner(manager, owned.id,
+      {userId:'sales-only',revision:rev}), {code:'invalid_buyer_account'});
+    assert.equal(stores.store(owned.id).owner.id, 'buyer-one');
+    assert.throws(() => stores.setOwner(manager, owned.id,
+      {userId:'buyer-two',revision:rev-1}), {code:'revision_conflict'});
+    assert.equal(stores.store(owned.id).revision, rev);
+    const transferred = stores.setOwner(manager, owned.id,
+      {userId:'buyer-two', revision:rev});
+    assert.equal(transferred.owner.id, 'buyer-two');
+    assert.equal(transferred.revision, rev+1);
+    assert.equal(stores.details(manager, owned.id).members.length, 1);
+    assert.deepEqual(stores.list({id:'buyer-one',role:'user'}).map(x=>x.id), [legacy.id]);
+    assert.deepEqual(stores.list({id:'buyer-two',role:'user'}).map(x=>x.id), [owned.id]);
+    const last = stores.setOwner(manager, legacy.id,
+      {userId:'buyer-two',revision:stores.store(legacy.id).revision,keepPreviousMember:true});
+    assert.equal(last.owner.id,'buyer-two');
+    const actions = db.prepare('SELECT action FROM b2b_store_audit WHERE store_id=?').all(owned.id);
+    assert.ok(actions.some(x=>x.action==='store_owner_transferred'));
+  } finally { app.db.close(); }
+});

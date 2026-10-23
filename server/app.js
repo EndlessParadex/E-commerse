@@ -457,7 +457,8 @@ export function createApp({
         path === '/api/b2b/sales/appoint' ||
         path === '/api/b2b/stores/create' ||
         b2bDetailMatch ||
-        /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)(?:\/remove)?$/.test(path)
+        /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)(?:\/remove)?$/.test(path) ||
+        /^\/api\/b2b\/stores\/[^/]+\/owner$/.test(path)
       ) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
@@ -487,6 +488,11 @@ export function createApp({
               await readBody(req),
             ),
           });
+        const ownerMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/owner$/);
+        if (ownerMatch && req.method === 'PUT')
+          return json(res, 200, { store: b2bStores.setOwner(
+            actor, decodeURIComponent(ownerMatch[1]), await readBody(req),
+          ) });
         const deliveryScheduleMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/schedule$/);
         if (deliveryScheduleMatch && req.method === 'POST') {
           const updated = b2bStores.setSchedule(

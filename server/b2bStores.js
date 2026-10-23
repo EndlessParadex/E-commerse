@@ -87,6 +87,13 @@ export class B2BStoreRepository {
       created_at INTEGER NOT NULL,
       PRIMARY KEY(store_id,user_id)
     );
+    CREATE TABLE IF NOT EXISTS b2b_store_owners (
+      store_id TEXT PRIMARY KEY REFERENCES b2b_stores(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      assigned_by TEXT NOT NULL REFERENCES users(id),
+      assigned_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS b2b_store_owner_user ON b2b_store_owners(user_id,store_id);
     CREATE TABLE IF NOT EXISTS b2b_sales_agents (
       user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       appointed_by TEXT NOT NULL REFERENCES users(id),
@@ -170,6 +177,50 @@ export class B2BStoreRepository {
   bump(storeId) {
     this.db.prepare('UPDATE b2b_stores SET revision=revision+1 WHERE id=?').run(storeId);
   }
+  storeOwner(storeId) {
+    return this.db.prepare(`SELECT u.id,u.name,u.email,
+      CASE WHEN access.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'
+      THEN 1 ELSE 0 END AS active
+      FROM b2b_store_owners link JOIN users u ON u.id=link.user_id
+      LEFT JOIN account_access access ON access.user_id=u.id
+      LEFT JOIN account_approvals approval ON approval.user_id=u.id
+      WHERE link.store_id=?`).get(storeId) || null;
+  }
+  validateBuyer(userId) {
+    const user = validUser(this.db, userId);
+    if (user.role !== 'user' || this.isSales(userId))
+      fail('Pilih akun pembeli aktif yang bukan Sales atau Admin.', 422, 'invalid_buyer_account');
+    return user;
+  }
+  linkStoreOwner(actor, storeId, userId) {
+    this.db.prepare('INSERT OR IGNORE INTO b2b_store_members VALUES(?,?,?,?)')
+      .run(storeId, userId, actor.id, this.now());
+    this.db.prepare(`INSERT INTO b2b_store_owners(store_id,user_id,assigned_by,assigned_at)
+      VALUES(?,?,?,?) ON CONFLICT(store_id) DO UPDATE SET
+      user_id=excluded.user_id,assigned_by=excluded.assigned_by,assigned_at=excluded.assigned_at`)
+      .run(storeId, userId, actor.id, this.now());
+  }
+  setOwner(actor, storeId, body) {
+    this.requireOwner(actor);
+    const userId = required(body?.userId, 'Akun pemilik toko', 1, 100);
+    const user = this.validateBuyer(userId);
+    if (body?.keepPreviousMember !== undefined && typeof body.keepPreviousMember !== 'boolean')
+      fail('Pilihan akses pemilik sebelumnya tidak valid.');
+    return this.transaction(() => {
+      const store = this.checkRevision(storeId, body?.revision, true);
+      const previous = this.storeOwner(store.id);
+      if (previous?.id === user.id) return this.store(store.id);
+      this.linkStoreOwner(actor, store.id, user.id);
+      if (previous && !body.keepPreviousMember) {
+        this.db.prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
+          .run(store.id, previous.id);
+        this.record(actor, 'previous_owner_unlinked', store.id, previous.id);
+      }
+      this.bump(store.id);
+      this.record(actor, previous ? 'store_owner_transferred' : 'store_owner_assigned', store.id, user.id);
+      return this.store(store.id);
+    });
+  }
   schedule(storeId) {
     const row = this.db.prepare(
       'SELECT weekday,interval_weeks AS intervalWeeks,anchor_date AS anchorDate FROM b2b_delivery_schedules WHERE store_id=?',
@@ -209,7 +260,7 @@ export class B2BStoreRepository {
       )
       .get(id);
     if (!row || !row.active) fail('Toko tidak ditemukan.', 404, 'store_not_found');
-    return { ...row, deliverySchedule: this.schedule(row.id) };
+    return { ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) };
   }
   list(actor) {
     if (actor.role === 'admin')
@@ -217,7 +268,7 @@ export class B2BStoreRepository {
         .prepare(
           'SELECT id,store_code AS storeCode,store_name AS storeName,phone,address,active,created_at AS createdAt FROM b2b_stores WHERE active=1 ORDER BY store_name,store_code LIMIT 500',
         )
-        .all().map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) }));
+        .all().map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) }));
     return this.db
       .prepare(
         `SELECT s.id,s.store_code AS storeCode,s.store_name AS storeName,
@@ -228,7 +279,7 @@ export class B2BStoreRepository {
       ORDER BY s.store_name,s.store_code LIMIT 500`,
       )
       .all(actor.id, actor.id)
-      .map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) }));
+      .map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) }));
   }
   page(actor, params) {
     const { query, page: requestedPage, pageSize } = pageFilter(params);
@@ -255,7 +306,7 @@ export class B2BStoreRepository {
       )
       .all(...args, pageSize, (page - 1) * pageSize);
     return {
-      stores: stores.map((row) => ({ ...row, deliverySchedule: this.schedule(row.id) })),
+      stores: stores.map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) })),
       total,
       page,
       pageSize,
@@ -285,7 +336,8 @@ export class B2BStoreRepository {
       WHERE link.store_id=? ORDER BY u.name,u.id`,
       )
       .all(store.id);
-    return { store, members, sales };
+    return { store, members: members.map((member) =>
+      ({ ...member, isStoreOwner: store.owner?.id === member.id })), sales };
   }
   candidates(actor, params) {
     this.requireOwner(actor);
@@ -303,7 +355,10 @@ export class B2BStoreRepository {
     const users = this.db
       .prepare(
         `SELECT u.id,u.name,u.email,
-      (SELECT COUNT(*) FROM b2b_store_members m WHERE m.user_id=u.id) AS memberStores
+      (SELECT COUNT(*) FROM b2b_store_members m WHERE m.user_id=u.id) AS memberStores,
+      (SELECT COUNT(*) FROM b2b_store_owners o WHERE o.user_id=u.id) AS ownedStores,
+      CASE WHEN EXISTS(SELECT 1 FROM auth_account_state v WHERE v.user_id=u.id AND v.verified_at IS NOT NULL)
+      THEN 1 ELSE 0 END AS emailVerified
       ${from} ORDER BY u.name,u.id LIMIT ? OFFSET ?`,
       )
       .all(query, pageSize, (page - 1) * pageSize);
@@ -314,6 +369,11 @@ export class B2BStoreRepository {
     const name = required(body?.storeName, 'Nama toko', 2, 100);
     const phone = phoneNumber(body?.phone);
     const address = required(body?.address, 'Alamat toko', 10, 500);
+    // Older API callers can still create a store without an owner; the Admin UI
+    // requires one. Never infer an owner from pre-existing membership.
+    const ownerUserId = body?.ownerUserId;
+    if (ownerUserId !== undefined && ownerUserId !== null && ownerUserId !== '')
+      this.validateBuyer(ownerUserId);
     return this.transaction(() => {
       const codeNumber = Number(
         this.db.prepare('INSERT INTO b2b_store_sequences DEFAULT VALUES').run().lastInsertRowid,
@@ -333,6 +393,10 @@ export class B2BStoreRepository {
         this.record(actor, 'schedule_assigned', id);
       }
       this.record(actor, 'store_created', id);
+      if (ownerUserId) {
+        this.linkStoreOwner(actor, id, ownerUserId);
+        this.record(actor, 'store_owner_assigned', id, ownerUserId);
+      }
       return this.store(id);
     });
   }
@@ -341,6 +405,9 @@ export class B2BStoreRepository {
     const user = validUser(this.db, userId);
     if (user.role !== 'user')
       fail('Akun Sales harus merupakan akun staf non-Admin.', 422, 'invalid_sales_account');
+    if (this.db.prepare('SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1').get(user.id))
+      fail('Akun masih terhubung sebagai pembeli. Lepas hubungan toko sebelum mengangkatnya menjadi Sales.',
+        409, 'buyer_still_linked');
     return this.transaction(() => {
       this.db
         .prepare('INSERT OR IGNORE INTO b2b_sales_agents VALUES(?,?,?)')
@@ -395,6 +462,9 @@ export class B2BStoreRepository {
     const userId = required(body?.userId, 'Akun tujuan', 1, 100);
     return this.transaction(() => {
       this.checkRevision(storeId, body.revision, true);
+      if (kind === 'members' && this.storeOwner(storeId)?.id === userId)
+        fail('Pindahkan pemilik toko terlebih dahulu sebelum melepas akunnya.',
+          409, 'store_owner_required');
       const removed = this.db
         .prepare(
           kind === 'sales'
@@ -411,13 +481,7 @@ export class B2BStoreRepository {
   }
   addMember(actor, storeId, userId, { revision } = {}) {
     this.requireOwner(actor);
-    const user = validUser(this.db, userId);
-    if (user.role !== 'user' || this.isSales(userId))
-      fail(
-        'Pemilik toko harus memakai akun pembeli yang bukan Sales.',
-        422,
-        'invalid_buyer_account',
-      );
+    const user = this.validateBuyer(userId);
     return this.transaction(() => {
       const store = this.checkRevision(storeId, revision);
       const inserted = this.db

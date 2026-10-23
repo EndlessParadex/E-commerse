@@ -192,6 +192,21 @@ export class B2BStoreRepository {
       fail('Pilih akun pembeli aktif yang bukan Sales atau Admin.', 422, 'invalid_buyer_account');
     return user;
   }
+  validateUnlinkedOwner(userId) {
+    const user = this.validateBuyer(userId);
+    // Owning a store is a one-account/one-store responsibility; ordinary
+    // membership and Sales relationships remain independent.
+    const linked = this.db.prepare(
+      `SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1`,
+    ).get(user.id);
+    const owns = this.db.prepare(
+      `SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1`,
+    ).get(user.id);
+    if (linked || owns)
+      fail('Akun ini sudah terhubung ke toko lain. Pilih akun pembeli yang belum memiliki toko.',
+        409, 'buyer_already_linked');
+    return user;
+  }
   linkStoreOwner(actor, storeId, userId) {
     this.db.prepare('INSERT OR IGNORE INTO b2b_store_members VALUES(?,?,?,?)')
       .run(storeId, userId, actor.id, this.now());
@@ -203,13 +218,13 @@ export class B2BStoreRepository {
   setOwner(actor, storeId, body) {
     this.requireOwner(actor);
     const userId = required(body?.userId, 'Akun pemilik toko', 1, 100);
-    const user = this.validateBuyer(userId);
     if (body?.keepPreviousMember !== undefined && typeof body.keepPreviousMember !== 'boolean')
       fail('Pilihan akses pemilik sebelumnya tidak valid.');
     return this.transaction(() => {
       const store = this.checkRevision(storeId, body?.revision, true);
       const previous = this.storeOwner(store.id);
-      if (previous?.id === user.id) return this.store(store.id);
+      if (previous?.id === userId) return this.store(store.id);
+      const user = this.validateUnlinkedOwner(userId);
       this.linkStoreOwner(actor, store.id, user.id);
       if (previous && !body.keepPreviousMember) {
         this.db.prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
@@ -342,12 +357,20 @@ export class B2BStoreRepository {
   candidates(actor, params) {
     this.requireOwner(actor);
     const { query, page: requestedPage, pageSize } = pageFilter(params);
+    const purpose = params.get('purpose') || 'member';
+    if (!['member', 'owner'].includes(purpose))
+      fail('Tujuan pencarian akun tidak valid.');
+    const ownerFilter = purpose === 'owner'
+      ? `AND NOT EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.user_id=u.id)
+      AND NOT EXISTS(SELECT 1 FROM b2b_store_owners o WHERE o.user_id=u.id)`
+      : '';
     const from = `FROM users u
       LEFT JOIN account_access access ON access.user_id=u.id
       LEFT JOIN account_approvals approval ON approval.user_id=u.id
       WHERE u.role='user' AND access.disabled_at IS NULL
       AND COALESCE(approval.status,'approved')='approved'
       AND NOT EXISTS(SELECT 1 FROM b2b_sales_agents a WHERE a.user_id=u.id)
+      ${ownerFilter}
       AND instr(lower(u.name||' '||u.email),?)>0`;
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from).get(query).n;
     const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -369,12 +392,12 @@ export class B2BStoreRepository {
     const name = required(body?.storeName, 'Nama toko', 2, 100);
     const phone = phoneNumber(body?.phone);
     const address = required(body?.address, 'Alamat toko', 10, 500);
-    // Older API callers can still create a store without an owner; the Admin UI
-    // requires one. Never infer an owner from pre-existing membership.
+    // Older callers may still create ownerless stores; the Admin form always
+    // chooses an account. The final eligibility check occurs in the transaction.
     const ownerUserId = body?.ownerUserId;
-    if (ownerUserId !== undefined && ownerUserId !== null && ownerUserId !== '')
-      this.validateBuyer(ownerUserId);
     return this.transaction(() => {
+      if (ownerUserId !== undefined && ownerUserId !== null && ownerUserId !== '')
+        this.validateUnlinkedOwner(ownerUserId);
       const codeNumber = Number(
         this.db.prepare('INSERT INTO b2b_store_sequences DEFAULT VALUES').run().lastInsertRowid,
       );

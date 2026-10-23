@@ -224,56 +224,90 @@ function Pagination({ data, onPage, busy, label }) {
 }
 
 function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const pickerRef = useRef(null);
   useEffect(() => {
     const timer = setTimeout(() => { setSearch(query.trim()); setPage(1); }, 250);
     return () => clearTimeout(timer);
   }, [query]);
-  const result = useResource('/api/b2b/accounts?' +
-    new URLSearchParams({ q: search, page: String(page) }), revision);
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOutside = (event) => {
+      if (!pickerRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [open]);
+  const result = useResource(open
+    ? '/api/b2b/accounts?' + new URLSearchParams({
+      purpose: 'owner', q: search, page: String(page),
+    })
+    : null, revision);
+  const choose = (account) => {
+    onSelect(account);
+    setOpen(false);
+    setQuery('');
+  };
   return (
-    <div className="b2b-owner-picker">
-      {selected ? (
-        <div className="b2b-owner-selected">
-          <div>
-            <strong>{selected.name}</strong><span>{selected.email}</span>
-            {!selected.emailVerified && <small>Email belum diverifikasi; belum dapat checkout.</small>}
-          </div>
-          <button type="button" className="admin-secondary" disabled={disabled}
-            onClick={() => onSelect(null)}>Ganti pilihan</button>
-        </div>
-      ) : (
-        <>
-          <label htmlFor={id + '-search'}>Cari akun berdasarkan nama atau email</label>
+    <div className="b2b-owner-picker" ref={pickerRef}>
+      <label id={id + '-label'}>Akun penanggung jawab toko</label>
+      <button type="button" className="b2b-owner-trigger" disabled={disabled}
+        aria-expanded={open} aria-haspopup="listbox"
+        aria-labelledby={id + '-label'} aria-controls={id + '-options'}
+        onClick={() => setOpen((value) => !value)}>
+        <span className="b2b-owner-trigger-text">
+          {selected ? (
+            <>
+              <strong>{selected.name}</strong>
+              <small>{selected.email}</small>
+            </>
+          ) : <span>Pilih akun pembeli yang belum memiliki toko</span>}
+        </span>
+        <span className="b2b-owner-chevron" aria-hidden="true">⌄</span>
+      </button>
+      {open && (
+        <div className="b2b-owner-popover" onKeyDown={(event) => {
+          if (event.key === 'Escape') { event.stopPropagation(); setOpen(false); }
+        }}>
+          <label htmlFor={id + '-search'}>Cari akun</label>
           <input id={id + '-search'} type="search" value={query} maxLength={200}
-            placeholder="Cari akun pembeli yang sudah disetujui" disabled={disabled}
-            onChange={event => setQuery(event.target.value)}
-            onKeyDown={event => { if (event.key === 'Enter') event.preventDefault(); }} />
-          {result.loading && <p role="status">Memuat akun…</p>}
+            autoComplete="off" placeholder="Cari nama atau email…" disabled={disabled}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
+          {result.loading && <p role="status" className="b2b-muted">Memuat akun…</p>}
           {result.error && <p className="b2b-error" role="alert">{result.error}</p>}
           {result.data && (
             <>
-              <ul className="b2b-owner-options">
-                {result.data.users.map(account => (
-                  <li key={account.id}>
-                    <button type="button" className="b2b-owner-option"
-                      disabled={disabled} onClick={() => onSelect(account)}>
-                      <strong>{account.name}</strong><span>{account.email}</span>
-                      <small>{account.ownedStores} toko dimiliki · {account.memberStores} toko terhubung
-                        {!account.emailVerified && ' · Email belum diverifikasi'}</small>
+              <ul className="b2b-owner-options" id={id + '-options'} role="listbox"
+                aria-labelledby={id + '-label'}>
+                {result.data.users.map((account) => (
+                  <li key={account.id} role="presentation">
+                    <button type="button" role="option" className="b2b-owner-option"
+                      aria-selected={selected?.id === account.id} disabled={disabled}
+                      onClick={() => choose(account)}>
+                      <strong>{account.name}</strong>
+                      <span>{account.email}</span>
                     </button>
                   </li>
                 ))}
               </ul>
-              {!result.data.total && <p className="b2b-muted">
-                Tidak ditemukan akun aktif. Setujui pendaftaran melalui Persetujuan akun terlebih dahulu.
-              </p>}
-              <Pagination data={result.data} onPage={setPage} busy={disabled} label="Pilih pemilik toko" />
+              {!result.data.total && (
+                <p className="b2b-muted">Tidak ada akun pembeli yang tersedia.
+                  Akun harus aktif, disetujui, belum terhubung ke toko,
+                  dan bukan Sales atau Admin.</p>
+              )}
+              <Pagination data={result.data} onPage={setPage} busy={disabled}
+                label="Daftar akun pemilik toko" />
             </>
           )}
-        </>
+          {selected && (
+            <button type="button" className="admin-text-button"
+              disabled={disabled} onClick={() => choose(null)}>Kosongkan pilihan</button>
+          )}
+        </div>
       )}
     </div>
   );

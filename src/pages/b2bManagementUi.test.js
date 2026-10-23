@@ -14,6 +14,7 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     ['owner', 'admin'],
     ['operator', 'admin'],
     ['buyer', 'user'],
+    ['buyer-two', 'user'],
     ['sales', 'user'],
     ['other', 'user'],
   ]) {
@@ -180,6 +181,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Pertama');
     await fill('#b2b-store-phone', '081234567890');
     await fill('#b2b-store-address', 'Jalan Nusantara Nomor 15');
+    assert.equal(container.querySelector('.b2b-create .b2b-owner-trigger').getAttribute('aria-expanded'), 'false');
+    await click(container.querySelector('.b2b-create .b2b-owner-trigger'));
     await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
       .some(button => button.textContent.includes('buyer@fixture.test')));
     await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
@@ -244,10 +247,14 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');
+    await click(container.querySelector('.b2b-create .b2b-owner-trigger'));
     await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .some(button => button.textContent.includes('buyer@fixture.test')));
+      .some(button => button.textContent.includes('buyer-two@fixture.test')));
+    assert.equal([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
+      .some(button => button.textContent.includes('buyer@fixture.test')), false,
+      'an account already linked to another store is not selectable as a new owner');
     await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .find(button => button.textContent.includes('buyer@fixture.test')));
+      .find(button => button.textContent.includes('buyer-two@fixture.test')));
     await fill('#b2b-create-delivery-anchor', '2026-11-02');
     await submit('#b2b-create-form');
     await wait(
@@ -257,8 +264,9 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     );
     await wait(() => account('buyer'));
     const second = api.db.prepare('SELECT id FROM b2b_stores WHERE store_name=?').get('Toko Kedua');
+    assert.equal(api.b2bStores.store(second.id).owner.id, 'buyer-two');
+    await click(account('buyer').querySelector('button'));
     await wait(() => account('buyer')?.querySelector('button')?.textContent === 'Sudah terhubung');
-    assert.equal(api.b2bStores.store(second.id).owner.id, 'buyer');
     assert.equal(
       api.db.prepare('SELECT store_id FROM b2b_store_members WHERE user_id=? AND store_id=?')
         .get('buyer', second.id).store_id,

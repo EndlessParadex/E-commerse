@@ -171,44 +171,43 @@ export default function Home({ catalog = null }) {
                 onChange={(categoryId) => setFilter({ categoryId, subcategoryId: '' })}
               />
               {category && (
-                <label className="catalog-select-filter">
-                  Subkategori
-                  <select
-                    value={sub?.id || ''}
-                    onChange={(event) => setFilter({ subcategoryId: event.target.value })}
-                  >
-                    <option value="">Semua subkategori</option>
-                    {category.children.map((item) => (
-                      <option value={item.id} key={item.id}>
-                        {item.name} ({count({ subcategoryId: item.id })})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <CatalogSearchDropdown
+                  label="Subkategori"
+                  value={sub?.id || ''}
+                  placeholder="Cari subkategori..."
+                  options={[
+                    { id: '', name: 'Semua subkategori', icon: '▦',
+                      count: count({ subcategoryId: '' }) },
+                    ...category.children.map((item) => ({
+                      id: item.id, name: item.name, icon: category.icon,
+                      count: count({ subcategoryId: item.id }),
+                    })),
+                  ]}
+                  onChange={(subcategoryId) => setFilter({ subcategoryId })}
+                />
               )}
-              <label className="catalog-select-filter">
-                PT pemasok
-                <select
-                  value={supplier?.id || ''}
-                  onChange={(event) => {
-                    const nextSupplier = event.target.value;
-                    const keepBrand = availableBrands(nextSupplier).some(
-                      (item) => item.id === scopes.brandId,
-                    );
-                    setFilter({
-                      supplierId: nextSupplier,
-                      brandId: keepBrand ? scopes.brandId : '',
-                    });
-                  }}
-                >
-                  <option value="">Semua pemasok</option>
-                  {suppliers.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} ({count({ supplierId: item.id, brandId: '' })})
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <CatalogSearchDropdown
+                label="PT pemasok"
+                value={supplier?.id || ''}
+                placeholder="Cari pemasok..."
+                options={[
+                  { id: '', name: 'Semua pemasok', icon: '▦',
+                    count: count({ supplierId: '', brandId: '' }) },
+                  ...suppliers.map((item) => ({
+                    id: item.id, name: item.name, icon: '▣',
+                    count: count({ supplierId: item.id, brandId: '' }),
+                  })),
+                ]}
+                onChange={(nextSupplier) => {
+                  const keepBrand = availableBrands(nextSupplier).some(
+                    (item) => item.id === scopes.brandId,
+                  );
+                  setFilter({
+                    supplierId: nextSupplier,
+                    brandId: keepBrand ? scopes.brandId : '',
+                  });
+                }}
+              />
               <CatalogSearchDropdown
                 label="Merek"
                 value={brand?.id || ''}
@@ -233,17 +232,19 @@ export default function Home({ catalog = null }) {
               <p role="status">
                 <strong>{visible.length}</strong> produk ditemukan
               </p>
-              <label>
-                Urutkan
-                <select
-                  value={scopes.sort}
-                  onChange={(event) => setFilter({ sort: event.target.value })}
-                >
-                  <option value="popular">Pilihan katalog</option>
-                  <option value="low">Harga terendah</option>
-                  <option value="high">Harga tertinggi</option>
-                </select>
-              </label>
+              <CatalogSearchDropdown
+                label="Urutkan"
+                value={scopes.sort}
+                compact
+                searchable={false}
+                showCounts={false}
+                options={[
+                  { id: 'popular', name: 'Pilihan katalog', icon: '✦' },
+                  { id: 'low', name: 'Harga terendah', icon: '↑' },
+                  { id: 'high', name: 'Harga tertinggi', icon: '↓' },
+                ]}
+                onChange={(sort) => setFilter({ sort })}
+              />
             </div>
             {!!chips.length && (
               <div className="catalog-filter-chips" aria-label="Filter aktif">

@@ -42,9 +42,11 @@ export default function AppearanceProvider({ children }) {
   const owner = appearanceOwner(user);
   const stored = useMemo(() => readAppearance(browserStorage(), owner), [owner]);
   const storedAdvanced = useMemo(() => readAdvancedAppearance(browserStorage(), owner), [owner]);
-  const [selection, setSelection] = useState(() => ({ owner, preferences: stored, notice: '' }));
+  const [selection, setSelection] = useState(() => ({ owner, preferences: stored }));
   const [advancedSelection, setAdvancedSelection] = useState(() =>
-    ({ owner, preferences: storedAdvanced, notice: '' }));
+    ({ owner, preferences: storedAdvanced }));
+  // Feedback describes the most recent save, not whichever settings group was edited first.
+  const [feedback, setFeedback] = useState(() => ({ owner, message: '' }));
   const systemDark = useSyncExternalStore(subscribeSystem, systemSnapshot, () => false);
   const preferences = selection.owner === owner ? selection.preferences : stored;
   const advanced = advancedSelection.owner === owner
@@ -54,9 +56,11 @@ export default function AppearanceProvider({ children }) {
   useEffect(() => {
     // Reset feedback when the account changes; render already uses that account's preferences.
     // oxlint-disable-next-line react/set-state-in-effect
-    setSelection({ owner, preferences: stored, notice: '' });
+    setSelection({ owner, preferences: stored });
     // oxlint-disable-next-line react/set-state-in-effect
-    setAdvancedSelection({ owner, preferences: storedAdvanced, notice: '' });
+    setAdvancedSelection({ owner, preferences: storedAdvanced });
+    // oxlint-disable-next-line react/set-state-in-effect
+    setFeedback({ owner, message: '' });
   }, [owner, stored, storedAdvanced]);
 
   useLayoutEffect(() => {
@@ -113,11 +117,12 @@ export default function AppearanceProvider({ children }) {
           event.key !== appearanceStorageKey(owner) &&
           event.key !== advancedStorageKey(owner)) return;
       if (event.key === null || event.key === appearanceStorageKey(owner))
-        setSelection({ owner, preferences: readAppearance(browserStorage(), owner), notice: '' });
+        setSelection({ owner, preferences: readAppearance(browserStorage(), owner) });
       if (event.key === null || event.key === advancedStorageKey(owner))
         setAdvancedSelection({
-          owner, preferences: readAdvancedAppearance(browserStorage(), owner), notice: '',
+          owner, preferences: readAdvancedAppearance(browserStorage(), owner),
         });
+      setFeedback({ owner, message: '' });
     };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
@@ -126,10 +131,10 @@ export default function AppearanceProvider({ children }) {
   const update = (patch) => {
     const next = normalizeAppearance({ ...preferences, ...patch });
     const saved = writeAppearance(browserStorage(), owner, next);
-    setSelection({
+    setSelection({ owner, preferences: next });
+    setFeedback({
       owner,
-      preferences: next,
-      notice: saved
+      message: saved
         ? 'Pilihan tampilan tersimpan di perangkat ini.'
         : 'Pilihan diterapkan, tetapi belum tersimpan. Penyimpanan di perangkat ini tidak tersedia; pilihan dapat hilang setelah halaman dimuat ulang.',
     });
@@ -137,11 +142,12 @@ export default function AppearanceProvider({ children }) {
   const updateAdvanced = (patch) => {
     const next = normalizeAdvancedAppearance({ ...advanced, ...patch });
     const saved = writeAdvancedAppearance(browserStorage(), owner, next);
-    setAdvancedSelection({
-      owner, preferences: next,
-      notice: saved
+    setAdvancedSelection({ owner, preferences: next });
+    setFeedback({
+      owner,
+      message: saved
         ? 'Tema dan pengaturan lanjutan tersimpan di perangkat ini.'
-        : 'Tema diterapkan, tetapi penyimpanan browser tidak tersedia.',
+        : 'Tema diterapkan, tetapi belum tersimpan. Penyimpanan browser tidak tersedia.',
     });
   };
   return (
@@ -157,9 +163,7 @@ export default function AppearanceProvider({ children }) {
           update(defaultAppearance);
           updateAdvanced(defaultAdvancedAppearance);
         },
-        notice: advancedSelection.owner === owner && advancedSelection.notice
-          ? advancedSelection.notice
-          : selection.owner === owner ? selection.notice : '',
+        notice: feedback.owner === owner ? feedback.message : '',
       }}
     >
       {children}

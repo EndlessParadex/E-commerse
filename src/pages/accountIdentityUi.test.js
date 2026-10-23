@@ -133,6 +133,7 @@ test('account website: buyer security summary, admin password settings, registra
     await wait(() => container.querySelector('#auth-name'));
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Guest');
     await fill('#auth-name', 'Pembeli Website');
+    await fill('#auth-phone', '081234560014');
     await fill('#auth-email', 'website@fixture.test');
     await fill('#auth-address', 'Alamat pengujian website lengkap');
     await fill('#auth-password', 'registration-password');

@@ -260,8 +260,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await wait(() => account('buyer')?.querySelector('button')?.textContent === 'Sudah terhubung');
     assert.equal(api.b2bStores.store(second.id).owner.id, 'buyer');
     assert.equal(
-      api.db.prepare('SELECT store_id FROM b2b_store_members WHERE user_id=?').get('buyer')
-        .store_id,
+      api.db.prepare('SELECT store_id FROM b2b_store_members WHERE user_id=? AND store_id=?')
+        .get('buyer', second.id).store_id,
       second.id,
     );
     assert.equal(

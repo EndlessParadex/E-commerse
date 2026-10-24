@@ -195,13 +195,9 @@ test('owner can edit stores, replace and revoke Sales atomically; stale changes 
       true,
       'removing the last link must not re-enable legacy checkout',
     );
-<<<<<<< HEAD
-    assert.equal((await request(app, 'POST', '/api/orders', 'buyer', {})).status, 422);
-=======
     const invalidPrivateOrder = await request(app, 'POST', '/api/orders', 'buyer', {});
     assert.notEqual(invalidPrivateOrder.body.error, 'shared_cart_required');
     assert.notEqual(invalidPrivateOrder.status, 201);
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
     assert.equal(app.sharedCarts.read(owner, first.id, '2026-10-21').items.length, 1);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_events').get().n, 1);
     const actions = app.db

@@ -110,20 +110,11 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
       ).status,
       403,
     );
-<<<<<<< HEAD
-    for (const actor of ['buyer', 'sales'])
-      assert.notEqual(
-        (await sharedRequest(app, 'POST', '/api/orders', actor, {})).body.error,
-        'shared_cart_required',
-        'belanja pribadi tidak lagi diblokir; body kosong hanya gagal validasi',
-      );
-=======
     for (const actor of ['buyer', 'sales']) {
       const invalid = await sharedRequest(app, 'POST', '/api/orders', actor, {});
       assert.notEqual(invalid.body.error, 'shared_cart_required');
       assert.notEqual(invalid.status, 201, 'an invalid private order remains rejected');
     }
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
     const cleared = await sharedRequest(
       app,
       'POST',

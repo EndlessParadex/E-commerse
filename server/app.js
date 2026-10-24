@@ -685,11 +685,8 @@ export function createApp({
             }),
           );
         if (req.method === 'POST' && path === '/api/orders') {
-<<<<<<< HEAD
           // Setiap akun, termasuk Sales dan pembeli toko, boleh belanja untuk dirinya sendiri.
           // Pesanan toko tetap hanya lahir dari finalisasi Admin (b2bFinalization), bukan dari sini.
-=======
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
           return json(res, 201, {
             order: workflow.create(user, await readBody(req), clientIp(req)),
           });

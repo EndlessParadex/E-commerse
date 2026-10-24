@@ -28,11 +28,7 @@ function RoleIcon({ name }) {
 }
 
 /** All store names and assigned shops below come from server-filtered shared cart context. */
-<<<<<<< HEAD
-export default function B2BHomeExperience({ shared, setCartMode = () => {} }) {
-=======
 export default function B2BHomeExperience({ shared, onCartMode }) {
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
   const sales = shared.role === 'sales';
   const stores = Array.isArray(shared.stores?.stores) ? shared.stores.stores : [];
   const count = shared.stores?.total ?? stores.length;
@@ -47,25 +43,6 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
   const shopName = selected?.storeName || (count > 1 ? `${count} toko terhubung` : 'Belum ada toko');
   // Kotak Sales: tepat dua, "List Toko" (keranjang toko) dan "Belanja biasa" (keranjang pribadi).
   const cards = sales ? [
-<<<<<<< HEAD
-    { id: 'stores', icon: 'store', title: 'List Toko', mode: 'store',
-      description: count ? `${count} toko yang ditugaskan` : 'Belum ada toko yang ditugaskan',
-      href: '#/keranjang', cta: 'Buka List Toko' },
-    { id: 'personal', icon: 'catalog', title: 'Belanja biasa', mode: 'personal',
-      description: 'Belanja untuk diri sendiri dengan keranjang dan checkout pribadi',
-      href: '#/cari?q=', cta: 'Mulai belanja' },
-  ] : [
-    { id: 'store', icon: 'store', title: 'Toko Saya', mode: 'store',
-      description: count ? shopName : 'Akun belum terhubung ke toko',
-      href: '#/keranjang', cta: 'Lihat toko' },
-    { id: 'schedule', icon: 'calendar', title: 'Jadwal Pengiriman', mode: 'store',
-      description: selected
-        ? scheduleLabel : 'Pilih toko untuk melihat jadwal tetap',
-      href: '#/keranjang', cta: 'Lihat jadwal' },
-    { id: 'cart', icon: 'cart', title: 'Keranjang Toko', mode: 'store',
-      description: 'Tambahkan kebutuhan toko sebelum finalisasi Admin',
-      href: '#/keranjang', cta: 'Buka keranjang' },
-=======
     { id: 'stores', icon: 'store', title: 'List Toko',
       description: count ? `${count} toko yang ditugaskan — isi keranjang bersama` : 'Belum ada toko yang ditugaskan',
       href: '#/keranjang', cta: 'Buka daftar toko', mode: 'store' },
@@ -79,7 +56,6 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
     { id: 'personal', icon: 'cart', title: 'Belanja pribadi',
       description: 'Keranjang pribadi dan checkout sendiri, terpisah dari pesanan toko',
       href: '#/cari?q=', cta: 'Mulai belanja pribadi', mode: 'personal' },
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
   ];
   return (
     <div className={'bam-role-home bam-role-home--' + (sales ? 'sales' : 'buyer')}>
@@ -94,11 +70,7 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
             ? 'Pilih toko yang ditugaskan, lihat katalog, dan bantu isi keranjang bersama.'
             : 'Temukan kebutuhan toko dan isi keranjang bersama sesuai jadwal yang ditetapkan.'}</p>
           <a className="bam-role-home-primary" href={count ? '#/keranjang' : '#/cari?q='}
-<<<<<<< HEAD
-            onClick={() => setCartMode(count ? 'store' : 'personal')}>
-=======
             onClick={() => onCartMode?.(count ? 'store' : 'personal')}>
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
             {sales
               ? (count ? 'Buka List Toko' : 'Jelajahi Produk')
               : (count ? 'Buka Toko Saya' : 'Jelajahi Produk')}
@@ -116,13 +88,8 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
       </section>
       <nav className="bam-role-home-actions" aria-label={sales ? 'Akses cepat Sales' : 'Akses cepat toko'}>
         {cards.map((card) => (
-<<<<<<< HEAD
-          <a key={card.id} className={'bam-role-home-card is-' + card.id} href={card.href}
-            onClick={() => setCartMode(card.mode)}>
-=======
           <a key={card.id} className={'bam-role-home-card is-' + card.id}
             href={card.href} onClick={() => onCartMode?.(card.mode)}>
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
             <span className="bam-role-home-card-icon"><RoleIcon name={card.icon}/></span>
             <span className="bam-role-home-card-body">
               <strong>{card.title}</strong>
@@ -138,11 +105,7 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
         ))}
       </nav>
       <p className="bam-role-home-footnote">
-<<<<<<< HEAD
-        Keranjang toko difinalisasi oleh Admin BAM. Belanja biasa memakai keranjang dan checkout pribadi yang terpisah.
-=======
         Keranjang toko difinalisasi oleh Admin BAM. Belanja pribadi memakai checkout dan riwayat pesanan akun sendiri.
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
       </p>
     </div>
   );

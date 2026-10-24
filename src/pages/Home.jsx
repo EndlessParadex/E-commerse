@@ -43,11 +43,7 @@ export default function Home({ catalog = null }) {
       <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
           {b2bHome
-<<<<<<< HEAD
-            ? <B2BHomeExperience shared={shared} setCartMode={setCartMode} />
-=======
             ? <B2BHomeExperience shared={shared} onCartMode={setCartMode} />
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
             : <PromoCarousel />}
           <VerticalPromoPanel />
         </div>

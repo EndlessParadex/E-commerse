@@ -230,10 +230,7 @@ function AccountScopedShop({ children, delivery, shared, storageKey }) {
         ...state,
         cart,
         shared,
-<<<<<<< HEAD
-=======
         cartMode,
->>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
         setCartMode,
         ...cartTotals(cart),
         cartReview: review,

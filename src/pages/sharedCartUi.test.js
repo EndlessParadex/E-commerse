@@ -126,7 +126,18 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     };
 
     await mount('buyer');
+    assert.equal(container.querySelector('.shared-selection-panel').open, true,
+      'store selector is expanded before the cart has been opened');
+    assert.ok(container.querySelector('.shared-store-search-details'),
+      'optional store search remains available');
     await openDate();
+    await wait(() => container.querySelector('.shared-selection-panel')?.open === false);
+    assert.match(container.querySelector('.shared-selection-trigger').textContent,
+      /Toko dan periode/);
+    assert.ok(container.querySelector('.shared-cart-payment-compact'),
+      'payment choices remain accessible in compact card');
+    assert.ok(container.querySelector('.shared-summary-help'),
+      'full price and stock explanation remains available');
     assert.equal(container.querySelector('#shared-store').value, first.id);
     assert.equal(container.querySelectorAll('#shared-store option').length, 2);
     await fill('#shared-cart-payment', 'transfer-bca');

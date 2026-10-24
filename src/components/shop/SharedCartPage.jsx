@@ -573,18 +573,13 @@ function AdminCartWorkspace({
                   <p>
                     Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                   </p>
-                  <details className="shared-summary-help">
-                    <summary>Catatan harga dan stok</summary>
-                    <p>
-                      {cart.status === 'finalized'
-                        ? 'Harga dan barang sudah dicatat pada pesanan final.'
-                        : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
-                    </p>
-                    <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
-                  </details>
-                  {cart.updatedAt && (
-                    <p className="shared-summary-update">Disimpan: {timeLabel(cart.updatedAt)} WIB</p>
-                  )}}
+                  <p>
+                    {cart.status === 'finalized'
+                      ? 'Harga dan barang sudah dicatat pada pesanan final.'
+                      : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
+                  </p>
+                  <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
+                  {cart.updatedAt && <p>Terakhir disimpan: {timeLabel(cart.updatedAt)} WIB</p>}
                   {cart.canEdit && cart.items.length > 0 && (
                     <button
                       type="button"
@@ -1107,13 +1102,18 @@ export default function SharedCartPage({ adminView = false }) {
                   <p>
                     Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                   </p>
-                  <p>
-                    {cart.status === 'finalized'
-                      ? 'Harga dan barang sudah dicatat pada pesanan final.'
-                      : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
-                  </p>
-                  <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
-                  {cart.updatedAt && <p>Terakhir disimpan: {timeLabel(cart.updatedAt)} WIB</p>}
+                  <details className="shared-summary-help">
+                    <summary>Catatan harga dan stok</summary>
+                    <p>
+                      {cart.status === 'finalized'
+                        ? 'Harga dan barang sudah dicatat pada pesanan final.'
+                        : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
+                    </p>
+                    <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
+                  </details>
+                  {cart.updatedAt && (
+                    <p className="shared-summary-update">Disimpan: {timeLabel(cart.updatedAt)} WIB</p>
+                  )}}
                   {cart.canEdit && cart.items.length > 0 && (
                     <button
                       type="button"

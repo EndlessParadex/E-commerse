@@ -126,8 +126,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     };
 
     await mount('buyer');
-    assert.equal(container.querySelector('.shared-selection-panel').open, true,
-      'store selector is expanded before the cart has been opened');
+    assert.ok(container.querySelector('.shared-selection-panel'),
+      'a compact store picker is always available');
     assert.ok(container.querySelector('.shared-store-search-details'),
       'optional store search remains available');
     await openDate();

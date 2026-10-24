@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/b2b-store-sales-shared-cart
+      - main
   pull_request:
   workflow_dispatch:
 

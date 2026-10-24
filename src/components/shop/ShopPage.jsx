@@ -48,9 +48,19 @@ export default function ShopPage({ type }) {
     }
   };
 
-  if (isCart && shop.shared?.enabled) return <SharedCartPage />;
+  const modeSwitcher = isCart && shop.shared?.enabled && (
+    <nav className="bam-cart-mode-switch" aria-label="Jenis keranjang belanja">
+      <button type="button" aria-pressed={shop.cartMode === 'store'}
+        onClick={() => shop.setCartMode('store')}>Keranjang toko</button>
+      <button type="button" aria-pressed={shop.cartMode === 'personal'}
+        onClick={() => shop.setCartMode('personal')}>Belanja pribadi</button>
+    </nav>
+  );
+  if (isCart && shop.shared?.enabled && shop.cartMode === 'store')
+    return <div className="bam-cart-mode-page">{modeSwitcher}<SharedCartPage /></div>;
   return (
     <div className={'shop-page' + (isCart ? ' cart-page' : ' notifications-page')}>
+      {modeSwitcher}
       <nav className="shop-breadcrumb" aria-label="Breadcrumb">
         <a href="#/">Beranda</a>
         <span aria-hidden="true">/</span>

@@ -96,7 +96,7 @@ export default function CheckoutPage() {
   const total = shop.subtotal + shipping.cost;
   const itemProducts = shop.cart.map((item) => ({ item, display: cartItemPresentation(item) }));
 
-  if (shop.shared?.enabled)
+  if (shop.shared?.enabled && shop.cartMode === 'store')
     return (
       <div className="checkout-page">
         <h1>Keranjang bersama toko</h1>

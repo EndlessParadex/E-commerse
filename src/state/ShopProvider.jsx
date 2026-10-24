@@ -12,6 +12,16 @@ import { DeliveryContext } from './useDelivery';
 import { clearCompletedCheckoutRequest, serverStock } from './serverWorkflow';
 import useSharedCart from './useSharedCart';
 
+function readCartMode(userId) {
+  if (!userId) return 'personal';
+  try {
+    return localStorage.getItem(companyStorageKey('bam.b2b.cart-mode.' + userId)) === 'personal'
+      ? 'personal' : 'store';
+  } catch {
+    return 'store';
+  }
+}
+
 function loadShop(key) {
   try {
     const stored = localStorage.getItem(key);
@@ -69,8 +79,33 @@ export default function ShopProvider({ children }) {
   const storageKey = companyStorageKey(
     STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''),
   );
+  return (
+    <AccountScopedShop key={storageKey} delivery={delivery} shared={shared} storageKey={storageKey}>
+      {children}
+    </AccountScopedShop>
+  );
+}
+
+// Remount the reducer whenever the signed-in account changes. Without a keyed
+// boundary, the previous user's private cart could be written under another ID.
+function AccountScopedShop({ children, delivery, shared, storageKey }) {
   const [state, rawDispatch] = useReducer(shopReducer, storageKey, loadShop);
-  const cart = shared.enabled ? shared.cart?.items || [] : state.cart;
+  const userId = delivery?.user?.id || '';
+  const [modeSelection, setModeSelection] = useState({ userId: '', mode: 'store' });
+  const cartMode = shared.enabled
+    ? (modeSelection.userId === userId ? modeSelection.mode : readCartMode(userId))
+    : 'personal';
+  const storeCartActive = shared.enabled && cartMode === 'store';
+  const setCartMode = (mode) => {
+    if (!shared.enabled || !['store', 'personal'].includes(mode)) return;
+    try {
+      localStorage.setItem(companyStorageKey('bam.b2b.cart-mode.' + userId), mode);
+    } catch {
+      // Mode still works until refresh when local storage is unavailable.
+    }
+    setModeSelection({ userId, mode });
+  };
+  const cart = storeCartActive ? shared.cart?.items || [] : state.cart;
   const stateRef = useRef(state);
   useLayoutEffect(() => {
     stateRef.current = state;
@@ -112,7 +147,7 @@ export default function ShopProvider({ children }) {
 
   const dispatch = (action) => {
     if (
-      shared.enabled &&
+      storeCartActive &&
       ['add', 'quantity', 'remove', 'clearCart', 'updateCart', 'completeOrder'].includes(
         action.type,
       )
@@ -156,7 +191,7 @@ export default function ShopProvider({ children }) {
       const statistics = workflowUsesServer ? serverStock(product) : {};
       return {
         available: availableStock(product, window.sessionStorage, workflow.orders),
-        maximum: shared.enabled
+        maximum: storeCartActive
           ? shared.canEdit
             ? 99
             : 0
@@ -176,13 +211,13 @@ export default function ShopProvider({ children }) {
   };
   const review = reviewCart(cart);
   try {
-    if (!shared.enabled)
+    if (!storeCartActive)
       review.issues.push(...reviewStock(cart, window.sessionStorage, workflow.orders));
   } catch {
     review.issues.push({ id: 'stock-storage', type: 'stock_error' });
   }
   if (
-    !shared.enabled &&
+    !storeCartActive &&
     stockWorkflow.failed &&
     !review.issues.some((issue) => issue.type === 'stock_error')
   )
@@ -195,6 +230,10 @@ export default function ShopProvider({ children }) {
         ...state,
         cart,
         shared,
+<<<<<<< HEAD
+=======
+        cartMode,
+>>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
         setCartMode,
         ...cartTotals(cart),
         cartReview: review,

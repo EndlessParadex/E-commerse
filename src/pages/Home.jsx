@@ -28,12 +28,26 @@ export default function Home({ catalog = null }) {
   const b2bHome = !catalog && shared?.status === 'ready' &&
     ['sales', 'buyer'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
+  if (!catalog && shared?.enabled && shared.status === 'loading')
+    return <div className="home-container" role="status">Memuat pilihan belanja akun…</div>;
+  if (!catalog && shared?.enabled && shared.status === 'error')
+    return (
+      <div className="home-container" role="alert">
+        <h1>Data toko belum dapat dimuat</h1>
+        <p>{shared.error || 'Periksa koneksi server dan coba lagi.'}</p>
+        <button type="button" className="shop-primary" onClick={shared.retry}>Coba lagi</button>
+      </div>
+    );
   if (!catalog)
     return (
       <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
           {b2bHome
+<<<<<<< HEAD
             ? <B2BHomeExperience shared={shared} setCartMode={setCartMode} />
+=======
+            ? <B2BHomeExperience shared={shared} onCartMode={setCartMode} />
+>>>>>>> 092213987820bba32b709ff4c75c126924fe7b35
             : <PromoCarousel />}
           <VerticalPromoPanel />
         </div>

@@ -35,3 +35,8 @@ data/*.sqlite-*
 
 # Review artifacts are distributed separately from application source.
 /review/
+
+# Windows terminal output / temporary review logs (not application sources)
+/build-error.txt
+/sharedcart-error.txt
+/test-log.txt

@@ -565,6 +565,10 @@ test('configured B2B cut-off locks carts once and rejects late writes without fi
     assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'").get().n, 1);
     assert.throws(() => app.sharedCarts.mutate(actors.buyer, first.id, change({ revision: 2 })),
       { code: 'cart_cutoff_passed' });
+    assert.throws(() => app.b2bFinalization.change(actors.owner, first.id, {
+      action: 'unlock', date, revision: locked.revision,
+      requestId: randomUUID(), reason: 'Perlu ubah isi keranjang',
+    }), { code: 'cart_cutoff_passed' }, 'Admin must reschedule instead of reopening a past-cutoff cart');
     now = Date.parse('2026-10-22T00:00:00+07:00');
     assert.equal(app.sharedCarts.read(actors.buyer, first.id, date).overdue, true);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);

@@ -176,6 +176,7 @@ export class SharedCartRepository {
       store,
       date,
       overdue,
+      cutoffPassed: isPastCutoff(date, this.cutoff, this.now()),
       cutoffAt: this.cutoff ? new Date(cutoffTime(date, this.cutoff)).toISOString() : null,
       id: cycle?.id || null,
       revision: cycle?.revision || 0,

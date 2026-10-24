@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { cartDate } from './sharedCarts.js';
-import { isPastDeliveryDate } from './b2bCutoff.js';
+import { isPastCutoff, isPastDeliveryDate } from './b2bCutoff.js';
 import { paymentMethod } from '../src/state/paymentMethods.js';
 import { withNotificationEvent } from '../src/state/orderNotifications.js';
 
@@ -299,6 +299,9 @@ export class B2BFinalizationRepository {
         this.db.prepare("UPDATE cart_cycles SET status='locked' WHERE id=?").run(cycle.id);
         this.event(cycle, user, body, hash, {});
       } else if (body.action === 'unlock') {
+        if (isPastCutoff(body.date, this.carts.cutoff, this.carts.now()))
+          fail('Batas waktu pemesanan terlewati. Jadwalkan ulang melalui Admin.',
+            409, 'cart_cutoff_passed');
         if (cycle.status !== 'locked')
           fail('Keranjang tidak sedang dikunci.', 409, 'cart_not_locked');
         this.db.prepare("UPDATE cart_cycles SET status='open' WHERE id=?").run(cycle.id);

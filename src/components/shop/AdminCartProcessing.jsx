@@ -346,8 +346,9 @@ export default function AdminCartProcessing({ shared }) {
           <button
             type="button"
             className="bam-button-secondary"
-            disabled={frozen}
+            disabled={frozen || cart.cutoffPassed}
             onClick={() => open('unlock')}
+            title={cart.cutoffPassed ? 'Cut-off terlewati. Jadwalkan ulang keranjang.' : undefined}
           >
             Buka kembali untuk diperbaiki
           </button>

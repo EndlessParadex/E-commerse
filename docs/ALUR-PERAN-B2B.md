@@ -88,3 +88,14 @@ hanya dapat dilakukan Admin dan stok baru dipesan setelah finalisasi.
 Status `overdue` pada respons keranjang berarti tanggal pengiriman sudah terlewati
 dan keranjang belum difinalisasi. Itu bukan pembatalan otomatis. Pemindahan
 periode harus melewati alur Admin yang diaudit; jangan menyalin barang otomatis.
+
+### Penjadwalan ulang periode terlambat
+
+Admin dapat menggunakan tombol **Jadwalkan ulang keranjang** untuk keranjang yang tanggal
+pengirimannya sudah terlewati. Tanggal tujuan harus masih akan datang dan sesuai jadwal
+tetap toko; sistem menolak periode tujuan yang sudah mempunyai keranjang.
+Barang **dipindahkan pada cart ID yang sama**, tidak digandakan dan tidak difinalisasi
+secara otomatis. Periode yang dijadwalkan ulang tetap terkunci untuk pemeriksaan Admin.
+Perubahan direkam di `cart_events` dan `b2b_cycle_lifecycle_events` dengan tanggal
+awal/baru serta alasan. Jika cut-off diaktifkan, keranjang setelah cut-off tidak
+dapat dibuka kembali: gunakan alur penjadwalan ulang.

@@ -127,15 +127,19 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
 
     await mount('buyer');
     assert.ok(container.querySelector('.shared-selection-panel'),
-      'a compact store picker is always available');
+      'the store picker is available before and after choosing a cart');
     assert.ok(container.querySelector('.shared-store-search-details'),
       'optional store search remains available');
     await openDate();
     await wait(() => container.querySelector('.shared-selection-panel')?.open === false);
-    assert.match(container.querySelector('.shared-selection-trigger').textContent,
-      /Toko dan periode/);
-    assert.ok(container.querySelector('.shared-cart-payment-compact'),
-      'payment choices remain accessible in compact card');
+    assert.ok(container.querySelector('.shared-delivery-calendar'),
+      'calendar replaces the full-width store selection after opening a cart');
+    assert.ok(container.querySelector('.shared-cart-summary .shared-selection-panel'),
+      'store selection is inside the cart summary');
+    assert.ok(container.querySelector('.shared-cart-summary .shared-cart-payment-compact'),
+      'store payment method is inside the cart summary');
+    assert.ok(container.querySelector('.shared-delivery-calendar-grid'),
+      'monthly calendar supports accessible period navigation');
     assert.ok(container.querySelector('.shared-summary-help'),
       'full price and stock explanation remains available');
     assert.equal(container.querySelector('#shared-store').value, first.id);

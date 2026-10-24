@@ -347,6 +347,11 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
         'Perubahan perangkat lain',
     );
     api.b2bStores.appointSales({ id: 'owner', role: 'admin' }, 'other');
+    assert.equal(
+      api.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_members WHERE user_id=?').get('other').n,
+      0,
+      'Sales promotion automatically revokes old buyer store memberships',
+    );
     await click(buttonText('Muat ulang'));
     await wait(() => container.querySelector('#b2b-sales-choice option[value=other]'));
     await click(buttonText('Ganti Sales'));
@@ -366,22 +371,24 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await click(buttonText('Cabut penugasan'));
     assert.match(container.querySelector('dialog').textContent, /Perubahan perangkat lain/);
     assert.match(container.querySelector('dialog').textContent, /other@fixture.test/);
-    assert.match(container.querySelector('dialog').textContent, /juga terhubung sebagai pembeli/);
+    assert.doesNotMatch(container.querySelector('dialog').textContent,
+      /juga terhubung sebagai pembeli/,
+      'promoted Sales no longer has a second buyer access path');
     await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
     await wait(
       () =>
         !container.querySelector('dialog') &&
         container.textContent.includes('Penugasan Sales berhasil dicabut'),
     );
-    assert.equal(api.b2bStores.details({ id: 'owner', role: 'admin' }, second.id).sales.length, 0);
-    await wait(() => buttonText('Lepas pembeli'));
-    await click(buttonText('Lepas pembeli'));
-    await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
-    await wait(
-      () =>
-        !container.querySelector('dialog') &&
-        container.textContent.includes('Pembeli berhasil dilepas'),
+    const detailAfterRevocation = api.b2bStores.details(
+      { id: 'owner', role: 'admin' }, second.id,
     );
+    assert.equal(detailAfterRevocation.sales.length, 0);
+    assert.equal(detailAfterRevocation.members.some((row) => row.id === 'other'), false,
+      'removing Sales assignment leaves no buyer membership to grant hidden access');
+    assert.throws(() => api.sharedCarts.read(
+      { id: 'other', role: 'user' }, second.id, '2026-10-21',
+    ), { code: 'store_not_found' });
     const accountReads = requests.filter((item) =>
       item.path.startsWith('/api/b2b/accounts'),
     ).length;

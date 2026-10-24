@@ -48,7 +48,7 @@ export default function ShopPage({ type }) {
     }
   };
 
-  const modeSwitcher = isCart && shop.shared?.enabled && (
+  const modeSwitcher = isCart && shop.shared?.canChooseCart && (
     <nav className="bam-cart-mode-switch" aria-label="Jenis keranjang belanja">
       <button type="button" aria-pressed={shop.cartMode === 'store'}
         onClick={() => shop.setCartMode('store')}>Keranjang toko</button>

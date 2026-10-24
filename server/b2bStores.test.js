@@ -139,3 +139,52 @@ test('B2B store owner: create, transfer and preserve legacy stores without guess
     assert.ok(actions.some(x=>x.action==='store_owner_transferred'));
   } finally { app.db.close(); }
 });
+
+
+test('promoting a buyer to Sales revokes buyer access and requires explicit Sales assignment', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  try {
+    const { actors, first, second } = seedSharedCart(app);
+    // A formerly linked buyer may belong to multiple stores; neither grants Sales access.
+    app.b2bStores.addMember(actors.owner, second.id, 'buyer2');
+    const firstRevision = app.b2bStores.store(first.id).revision;
+    const secondRevision = app.b2bStores.store(second.id).revision;
+    assert.deepEqual(
+      app.b2bStores.list(actors.buyer2).map((store) => store.id).sort(),
+      [first.id, second.id].sort(),
+    );
+    const promoted = app.b2bStores.appointSales(actors.owner, 'buyer2');
+    assert.equal(promoted.buyerLinksRemoved, 2);
+    assert.equal(app.b2bStores.role(actors.buyer2), 'sales');
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_members WHERE user_id=?')
+      .get('buyer2').n, 0);
+    assert.equal(app.b2bStores.store(first.id).revision, firstRevision + 1);
+    assert.equal(app.b2bStores.store(second.id).revision, secondRevision + 1);
+    assert.equal(app.db.prepare(
+      "SELECT COUNT(*) AS n FROM b2b_store_audit WHERE target_user_id=? AND action='buyer_unlinked'",
+    ).get('buyer2').n, 2);
+    assert.equal(app.b2bStores.page(actors.buyer2, new URLSearchParams()).total, 0);
+    assert.deepEqual(app.b2bStores.list(actors.buyer2), []);
+    assert.throws(() => app.sharedCarts.read(actors.buyer2, first.id, '2026-10-21'),
+      { code: 'store_not_found' });
+    // Legacy mixed links must never bypass a missing Sales assignment either.
+    app.db.prepare('INSERT INTO b2b_store_members VALUES(?,?,?,?)')
+      .run(second.id, 'buyer2', actors.owner.id, Date.now());
+    assert.equal(app.b2bStores.page(actors.buyer2, new URLSearchParams()).total, 0);
+    assert.deepEqual(app.b2bStores.list(actors.buyer2), []);
+    assert.throws(() => app.sharedCarts.read(actors.buyer2, second.id, '2026-10-21'),
+      { code: 'store_not_found' });
+    const assigned = app.b2bStores.assignSales(actors.owner, first.id, 'buyer2');
+    assert.equal(assigned.assigned, true);
+    assert.deepEqual(app.b2bStores.list(actors.buyer2).map((store) => store.id), [first.id]);
+    assert.equal(app.b2bStores.page(actors.buyer2, new URLSearchParams()).total, 1);
+    assert.equal(app.sharedCarts.read(actors.buyer2, first.id, '2026-10-21').date, '2026-10-21');
+    assert.throws(() => app.sharedCarts.read(actors.buyer2, second.id, '2026-10-21'),
+      { code: 'store_not_found' });
+    assert.equal(app.b2bStores.appointSales(actors.owner, 'buyer2').buyerLinksRemoved, 1);
+    assert.equal(app.b2bStores.list(actors.buyer2).length, 1,
+      'reappointment does not revoke a valid Sales assignment');
+  } finally {
+    app.db.close();
+  }
+});

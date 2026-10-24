@@ -95,10 +95,10 @@ export class SharedCartRepository {
         .prepare(
           `SELECT 1 FROM b2b_stores s
       WHERE s.id=? AND s.active=1 AND
-      (EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?)
+      ((?=0 AND EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?))
        OR EXISTS(SELECT 1 FROM b2b_sales_assignments a WHERE a.store_id=s.id AND a.sales_user_id=?))`,
         )
-        .get(storeId, user.id, user.id)
+        .get(storeId, Number(this.stores.isSales(user.id)), user.id, user.id)
     )
       fail('Toko tidak ditemukan atau akses sudah berubah.', 404, 'store_not_found');
     const store = this.stores.store(storeId);

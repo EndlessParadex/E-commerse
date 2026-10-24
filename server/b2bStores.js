@@ -289,11 +289,11 @@ export class B2BStoreRepository {
         `SELECT s.id,s.store_code AS storeCode,s.store_name AS storeName,
       s.phone,s.address,s.active,s.created_at AS createdAt
       FROM b2b_stores s WHERE s.active=1 AND
-      (EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?)
+      ((?=0 AND EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?))
       OR EXISTS(SELECT 1 FROM b2b_sales_assignments a WHERE a.store_id=s.id AND a.sales_user_id=?))
       ORDER BY s.store_name,s.store_code LIMIT 500`,
       )
-      .all(actor.id, actor.id)
+      .all(Number(this.isSales(actor.id)), actor.id, actor.id)
       .map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) }));
   }
   page(actor, params) {
@@ -301,9 +301,9 @@ export class B2BStoreRepository {
     const where = ['s.active=1'];
     const args = [];
     if (actor.role !== 'admin') {
-      where.push(`(EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?)
+      where.push(`((?=0 AND EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.store_id=s.id AND m.user_id=?))
         OR EXISTS(SELECT 1 FROM b2b_sales_assignments a WHERE a.store_id=s.id AND a.sales_user_id=?))`);
-      args.push(actor.id, actor.id);
+      args.push(Number(this.isSales(actor.id)), actor.id, actor.id);
     }
     if (query) {
       where.push("instr(lower(s.store_name||' '||s.store_code||' '||s.phone),?)>0");
@@ -428,8 +428,9 @@ export class B2BStoreRepository {
     const user = validUser(this.db, userId);
     if (user.role !== 'user')
       fail('Akun Sales harus merupakan akun staf non-Admin.', 422, 'invalid_sales_account');
-    // Keep existing buyer + Sales memberships compatible; only the explicit
-    // responsible owner must hand over ownership before switching to Sales.
+    // The responsible store owner must hand over ownership before promotion.
+    // Promoting a buyer to Sales revokes buyer links; explicit Sales assignments
+    // become the only source of storefront access for that user.
     if (this.db.prepare('SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1').get(user.id))
       fail('Pindahkan kepemilikan toko terlebih dahulu sebelum akun ini menjadi Sales.',
         409, 'store_owner_sales_conflict');
@@ -437,8 +438,17 @@ export class B2BStoreRepository {
       this.db
         .prepare('INSERT OR IGNORE INTO b2b_sales_agents VALUES(?,?,?)')
         .run(user.id, actor.id, this.now());
+      const buyerStores = this.db.prepare(
+        'SELECT store_id FROM b2b_store_members WHERE user_id=? ORDER BY store_id',
+      ).all(user.id);
+      for (const row of buyerStores) {
+        this.db.prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
+          .run(row.store_id, user.id);
+        this.bump(row.store_id);
+        this.record(actor, 'buyer_unlinked', row.store_id, user.id);
+      }
       this.record(actor, 'sales_appointed', null, user.id);
-      return { userId: user.id, sales: true };
+      return { userId: user.id, sales: true, buyerLinksRemoved: buyerStores.length };
     });
   }
   update(actor, storeId, body) {

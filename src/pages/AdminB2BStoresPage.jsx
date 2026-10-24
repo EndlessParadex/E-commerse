@@ -1119,13 +1119,16 @@ export default function AdminB2BStoresPage() {
             {appointment.email}
           </p>
           <p>
-            Akun ini akan menjadi Sales dan dapat ditugaskan ke toko. Pastikan akun yang dipilih
-            adalah akun staf.
+            Akun ini akan menjadi Sales, bukan pembeli toko. Akses Sales hanya berlaku pada
+            toko yang secara khusus ditugaskan oleh Pemilik BAM. Pastikan akun ini benar-benar
+            digunakan oleh staf.
           </p>
           {appointment.memberStores > 0 && (
             <p>
-              Akun ini sudah terhubung sebagai pembeli ke {appointment.memberStores} toko. Akses
-              toko tersebut tetap berlaku.
+              Akun ini masih tercatat sebagai pembeli di {appointment.memberStores} toko.
+              Hubungan pembeli akan dicabut saat pendaftaran Sales. Untuk tetap mengakses toko,
+              tugaskan kembali akun ini sebagai Sales melalui pengelolaan toko. Riwayat keranjang
+              dan pesanan tetap disimpan.
             </p>
           )}
         </ConfirmDialog>

@@ -140,6 +140,13 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       'store payment method is inside the cart summary');
     assert.ok(container.querySelector('.shared-delivery-calendar-grid'),
       'monthly calendar supports accessible period navigation');
+    const monthDates = container.querySelectorAll(
+      '.shared-delivery-calendar-grid .shared-calendar-date:not(.is-outside)',
+    );
+    assert.equal(monthDates.length, 31, 'all October dates must be visible, not marked outside');
+    const chosenDate = container.querySelector('.shared-calendar-date.is-selected');
+    assert.equal(chosenDate?.textContent.trim(), '21',
+      'the active delivery period remains visible in the calendar');
     assert.ok(container.querySelector('.shared-summary-help'),
       'full price and stock explanation remains available');
     assert.equal(container.querySelector('#shared-store').value, first.id);

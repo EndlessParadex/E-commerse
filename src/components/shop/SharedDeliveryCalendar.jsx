@@ -22,7 +22,7 @@ export default function SharedDeliveryCalendar({ date, schedule, disabled, onCho
   const offset = (weekday + 6) % 7;
   const days = Array.from({ length: 42 }, (_, index) => {
     const value = isoDate(start + (index - offset) * 86400000);
-    return { value, inMonth: value.slice(0, 7) === month };
+    return { value, inMonth: value.slice(0, 7) === month.slice(0, 7) };
   });
   const navigate = (delta) => {
     const next = isoDate(Date.UTC(

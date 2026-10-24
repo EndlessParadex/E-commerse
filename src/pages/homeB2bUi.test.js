@@ -39,9 +39,12 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     stores: { stores: list, total: list.length, page: 1, pages: 1 },
     selection,
   });
+  const modes = [];
   const render = async (state) => {
     await act(async () => {
-      root.render(createElement(B2BHomeExperience, { shared: state }));
+      root.render(createElement(B2BHomeExperience, {
+        shared: state, onCartMode: (mode) => modes.push(mode),
+      }));
       await flush();
     });
   };
@@ -56,6 +59,11 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.doesNotMatch(container.textContent, /Toko Saya/);
     assert.match(container.textContent, /Belanja biasa/);
     assert.equal(container.querySelector('.bam-role-home-card.is-personal').getAttribute('href'), '#/cari?q=');
+    await act(async () => {
+      container.querySelector('.bam-role-home-card.is-personal').click();
+      await flush();
+    });
+    assert.equal(modes.at(-1), 'personal');
 
     await render(shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }));
     assert.ok(container.querySelector('.bam-role-home--buyer'));

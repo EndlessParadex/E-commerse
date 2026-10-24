@@ -513,3 +513,34 @@ test('simultaneous buyer/Sales writes from separate backend workers cannot both 
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+
+test('B2B buyer and Sales can place private orders without changing shared-store cart', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  try {
+    const { first } = seedSharedCart(app);
+    const variant = app.catalog.snapshot().edits
+      .flatMap((draft) => draft.variants)
+      .find((item) => item.id === 'snack-pedas');
+    assert.ok(variant, 'fixture product should be available');
+    const cartBefore = app.sharedCarts.read({id:'buyer',role:'user'}, first.id, date);
+    for (const actor of ['buyer', 'sales']) {
+      const response = await sharedRequest(app, 'POST', '/api/orders', actor, {
+        requestKey: randomUUID(),
+        recipient: 'Pembeli pribadi fixture',
+        address: 'Jalan Test Private Nomor 20',
+        shippingId: 'regular',
+        paymentId: 'manual-transfer',
+        items: [{
+          id: variant.id, quantity: 1, expectedPrice: Number(variant.price),
+        }],
+      });
+      assert.equal(response.status, 201, JSON.stringify(response.body));
+      assert.equal(response.body.order.userId, actor);
+      assert.equal(response.body.order.b2b ?? null, null);
+    }
+    const cartAfter = app.sharedCarts.read({id:'buyer',role:'user'}, first.id, date);
+    assert.deepEqual(cartAfter.items, cartBefore.items);
+    assert.equal(cartAfter.revision, cartBefore.revision);
+  } finally { app.db.close(); }
+});

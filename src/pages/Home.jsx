@@ -22,6 +22,7 @@ import { brandsForSupplier } from '../data/catalogMasters';
 import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 import './StorefrontDesign2.css';
+import './StorefrontFeatureRail.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();

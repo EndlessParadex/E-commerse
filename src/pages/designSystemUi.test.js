@@ -33,8 +33,15 @@ test('catalog sort uses a shared themed popover', () => {
 
 test('storefront has dark-mode readable promo surfaces', () => {
   const storefront = read('./StorefrontDesign2.css');
-  assert.match(storefront, /:root\[data-theme='dark'\]/);
-  assert.match(storefront, /background: linear-gradient\(120deg, var\(--color-surface-soft\)/);
+  const rail = read('./StorefrontFeatureRail.css');
+  const home = read('./Home.jsx');
+  assert.match(home, /import '\.\/StorefrontFeatureRail\.css'/);
+  assert.match(rail, /:root\[data-theme='dark'\] \.home-landing \.home-feature-rail/);
+  assert.match(rail, /\.bam-promo-product-name\s*\{\s*color: var\(--color-text\)/);
+  assert.match(rail, /\.bam-vertical-promo-detail h3 a\s*\{\s*color: var\(--color-text\)/);
+  assert.match(rail, /\.bam-promo-footer\s*\{\s*background: #071b30bb/);
+  assert.match(rail, /\.bam-vertical-promo-item:nth-child\(4n\+1\).*var\(--catalog-tint-sky\)/s);
+  assert.doesNotMatch(storefront, /Promotional graphics stay decorative/);
 });
 
 

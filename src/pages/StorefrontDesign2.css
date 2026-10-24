@@ -632,26 +632,5 @@
   .home-landing .home-discovery-row .home-category-card { min-height: 160px; }
 }
 
-/* Promotional graphics stay decorative; readable surfaces and controls follow appearance. */
-:root[data-theme='dark'] .home-landing .home-feature-rail :is(.bam-promo,.bam-promo--spice,.bam-promo--beauty,.bam-promo--home) {
-  --promo-paper: var(--color-surface-soft);
-  --promo-ink: var(--color-text);
-  background: linear-gradient(120deg, var(--color-surface-soft), var(--color-surface), var(--color-surface-tint));
-  color: var(--color-text);
-  border-color: var(--color-border-store);
-}
-:root[data-theme='dark'] .home-landing .bam-promo :is(.bam-promo-copy h1, .bam-promo-product-name) {
-  color: var(--color-text);
-}
-:root[data-theme='dark'] .home-landing .bam-promo :is(.bam-promo-copy > p, .bam-promo-product-brand, .bam-promo-old-price) {
-  color: var(--color-text-secondary);
-}
-:root[data-theme='dark'] .home-landing .bam-promo :is(.bam-promo-price, .bam-promo-price strong, .bam-promo-product-link, .bam-promo-eyebrow) {
-  color: var(--color-link-bright);
-}
-:root[data-theme='dark'] .category-page .store-category-intro p {
-  color: var(--color-text-secondary);
-}
-:root[data-theme='dark'] .category-page .store-subcategory-nav a:not(.is-current) {
-  color: var(--color-text-secondary);
-}
+/* Hero and featured-promo styling lives in StorefrontFeatureRail.css,
+   after this file, to avoid conflicting light/dark overrides. */

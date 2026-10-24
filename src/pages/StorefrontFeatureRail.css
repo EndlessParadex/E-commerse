@@ -1,0 +1,254 @@
+/* BAM feature rail: one visual system for hero, featured SKU cards and recommendations.
+ * Kept after StorefrontDesign2.css so light and dark modes share semantic surfaces.
+ * The decorative hero remains navy in both modes; product details follow the user's theme.
+ */
+.home-landing .home-feature-rail {
+  --feature-hero-start: #152540;
+  --feature-hero-end: #244567;
+  --feature-hero-ink: #f6faff;
+  --feature-hero-muted: #d5e4f4;
+  --feature-hero-accent: #9ac8ff;
+  --feature-card-radius: var(--bam-ui-radius-card, 16px);
+  --feature-panel-shadow: 0 12px 30px #0827481c;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail {
+  --feature-hero-start: #0e1b31;
+  --feature-hero-end: #1b3657;
+  --feature-hero-muted: #cad8e9;
+  --feature-hero-accent: #a8d2ff;
+  --feature-panel-shadow: 0 14px 32px #020b1899;
+}
+.home-landing .home-feature-rail .bam-promo {
+  --promo-paper: var(--feature-hero-ink);
+  --promo-highlight: var(--feature-hero-accent);
+  --promo-ink: #112e53;
+  --promo-glow: #547fb0;
+  background: linear-gradient(122deg, var(--feature-hero-start), var(--feature-hero-end));
+  color: var(--feature-hero-ink);
+  border: 1px solid #46617d;
+  border-radius: var(--feature-card-radius);
+  box-shadow: var(--feature-panel-shadow);
+}
+.home-landing .home-feature-rail .bam-promo::before {
+  background: radial-gradient(circle at 86% 18%, #80baf527, transparent 58%);
+}
+.home-landing .home-feature-rail .bam-promo::after { border-color: #f3f8ff24; }
+.home-landing .home-feature-rail .bam-promo-brand .company-brand,
+.home-landing .home-feature-rail .bam-promo-brand .company-brand-text {
+  color: var(--feature-hero-ink);
+}
+.home-landing .home-feature-rail .bam-promo-brand .company-brand-text .logo-accent,
+.home-landing .home-feature-rail .bam-promo-brand > span:last-child,
+.home-landing .home-feature-rail .bam-promo-eyebrow {
+  color: var(--feature-hero-accent);
+}
+.home-landing .home-feature-rail .bam-promo-brand .company-brand-logo {
+  background: #fff;
+  border-color: #d5e7fc;
+}
+.home-landing .home-feature-rail .bam-promo-copy h1 {
+  color: var(--feature-hero-ink);
+}
+.home-landing .home-feature-rail .bam-promo-copy h1 > span:last-child {
+  color: var(--feature-hero-accent);
+}
+.home-landing .home-feature-rail .bam-promo-copy > p,
+.home-landing .home-feature-rail .bam-promo-all {
+  color: var(--feature-hero-muted);
+}
+.home-landing .home-feature-rail .bam-promo-eyebrow > span {
+  background: currentColor;
+}
+.home-landing .home-feature-rail .bam-promo-cta {
+  min-height: 48px;
+  border-radius: var(--bam-ui-radius-control, 12px);
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.home-landing .home-feature-rail .bam-promo-cta:hover {
+  background: var(--color-action-hover);
+  color: var(--color-on-action);
+}
+.home-landing .home-feature-rail .bam-promo-cta svg {
+  background: var(--color-on-action);
+  color: var(--color-action);
+}
+/* Product cards should never inherit the pale hero text on light surfaces. */
+.home-landing .home-feature-rail .bam-promo-product,
+.home-landing .home-feature-rail .bam-promo-product.is-secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-store);
+  border-radius: var(--feature-card-radius);
+  box-shadow: var(--feature-panel-shadow);
+}
+.home-landing .home-feature-rail .bam-promo-product:hover {
+  border-color: var(--color-border-info-strong);
+}
+.home-landing .home-feature-rail .bam-promo-product.is-spotlight .bam-promo-product-visual,
+.home-landing .home-feature-rail .bam-promo-product.is-secondary .bam-promo-product-visual {
+  background: var(--color-surface-soft);
+  border-radius: var(--bam-ui-radius-control, 12px);
+}
+.home-landing .home-feature-rail .bam-promo-product-monogram {
+  color: var(--color-info-text);
+  background: linear-gradient(140deg, var(--color-info-soft), var(--color-surface-soft));
+}
+.home-landing .home-feature-rail .bam-promo-product-monogram span,
+.home-landing .home-feature-rail .bam-promo-product-brand,
+.home-landing .home-feature-rail .bam-promo-old-price {
+  color: var(--color-text-secondary);
+}
+.home-landing .home-feature-rail .bam-promo-product-name {
+  color: var(--color-text);
+  font-weight: 750;
+}
+.home-landing .home-feature-rail .bam-promo-product-size > span {
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  border-color: var(--color-border-info);
+}
+.home-landing .home-feature-rail .bam-promo-price,
+.home-landing .home-feature-rail .bam-promo-product-link {
+  color: var(--color-link);
+}
+.home-landing .home-feature-rail .bam-promo-product-link svg {
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+}
+.home-landing .home-feature-rail .bam-promo-product.is-secondary {
+  grid-template-columns: 62px minmax(0,1fr);
+  padding: 9px;
+}
+.home-landing .home-feature-rail .bam-promo-discount {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+}
+/* Carousel navigation belongs to the hero, not to the white card surface. */
+.home-landing .home-feature-rail .bam-promo-footer {
+  background: #071b30bb;
+  border-top: 1px solid #f3f9ff24;
+  color: var(--feature-hero-muted);
+}
+.home-landing .home-feature-rail .bam-promo-arrow {
+  background: #1e3a58;
+  color: var(--feature-hero-ink);
+  border-color: #7893b466;
+}
+.home-landing .home-feature-rail .bam-promo-arrow:hover {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.home-landing .home-feature-rail .bam-promo-dots span { background: #839fbe; }
+.home-landing .home-feature-rail .bam-promo-dots [aria-current] span {
+  background: var(--feature-hero-accent);
+}
+.home-landing .home-feature-rail .bam-promo-position,
+.home-landing .home-feature-rail .bam-promo-pause {
+  color: var(--feature-hero-muted);
+}
+.home-landing .home-feature-rail .bam-promo-position strong {
+  color: var(--feature-hero-accent);
+}
+.home-landing .home-feature-rail .bam-promo :is(a, button):focus-visible,
+.home-landing .home-feature-rail .bam-vertical-promos :is(a,button):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+/* Matching recommendation panel: surfaces adapt to both light and dark mode. */
+.home-landing .home-feature-rail .bam-vertical-promos {
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-store);
+  border-radius: var(--feature-card-radius);
+  box-shadow: var(--feature-panel-shadow);
+}
+.home-landing .home-feature-rail .bam-vertical-promos-heading {
+  background: var(--color-action);
+  border-radius: var(--bam-ui-radius-control, 12px);
+}
+.home-landing .home-feature-rail .bam-vertical-promos-heading h2,
+.home-landing .home-feature-rail .bam-vertical-promos-heading > a,
+.home-landing .home-feature-rail .bam-vertical-promos-kicker {
+  color: var(--color-on-action);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-store);
+  border-radius: var(--feature-card-radius);
+  box-shadow: 0 3px 14px #041e3b0f;
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item:hover {
+  border-color: var(--color-border-info-strong);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-photo {
+  border-radius: var(--bam-ui-radius-control, 12px);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+1) .bam-vertical-promo-photo {
+  background: var(--catalog-tint-sky);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+2) .bam-vertical-promo-photo {
+  background: var(--catalog-tint-sand);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+3) .bam-vertical-promo-photo {
+  background: var(--catalog-tint-mint);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+4) .bam-vertical-promo-photo {
+  background: var(--catalog-tint-violet);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-monogram {
+  color: var(--color-info-text);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-brand,
+.home-landing .home-feature-rail .bam-vertical-promo-package,
+.home-landing .home-feature-rail .bam-vertical-promo-prices del {
+  color: var(--color-text-secondary);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-detail h3 a {
+  color: var(--color-text);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-prices strong {
+  color: var(--color-link);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-discount {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  border-radius: var(--bam-ui-radius-xs, 8px);
+}
+.home-landing .home-feature-rail .bam-vertical-promo-action a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 6px 11px;
+  border-radius: var(--bam-ui-radius-control, 12px);
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  white-space: nowrap;
+}
+.home-landing .home-feature-rail .bam-vertical-promo-action a:hover {
+  background: var(--color-surface-hover);
+}
+.home-landing .home-feature-rail .bam-vertical-promos-disclaimer {
+  color: var(--color-text-secondary);
+  font-size: .72rem;
+}
+.home-landing .home-feature-rail .bam-vertical-promos-empty {
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+@media (max-width: 1190px) {
+  .home-landing .home-feature-rail .bam-vertical-promo-action a {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+}
+@media (max-width: 650px) {
+  .home-landing .home-feature-rail .bam-vertical-promo-action a {
+    min-height: 40px;
+  }
+}

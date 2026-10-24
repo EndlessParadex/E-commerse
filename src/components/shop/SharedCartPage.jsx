@@ -517,6 +517,452 @@ function AdminCartWorkspace({
                   <h2><span className="shared-admin-step-number">3</span> Metode pembayaran</h2>
                   <span className="shared-admin-hint">Dipilih pembeli toko atau Sales</span>
                 </div>
+              <section className="shared-cart-payment" aria-labelledby="shared-payment-title">
+                <h2 id="shared-payment-title">Metode pembayaran toko</h2>
+                <p>Pilihan berlaku untuk seluruh keranjang toko pada periode ini.</p>
+                {['buyer', 'sales'].includes(shared.role) && cart.status === 'open' ? (
+                  <label htmlFor="shared-cart-payment">
+                    Pilih COD atau bank transfer
+                    <select
+                      id="shared-cart-payment"
+                      value={cart.paymentId || 'cod'}
+                      disabled={!shared.canEdit}
+                      onChange={(event) => void shared.mutate('payment', event.target.value)}
+                    >
+                      <option value="cod">COD — Bayar di Tempat</option>
+                      <option value="transfer-bca">Transfer BCA</option>
+                      <option value="transfer-bri">Transfer BRI</option>
+                      <option value="transfer-mandiri">Transfer Mandiri</option>
+                    </select>
+                  </label>
+                ) : (
+                  <p><strong>{cart.payment?.label || 'COD — Bayar di Tempat'}</strong></p>
+                )}
+                <p>
+                  {cart.payment?.groupId === 'transfer'
+                    ? 'Setelah Admin memfinalisasi pesanan, rekening tujuan dan unggah bukti tersedia pada Detail Pesanan. Bukti diperiksa Admin sebelum dinyatakan lunas.'
+                    : 'Pembayaran dilakukan ketika barang diterima. Admin mencatat pelunasan.'}
+                </p>
+                <small>Admin hanya memeriksa pilihan pembayaran pembeli toko atau Sales.</small>
+              </section>
+              </div>
+            </>
+          ) : (
+            <div className="shared-admin-empty-state">
+              <h2>Belum ada keranjang dipilih</h2>
+              <p>Pilih toko dan tanggal di atas, lalu tekan Buka keranjang untuk mulai mengelola barang.</p>
+            </div>
+          )}
+        </div>
+        <div className="shared-admin-sidebar">
+          {cart && (
+            <>
+                <aside className="shared-cart-summary">
+                  <h2>Ringkasan keranjang</h2>
+                  <p className="shared-admin-summary-store">{cart.store.storeName}
+                    <small>{cart.store.storeCode} · {dateLabel(cart.date)}</small>
+                  </p>
+                  <div className="shared-admin-summary-stats">
+                    <div><span>Status</span><strong className={'shared-admin-status status-' + cart.status}>
+                      {cart.status === 'open' ? 'Terbuka' : cart.status === 'locked' ? 'Dikunci' : 'Difinalisasi'}
+                    </strong></div>
+                    <div><span>Total SKU</span><strong>{cart.items.length}</strong></div>
+                    <div><span>Kemasan</span><strong>{shop.quantity}</strong></div>
+                    <div><span>Versi</span><strong>{cart.revision}</strong></div>
+                  </div>
+                  <p>
+                    Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
+                  </p>
+                  <details className="shared-summary-help">
+                    <summary>Catatan harga dan stok</summary>
+                    <p>
+                      {cart.status === 'finalized'
+                        ? 'Harga dan barang sudah dicatat pada pesanan final.'
+                        : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
+                    </p>
+                    <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
+                  </details>
+                  {cart.updatedAt && (
+                    <p className="shared-summary-update">Disimpan: {timeLabel(cart.updatedAt)} WIB</p>
+                  )}}
+                  {cart.canEdit && cart.items.length > 0 && (
+                    <button
+                      type="button"
+                      className="bam-button-danger"
+                      disabled={!shared.canEdit}
+                      onClick={() => setClearRevision(cart.revision)}
+                    >
+                      Kosongkan keranjang
+                    </button>
+                  )}
+                  {clearRevision !== null && (
+                    <div
+                      className="shared-clear-confirm"
+                      role="group"
+                      aria-label="Konfirmasi kosongkan keranjang"
+                    >
+                      <p>
+                        Hapus semua barang dari keranjang toko dan periode ini? Pembeli dan Sales
+                        akan melihat keranjang kosong.
+                      </p>
+                      <button
+                        type="button"
+                        className="bam-button-danger"
+                        disabled={!shared.canEdit}
+                        onClick={async () => {
+                          await shared.mutate('clear', undefined, undefined, clearRevision);
+                          setClearRevision(null);
+                        }}
+                      >
+                        Ya, kosongkan
+                      </button>
+                      <button
+                        type="button"
+                        className="bam-button-secondary"
+                        disabled={frozen}
+                        onClick={() => setClearRevision(null)}
+                      >
+                        Kembali
+                      </button>
+                    </div>
+                  )}
+                </aside>
+
+              <AdminCartProcessing key={cart.store.id + cart.date} shared={shared} />
+            </>
+          )}
+          <section className="shared-admin-help" aria-label="Panduan untuk Admin baru">
+            <h2>Petunjuk untuk Admin</h2>
+            <ol>
+              <li>Pilih toko dan periode yang akan diproses.</li>
+              <li>Periksa dan tambahkan barang selama keranjang terbuka.</li>
+              <li>Pastikan metode pembayaran pembeli/Sales sesuai.</li>
+              <li>Kunci keranjang, periksa stok, lalu finalisasi.</li>
+            </ol>
+            <p>Pemrosesan pesanan toko hanya dapat difinalisasi melalui Admin.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SharedCartPage({ adminView = false }) {
+  const shop = useShop();
+  const { shared } = shop;
+  const [query, setQuery] = useState('');
+  const [storeId, setStoreId] = useState(shared.selection.storeId);
+  const [date, setDate] = useState(shared.selection.date);
+  const [clearRevision, setClearRevision] = useState(null);
+  const [adminSection, setAdminSection] = useState('queue');
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setStoreId(shared.selection.storeId);
+    setDate(shared.selection.date);
+    setClearRevision(null);
+  }, [shared.selection.storeId, shared.selection.date]);
+  const frozen = shared.busy || shared.uncertain || shared.reading;
+  const { cart, stores, cycles } = shared;
+  const selectedNotListed = cart && !stores.stores.some((store) => store.id === cart.store.id);
+  const buyerStore = stores.stores.find((store) => store.id === storeId) ||
+    (cart?.store.id === storeId ? cart.store : null);
+  const buyerSchedule = buyerStore?.deliverySchedule;
+  const buyerFixedDate = nextStoreDelivery(buyerSchedule, todayID());
+  const isAdmin = adminView && ['admin', 'owner'].includes(shared.role);
+  const showSelection = !isAdmin || adminSection === 'history';
+  const showCart = !isAdmin || adminSection === 'cart';
+  const sections = [
+    { id: 'queue', label: 'Antrean', description: 'Cari toko dan buka keranjang yang perlu diproses.' },
+    { id: 'cart', label: 'Isi Keranjang', description: 'Pilih toko, kelola barang, dan lakukan finalisasi.' },
+    { id: 'history', label: 'Riwayat', description: 'Lihat catatan perubahan dan periode keranjang toko.' },
+    ...(shared.role === 'owner'
+      ? [{ id: 'banks', label: 'Rekening Transfer', description: 'Atur rekening resmi BCA, BRI, dan Mandiri.' }]
+      : []),
+  ];
+  const activeSection = sections.find((section) => section.id === adminSection);
+  return (
+    <div className="shop-page shared-cart-page">
+      {!adminView && (
+        <>
+          <nav className="shop-breadcrumb" aria-label="Breadcrumb">
+            <a href="#/">Beranda</a>
+            <span>/</span>
+            <span>Keranjang bersama</span>
+          </nav>
+          <header className="shop-page-header">
+            <h1>Keranjang bersama toko</h1>
+            <p>Pembeli dan Sales yang ditugaskan mengisi daftar barang yang sama.</p>
+          </header>
+          <p className="shared-cart-explanation">
+            Keranjang tersimpan bersama. Tanggal adalah rencana pengiriman; stok dicadangkan
+            setelah Admin memfinalisasi pesanan.
+          </p>
+        </>
+      )}
+      {shared.status === 'loading' && <p role="status">Memuat toko dan keranjang…</p>}
+      {shared.status === 'ready' && isAdmin && (
+        <div className="shared-admin-navigation">
+          <div className="shared-admin-tabs" role="tablist" aria-label="Submenu keranjang bersama">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                id={'shared-tab-' + section.id}
+                role="tab"
+                aria-selected={adminSection === section.id}
+                aria-controls={'shared-panel-' + section.id}
+                className={'shared-admin-tab' + (adminSection === section.id ? ' is-active' : '')}
+                onClick={() => setAdminSection(section.id)}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+          <p className="shared-admin-tab-description">{activeSection?.description}</p>
+        </div>
+      )}
+      {shared.status === 'ready' && isAdmin && adminSection === 'queue' && (
+        <div id="shared-panel-queue" role="tabpanel" aria-labelledby="shared-tab-queue">
+          <AdminCartQueue
+            shared={shared}
+            onOpenCart={async (target) => {
+              const chosen = await shared.choose(target);
+              if (chosen) setAdminSection('cart');
+            }}
+          />
+        </div>
+      )}
+      {shared.status === 'ready' && isAdmin && adminSection === 'banks' && (
+        <div id="shared-panel-banks" role="tabpanel" aria-labelledby="shared-tab-banks">
+          <AdminB2BBanks />
+        </div>
+      )}
+      {shared.status === 'ready' && isAdmin && adminSection === 'cart' && (
+        <AdminCartWorkspace
+          shop={shop}
+          shared={shared}
+          query={query}
+          setQuery={setQuery}
+          storeId={storeId}
+          setStoreId={setStoreId}
+          date={date}
+          setDate={setDate}
+          stores={stores}
+          cart={cart}
+          frozen={frozen}
+          selectedNotListed={selectedNotListed}
+          clearRevision={clearRevision}
+          setClearRevision={setClearRevision}
+        />
+      )}
+      {shared.status === 'legacy' && (
+        <p className="shop-warning">
+          Halaman ini memerlukan server B2B terbaru. Pembeli perlu dihubungkan ke toko oleh Pemilik
+          BAM.
+        </p>
+      )}
+      {shared.error && (
+        <div className="shop-warning" role="alert">
+          <p>{shared.error}</p>
+          <button
+            type="button"
+            className="bam-button-secondary"
+            disabled={shared.busy}
+            onClick={
+              shared.uncertain
+                ? shared.retryPending
+                : shared.status === 'error'
+                  ? shared.retry
+                  : shared.refresh
+            }
+          >
+            {shared.uncertain ? 'Pastikan penyimpanan' : 'Coba lagi / muat terbaru'}
+          </button>
+        </div>
+      )}
+      {shared.status === 'ready' && showSelection && (
+        <div
+          id={isAdmin ? 'shared-panel-' + adminSection : undefined}
+          role={isAdmin ? 'tabpanel' : undefined}
+          aria-labelledby={isAdmin ? 'shared-tab-' + adminSection : undefined}
+        >
+          <details className="shared-cart-selection shared-selection-panel"
+            key={cart ? 'active:' + cart.store.id + ':' + cart.date : 'choose-store'}
+            defaultOpen={!cart}>
+            <summary className="shared-selection-trigger">
+              <span className="shared-selection-label">
+                <strong id="shared-selection-title">Toko dan periode</strong>
+                <small>{cart
+                  ? cart.store.storeName + ' · ' + dateLabel(cart.date)
+                  : 'Pilih toko dan rencana pengiriman'}</small>
+              </span>
+              <span className="shared-selection-action">
+                {cart ? 'Ganti toko / periode' : 'Pilih toko'}
+              </span>
+            </summary>
+            <div className="shared-selection-content">
+            <form
+              className="shared-open-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (storeId && (buyerFixedDate || date)) void shared.choose({ storeId, date: buyerFixedDate || date });
+              }}
+            >
+              <label htmlFor="shared-store">
+                Toko
+                <select
+                  id="shared-store"
+                  required
+                  value={storeId}
+                  disabled={frozen}
+                  onChange={(event) => {
+                    const id = event.target.value;
+                    setStoreId(id);
+                    const match = stores.stores.find((store) => store.id === id);
+                    if (match?.deliverySchedule)
+                      setDate(nextStoreDelivery(match.deliverySchedule, todayID()));
+                  }}
+                >
+                  <option value="">Pilih toko</option>
+                  {selectedNotListed && (
+                    <option value={cart.store.id}>
+                      {cart.store.storeName} · {cart.store.storeCode}
+                    </option>
+                  )}
+                  {stores.stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.storeName} · {store.storeCode}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {buyerSchedule ? (
+                <div className="shared-admin-fixed-delivery">
+                  <strong>Jadwal: {weekdays[buyerSchedule.weekday]} · setiap {buyerSchedule.intervalWeeks} minggu</strong>
+                  <span>Berikutnya: {dateLabel(buyerFixedDate)}</span>
+                </div>
+              ) : (
+              <label htmlFor="shared-date">
+                Tanggal rencana pengiriman
+                <input
+                  id="shared-date"
+                  type="date"
+                  required
+                  min="2000-01-01"
+                  max="2099-12-31"
+                  value={date}
+                  disabled={frozen}
+                  onChange={(event) => setDate(event.target.value)}
+                />
+              </label>
+              )}
+              <button className="shop-primary" disabled={frozen || !storeId || !(buyerFixedDate || date)}>
+                Buka keranjang
+              </button>
+            </form>
+
+              <details className="shared-store-search-details">
+                <summary>Cari toko lain <span>{stores.total} toko tersedia</span></summary>
+                <div className="shared-store-search-body">
+            <form
+              className="shared-store-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void shared.findStores(query);
+              }}
+            >
+              <label htmlFor="shared-store-query">Cari toko yang dapat Anda akses</label>
+              <div>
+                <input
+                  id="shared-store-query"
+                  type="search"
+                  maxLength="200"
+                  value={query}
+                  disabled={frozen}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Nama atau kode toko"
+                />
+                <button className="bam-button-secondary" disabled={frozen}>
+                  Cari
+                </button>
+              </div>
+            </form>
+
+            <div className="shared-pagination">
+              <span>
+                {stores.total} toko · Halaman {stores.page}/{stores.pages}
+              </span>
+              <button
+                type="button"
+                disabled={frozen || stores.page <= 1}
+                onClick={() => shared.findStores(query, stores.page - 1)}
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                disabled={frozen || stores.page >= stores.pages}
+                onClick={() => shared.findStores(query, stores.page + 1)}
+              >
+                Berikutnya
+              </button>
+            </div>
+            {!stores.total && (
+              <p>
+                Belum ada toko pada daftar ini. Untuk akun pembeli/Sales, Pemilik BAM perlu
+                menghubungkan akun melalui menu Toko &amp; Sales.
+              </p>
+            )}
+
+                </div>
+              </details>
+            </div>
+          </details>
+          {shared.reading && <p role="status">Memuat keranjang terbaru…</p>}
+          {shared.notice && (
+            <p className="shared-save-notice" role="status">
+              ✓ {shared.notice}
+            </p>
+          )}
+          {cart && (
+            <>
+              <section className="shared-cart-heading">
+                <div>
+                  <h2>{cart.store.storeName}</h2>
+                  <p>
+                    {cart.store.storeCode} · {dateLabel(cart.date)}
+                  </p>
+                  <p>
+                    {shop.quantity} kemasan · {cart.items.length} SKU · Versi {cart.revision}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="bam-button-secondary"
+                  disabled={frozen}
+                  onClick={shared.refresh}
+                >
+                  Muat terbaru
+                </button>
+              </section>
+              {showCart && (
+                <>
+              {!cart.canEdit && (
+                <p className="shop-warning">
+                  {shared.role === 'admin' || shared.role === 'owner'
+                    ? cart.status === 'finalized'
+                      ? 'Keranjang sudah menjadi pesanan. Perubahan berikutnya dikelola pada Pesanan toko.'
+                      : 'Keranjang dikunci. Buka kembali melalui Pemrosesan Admin untuk memperbaiki barang.'
+                    : cart.status === 'finalized'
+                      ? 'Keranjang ini sudah menjadi pesanan dan hanya dapat dilihat.'
+                      : 'Keranjang dikunci untuk pemeriksaan Admin dan hanya dapat dilihat.'}
+                </p>
+              )}
+              {cart.orderId && (
+                <p className="shared-save-notice">
+                  <a href={'#/pesanan/' + encodeURIComponent(cart.orderId)}>Lihat pesanan toko →</a>
+                </p>
+              )}
               <section className="shared-cart-payment shared-cart-payment-compact"
                 aria-labelledby="shared-payment-title">
                 <div className="shared-payment-description">
@@ -527,12 +973,10 @@ function AdminCartWorkspace({
                   {['buyer', 'sales'].includes(shared.role) && cart.status === 'open' ? (
                     <label htmlFor="shared-cart-payment">
                       Metode pembayaran
-                      <select
-                        id="shared-cart-payment"
+                      <select id="shared-cart-payment"
                         value={cart.paymentId || 'cod'}
                         disabled={!shared.canEdit}
-                        onChange={(event) => void shared.mutate('payment', event.target.value)}
-                      >
+                        onChange={(event) => void shared.mutate('payment', event.target.value)}>
                         <option value="cod">COD — Bayar di Tempat</option>
                         <option value="transfer-bca">Transfer BCA</option>
                         <option value="transfer-bri">Transfer BRI</option>
@@ -547,7 +991,7 @@ function AdminCartWorkspace({
                 </div>
                 <p className="shared-payment-help">
                   {cart.payment?.groupId === 'transfer'
-                    ? 'Rekening tujuan dan unggah bukti tersedia setelah finalisasi Admin, pada Detail Pesanan.'
+                    ? 'Rekening dan unggah bukti tersedia setelah finalisasi Admin, pada Detail Pesanan.'
                     : 'Bayar saat barang diterima; pelunasan dicatat Admin.'}
                 </p>
                 {['admin', 'owner'].includes(shared.role) && (
@@ -663,18 +1107,13 @@ function AdminCartWorkspace({
                   <p>
                     Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                   </p>
-                  <details className="shared-summary-help">
-                    <summary>Catatan harga dan stok</summary>
-                    <p>
-                      {cart.status === 'finalized'
-                        ? 'Harga dan barang sudah dicatat pada pesanan final.'
-                        : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
-                    </p>
-                    <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
-                  </details>
-                  {cart.updatedAt && (
-                    <p className="shared-summary-update">Disimpan: {timeLabel(cart.updatedAt)} WIB</p>
-                  )}
+                  <p>
+                    {cart.status === 'finalized'
+                      ? 'Harga dan barang sudah dicatat pada pesanan final.'
+                      : 'Harga dapat berubah sampai finalisasi Admin. Persediaan diperiksa saat finalisasi.'}
+                  </p>
+                  <p>Isi diperiksa berkala setiap 5 detik saat halaman aktif.</p>
+                  {cart.updatedAt && <p>Terakhir disimpan: {timeLabel(cart.updatedAt)} WIB</p>}
                   {cart.canEdit && cart.items.length > 0 && (
                     <button
                       type="button"

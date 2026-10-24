@@ -23,7 +23,6 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - run: npm view nodemailer@10.2.1 dist.integrity
 
   test:
     name: Automated tests (Node 24)

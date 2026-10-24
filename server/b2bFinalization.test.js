@@ -223,7 +223,9 @@ test('finalization API only allows active Admin; locked carts reject edits; fina
         ).status,
         403,
       );
-      assert.equal((await sharedRequest(app, 'POST', '/api/orders', actor, {})).status, 403);
+      const personalOrder = await sharedRequest(app, 'POST', '/api/orders', actor, {});
+      assert.equal(personalOrder.status, 422, 'private checkout still validates the submitted cart');
+      assert.notEqual(personalOrder.body.error, 'shared_cart_required');
     }
     assert.equal(
       app.workflow.list(actors.owner).total,

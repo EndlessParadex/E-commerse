@@ -223,7 +223,7 @@ test('finalization API only allows active Admin; locked carts reject edits; fina
         ).status,
         403,
       );
-      assert.equal((await sharedRequest(app, 'POST', '/api/orders', actor, {})).status, 403);
+      assert.equal((await sharedRequest(app, 'POST', '/api/orders', actor, {})).status, 422);
     }
     assert.equal(
       app.workflow.list(actors.owner).total,

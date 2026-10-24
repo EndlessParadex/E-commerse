@@ -24,7 +24,7 @@ import './Home.css';
 import './StorefrontDesign2.css';
 
 export default function Home({ catalog = null }) {
-  const { addItem, favoriteIds, toggleFavorite, shared } = useShop();
+  const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
   const b2bHome = !catalog && shared?.status === 'ready' &&
     ['sales', 'buyer'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -33,7 +33,7 @@ export default function Home({ catalog = null }) {
       <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
           {b2bHome
-            ? <B2BHomeExperience shared={shared} />
+            ? <B2BHomeExperience shared={shared} setCartMode={setCartMode} />
             : <PromoCarousel />}
           <VerticalPromoPanel />
         </div>

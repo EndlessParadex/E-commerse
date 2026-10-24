@@ -229,7 +229,19 @@ function CartQuantity({ item, shared }) {
 }
 
 export function SharedCartBar() {
-  const shared = useShop().shared;
+  const { shared, setCartMode } = useShop();
+  if (shared?.personal)
+    return (
+      <aside className="shared-cart-bar" aria-label="Mode belanja pribadi">
+        <span>
+          <strong>Belanja pribadi</strong>
+          {' · pesanan atas nama Anda sendiri, terpisah dari keranjang toko'}
+        </span>
+        <a href="#/keranjang" onClick={() => setCartMode('store')}>
+          Ke keranjang toko →
+        </a>
+      </aside>
+    );
   if (!shared?.enabled) return null;
   return (
     <aside className="shared-cart-bar" aria-label="Toko keranjang aktif">
@@ -241,7 +253,17 @@ export function SharedCartBar() {
             ? ' · Memeriksa akun…'
             : ' · Pilih toko dan periode'}
       </span>
-      <a href="#/keranjang">{shared.cart ? 'Buka / ganti toko →' : 'Pilih toko →'}</a>
+      <span>
+        <a href="#/keranjang">{shared.cart ? 'Buka / ganti toko →' : 'Pilih toko →'}</a>
+        {shared.canChooseCart && (
+          <>
+            {' · '}
+            <a href="#/cari?q=" onClick={() => setCartMode('personal')}>
+              Belanja pribadi →
+            </a>
+          </>
+        )}
+      </span>
     </aside>
   );
 }

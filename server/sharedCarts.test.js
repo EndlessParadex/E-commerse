@@ -111,9 +111,10 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
       403,
     );
     for (const actor of ['buyer', 'sales'])
-      assert.equal(
+      assert.notEqual(
         (await sharedRequest(app, 'POST', '/api/orders', actor, {})).body.error,
         'shared_cart_required',
+        'belanja pribadi tidak lagi diblokir; body kosong hanya gagal validasi',
       );
     const cleared = await sharedRequest(
       app,
@@ -342,7 +343,7 @@ test('shared cart validates dates/quantities, preserves deleted SKUs, refreshes 
       (await sharedRequest(app, 'GET', url(first) + '?date=' + date, 'sales')).status,
       404,
     );
-    assert.equal(
+    assert.notEqual(
       (await sharedRequest(app, 'POST', '/api/orders', 'sales', {})).body.error,
       'shared_cart_required',
     );

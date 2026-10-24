@@ -26,9 +26,46 @@ function loadShop(key) {
   }
 }
 
+const CART_MODE_KEY = 'bam.cart-mode.';
+function readCartMode(key) {
+  try {
+    return localStorage.getItem(key) === 'personal' ? 'personal' : 'store';
+  } catch {
+    return 'store';
+  }
+}
+
 export default function ShopProvider({ children }) {
   const delivery = useContext(DeliveryContext);
-  const shared = useSharedCart(delivery?.user, delivery?.authLoading);
+  const sharedRaw = useSharedCart(delivery?.user, delivery?.authLoading);
+  // Sales dan pembeli toko punya dua keranjang: keranjang toko (bersama) dan keranjang pribadi.
+  // Mode menentukan keranjang mana yang aktif; Admin/Pemilik tidak memakai mode ini.
+  const modeKey = companyStorageKey(CART_MODE_KEY + (delivery?.user?.id || 'guest'));
+  const [modeState, setModeState] = useState(() => ({
+    key: modeKey,
+    value: readCartMode(modeKey),
+  }));
+  const cartMode = modeState.key === modeKey ? modeState.value : readCartMode(modeKey);
+  const canChooseCart =
+    sharedRaw.enabled &&
+    sharedRaw.status === 'ready' &&
+    ['sales', 'buyer'].includes(sharedRaw.role);
+  const personalCart = canChooseCart && cartMode === 'personal';
+  const setCartMode = (value) => {
+    const next = value === 'personal' ? 'personal' : 'store';
+    try {
+      localStorage.setItem(modeKey, next);
+    } catch {
+      // Mode tetap berlaku selama sesi walau penyimpanan browser gagal.
+    }
+    setModeState({ key: modeKey, value: next });
+  };
+  const shared = {
+    ...sharedRaw,
+    ...(personalCart ? { enabled: false } : {}),
+    personal: personalCart,
+    canChooseCart,
+  };
   const storageKey = companyStorageKey(
     STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''),
   );
@@ -158,6 +195,7 @@ export default function ShopProvider({ children }) {
         ...state,
         cart,
         shared,
+        setCartMode,
         ...cartTotals(cart),
         cartReview: review,
         stockFor,

@@ -132,6 +132,9 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 11px;
 }
+.bam-role-home--sales .bam-role-home-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .bam-role-home-card {
   display: flex;
   flex-direction: column;
@@ -220,7 +223,7 @@
   .bam-role-home-copy { width: 76%; }
   .bam-role-home-copy h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
   .bam-role-home-art { width: 30%; right: 4%; top: 30%; }
-  .bam-role-home-actions { grid-template-columns: 1fr; }
+  .bam-role-home-actions, .bam-role-home--sales .bam-role-home-actions { grid-template-columns: 1fr; }
   .bam-role-home-card { min-height: 90px; flex-direction: row; align-items: center; }
 }
 @media (max-width: 480px) {

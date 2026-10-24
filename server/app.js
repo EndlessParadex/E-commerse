@@ -684,10 +684,8 @@ export function createApp({
             }),
           );
         if (req.method === 'POST' && path === '/api/orders') {
-          if (user.role !== 'admin' && sharedCarts.participates(user))
-            return sendError(res, 403, 'shared_cart_required', {
-              form: 'Akun B2B menggunakan keranjang bersama. Pesanan akan difinalisasi oleh Admin.',
-            });
+          // Setiap akun, termasuk Sales dan pembeli toko, boleh belanja untuk dirinya sendiri.
+          // Pesanan toko tetap hanya lahir dari finalisasi Admin (b2bFinalization), bukan dari sini.
           return json(res, 201, {
             order: workflow.create(user, await readBody(req), clientIp(req)),
           });

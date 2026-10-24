@@ -39,9 +39,9 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     stores: { stores: list, total: list.length, page: 1, pages: 1 },
     selection,
   });
-  const render = async (state) => {
+  const render = async (state, setCartMode) => {
     await act(async () => {
-      root.render(createElement(B2BHomeExperience, { shared: state }));
+      root.render(createElement(B2BHomeExperience, { shared: state, setCartMode }));
       await flush();
     });
   };
@@ -49,12 +49,29 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     await render(shared('sales', [store]));
     assert.match(container.querySelector('h1').textContent, /toko pelanggan Anda/);
     assert.ok(container.querySelector('.bam-role-home--sales'));
-    assert.match(container.querySelector('.bam-role-home-actions').textContent, /Daftar Toko/);
-    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 3);
+    assert.match(container.querySelector('.bam-role-home-actions').textContent, /List Toko/);
+    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
     assert.equal(container.querySelector('.bam-role-home-card.is-stores').getAttribute('href'),
       '#/keranjang');
+    assert.match(container.querySelector('.bam-role-home-card.is-personal').textContent,
+      /Belanja biasa/);
+    assert.equal(container.querySelector('.bam-role-home-card.is-personal').getAttribute('href'),
+      '#/cari?q=');
     assert.doesNotMatch(container.textContent, /Toko Saya/);
-    assert.doesNotMatch(container.textContent, /Keranjang Pribadi/);
+    assert.doesNotMatch(container.textContent, /masih dalam pengembangan/);
+
+    const modes = [];
+    await render(shared('sales', [store]), (mode) => modes.push(mode));
+    await act(async () => {
+      container.querySelector('.bam-role-home-card.is-personal').dispatchEvent(
+        new dom.MouseEvent('click', { bubbles: true, cancelable: true }),
+      );
+      container.querySelector('.bam-role-home-card.is-stores').dispatchEvent(
+        new dom.MouseEvent('click', { bubbles: true, cancelable: true }),
+      );
+      await flush();
+    });
+    assert.deepEqual(modes, ['personal', 'store'], 'tiap kotak memilih keranjang yang tepat');
 
     await render(shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }));
     assert.ok(container.querySelector('.bam-role-home--buyer'));
@@ -64,7 +81,7 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       /Setiap Senin · 1 minggu/);
     assert.match(container.querySelector('.bam-role-home-card.is-schedule').textContent,
       /26 Oktober 2026/);
-    assert.doesNotMatch(container.textContent, /Daftar Toko/);
+    assert.doesNotMatch(container.textContent, /List Toko/);
 
     await render(shared('buyer', []));
     assert.match(container.textContent, /Akun belum terhubung ke toko/);

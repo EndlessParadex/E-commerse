@@ -1113,7 +1113,7 @@ export default function SharedCartPage({ adminView = false }) {
                   </details>
                   {cart.updatedAt && (
                     <p className="shared-summary-update">Disimpan: {timeLabel(cart.updatedAt)} WIB</p>
-                  )}}
+                  )}
                   {cart.canEdit && cart.items.length > 0 && (
                     <button
                       type="button"

@@ -441,3 +441,24 @@ test('B2B account ownership API: create, protect, transfer and show account-stor
     assert.equal(account.canDelete, false);
   } finally { app.db.close(); }
 });
+
+test('B2B delivery schedule route is reachable for Owner and rejects unauthorized updates', async () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  seed(app);
+  try {
+    const owner = { id: 'owner', role: 'admin' };
+    const store = app.b2bStores.create(owner, newStore('Jadwal Fixture'));
+    const path = '/api/b2b/stores/' + store.id + '/schedule';
+    const schedule = { weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
+      revision: store.revision };
+    assert.equal((await request(app, 'POST', path, 'buyer', schedule)).status, 403);
+    assert.equal((await request(app, 'POST', path, 'operator', schedule)).status, 403);
+    const result = await request(app, 'POST', path, 'owner', schedule);
+    assert.equal(result.status, 200, JSON.stringify(result.body));
+    assert.equal(result.body.store.deliverySchedule.weekday, 1);
+    assert.equal(result.body.store.deliverySchedule.intervalWeeks, 1);
+    assert.equal((await request(app, 'POST', path, 'owner',
+      { ...schedule, revision: result.body.store.revision })).status, 409,
+      'fixed schedule cannot be silently changed later');
+  } finally { app.db.close(); }
+});

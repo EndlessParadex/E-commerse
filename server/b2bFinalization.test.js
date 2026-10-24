@@ -714,7 +714,10 @@ test('overdue cart reschedule by Admin preserves items, audit and request idempo
     assert.equal(repeated.cart.revision, updated.revision);
     assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get().n, 1);
     assert.throws(() => app.b2bFinalization.change(actors.owner, first.id,
-      body('reschedule', updated.revision, { targetDate: '2026-11-09', reason: 'Coba ulang yang bukan lewat' })),
+      body('reschedule', updated.revision, {
+        date: '2026-11-02', targetDate: '2026-11-09',
+        reason: 'Coba ulang yang bukan lewat',
+      })),
       { code: 'not_overdue' });
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
   } finally { app.db.close(); }

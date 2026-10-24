@@ -461,7 +461,7 @@ export function createApp({
         path === '/api/b2b/stores/create' ||
         b2bDetailMatch ||
         /^\/api\/b2b\/stores\/[^/]+\/(?:members|sales)(?:\/remove)?$/.test(path) ||
-        /^\/api\/b2b\/stores\/[^/]+\/owner$/.test(path)
+        /^\/api\/b2b\/stores\/[^/]+\/(?:owner|schedule)$/.test(path)
       ) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');

@@ -530,7 +530,7 @@ test('B2B buyer and Sales can place private orders without changing shared-store
         recipient: 'Pembeli pribadi fixture',
         address: 'Jalan Test Private Nomor 20',
         shippingId: 'regular',
-        paymentId: 'manual-transfer',
+        paymentId: 'cod',
         items: [{
           id: variant.id, quantity: 1, expectedPrice: Number(variant.price),
         }],

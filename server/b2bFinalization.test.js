@@ -681,3 +681,66 @@ test('B2B email recipients are store members and Sales; revocation before delive
     app.db.close();
   }
 });
+
+test('overdue cart reschedule by Admin preserves items, audit and request idempotency without duplicating orders', () => {
+  let now = Date.parse('2026-10-30T12:00:00+07:00');
+  const app = createApp({ dbPath: ':memory:', logger: () => {}, now: () => now });
+  const { first, actors } = seedSharedCart(app);
+  try {
+    add(app, actors.buyer, first, 3);
+    const oldCart = app.sharedCarts.read(actors.buyer, first.id, date);
+    assert.equal(oldCart.overdue, true);
+    const action = body('reschedule', oldCart.revision, {
+      targetDate: '2026-11-02', reason: 'Armada pengiriman tidak tersedia',
+    });
+    assert.throws(() => app.b2bFinalization.change(actors.buyer, first.id, action),
+      { code: 'admin_required' });
+    const updated = app.b2bFinalization.change(actors.owner, first.id, action).cart;
+    assert.equal(updated.date, '2026-11-02');
+    assert.equal(updated.id, oldCart.id, 'move the same cart, not copy items');
+    assert.equal(updated.status, 'locked', 'Admin must review relocated cart');
+    assert.equal(updated.items[0].quantity, 3);
+    assert.equal(updated.revision, oldCart.revision + 1);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_cycles').get().n, 1);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_items').get().n, 1);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
+    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get().n, 1);
+    const audit = app.db.prepare("SELECT details FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get();
+    assert.deepEqual(JSON.parse(audit.details), {
+      from: date, to: '2026-11-02', reason: 'Armada pengiriman tidak tersedia',
+    });
+    const repeated = app.b2bFinalization.change(actors.owner, first.id, action);
+    assert.equal(repeated.cart.id, updated.id);
+    assert.equal(repeated.cart.revision, updated.revision);
+    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get().n, 1);
+    assert.throws(() => app.b2bFinalization.change(actors.owner, first.id,
+      body('reschedule', updated.revision, { targetDate: '2026-11-09', reason: 'Coba ulang yang bukan lewat' })),
+      { code: 'not_overdue' });
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
+  } finally { app.db.close(); }
+});
+
+test('Admin reschedule rejects destination collisions, invalid dates, and finalization remains Admin-only', () => {
+  const now = Date.parse('2026-10-30T12:00:00+07:00');
+  const app = createApp({ dbPath: ':memory:', logger: () => {}, now: () => now });
+  const { first, actors } = seedSharedCart(app);
+  try {
+    add(app, actors.buyer, first);
+    app.sharedCarts.mutate(actors.buyer, first.id, body('add', 0, {
+      date: '2026-11-02', productId: 'snack-pedas-23g', quantity: 1,
+    }));
+    const base = body('reschedule', 1, {
+      targetDate: '2026-11-02', reason: 'Jadwal distribusi terlambat',
+    });
+    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id, base),
+      { code: 'period_conflict' });
+    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id,
+      { ...base, requestId: randomUUID(), targetDate: '2026-10-29' }),
+      { code: 'invalid_target_date' });
+    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id,
+      { ...base, requestId: randomUUID(), targetDate: '2026-11-03', reason: 'x' }),
+      /alasan/i);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_cycles').get().n, 2);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
+  } finally { app.db.close(); }
+});

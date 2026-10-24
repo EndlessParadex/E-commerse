@@ -3,6 +3,7 @@ import { accountApi } from '../account/accountApi';
 import ConfirmDialog from './ConfirmDialog';
 import PackagingSummary from './PackagingSummary';
 import { rupiah } from './shopPresentation';
+import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import './AdminCartProcessing.css';
 
 const statusLabel = { open: 'Terbuka', locked: 'Dikunci Admin', finalized: 'Sudah jadi pesanan' };
@@ -247,6 +248,7 @@ export default function AdminCartProcessing({ shared }) {
   const cart = shared.cart;
   const [dialog, setDialog] = useState(null);
   const [reason, setReason] = useState('');
+  const [targetDate, setTargetDate] = useState('');
   const [accepted, setAccepted] = useState(false);
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -289,6 +291,11 @@ export default function AdminCartProcessing({ shared }) {
     setError('');
     setAccepted(false);
     setReason('');
+    const tomorrow = new Date(Date.now() + 86400000);
+    const todayWib = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(tomorrow);
+    setTargetDate(nextStoreDelivery(cart.store.deliverySchedule, todayWib) || todayWib);
     setDialog({ action, storeId: cart.store.id, date: cart.date, revision: cart.revision });
   };
   const confirm = async () => {
@@ -297,6 +304,7 @@ export default function AdminCartProcessing({ shared }) {
     const success = await shared.adminAction(dialog.action, {
       revision: dialog.action === 'finalize' ? review.revision : dialog.revision,
       ...(dialog.action === 'unlock' ? { reason } : {}),
+      ...(dialog.action === 'reschedule' ? { reason, targetDate } : {}),
       ...(dialog.action === 'finalize' ? { reviewToken: review.token, accepted } : {}),
     });
     if (success) setDialog(null);
@@ -345,6 +353,13 @@ export default function AdminCartProcessing({ shared }) {
           </button>
         </div>
       )}
+      {cart.overdue && cart.status !== 'finalized' && (
+        <div className="admin-cart-actions">
+          <p className="shop-warning">Tanggal pengiriman telah terlewat. Keranjang belum menjadi pesanan.</p>
+          <button type="button" className="bam-button-secondary" disabled={frozen}
+            onClick={() => open('reschedule')}>Jadwalkan ulang keranjang</button>
+        </div>
+      )}
       {cart.orderId && (
         <p className="shared-final-order">
           Pesanan telah dibuat.{' '}
@@ -358,20 +373,26 @@ export default function AdminCartProcessing({ shared }) {
               ? 'Kunci keranjang toko?'
               : dialog.action === 'unlock'
                 ? 'Buka kembali keranjang?'
-                : 'Periksa dan finalisasi pesanan'
+                : dialog.action === 'reschedule'
+                  ? 'Jadwalkan ulang keranjang toko?'
+                  : 'Periksa dan finalisasi pesanan'
           }
           confirmLabel={
             dialog.action === 'lock'
               ? 'Kunci keranjang'
               : dialog.action === 'unlock'
                 ? 'Buka kembali keranjang'
-                : 'Finalisasi dan cadangkan stok'
+                : dialog.action === 'reschedule'
+                  ? 'Simpan jadwal baru'
+                  : 'Finalisasi dan cadangkan stok'
           }
           danger={false}
           busy={shared.busy || loading}
           busyLabel={loading ? 'Memeriksa…' : 'Menyimpan…'}
           confirmDisabled={
-            shared.uncertain || (dialog.action === 'finalize' && (!review?.ready || !accepted))
+            shared.uncertain ||
+            (dialog.action === 'reschedule' && (!targetDate || reason.trim().length < 5)) ||
+            (dialog.action === 'finalize' && (!review?.ready || !accepted))
           }
           error={error || shared.error}
           onClose={() => {
@@ -403,6 +424,26 @@ export default function AdminCartProcessing({ shared }) {
                 onChange={(event) => setReason(event.target.value)}
               />
             </label>
+          )}
+          {dialog.action === 'reschedule' && (
+            <>
+              <p>Barang akan tetap di keranjang yang sama, terkunci untuk pemeriksaan Admin.
+                Perubahan dicatat dalam audit; tidak ada pesanan baru yang otomatis dibuat.</p>
+              <label className="admin-cart-reason" htmlFor="cart-reschedule-date">
+                Tanggal pengiriman baru
+                <input type="date" id="cart-reschedule-date" required
+                  value={targetDate} disabled={shared.busy}
+                  onChange={(event) => setTargetDate(event.target.value)} />
+              </label>
+              <p>Jika toko memiliki jadwal tetap, pilih tanggal yang sesuai dengan jadwal tersebut.</p>
+              <label className="admin-cart-reason" htmlFor="cart-reschedule-reason">
+                Alasan penjadwalan ulang
+                <textarea id="cart-reschedule-reason" rows={3}
+                  minLength={5} maxLength={200} required
+                  value={reason} disabled={shared.busy}
+                  onChange={(event) => setReason(event.target.value)} />
+              </label>
+            </>
           )}
           {dialog.action === 'finalize' && (
             <>

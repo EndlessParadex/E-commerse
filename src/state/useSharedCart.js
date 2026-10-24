@@ -236,6 +236,14 @@ export default function useSharedCart(user, authLoading) {
       setUncertain(false);
       snapshot.current = payload.cart;
       setCart(payload.cart);
+      if (payload.cart.date !== operation.target.date) {
+        const target = { storeId: operation.target.storeId, date: payload.cart.date };
+        selected.current = target;
+        setSelection(target);
+        try { localStorage.setItem(keyFor(userId), JSON.stringify(target)); } catch {
+          /* Cart remains usable when browser storage is unavailable. */
+        }
+      }
       setNotice(
         operation.admin
           ? payload.order

@@ -40,6 +40,9 @@ function eventLabel(event) {
   if (event.action === 'lock') return 'Mengunci keranjang untuk pemeriksaan Admin';
   if (event.action === 'unlock') return 'Membuka kembali keranjang: ' + event.details.reason;
   if (event.action === 'finalize') return 'Memfinalisasi pesanan ' + event.details.orderId;
+  if (event.action === 'reschedule')
+    return 'Menjadwalkan ulang: ' + event.details.from + ' → ' + event.details.to +
+      '. Alasan: ' + event.details.reason;
   if (event.action === 'remove') return `Menghapus ${name} (${before} kemasan)`;
   return `${name}: ${before} → ${after} kemasan`;
 }

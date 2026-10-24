@@ -221,3 +221,15 @@
 .cart-page .cart-subtotal strong {
   margin-left: auto;
 }
+
+/* Two isolated cart modes for B2B accounts. */
+.bam-cart-mode-page { width: 100%; min-width: 0; }
+.bam-cart-mode-switch { display: flex; gap: 8px; flex-wrap: wrap;
+  width: min(100% - 32px, 1140px); margin: 18px auto 10px; }
+.bam-cart-mode-switch button { padding: 10px 18px; min-height: 44px;
+  border: 1px solid var(--color-border); border-radius: var(--bam-ui-radius-control,12px);
+  color: var(--color-text); background: var(--color-surface); font: inherit; cursor: pointer; }
+.bam-cart-mode-switch button[aria-pressed='true'] { color: var(--color-info-text);
+  border-color: var(--color-border-info-strong); background: var(--color-info-soft);
+  font-weight: 700; }
+.bam-cart-mode-switch button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }

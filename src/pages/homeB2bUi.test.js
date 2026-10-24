@@ -49,26 +49,28 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     await render(shared('sales', [store]));
     assert.match(container.querySelector('h1').textContent, /toko pelanggan Anda/);
     assert.ok(container.querySelector('.bam-role-home--sales'));
-    assert.match(container.querySelector('.bam-role-home-actions').textContent, /Daftar Toko/);
-    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 3);
+    assert.match(container.querySelector('.bam-role-home-actions').textContent, /List Toko/);
+    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
     assert.equal(container.querySelector('.bam-role-home-card.is-stores').getAttribute('href'),
       '#/keranjang');
     assert.doesNotMatch(container.textContent, /Toko Saya/);
-    assert.doesNotMatch(container.textContent, /Keranjang Pribadi/);
+    assert.match(container.textContent, /Belanja biasa/);
+    assert.equal(container.querySelector('.bam-role-home-card.is-personal').getAttribute('href'), '#/cari?q=');
 
     await render(shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }));
     assert.ok(container.querySelector('.bam-role-home--buyer'));
     assert.match(container.querySelector('h1').textContent, /Belanja mudah untuk tokomu/);
     assert.match(container.querySelector('.bam-role-home-card.is-store').textContent, /Toko Makmur/);
-    assert.match(container.querySelector('.bam-role-home-card.is-schedule').textContent,
+    assert.match(container.querySelector('.bam-role-home-card.is-store').textContent,
       /Setiap Senin · 1 minggu/);
-    assert.match(container.querySelector('.bam-role-home-card.is-schedule').textContent,
+    assert.match(container.querySelector('.bam-role-home-card.is-store').textContent,
       /26 Oktober 2026/);
-    assert.doesNotMatch(container.textContent, /Daftar Toko/);
+    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
+    assert.doesNotMatch(container.textContent, /List Toko/);
 
     await render(shared('buyer', []));
     assert.match(container.textContent, /Akun belum terhubung ke toko/);
-    assert.match(container.textContent, /Jadwal belum ditetapkan|Pilih toko untuk melihat jadwal/);
+    assert.match(container.textContent, /Belanja pribadi/);
     assert.ok(!container.querySelector('.bam-role-home-next-date'));
 
     const css = await readFile(

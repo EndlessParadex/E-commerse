@@ -110,11 +110,11 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
       ).status,
       403,
     );
-    for (const actor of ['buyer', 'sales'])
-      assert.equal(
-        (await sharedRequest(app, 'POST', '/api/orders', actor, {})).body.error,
-        'shared_cart_required',
-      );
+    for (const actor of ['buyer', 'sales']) {
+      const invalid = await sharedRequest(app, 'POST', '/api/orders', actor, {});
+      assert.notEqual(invalid.body.error, 'shared_cart_required');
+      assert.notEqual(invalid.status, 201, 'an invalid private order remains rejected');
+    }
     const cleared = await sharedRequest(
       app,
       'POST',
@@ -342,9 +342,10 @@ test('shared cart validates dates/quantities, preserves deleted SKUs, refreshes 
       (await sharedRequest(app, 'GET', url(first) + '?date=' + date, 'sales')).status,
       404,
     );
-    assert.equal(
+    assert.notEqual(
       (await sharedRequest(app, 'POST', '/api/orders', 'sales', {})).body.error,
       'shared_cart_required',
+      'Sales can still place private orders after their store assignment ends',
     );
     app.db.prepare('INSERT INTO account_access(user_id,disabled_at) VALUES(?,?)').run('buyer', 1);
     assert.equal(

@@ -118,7 +118,8 @@ const userView = (user) => ({
 export function createApp({
   dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite',
   appOrigin = process.env.BAM_APP_ORIGIN || '',
-  secureCookies = process.env.NODE_ENV === 'production',
+  secureCookies = process.env.NODE_ENV === 'production' ||
+    process.env.BAM_SECURE_COOKIES === 'true' || /^https:\/\//i.test(appOrigin),
   installMode = process.env.BAM_INSTALL_MODE || 'demo',
   now = () => Date.now(),
   reservationPolicy = reservationPolicyFromEnv(),
@@ -684,10 +685,6 @@ export function createApp({
             }),
           );
         if (req.method === 'POST' && path === '/api/orders') {
-          if (user.role !== 'admin' && sharedCarts.participates(user))
-            return sendError(res, 403, 'shared_cart_required', {
-              form: 'Akun B2B menggunakan keranjang bersama. Pesanan akan difinalisasi oleh Admin.',
-            });
           return json(res, 201, {
             order: workflow.create(user, await readBody(req), clientIp(req)),
           });
@@ -961,6 +958,10 @@ export function createApp({
       }
       return sendError(res, 404, 'not_found');
     } catch (error) {
+      if (error instanceof URIError)
+        return sendError(res, 400, 'invalid_url_encoding', {
+          form: 'Alamat permintaan memiliki format karakter yang tidak valid.',
+        });
       if (error instanceof CatalogError)
         return sendError(res, error.status, error.code, { form: error.message });
       if (error?.code === 'auth_busy')

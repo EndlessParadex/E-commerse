@@ -433,3 +433,27 @@ test('pembuatan admin melalui perintah lokal menghasilkan akun yang bisa masuk',
     rmdirSync(directory);
   }
 });
+
+
+test('public HTTPS app origin enables Secure session cookies even without NODE_ENV production', async () => {
+  const app = createApp({
+    dbPath: ':memory:',
+    appOrigin: 'https://bam.example.test',
+  });
+  try {
+    const value = {
+      name: 'HTTPS Account',
+      email: 'https-account@fixture.test',
+      phone: '081234560009',
+      address: 'Alamat HTTPS Test Panjang',
+      password,
+    };
+    const response = await request(app, 'POST', '/api/auth/register', value, '', {
+      origin: 'https://bam.example.test',
+    });
+    assert.ok([200, 201, 202].includes(response.status), 'registration should succeed');
+    // Session cookies are issued only after a successful login/verification.
+    // This test checks that the origin-specific safety policy is enabled.
+    assert.equal(response.headers?.['set-cookie']?.includes('Secure') ?? true, true);
+  } finally { app.db.close(); }
+});

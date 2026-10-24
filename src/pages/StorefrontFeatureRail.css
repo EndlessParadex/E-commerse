@@ -1,38 +1,60 @@
 /* BAM feature rail: one visual system for hero, featured SKU cards and recommendations.
  * Kept after StorefrontDesign2.css so light and dark modes share semantic surfaces.
- * The decorative hero remains navy in both modes; product details follow the user's theme.
+ * Light mode shows a pale-blue hero, while dark mode uses navy. Authentication state
+ * never selects the color scheme; AppearanceProvider does.
  */
 .home-landing .home-feature-rail {
-  --feature-hero-start: #152540;
-  --feature-hero-end: #244567;
-  --feature-hero-ink: #f6faff;
-  --feature-hero-muted: #d5e4f4;
-  --feature-hero-accent: #9ac8ff;
+  /* Default is the light storefront, including guests. Authentication must
+     not choose the palette: AppearanceProvider's data-theme does that. */
+  --feature-hero-start: #e3efff;
+  --feature-hero-end: #f8fbff;
+  --feature-hero-ink: #102d50;
+  --feature-hero-muted: #416184;
+  --feature-hero-accent: #155db4;
+  --feature-hero-border: #c4ddf8;
+  --feature-hero-glow: #ffffffc0;
+  --feature-orbit-border: #bfd8f4;
+  --feature-footer-bg: #dcebfce8;
+  --feature-footer-border: #bdd4f0;
+  --feature-arrow-bg: #ffffff;
+  --feature-arrow-ink: #1256a1;
+  --feature-arrow-border: #bad1ed;
+  --feature-dot-ink: #779bc5;
   --feature-card-radius: var(--bam-ui-radius-card, 16px);
   --feature-panel-shadow: 0 12px 30px #0827481c;
 }
 :root[data-theme='dark'] .home-landing .home-feature-rail {
   --feature-hero-start: #0e1b31;
   --feature-hero-end: #1b3657;
+  --feature-hero-ink: #f6faff;
   --feature-hero-muted: #cad8e9;
   --feature-hero-accent: #a8d2ff;
+  --feature-hero-border: #46617d;
+  --feature-hero-glow: #80baf527;
+  --feature-orbit-border: #f3f8ff24;
+  --feature-footer-bg: #071b30bb;
+  --feature-footer-border: #f3f9ff24;
+  --feature-arrow-bg: #1e3a58;
+  --feature-arrow-ink: #f6faff;
+  --feature-arrow-border: #7893b466;
+  --feature-dot-ink: #839fbe;
   --feature-panel-shadow: 0 14px 32px #020b1899;
 }
 .home-landing .home-feature-rail .bam-promo {
   --promo-paper: var(--feature-hero-ink);
   --promo-highlight: var(--feature-hero-accent);
-  --promo-ink: #112e53;
-  --promo-glow: #547fb0;
+  --promo-ink: var(--feature-hero-ink);
+  --promo-glow: var(--feature-hero-accent);
   background: linear-gradient(122deg, var(--feature-hero-start), var(--feature-hero-end));
   color: var(--feature-hero-ink);
-  border: 1px solid #46617d;
+  border: 1px solid var(--feature-hero-border);
   border-radius: var(--feature-card-radius);
   box-shadow: var(--feature-panel-shadow);
 }
 .home-landing .home-feature-rail .bam-promo::before {
-  background: radial-gradient(circle at 86% 18%, #80baf527, transparent 58%);
+  background: radial-gradient(circle at 86% 18%, var(--feature-hero-glow), transparent 58%);
 }
-.home-landing .home-feature-rail .bam-promo::after { border-color: #f3f8ff24; }
+.home-landing .home-feature-rail .bam-promo::after { border-color: var(--feature-orbit-border); }
 .home-landing .home-feature-rail .bam-promo-brand .company-brand,
 .home-landing .home-feature-rail .bam-promo-brand .company-brand-text {
   color: var(--feature-hero-ink);
@@ -127,20 +149,20 @@
 }
 /* Carousel navigation belongs to the hero, not to the white card surface. */
 .home-landing .home-feature-rail .bam-promo-footer {
-  background: #071b30bb;
-  border-top: 1px solid #f3f9ff24;
+  background: var(--feature-footer-bg);
+  border-top: 1px solid var(--feature-footer-border);
   color: var(--feature-hero-muted);
 }
 .home-landing .home-feature-rail .bam-promo-arrow {
-  background: #1e3a58;
-  color: var(--feature-hero-ink);
-  border-color: #7893b466;
+  background: var(--feature-arrow-bg);
+  color: var(--feature-arrow-ink);
+  border-color: var(--feature-arrow-border);
 }
 .home-landing .home-feature-rail .bam-promo-arrow:hover {
   background: var(--color-action);
   color: var(--color-on-action);
 }
-.home-landing .home-feature-rail .bam-promo-dots span { background: #839fbe; }
+.home-landing .home-feature-rail .bam-promo-dots span { background: var(--feature-dot-ink); }
 .home-landing .home-feature-rail .bam-promo-dots [aria-current] span {
   background: var(--feature-hero-accent);
 }

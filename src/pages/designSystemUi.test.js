@@ -31,15 +31,22 @@ test('catalog sort uses a shared themed popover', () => {
   assert.match(dropdown, /aria-pressed='true'/);
 });
 
-test('storefront has dark-mode readable promo surfaces', () => {
+test('storefront featured rail follows light/dark appearance even for guests', () => {
   const storefront = read('./StorefrontDesign2.css');
   const rail = read('./StorefrontFeatureRail.css');
   const home = read('./Home.jsx');
+  const appearance = read('../state/AppearanceProvider.jsx');
   assert.match(home, /import '\.\/StorefrontFeatureRail\.css'/);
+  assert.match(appearance, /'data-theme': effectiveMode/);
+  assert.match(rail, /--feature-hero-start: #e3efff/);
+  assert.match(rail, /--feature-hero-ink: #102d50/);
   assert.match(rail, /:root\[data-theme='dark'\] \.home-landing \.home-feature-rail/);
+  assert.match(rail, /--feature-hero-start: #0e1b31/);
+  assert.match(rail, /--feature-hero-ink: #f6faff/);
   assert.match(rail, /\.bam-promo-product-name\s*\{\s*color: var\(--color-text\)/);
   assert.match(rail, /\.bam-vertical-promo-detail h3 a\s*\{\s*color: var\(--color-text\)/);
-  assert.match(rail, /\.bam-promo-footer\s*\{\s*background: #071b30bb/);
+  assert.match(rail, /\.bam-promo-footer\s*\{\s*background: var\(--feature-footer-bg\)/);
+  assert.match(rail, /\.bam-promo-arrow\s*\{\s*background: var\(--feature-arrow-bg\)/);
   assert.match(rail, /\.bam-vertical-promo-item:nth-child\(4n\+1\).*var\(--catalog-tint-sky\)/s);
   assert.doesNotMatch(storefront, /Promotional graphics stay decorative/);
 });

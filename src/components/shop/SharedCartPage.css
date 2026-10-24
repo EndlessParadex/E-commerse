@@ -1067,3 +1067,6 @@
   .shared-cart-page .shared-item { padding: 14px; }
   .shared-cart-page .shared-cart-heading { align-items: flex-start; }
 }
+
+/* Overdue periods are never auto-transferred or discarded. */
+.shared-overdue-label { color: var(--color-danger-text); font-weight: 750; }

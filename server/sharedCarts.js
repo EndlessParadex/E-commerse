@@ -3,6 +3,7 @@ import { CatalogError } from './catalog.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { packagingLabel, packagingSnapshot } from '../src/data/productPackaging.js';
 import { paymentMethod } from '../src/state/paymentMethods.js';
+import { cutoffTime, isPastCutoff, isPastDeliveryDate } from './b2bCutoff.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -19,8 +20,8 @@ export function cartDate(value) {
 }
 
 export class SharedCartRepository {
-  constructor(db, catalog, stores, now = () => Date.now()) {
-    Object.assign(this, { db, catalog, stores, now });
+  constructor(db, catalog, stores, now = () => Date.now(), cutoff = null) {
+    Object.assign(this, { db, catalog, stores, now, cutoff });
     db.exec(`CREATE TABLE IF NOT EXISTS cart_cycles (
       id TEXT PRIMARY KEY, store_id TEXT NOT NULL REFERENCES b2b_stores(id),
       delivery_date TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open','locked','finalized')),
@@ -42,7 +43,14 @@ export class SharedCartRepository {
       UNIQUE(cart_id,request_id), UNIQUE(cart_id,revision)
     );
     CREATE INDEX IF NOT EXISTS cart_cycle_store_date ON cart_cycles(store_id,delivery_date DESC);
-    CREATE INDEX IF NOT EXISTS cart_event_revision ON cart_events(cart_id,revision DESC);`);
+    CREATE INDEX IF NOT EXISTS cart_event_revision ON cart_events(cart_id,revision DESC);
+    CREATE TABLE IF NOT EXISTS b2b_cycle_lifecycle_events (
+      id TEXT PRIMARY KEY, cart_id TEXT NOT NULL REFERENCES cart_cycles(id),
+      action TEXT NOT NULL CHECK(action IN ('auto_lock','reschedule')),
+      actor_id TEXT REFERENCES users(id), details TEXT NOT NULL, created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS b2b_cycle_lifecycle_cart
+      ON b2b_cycle_lifecycle_events(cart_id,created_at DESC);`);
     if (!db.prepare('PRAGMA table_info(cart_cycles)').all().some((column) => column.name === 'payment_id'))
       db.exec("ALTER TABLE cart_cycles ADD COLUMN payment_id TEXT NOT NULL DEFAULT 'cod'");
   }
@@ -101,6 +109,36 @@ export class SharedCartRepository {
       .prepare('SELECT * FROM cart_cycles WHERE store_id=? AND delivery_date=?')
       .get(storeId, date);
   }
+  /** SAVEPOINT is valid inside Admin transactions and on independent reads. */
+  enforceCutoff(storeId, date, cycle = this.cycle(storeId, date)) {
+    if (!cycle || cycle.status !== 'open' ||
+        !isPastCutoff(date, this.cutoff, this.now())) return cycle;
+    this.db.exec('SAVEPOINT b2b_auto_cutoff');
+    try {
+      const changed = this.db.prepare(
+        "UPDATE cart_cycles SET status='locked',revision=revision+1,updated_at=? WHERE id=? AND status='open'",
+      ).run(this.now(), cycle.id);
+      if (changed.changes) {
+        this.db.prepare(
+          'INSERT INTO b2b_cycle_lifecycle_events VALUES(?,?,?,?,?,?)',
+        ).run(randomUUID(), cycle.id, 'auto_lock', null,
+          JSON.stringify({ date, cutoffAt: new Date(this.now()).toISOString() }), this.now());
+      }
+      this.db.exec('RELEASE SAVEPOINT b2b_auto_cutoff');
+    } catch (error) {
+      this.db.exec('ROLLBACK TO SAVEPOINT b2b_auto_cutoff');
+      this.db.exec('RELEASE SAVEPOINT b2b_auto_cutoff');
+      throw error;
+    }
+    return this.cycle(storeId, date);
+  }
+  enforceAllCutoffs(storeId = null) {
+    if (!this.cutoff) return;
+    const rows = storeId
+      ? this.db.prepare("SELECT store_id,delivery_date FROM cart_cycles WHERE status='open' AND store_id=?").all(storeId)
+      : this.db.prepare("SELECT store_id,delivery_date FROM cart_cycles WHERE status='open'").all();
+    for (const row of rows) this.enforceCutoff(row.store_id, row.delivery_date);
+  }
   products() {
     return this.catalog.snapshot().edits.flatMap((draft) =>
       draft.variants.map((variant) => {
@@ -132,17 +170,20 @@ export class SharedCartRepository {
   read(actor, storeId, date) {
     date = cartDate(date);
     const { store } = this.access(actor, storeId);
-    const cycle = this.cycle(store.id, date);
+    const cycle = this.enforceCutoff(store.id, date);
+    const overdue = isPastDeliveryDate(date, this.now()) && cycle?.status !== 'finalized';
     return {
       store,
       date,
+      overdue,
+      cutoffAt: this.cutoff ? new Date(cutoffTime(date, this.cutoff)).toISOString() : null,
       id: cycle?.id || null,
       revision: cycle?.revision || 0,
       status: cycle?.status || 'open',
       paymentId: cycle?.payment_id || 'cod',
       payment: paymentMethod(cycle?.payment_id || 'cod'),
       orderId: cycle ? this.orderFor?.(cycle.id) || null : null,
-      canEdit: !cycle || cycle.status === 'open',
+      canEdit: (!cycle || cycle.status === 'open') && !isPastCutoff(date, this.cutoff, this.now()),
       updatedAt: cycle?.updated_at || null,
       items: cycle
         ? this.db
@@ -164,6 +205,7 @@ export class SharedCartRepository {
   }
   list(actor, storeId, params) {
     this.access(actor, storeId);
+    this.enforceAllCutoffs(storeId);
     const page = Number(params.get('page') || 1);
     if (!Number.isSafeInteger(page) || page < 1 || page > 100000) fail('Halaman tidak valid.');
     const total = this.db
@@ -214,7 +256,7 @@ export class SharedCartRepository {
       const { user } = this.access(actor, storeId);
       if (action === 'payment' && user.role === 'admin')
         fail('Metode pembayaran dipilih pembeli toko atau Sales.', 403, 'payment_read_only');
-      let cycle = this.cycle(storeId, date);
+      let cycle = this.enforceCutoff(storeId, date);
       const prior =
         cycle &&
         this.db
@@ -225,6 +267,8 @@ export class SharedCartRepository {
           fail('Kode perubahan sudah digunakan untuk isian berbeda.', 409, 'request_reused');
         return this.read(user, storeId, date);
       }
+      if (isPastCutoff(date, this.cutoff, this.now()))
+        fail('Batas waktu pemesanan terlewati. Hubungi Admin BAM.', 409, 'cart_cutoff_passed');
       if (cycle && cycle.status !== 'open')
         fail('Keranjang sudah dikunci dan tidak dapat diubah.', 409, 'cart_locked');
       if ((cycle?.revision || 0) !== body.revision)

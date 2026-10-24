@@ -247,7 +247,7 @@ export class B2BFinalizationRepository {
     return this.workflow.transaction(() => {
       const user = this.admin(actor);
       this.carts.access(user, storeId);
-      const cycle = this.carts.cycle(storeId, body.date);
+      const cycle = this.carts.enforceCutoff(storeId, body.date);
       if (!cycle) fail('Keranjang belum berisi barang.', 409, 'empty_cart');
       const prior = this.db
         .prepare('SELECT request_hash FROM cart_events WHERE cart_id=? AND request_id=?')
@@ -418,6 +418,7 @@ export class B2BFinalizationRepository {
   }
   queue(actor, params) {
     this.admin(actor);
+    this.carts.enforceAllCutoffs();
     const status = params.get('status') || 'pending';
     const q = (params.get('q') || '').trim().toLowerCase();
     const page = Number(params.get('page') || 1);

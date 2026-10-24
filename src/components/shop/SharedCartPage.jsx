@@ -399,7 +399,9 @@ function AdminCartWorkspace({
               <section className="shared-cart-heading shared-admin-active-store">
                 <div>
                   <h2>{cart.store.storeName}</h2>
-                  <p>{cart.store.storeCode} · {dateLabel(cart.date)}</p>
+                  <p>{cart.store.storeCode} · {dateLabel(cart.date)}
+                     {cart.overdue && <strong className="shared-overdue-label"> · Lewat jadwal</strong>}
+                   </p>
                   <p>{shop.quantity} kemasan · {cart.items.length} SKU · Versi {cart.revision}</p>
                 </div>
                 <button type="button" className="bam-button-secondary" disabled={frozen}
@@ -938,6 +940,7 @@ export default function SharedCartPage({ adminView = false }) {
                   <h2>{cart.store.storeName}</h2>
                   <p>
                     {cart.store.storeCode} · {dateLabel(cart.date)}
+                     {cart.overdue && <strong className="shared-overdue-label"> · Lewat jadwal</strong>}
                   </p>
                   <p>
                     {shop.quantity} kemasan · {cart.items.length} SKU · Versi {cart.revision}

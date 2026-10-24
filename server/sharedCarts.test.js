@@ -544,3 +544,46 @@ test('B2B buyer and Sales can place private orders without changing shared-store
     assert.equal(cartAfter.revision, cartBefore.revision);
   } finally { app.db.close(); }
 });
+
+test('configured B2B cut-off locks carts once and rejects late writes without finalizing', () => {
+  let now = Date.parse('2026-10-19T17:00:00+07:00');
+  const app = createApp({ dbPath: ':memory:', logger: () => {},
+    now: () => now, b2bCutoff: { daysBefore: 1, time: '18:00' } });
+  const { first, actors } = seedSharedCart(app);
+  try {
+    const before = app.sharedCarts.mutate(actors.buyer, first.id, change());
+    assert.equal(before.canEdit, true);
+    assert.equal(before.cutoffAt, '2026-10-20T11:00:00.000Z');
+    now = Date.parse('2026-10-20T18:00:00+07:00');
+    const locked = app.sharedCarts.read(actors.buyer, first.id, date);
+    assert.equal(locked.status, 'locked');
+    assert.equal(locked.canEdit, false);
+    assert.equal(locked.revision, 2);
+    assert.equal(locked.items.length, 1);
+    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'").get().n, 1);
+    app.sharedCarts.read(actors.sales, first.id, date);
+    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'").get().n, 1);
+    assert.throws(() => app.sharedCarts.mutate(actors.buyer, first.id, change({ revision: 2 })),
+      { code: 'cart_cutoff_passed' });
+    now = Date.parse('2026-10-22T00:00:00+07:00');
+    assert.equal(app.sharedCarts.read(actors.buyer, first.id, date).overdue, true);
+    assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
+  } finally { app.db.close(); }
+});
+
+test('cut-off configuration and WIB date boundaries are validated', async () => {
+  const { b2bCutoffFromEnv, cutoffTime, isPastDeliveryDate } = await import('./b2bCutoff.js');
+  assert.equal(b2bCutoffFromEnv({}), null);
+  assert.deepEqual(b2bCutoffFromEnv({ BAM_B2B_CUTOFF_DAYS_BEFORE: '1', BAM_B2B_CUTOFF_TIME: '18:00' }),
+    { daysBefore: 1, time: '18:00' });
+  for (const bad of [
+    { BAM_B2B_CUTOFF_DAYS_BEFORE: '1' },
+    { BAM_B2B_CUTOFF_TIME: '18:00' },
+    { BAM_B2B_CUTOFF_DAYS_BEFORE: '-1', BAM_B2B_CUTOFF_TIME: '18:00' },
+    { BAM_B2B_CUTOFF_DAYS_BEFORE: '1', BAM_B2B_CUTOFF_TIME: '26:00' },
+  ]) assert.throws(() => b2bCutoffFromEnv(bad));
+  assert.equal(cutoffTime('2026-10-26', { daysBefore: 1, time: '18:00' }),
+    Date.parse('2026-10-25T18:00:00+07:00'));
+  assert.equal(isPastDeliveryDate('2026-10-26', Date.parse('2026-10-26T22:00:00+07:00')), false);
+  assert.equal(isPastDeliveryDate('2026-10-26', Date.parse('2026-10-27T00:00:00+07:00')), true);
+});

@@ -26,6 +26,7 @@ import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { AccountRepository } from './accounts.js';
 import { B2BStoreRepository } from './b2bStores.js';
 import { SharedCartRepository } from './sharedCarts.js';
+import { b2bCutoffFromEnv } from './b2bCutoff.js';
 import { B2BFinalizationRepository } from './b2bFinalization.js';
 import { customerAccess } from './customerAccess.js';
 import { PhoneVerificationRepository } from './phoneVerification.js';
@@ -123,6 +124,7 @@ export function createApp({
   installMode = process.env.BAM_INSTALL_MODE || 'demo',
   now = () => Date.now(),
   reservationPolicy = reservationPolicyFromEnv(),
+  b2bCutoff = b2bCutoffFromEnv(),
   authLimits,
   trustedProxies,
   mailer,
@@ -227,7 +229,7 @@ export function createApp({
   installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
   const accounts = new AccountRepository(db, now);
   const b2bStores = new B2BStoreRepository(db, now);
-  const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now);
+  const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now, b2bCutoff);
   const b2bFinalization = new B2BFinalizationRepository(db, sharedCarts, workflow, messages);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',

@@ -145,7 +145,16 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await wait(() => container.querySelector('.shared-item'));
     assert.equal(container.querySelector('.shared-quantity input').value, '1');
     assert.equal(container.querySelector('a[href="#/checkout"]'), null);
-    assert.match(container.querySelector('.shared-history').textContent, /Akun buyer/);
+    const activityPanel = container.querySelector('.shared-history-panel');
+    assert.ok(activityPanel, 'audit trail is available without occupying the full page');
+    assert.equal(activityPanel.open, false, 'buyer history starts collapsed');
+    assert.match(activityPanel.textContent, /Akun buyer/);
+    assert.ok(container.querySelector('.shared-cart-activity-grid'));
+    assert.ok(container.querySelector('.shared-cycle-panel'));
+    await click(activityPanel.querySelector('summary'));
+    assert.equal(activityPanel.open, true, 'buyer can expand the history');
+    assert.ok(activityPanel.querySelectorAll('.shared-activity-item').length > 0);
+    assert.match(activityPanel.textContent, /Versi/);
     await fill('.shared-quantity input', '4');
     await submit('.shared-quantity');
     await wait(

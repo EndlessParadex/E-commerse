@@ -1127,73 +1127,89 @@ export default function SharedCartPage({ adminView = false }) {
                 </>
               )}
               {(!isAdmin || adminSection === 'history') && (
-                <>
-              <section className="shared-history">
-                <h2>Riwayat perubahan</h2>
-                {cart.events.length ? (
-                  <ol>
-                    {cart.events.map((event) => (
-                      <li key={event.revision}>
-                        <strong>
-                          {event.actorName} · {roles[event.actorRole]}
-                        </strong>
-                        <p>{eventLabel(event)}</p>
-                        <small>
-                          {timeLabel(event.createdAt)} WIB · Versi {event.revision}
-                        </small>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p>Belum ada perubahan tersimpan pada periode ini.</p>
-                )}
-                {cart.hasMore && (
-                  <button
-                    type="button"
-                    className="bam-button-secondary"
-                    onClick={shared.olderEvents}
+                <div className="shared-cart-activity-grid" aria-label="Aktivitas dan periode keranjang">
+                  <details
+                    key={'activity:' + cart.store.id + ':' + cart.date}
+                    className="shared-history shared-history-panel"
+                    defaultOpen={isAdmin && adminSection === 'history'}
                   >
-                    Lihat riwayat lebih lama
-                  </button>
-                )}
-              </section>
-              <section className="shared-history">
-                <h2>Periode keranjang toko ini</h2>
-                <ul className="shared-cycle-list">
-                  {cycles.cycles.map((cycle) => (
-                    <li key={cycle.date}>
-                      <button
-                        type="button"
-                        disabled={frozen || cycle.date === cart.date}
-                        onClick={() => shared.choose({ storeId: cart.store.id, date: cycle.date })}
-                      >
-                        {dateLabel(cycle.date)} · {cycle.itemCount} SKU ·{' '}
-                        {cycle.status === 'open' ? 'Terbuka' : 'Dikunci'}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="shared-pagination">
-                  <span>
-                    Halaman {cycles.page}/{cycles.pages}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={frozen || cycles.page <= 1}
-                    onClick={() => shared.loadCycles(cycles.page - 1)}
+                    <summary className="shared-activity-heading">
+                      <span className="shared-activity-heading-text">
+                        <strong>Riwayat perubahan</strong>
+                        <small>Catatan barang, pembayaran, dan akun yang mengubahnya</small>
+                      </span>
+                      <span className="shared-activity-counter">
+                        {cart.events.length}{cart.hasMore ? '+' : ''} aktivitas
+                      </span>
+                      <span className="shared-activity-chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="shared-activity-body">
+                      {cart.events.length ? (
+                        <ol className="shared-activity-timeline">
+                          {cart.events.map((event) => (
+                            <li className="shared-activity-item" key={event.revision}>
+                              <div className="shared-activity-item-head">
+                                <strong>{event.actorName}</strong>
+                                <span className="shared-activity-role">
+                                  {roles[event.actorRole] || 'Pengguna'}
+                                </span>
+                              </div>
+                              <p className="shared-activity-description">{eventLabel(event)}</p>
+                              <div className="shared-activity-item-meta">
+                                <small>{timeLabel(event.createdAt)} WIB</small>
+                                <small>Versi {event.revision}</small>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : (
+                        <p className="shared-activity-empty">Belum ada perubahan pada periode ini.</p>
+                      )}
+                      {cart.hasMore && (
+                        <button type="button" className="bam-button-secondary"
+                          disabled={shared.reading} onClick={shared.olderEvents}>
+                          Lihat riwayat lebih lama
+                        </button>
+                      )}
+                    </div>
+                  </details>
+                  <details
+                    key={'cycles:' + cart.store.id + ':' + cart.date}
+                    className="shared-history shared-cycle-panel"
+                    defaultOpen={isAdmin && adminSection === 'history'}
                   >
-                    Sebelumnya
-                  </button>
-                  <button
-                    type="button"
-                    disabled={frozen || cycles.page >= cycles.pages}
-                    onClick={() => shared.loadCycles(cycles.page + 1)}
-                  >
-                    Berikutnya
-                  </button>
+                    <summary className="shared-activity-heading">
+                      <span className="shared-activity-heading-text">
+                        <strong>Periode keranjang</strong>
+                        <small>Lihat keranjang toko pada periode lainnya</small>
+                      </span>
+                      <span className="shared-activity-chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="shared-activity-body">
+                      <ul className="shared-cycle-list">
+                        {cycles.cycles.map((cycle) => (
+                          <li key={cycle.date}>
+                            <button type="button"
+                              aria-current={cycle.date === cart.date ? 'date' : undefined}
+                              disabled={frozen || cycle.date === cart.date}
+                              onClick={() => shared.choose({ storeId: cart.store.id, date: cycle.date })}>
+                              <span>{dateLabel(cycle.date)}</span>
+                              <small>{cycle.itemCount} SKU ·{' '}
+                                {cycle.status === 'open' ? 'Terbuka' : 'Dikunci'}</small>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="shared-pagination">
+                        <span>Halaman {cycles.page}/{cycles.pages}</span>
+                        <button type="button" disabled={frozen || cycles.page <= 1}
+                          onClick={() => shared.loadCycles(cycles.page - 1)}>Sebelumnya</button>
+                        <button type="button" disabled={frozen || cycles.page >= cycles.pages}
+                          onClick={() => shared.loadCycles(cycles.page + 1)}>Berikutnya</button>
+                      </div>
+                    </div>
+                  </details>
                 </div>
-              </section>
-                </>
               )}
             </>
           )}

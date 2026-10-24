@@ -42,6 +42,16 @@ export default function ShopProvider({ children }) {
   const storageKey = companyStorageKey(
     STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''),
   );
+  return (
+    <AccountScopedShop key={storageKey} delivery={delivery} shared={shared} storageKey={storageKey}>
+      {children}
+    </AccountScopedShop>
+  );
+}
+
+// Remount the reducer whenever the signed-in account changes. Without a keyed
+// boundary, the previous user's private cart could be written under another ID.
+function AccountScopedShop({ children, delivery, shared, storageKey }) {
   const [state, rawDispatch] = useReducer(shopReducer, storageKey, loadShop);
   const userId = delivery?.user?.id || '';
   const [modeSelection, setModeSelection] = useState({ userId: '', mode: 'store' });

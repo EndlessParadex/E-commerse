@@ -40,7 +40,8 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
   const scheduleLabel = schedule
     ? `Setiap ${days[schedule.weekday]} · ${schedule.intervalWeeks === 2 ? '2 minggu' : '1 minggu'}`
     : 'Jadwal belum ditetapkan';
-  const shopName = selected?.storeName || (count > 1 ? `${count} toko terhubung` : 'Belum   const cards = sales ? [
+  const shopName = selected?.storeName || (count > 1 ? `${count} toko terhubung` : 'Belum ada toko');
+  const cards = sales ? [
     { id: 'stores', icon: 'store', title: 'List Toko',
       description: count ? `${count} toko yang ditugaskan — isi keranjang bersama` : 'Belum ada toko yang ditugaskan',
       href: '#/keranjang', cta: 'Buka daftar toko', mode: 'store' },
@@ -54,8 +55,6 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
     { id: 'personal', icon: 'cart', title: 'Belanja pribadi',
       description: 'Keranjang pribadi dan checkout sendiri, terpisah dari pesanan toko',
       href: '#/cari?q=', cta: 'Mulai belanja pribadi', mode: 'personal' },
-  ];
-ang' },
   ];
   return (
     <div className={'bam-role-home bam-role-home--' + (sales ? 'sales' : 'buyer')}>

@@ -654,3 +654,64 @@ button.b2b-calendar-date:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .b2b-saved-calendar-chevron { transition: none; }
 }
+
+/* Dense store-management view. New-store creation keeps its full-size forms. */
+.b2b-page { gap: 12px; }
+.b2b-workspace { gap: 12px; grid-template-columns: minmax(265px,.9fr) minmax(0,1.7fr); }
+.b2b-workspace > .b2b-panel { padding: 16px 18px; }
+.b2b-workspace .b2b-heading h2 { margin-bottom: 0; }
+.b2b-workspace .admin-field { margin: 10px 0; }
+.b2b-workspace #b2b-store-search { min-height: 38px; padding: 7px 10px; }
+.b2b-workspace .b2b-store-list { margin-top: 10px; gap: 7px; }
+.b2b-workspace .b2b-store-list button { padding: 10px 12px; gap: 3px; }
+.b2b-workspace .b2b-store-list span { font-size: .8rem; line-height: 1.4; }
+.b2b-store-line { display: flex !important; flex-wrap: wrap; gap: 5px 14px; }
+.b2b-store-line span { display: inline !important; overflow-wrap: anywhere; }
+.b2b-workspace .b2b-code { padding: 3px 7px; margin: 0; font-size: .72rem; }
+.b2b-detail-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; }
+.b2b-detail-identity { display: grid; gap: 5px; min-width: 0; }
+.b2b-detail-top h2 { margin: 0; font-size: 1.08rem; }
+.b2b-detail-contact { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; }
+.b2b-detail-contact > span { color: var(--color-text-secondary); font-size: .83rem; line-height: 1.5; overflow-wrap: anywhere; }
+.b2b-detail-contact .b2b-address { margin: 0; white-space: pre-wrap; }
+.b2b-detail-top .b2b-edit-store { flex-shrink: 0; min-height: 35px; padding: 7px 10px; font-size: .78rem; }
+.b2b-workspace .b2b-schedule-section { padding: 10px 12px; margin: 12px 0 10px; }
+.b2b-workspace .b2b-schedule-section h3 { font-size: .85rem; margin: 0 0 4px; }
+.b2b-workspace .b2b-schedule-section > p { font-size: .8rem; margin: 0; line-height: 1.4; }
+.b2b-workspace .b2b-saved-calendar { margin-top: 7px; }
+.b2b-workspace .b2b-saved-calendar > summary { padding: 8px 10px; gap: 8px; }
+.b2b-workspace .b2b-saved-calendar-info { gap: 4px; }
+.b2b-workspace .b2b-saved-calendar-info > strong { font-size: .78rem; }
+.b2b-workspace .b2b-saved-calendar-dates > span { padding: 3px 6px; font-size: .69rem; }
+.b2b-workspace .b2b-owner-overview { margin: 10px 0 0; padding: 10px 12px; gap: 8px; border-radius: 10px; }
+.b2b-workspace .b2b-owner-overview h3 { margin: 0 0 3px; font-size: .84rem; }
+.b2b-workspace .b2b-owner-overview strong { font-size: .82rem; }
+.b2b-workspace .b2b-owner-overview span { font-size: .77rem; line-height: 1.45; }
+.b2b-workspace .b2b-owner-overview .admin-secondary { min-height: 35px; padding: 7px 10px; font-size: .78rem; }
+.b2b-assignments-disclosure { margin-top: 10px; min-width: 0; border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; }
+.b2b-assignments-disclosure > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 10px; cursor: pointer; list-style: none; padding: 11px 12px; color: var(--color-text); }
+.b2b-assignments-disclosure > summary::-webkit-details-marker { display: none; }
+.b2b-assignments-disclosure > summary::marker { content: ''; }
+.b2b-assignments-disclosure > summary:focus-visible { outline: 2px solid var(--color-action); outline-offset: -3px; }
+.b2b-assignments-title { font-size: .86rem; font-weight: 700; }
+.b2b-assignments-count { font-size: .78rem; color: var(--color-text-secondary); }
+.b2b-assignments-toggle { margin-left: auto; font-weight: 700; transition: transform 150ms ease; }
+.b2b-assignments-disclosure[open] .b2b-assignments-toggle { transform: rotate(180deg); }
+.b2b-assignments-content { border-top: 1px solid var(--color-border); padding: 12px; }
+.b2b-assignments-content .b2b-assignment-grid { gap: 12px; padding: 0; border: 0; }
+.b2b-assignments-content .b2b-assignment-grid h3 { margin: 0 0 4px; font-size: .83rem; }
+.b2b-assignments-content .b2b-people { margin-top: 4px; }
+.b2b-assignments-content .b2b-people li { padding: 6px 0; }
+.b2b-assignments-content .b2b-people .b2b-actions { margin-top: 6px; gap: 6px; }
+.b2b-assignments-content .b2b-inline-form { padding-top: 10px !important; gap: 8px; }
+.b2b-assignments-content .b2b-inline-form .admin-field { margin: 0; }
+.b2b-assignments-content #b2b-sales-choice { min-height: 38px; padding: 7px 10px; }
+@media(max-width:1150px) { .b2b-workspace { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:600px) {
+  .b2b-workspace > .b2b-panel { padding: 12px; }
+  .b2b-detail-top { flex-wrap: wrap; }
+  .b2b-detail-top .b2b-edit-store { margin-left: auto; }
+  .b2b-assignments-content .b2b-assignment-grid { grid-template-columns: minmax(0,1fr); }
+  .b2b-assignments-content .b2b-inline-form > button { width: 100%; }
+}
+@media(prefers-reduced-motion:reduce) { .b2b-assignments-toggle { transition: none; } }

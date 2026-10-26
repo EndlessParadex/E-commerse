@@ -238,6 +238,14 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await wait(() => container.querySelector(
       '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
     ));
+    const accessPanel = container.querySelector('.b2b-assignments-disclosure');
+    assert.ok(accessPanel, 'buyer and Sales management are grouped in a compact panel');
+    assert.equal(accessPanel.open, false, 'assignment management starts collapsed');
+    assert.match(accessPanel.querySelector('summary').textContent, /1 pembeli/);
+    assert.ok(container.querySelector('.b2b-detail-top .b2b-edit-store'),
+      'edit action remains available in the compact header');
+    await click(accessPanel.querySelector('summary'));
+    assert.equal(accessPanel.open, true, 'Owner can expand account management');
     const savedCalendarDetails = container.querySelector(
       '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
     );

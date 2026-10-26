@@ -703,9 +703,11 @@ export default function AdminB2BStoresPage() {
                       }}
                     >
                       <strong>{store.storeName}</strong>
-                      <span>{store.storeCode}</span>
+                      <span className="b2b-store-line">
+                        <span>{store.storeCode}</span>
+                        <span>{store.phone}</span>
+                      </span>
                       <span>{store.owner ? 'Pemilik: ' + store.owner.name : 'Belum ada penanggung jawab'}</span>
-                      <span>{store.phone}</span>
                     </button>
                   </li>
                 ))}
@@ -726,10 +728,22 @@ export default function AdminB2BStoresPage() {
           {loadMessage(details, 'detail toko')}
           {current && (
             <>
-              <span className="b2b-code">{current.store.storeCode}</span>
-              <h2>{current.store.storeName}</h2>
-              <p className="b2b-muted">{current.store.phone}</p>
-              <p className="b2b-address">{current.store.address}</p>
+              <div className="b2b-detail-top">
+                <div className="b2b-detail-identity">
+                  <span className="b2b-code">{current.store.storeCode}</span>
+                  <h2>{current.store.storeName}</h2>
+                  <div className="b2b-detail-contact">
+                    <span>{current.store.phone}</span>
+                    <span className="b2b-address">{current.store.address}</span>
+                  </div>
+                </div>
+                {owner && (
+                  <button type="button" className="admin-secondary b2b-edit-store"
+                    disabled={busy} onClick={() => openChange('edit')}>
+                    Ubah data toko
+                  </button>
+                )}
+              </div>
               <div className="b2b-schedule-section">
                 <h3>Jadwal pengiriman tetap</h3>
                 <p>{scheduleLabel(current.store.deliverySchedule)}</p>
@@ -772,16 +786,6 @@ export default function AdminB2BStoresPage() {
                   </form>
                 )}
               </div>
-              {owner && (
-                <button
-                  type="button"
-                  className="admin-secondary"
-                  disabled={busy}
-                  onClick={() => openChange('edit')}
-                >
-                  Ubah data toko
-                </button>
-              )}
               <section className="b2b-owner-overview" aria-label="Penanggung jawab toko">
                 <div>
                   <h3>Penanggung jawab toko</h3>
@@ -816,67 +820,78 @@ export default function AdminB2BStoresPage() {
                     onClick={() => openChange('owner', transferOwner)}>Tinjau perubahan pemilik</button>
                 </div>
               )}
-              <div className="b2b-assignment-grid">
-                <section>
-                  <h3>Akun pembeli</h3>
-                  <AccountList
-                    accounts={current.members}
-                    empty="Belum ada pembeli yang dihubungkan."
-                    busy={busy}
-                    onRemove={owner ? (account) => openChange('members', account) : undefined}
-                  />
-                </section>
-                <section>
-                  <h3>Sales yang ditugaskan</h3>
-                  <AccountList
-                    accounts={current.sales}
-                    empty="Belum ada Sales yang ditugaskan."
-                    busy={busy}
-                    onRemove={owner ? (account) => openChange('sales', account) : undefined}
-                    onReplace={owner ? (account) => openChange('replace', account) : undefined}
-                  />
-                </section>
-              </div>
-              {owner && (
-                <form
-                  id="b2b-assign-form"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (!salesId) return;
-                    mutate(
-                      '/api/b2b/stores/' + encodeURIComponent(selectedId) + '/sales',
-                      { userId: salesId, revision: current.store.revision },
-                      'Sales berhasil ditugaskan ke toko.',
-                      () => setSalesId(''),
-                    );
-                  }}
-                >
-                  <fieldset
-                    disabled={busy || sales.loading || Boolean(sales.error)}
-                    className="b2b-inline-form"
-                  >
-                    <div className="admin-field">
-                      <label htmlFor="b2b-sales-choice">Tugaskan Sales ke toko ini</label>
-                      <select
-                        id="b2b-sales-choice"
-                        required
-                        value={salesId}
-                        onChange={(event) => setSalesId(event.target.value)}
+              <details className="b2b-assignments-disclosure" key={current.store.id}>
+                <summary>
+                  <span className="b2b-assignments-title">Kelola akun &amp; Sales</span>
+                  <span className="b2b-assignments-count">
+                    {current.members.length} pembeli · {current.sales.length} Sales
+                  </span>
+                  <span className="b2b-assignments-toggle" aria-hidden="true">⌄</span>
+                </summary>
+                <div className="b2b-assignments-content">
+                  <div className="b2b-assignment-grid">
+                    <section>
+                      <h3>Akun pembeli</h3>
+                      <AccountList
+                        accounts={current.members}
+                        empty="Belum ada pembeli yang dihubungkan."
+                        busy={busy}
+                        onRemove={owner ? (account) => openChange('members', account) : undefined}
+                      />
+                    </section>
+                    <section>
+                      <h3>Sales yang ditugaskan</h3>
+                      <AccountList
+                        accounts={current.sales}
+                        empty="Belum ada Sales yang ditugaskan."
+                        busy={busy}
+                        onRemove={owner ? (account) => openChange('sales', account) : undefined}
+                        onReplace={owner ? (account) => openChange('replace', account) : undefined}
+                      />
+                    </section>
+                  </div>
+                  {owner && (
+                    <form
+                      id="b2b-assign-form"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (!salesId) return;
+                        mutate(
+                          '/api/b2b/stores/' + encodeURIComponent(selectedId) + '/sales',
+                          { userId: salesId, revision: current.store.revision },
+                          'Sales berhasil ditugaskan ke toko.',
+                          () => setSalesId(''),
+                        );
+                      }}
+                    >
+                      <fieldset
+                        disabled={busy || sales.loading || Boolean(sales.error)}
+                        className="b2b-inline-form"
                       >
-                        <option value="">Pilih Sales</option>
-                        {availableSales.map((account) => (
-                          <option key={account.id} value={account.id}>
-                            {account.name} · {account.email}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button className="admin-primary" type="submit" disabled={!salesId}>
-                      Tugaskan Sales
-                    </button>
-                  </fieldset>
-                </form>
-              )}
+                        <div className="admin-field">
+                          <label htmlFor="b2b-sales-choice">Tugaskan Sales ke toko ini</label>
+                          <select
+                            id="b2b-sales-choice"
+                            required
+                            value={salesId}
+                            onChange={(event) => setSalesId(event.target.value)}
+                          >
+                            <option value="">Pilih Sales</option>
+                            {availableSales.map((account) => (
+                              <option key={account.id} value={account.id}>
+                                {account.name} · {account.email}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button className="admin-primary" type="submit" disabled={!salesId}>
+                          Tugaskan Sales
+                        </button>
+                      </fieldset>
+                    </form>
+                  )}
+                </div>
+              </details>
             </>
           )}
         </section>

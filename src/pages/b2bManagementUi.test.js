@@ -236,14 +236,28 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
       weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
     });
     await wait(() => container.querySelector(
-      '[aria-label="Detail dan penugasan toko"] .b2b-calendar-panel',
+      '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
     ));
-    const savedCalendar = container.querySelector(
-      '[aria-label="Detail dan penugasan toko"] .b2b-calendar-panel',
+    const savedCalendarDetails = container.querySelector(
+      '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
     );
-    assert.match(savedCalendar.textContent, /Tiga jadwal pengiriman berikutnya/);
+    assert.equal(savedCalendarDetails.open, false,
+      'saved calendar defaults to compact mode to preserve space');
+    assert.match(savedCalendarDetails.querySelector('summary').textContent,
+      /Pengiriman berikutnya/);
+    assert.match(savedCalendarDetails.querySelector('summary').textContent,
+      /26 Oktober 2026/);
+    assert.equal(savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span').length, 3,
+      'the next three delivery dates stay visible even when the month grid is closed');
+    await click(savedCalendarDetails.querySelector('summary'));
+    assert.equal(savedCalendarDetails.open, true, 'Owner may expand the complete monthly view');
+    const savedCalendar = savedCalendarDetails.querySelector('.b2b-calendar-panel');
+    assert.ok(savedCalendar.querySelectorAll('.b2b-calendar-date').length >= 28,
+      'expanded view retains the complete read-only month grid');
     assert.equal(savedCalendar.querySelectorAll('button[data-calendar-date]').length, 0,
-      'A saved store schedule is visible but no longer editable');
+      'a fixed store schedule is read-only');
+    await click(savedCalendarDetails.querySelector('summary'));
+    assert.equal(savedCalendarDetails.open, false, 'Owner can collapse the calendar again');
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');

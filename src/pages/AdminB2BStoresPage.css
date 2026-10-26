@@ -569,3 +569,88 @@ button.b2b-calendar-date:not(:disabled) {
   .b2b-owner-overview > button, .b2b-owner-editor > .admin-primary { width: 100%; }
   .b2b-owner-section, .b2b-owner-editor { padding: 14px; }
 }
+
+/* Read-only schedules in store details: compact next dates, calendar on demand. */
+.b2b-saved-calendar {
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.b2b-saved-calendar > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.b2b-saved-calendar > summary::-webkit-details-marker { display: none; }
+.b2b-saved-calendar > summary::marker { content: ''; }
+.b2b-saved-calendar > summary:focus-visible {
+  outline: 3px solid var(--color-action);
+  outline-offset: -3px;
+}
+.b2b-saved-calendar-info {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+.b2b-saved-calendar-info > strong {
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+.b2b-saved-calendar-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.b2b-saved-calendar-dates > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+.b2b-saved-calendar-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-info-text);
+  white-space: nowrap;
+}
+.b2b-saved-calendar-hide { display: none; }
+.b2b-saved-calendar[open] .b2b-saved-calendar-show { display: none; }
+.b2b-saved-calendar[open] .b2b-saved-calendar-hide { display: inline; }
+.b2b-saved-calendar-chevron {
+  display: inline-block;
+  font-size: 1rem;
+  transition: transform 150ms ease;
+}
+.b2b-saved-calendar[open] .b2b-saved-calendar-chevron { transform: rotate(180deg); }
+.b2b-saved-calendar > .b2b-calendar-panel {
+  max-width: 480px;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 14px 14px;
+}
+@media (max-width: 600px) {
+  .b2b-saved-calendar > summary { align-items: flex-start; flex-wrap: wrap; padding: 12px; }
+  .b2b-saved-calendar-toggle { margin-left: auto; }
+  .b2b-saved-calendar > .b2b-calendar-panel { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .b2b-saved-calendar-chevron { transition: none; }
+}

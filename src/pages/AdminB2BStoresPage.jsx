@@ -71,7 +71,7 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
       const next = new Date(startPreview.getTime() + index * stepDays * 86400000);
       return next.toISOString().slice(0, 10);
     }) : [];
-  return (
+  const panel = (
     <div className="b2b-calendar-panel" aria-label={readOnly ? 'Kalender jadwal pengiriman tetap' : 'Kalender pilih tanggal acuan'}>
       <div className="b2b-calendar-top">
         <div>
@@ -118,7 +118,7 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
         <span><i className="b2b-calendar-key eligible" />{readOnly ? 'Tanggal pengiriman' : 'Hari yang dapat dipilih'}</span>
         <span><i className="b2b-calendar-key selected" />{readOnly ? 'Tanggal acuan' : 'Pilihan Anda'}</span>
       </div>
-      {validAnchor && (
+      {validAnchor && !readOnly && (
         <div className="b2b-calendar-preview">
           <strong>{readOnly ? 'Tiga jadwal pengiriman berikutnya' : 'Pratinjau jadwal berdasarkan tanggal acuan'}</strong>
           <div>{exampleDates.map((date) => <span key={date}>{calendarDateLabel(date)}</span>)}</div>
@@ -129,6 +129,25 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
         <p className="b2b-calendar-help">Tanggal acuan belum dipilih. Pilih salah satu tanggal yang tersedia pada kalender.</p>
       )}
     </div>
+  );
+  if (!readOnly) return panel;
+  return (
+    <details className="b2b-saved-calendar">
+      <summary className="b2b-saved-calendar-summary">
+        <span className="b2b-saved-calendar-info">
+          <strong>Pengiriman berikutnya</strong>
+          <span className="b2b-saved-calendar-dates">
+            {exampleDates.map((value) => <span key={value}>{calendarDateLabel(value)}</span>)}
+          </span>
+        </span>
+        <span className="b2b-saved-calendar-toggle" aria-hidden="true">
+          <span className="b2b-saved-calendar-show">Lihat kalender</span>
+          <span className="b2b-saved-calendar-hide">Tutup kalender</span>
+          <span className="b2b-saved-calendar-chevron">⌄</span>
+        </span>
+      </summary>
+      {panel}
+    </details>
   );
 }
 function DeliveryScheduleInputs({ schedule, onChange, prefix }) {

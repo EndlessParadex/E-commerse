@@ -8,6 +8,7 @@
     "server": "node server/index.js",
     "create-admin": "node server/create-admin.js",
     "create-owner": "node server/create-admin.js --owner",
+    "seed:pc": "node tools/seed-pc-demo.mjs",
     "create-owner:company": "node tools/company-command.cjs owner",
     "dev:full": "concurrently --kill-others-on-fail \"npm run server\" \"npm run dev\"",
     "check:local": "node tools/check-local.cjs",

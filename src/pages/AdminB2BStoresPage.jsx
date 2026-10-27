@@ -60,6 +60,12 @@ const calendarDateLabel = (value) => {
     timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric',
   }).format(date) : value;
 };
+const calendarShortDateLabel = (value) => {
+  const date = parseDeliveryDate(value);
+  return date ? new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric',
+  }).format(date) : value;
+};
 const calendarMonthLabel = (year, month) => new Intl.DateTimeFormat('id-ID', {
   timeZone: 'UTC', month: 'long', year: 'numeric',
 }).format(new Date(Date.UTC(year, month, 1)));
@@ -160,16 +166,21 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
   return (
     <details className="b2b-saved-calendar">
       <summary className="b2b-saved-calendar-summary">
-        <span className="b2b-saved-calendar-info">
+        <span className="b2b-saved-calendar-topline">
           <strong>Pengiriman berikutnya</strong>
-          <span className="b2b-saved-calendar-dates">
-            {exampleDates.map((value) => <span key={value}>{calendarDateLabel(value)}</span>)}
+          <span className="b2b-saved-calendar-toggle" aria-hidden="true">
+            <span className="b2b-saved-calendar-show">Lihat kalender</span>
+            <span className="b2b-saved-calendar-hide">Tutup kalender</span>
+            <span className="b2b-saved-calendar-chevron">⌄</span>
           </span>
         </span>
-        <span className="b2b-saved-calendar-toggle" aria-hidden="true">
-          <span className="b2b-saved-calendar-show">Lihat kalender</span>
-          <span className="b2b-saved-calendar-hide">Tutup kalender</span>
-          <span className="b2b-saved-calendar-chevron">⌄</span>
+        <span className="b2b-saved-calendar-dates">
+          {exampleDates.map((value) => (
+            <span key={value} title={calendarDateLabel(value)}
+              aria-label={calendarDateLabel(value)}>
+              {calendarShortDateLabel(value)}
+            </span>
+          ))}
         </span>
       </summary>
       {panel}

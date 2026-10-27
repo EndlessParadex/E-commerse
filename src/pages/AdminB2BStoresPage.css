@@ -581,10 +581,9 @@ button.b2b-calendar-date:not(:disabled) {
   overflow: hidden;
 }
 .b2b-saved-calendar > summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   padding: 12px 14px;
   cursor: pointer;
   list-style: none;
@@ -595,29 +594,36 @@ button.b2b-calendar-date:not(:disabled) {
   outline: 3px solid var(--color-action);
   outline-offset: -3px;
 }
-.b2b-saved-calendar-info {
-  display: grid;
+.b2b-saved-calendar-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   min-width: 0;
-  gap: 6px;
 }
-.b2b-saved-calendar-info > strong {
+.b2b-saved-calendar-topline > strong {
   color: var(--color-text);
   font-size: 0.82rem;
 }
 .b2b-saved-calendar-dates {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-width: 0;
   gap: 5px;
 }
 .b2b-saved-calendar-dates > span {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  padding: 4px 8px;
+  justify-content: center;
+  min-width: 0;
+  padding: 4px 3px;
   border-radius: 999px;
   background: var(--color-info-soft);
   color: var(--color-info-text);
-  font-size: 0.73rem;
+  font-size: 0.7rem;
   line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
 }
 .b2b-saved-calendar-toggle {
   display: inline-flex;
@@ -647,8 +653,8 @@ button.b2b-calendar-date:not(:disabled) {
   padding: 12px 14px 14px;
 }
 @media (max-width: 600px) {
-  .b2b-saved-calendar > summary { align-items: flex-start; flex-wrap: wrap; padding: 12px; }
-  .b2b-saved-calendar-toggle { margin-left: auto; }
+  .b2b-saved-calendar > summary { padding: 10px; gap: 7px; }
+  .b2b-saved-calendar-dates > span { padding: 4px 2px; font-size: .65rem; }
   .b2b-saved-calendar > .b2b-calendar-panel { padding: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -680,9 +686,9 @@ button.b2b-calendar-date:not(:disabled) {
 .b2b-workspace .b2b-schedule-section > p { font-size: .8rem; margin: 0; line-height: 1.4; }
 .b2b-workspace .b2b-saved-calendar { margin-top: 7px; }
 .b2b-workspace .b2b-saved-calendar > summary { padding: 8px 10px; gap: 8px; }
-.b2b-workspace .b2b-saved-calendar-info { gap: 4px; }
-.b2b-workspace .b2b-saved-calendar-info > strong { font-size: .78rem; }
-.b2b-workspace .b2b-saved-calendar-dates > span { padding: 3px 6px; font-size: .69rem; }
+.b2b-workspace .b2b-saved-calendar-topline { gap: 5px; }
+.b2b-workspace .b2b-saved-calendar-topline > strong { font-size: .78rem; }
+.b2b-workspace .b2b-saved-calendar-dates > span { padding: 4px 3px; font-size: .68rem; }
 .b2b-workspace .b2b-owner-overview { margin: 10px 0 0; padding: 10px 12px; gap: 8px; border-radius: 10px; }
 .b2b-workspace .b2b-owner-overview h3 { margin: 0 0 3px; font-size: .84rem; }
 .b2b-workspace .b2b-owner-overview strong { font-size: .82rem; }

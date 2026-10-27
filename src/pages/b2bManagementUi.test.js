@@ -273,8 +273,19 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     const upcomingDates = [...savedCalendarDetails.querySelectorAll(
       '.b2b-saved-calendar-dates > span',
     )].map((item) => item.textContent);
-    assert.match(upcomingDates[0], /^\d{1,2} \p{L}+ \d{4}$/u,
-      'a saved schedule shows a real upcoming delivery date rather than a fixed fixture date');
+    assert.match(upcomingDates[0], /^\d{1,2} \p{L}{3,4} \d{4}$/u,
+      'the date chips use short Indonesian months to stay on one compact row');
+    const dateGrid = savedCalendarDetails.querySelector('.b2b-saved-calendar-dates');
+    assert.equal(dateGrid.parentElement.tagName, 'SUMMARY',
+      'the three dates have the full summary width without sharing space with the toggle');
+    assert.ok(savedCalendarDetails.querySelector('.b2b-saved-calendar-topline .b2b-saved-calendar-toggle'),
+      'the calendar toggle has its own headline row');
+    assert.match(dateGrid.firstElementChild.getAttribute('title'),
+      /^\d{1,2} \p{L}+ \d{4}$/u,
+      'the exact full-length delivery date remains available as a tooltip');
+    assert.equal(dateGrid.firstElementChild.getAttribute('aria-label'),
+      dateGrid.firstElementChild.getAttribute('title'),
+      'the full date remains accessible when the month is abbreviated');
     assert.equal(new Set(upcomingDates).size, 3,
       'the next three scheduled dates do not repeat');
     assert.equal(savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span').length, 3,

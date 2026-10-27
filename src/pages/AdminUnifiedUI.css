@@ -723,3 +723,106 @@
   .admin-shell .admin-editor .admin-form-section { padding: 12px; }
   .admin-shell .admin-editor .admin-section-card { padding: 0; }
 }
+
+/* Visually labeled color picker: swatches match the actual card gradient. */
+.admin-shell .admin-editor .admin-color-field {
+  position: relative;
+  min-width: 0;
+}
+.admin-shell .admin-editor .admin-color-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.admin-shell .admin-editor .admin-color-picker {
+  position: relative;
+  min-width: 0;
+}
+.admin-shell .admin-editor .admin-color-picker[open] {
+  z-index: 25;
+}
+.admin-shell .admin-editor .admin-color-picker > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--admin-control-height);
+  padding: 8px 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.admin-shell .admin-editor .admin-color-picker > summary::-webkit-details-marker {
+  display: none;
+}
+.admin-shell .admin-editor .admin-color-picker > summary[aria-invalid='true'] {
+  border-color: var(--color-danger-bright);
+  background: var(--color-danger-subtle);
+}
+.admin-shell .admin-editor .admin-color-swatch {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border: 1px solid rgb(128 128 128 / 40%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 15%);
+}
+.admin-shell .admin-editor .admin-color-chevron {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+.admin-shell .admin-editor .admin-color-picker[open] .admin-color-chevron {
+  transform: rotate(180deg);
+}
+.admin-shell .admin-editor .admin-color-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 2px;
+  padding: 5px;
+  max-height: 285px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-input-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 22%);
+}
+.admin-shell .admin-editor .admin-color-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  font-size: 0.875rem;
+}
+.admin-shell .admin-editor .admin-color-option:hover,
+.admin-shell .admin-editor .admin-color-option[aria-pressed='true'] {
+  background: var(--color-info-soft);
+}
+.admin-shell .admin-editor .admin-color-option[aria-pressed='true'] {
+  color: var(--color-info-text);
+  font-weight: 700;
+}
+.admin-shell .admin-editor .admin-color-option-name { flex: 1 1 auto; }
+.admin-shell .admin-editor .admin-color-selected {
+  color: var(--color-info-text);
+  font-size: 1rem;
+}

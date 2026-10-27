@@ -8,7 +8,8 @@ import ProductImage from '../components/shop/ProductImage';
 import { rupiah } from '../components/shop/shopPresentation';
 import { brandsForSupplier } from '../data/catalogMasters';
 import useUnsavedChanges from '../state/useUnsavedChanges';
-import { catalogColors, productColorStyle } from '../data/catalogColors';
+import { productColorStyle } from '../data/catalogColors';
+import AdminColorPicker from '../components/admin/AdminColorPicker';
 import { packagingTypes, packagingLabel, packagingContents } from '../data/productPackaging';
 import { MAX_PRODUCT_PHOTOS, MAX_PRODUCT_PHOTO_BYTES } from '../data/productPhotos';
 
@@ -465,7 +466,11 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   setErrors({});
                 })}
                 {select('subcategoryId', 'Subkategori *', category?.children || [])}
-                {select('color', 'Warna kartu *', catalogColors)}
+                <AdminColorPicker
+                  value={draft.color}
+                  onChange={(color) => update('color', color)}
+                  error={errors.color}
+                />
                 <div className="admin-field admin-full">
                   <label htmlFor="product-description">Deskripsi *</label>
                   <textarea

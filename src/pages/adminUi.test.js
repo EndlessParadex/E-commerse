@@ -122,6 +122,18 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       'product information can expand on demand');
     assert.ok(container.querySelector('details.admin-photo-card'),
       'photo controls can expand on demand');
+    const colorPicker = container.querySelector('.admin-color-picker');
+    assert.ok(colorPicker, 'card color has a swatch picker');
+    assert.equal(colorPicker.querySelectorAll('.admin-color-option').length, 10,
+      'each catalog color is visible with a color swatch');
+    assert.equal(colorPicker.querySelectorAll('.admin-color-options .admin-color-swatch').length, 10);
+    await click(colorPicker.querySelector('summary'));
+    await click(colorPicker.querySelector('button[data-color-id="rose"]'));
+    assert.equal(colorPicker.hasAttribute('open'), false, 'picker closes after selection');
+    assert.match(colorPicker.querySelector('summary').textContent, /Merah muda/);
+    assert.equal(colorPicker.querySelector('button[data-color-id="rose"]').getAttribute('aria-pressed'), 'true');
+    assert.match(container.querySelector('.admin-form-preview .admin-preview-image').getAttribute('style'),
+      /linear-gradient/, 'the selected swatch updates the live card preview');
     assert.ok(container.querySelector('.admin-editor .admin-product-photos .admin-photo-controls'),
       'photo upload remains accessible in the compact photo section');
     await fill('#product-baseName', 'Isian belum disimpan');

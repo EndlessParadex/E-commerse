@@ -87,15 +87,12 @@ test('akses admin dan form server: selama menyimpan terkunci; kegagalan memperta
       );
       input.dispatchEvent(new dom.Event('input', { bubbles: true }));
     });
-    const color = container.querySelector('#product-color');
-    assert.equal(color.options.length, 11);
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(dom.HTMLSelectElement.prototype, 'value').set.call(
-        color,
-        'mint',
-      );
-      color.dispatchEvent(new dom.Event('change', { bubbles: true }));
-    });
+    const color = container.querySelector('.admin-color-picker');
+    assert.equal(color.querySelectorAll('.admin-color-option').length, 10);
+    await click(color.querySelector('summary'));
+    await click(color.querySelector('button[data-color-id="mint"]'));
+    assert.match(color.querySelector('summary').textContent, /Hijau/);
+    assert.equal(color.querySelector('button[data-color-id="mint"]').getAttribute('aria-pressed'), 'true');
     assert.match(
       container.querySelector('.admin-preview-image').style.background,
       /linear-gradient/,

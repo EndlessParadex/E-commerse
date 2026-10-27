@@ -270,8 +270,13 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
       'saved calendar defaults to compact mode to preserve space');
     assert.match(savedCalendarDetails.querySelector('summary').textContent,
       /Pengiriman berikutnya/);
-    assert.match(savedCalendarDetails.querySelector('summary').textContent,
-      /26 Oktober 2026/);
+    const upcomingDates = [...savedCalendarDetails.querySelectorAll(
+      '.b2b-saved-calendar-dates > span',
+    )].map((item) => item.textContent);
+    assert.match(upcomingDates[0], /^\d{1,2} \p{L}+ \d{4}$/u,
+      'a saved schedule shows a real upcoming delivery date rather than a fixed fixture date');
+    assert.equal(new Set(upcomingDates).size, 3,
+      'the next three scheduled dates do not repeat');
     assert.equal(savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span').length, 3,
       'the next three delivery dates stay visible even when the month grid is closed');
     await click(savedCalendarDetails.querySelector('summary'));

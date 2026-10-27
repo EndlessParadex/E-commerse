@@ -4,6 +4,8 @@ Frontend React dan Vite dengan API Node.js serta database SQLite untuk akun, kat
 
 Alur akun, kepemilikan toko, keranjang bersama, dan belanja pribadi dijelaskan dalam [ALUR-PERAN-B2B.md](./docs/ALUR-PERAN-B2B.md).
 
+Status fitur terkini ada pada [roadmap B2B](./docs/B2B-ROADMAP.md). Dukungan Satuan/Pack/Box/Dus/Renceng, dokumen B2B tanpa harga untuk A4/dot matrix, kalender profil dan jadwal wilayah dijelaskan pada [fitur operasional](./docs/FITUR-OPERASIONAL.md). Sebelum memperbarui instalasi, ikuti [backup dan latihan pemulihan](./docs/BACKUP-DAN-PEMULIHAN.md).
+
 Gunakan **Node.js 24 atau lebih baru**. Pembaruan **v31** menyediakan COD dan transfer manual yang dikonfigurasi toko, penawaran ongkir/total akhir, persetujuan pelanggan, unggah bukti, notifikasi email pesanan, serta cetak faktur/ringkasan. Panduan utama ada di [TRANSAKSI-TOKO.md](./docs/TRANSAKSI-TOKO.md).
 
 **Verifikasi email wajib sebelum memesan.** Pendaftaran tetap menyimpan kata sandi awal meskipun SMTP belum diisi, tetapi pelanggan belum dapat memesan sebelum verifikasi. Admin menampilkan status kesiapan email dan rekening. Siapkan layanan melalui [EMAIL-DAN-PROXY.md](./docs/EMAIL-DAN-PROXY.md). Rincian perlindungan/migrasi ada di [KEAMANAN-BACKEND.md](./docs/KEAMANAN-BACKEND.md).

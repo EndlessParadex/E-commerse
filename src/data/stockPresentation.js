@@ -17,20 +17,39 @@ export function stockBreakdown(available, variants) {
     ? box.unitsPerPackage / box.packsPerBox
     : packChoice?.unitsPerPackage || 0;
   const boxUnits = box?.unitsPerPackage || 0;
-  const boxes = boxUnits ? Math.floor(available / boxUnits) : 0;
-  const afterBoxes = available - boxes * boxUnits;
-  const packCount = packUnits ? Math.floor(afterBoxes / packUnits) : 0;
+  const extra = ['box', 'renceng'].filter((type) =>
+    choices.some((entry) => entry.packagingType === type),
+  );
+  const factors = { dus: boxUnits, pack: packUnits };
+  for (const type of extra)
+    factors[type] = Math.max(
+      ...choices
+        .filter((entry) => entry.packagingType === type)
+        .map((entry) => entry.unitsPerPackage),
+    );
+  const order = [
+    'dus',
+    ...(extra.includes('box') ? ['box'] : []),
+    'pack',
+    ...(extra.includes('renceng') ? ['renceng'] : []),
+  ];
+  let remaining = available;
+  const counts = {};
+  for (const type of [...order].sort((a, b) => factors[b] - factors[a])) {
+    counts[type] = factors[type] ? Math.floor(remaining / factors[type]) : 0;
+    remaining -= counts[type] * factors[type];
+  }
+  const names = { dus: 'Dus', box: 'Box', pack: 'Pack', renceng: 'Renceng' };
   return {
     totalUnits: available,
     items: [
-      { type: 'dus', name: 'Dus', quantity: boxes, unitsPerPackage: boxUnits },
-      { type: 'pack', name: 'Pack', quantity: packCount, unitsPerPackage: packUnits },
-      {
-        type: 'satuan',
-        name: 'Satuan',
-        quantity: afterBoxes - packCount * packUnits,
-        unitsPerPackage: 1,
-      },
+      ...order.map((type) => ({
+        type,
+        name: names[type],
+        quantity: counts[type],
+        unitsPerPackage: factors[type],
+      })),
+      { type: 'satuan', name: 'Satuan', quantity: remaining, unitsPerPackage: 1 },
     ],
   };
 }

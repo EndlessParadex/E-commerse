@@ -1,0 +1,121 @@
+.b2b-packing-disclosure {
+  min-width: 0;
+  margin: 24px 0;
+}
+.b2b-packing-disclosure > summary {
+  cursor: pointer;
+  min-height: 44px;
+  font-weight: 700;
+}
+.b2b-print-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+  margin: 20px 0 12px;
+}
+.b2b-print-controls label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+}
+.b2b-print-controls select {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.b2b-print-hint {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.b2b-packing-preview {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+.b2b-packing-list {
+  color: #000;
+  background: #fff;
+  padding: 20px;
+  min-width: 520px;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+.b2b-packing-list header {
+  display: block;
+  margin-bottom: 16px;
+}
+.b2b-packing-list h2 {
+  font-size: 20px;
+  color: #000;
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+.b2b-packing-list p {
+  color: #000;
+  margin: 0;
+  font-size: inherit;
+}
+.b2b-packing-list table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.b2b-packing-list :is(th, td) {
+  border: 1px solid #000;
+  padding: 8px 5px;
+  color: #000;
+  background: #fff;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.b2b-packing-list :is(th, td):first-child {
+  width: 50%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.b2b-packing-list small {
+  display: block;
+  font: inherit;
+  font-size: 0.85em;
+}
+.b2b-packing-list .b2b-packing-count {
+  margin-top: 12px;
+}
+.b2b-packing-list.is-dot-matrix {
+  font-family: 'Courier New', monospace;
+}
+.b2b-packing-list.is-dot-matrix :is(th, td) {
+  border-width: 1px 0;
+  padding: 5px 3px;
+}
+@media print {
+  .b2b-print-root .b2b-packing-list {
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+    font-size: 10pt;
+    box-shadow: none;
+  }
+  .b2b-print-root .b2b-packing-list.is-dot-matrix {
+    font-size: 10pt;
+  }
+  .b2b-print-root thead {
+    display: table-header-group;
+  }
+  .b2b-print-root tfoot {
+    display: table-row-group;
+  }
+  .b2b-print-root tr {
+    break-inside: avoid;
+  }
+}

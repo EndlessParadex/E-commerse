@@ -1,4 +1,5 @@
 import CommerceReadiness from './CommerceReadiness';
+import B2BPackingList from '../components/shop/B2BPackingList';
 import useCompany from '../state/useCompany';
 import { useRef, useState } from 'react';
 import { changeServerOrder } from '../state/serverWorkflow';
@@ -304,6 +305,7 @@ export default function AdminOrdersPage() {
                   instruksi pembayaran. Batas pemeriksaan: {dateLabel(order.review.expiresAt)}.
                 </p>
               )}
+              {server && order.b2b && <B2BPackingList key={order.id} order={order} />}
               <div className="workflow-actions">
                 <a className="admin-secondary" href={'#/pesanan/' + encodeURIComponent(order.id)}>
                   Detail di toko
@@ -363,12 +365,14 @@ export default function AdminOrdersPage() {
                   </button>
                 )}
                 {(order.status === 'awaiting_payment' ||
-                  (order.b2b && order.status === 'processing' && order.payment.status === 'proof_submitted')) &&
+                  (order.b2b &&
+                    order.status === 'processing' &&
+                    order.payment.status === 'proof_submitted')) &&
                   paymentMethod(order.payment.id) && (
-                  <button className="admin-primary" onClick={() => openAction(order, 'paid')}>
-                    {server ? 'Catat pembayaran manual' : 'Catat pembayaran simulasi'}
-                  </button>
-                )}
+                    <button className="admin-primary" onClick={() => openAction(order, 'paid')}>
+                      {server ? 'Catat pembayaran manual' : 'Catat pembayaran simulasi'}
+                    </button>
+                  )}
                 {(order.status || 'processing') === 'processing' &&
                   (isCOD(order) || order.payment.status === 'paid') && (
                     <button className="admin-primary" onClick={() => openAction(order, 'ship')}>

@@ -669,6 +669,8 @@ export class WorkflowRepository {
         inventoryReserved: false,
       };
       order = this.prepareOrder ? this.prepareOrder(order) : order;
+      const delivery = this.deliverySnapshot?.(user);
+      if (delivery) order.shipping = { ...order.shipping, ...delivery };
       if (order.codFixedTotal) this.reserve(order, user.id);
       order = withNotificationEvent(order, 'orderCreated', time);
       this.db
@@ -758,10 +760,12 @@ export class WorkflowRepository {
           order.review = { ...order.review, approvedAt: time, approvedBy: user.id };
           kind = 'orderApproved';
         } else if (action === 'paid') {
-          if (isCOD(order) ||
+          if (
+            isCOD(order) ||
             (order.b2b
               ? order.status !== 'processing' || order.payment.status !== 'proof_submitted'
-              : order.status !== 'awaiting_payment'))
+              : order.status !== 'awaiting_payment')
+          )
             fail('Transfer belum memiliki bukti yang menunggu verifikasi.', 409, 'invalid_status');
           order.payment.reference = text(body.reference, 3, 100, 'Referensi pembayaran manual');
           order.payment.status = 'paid';

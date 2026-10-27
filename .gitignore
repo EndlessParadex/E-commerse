@@ -27,6 +27,7 @@ dist-ssr
 data/*.sqlite
 data/*.sqlite-*
 *.mail-key
+/backups/
 
 # Credentials and email queue encryption key
 .env

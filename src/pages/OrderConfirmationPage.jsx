@@ -1,4 +1,5 @@
 import OrderInvoice from '../components/shop/OrderInvoice';
+import B2BPackingList from '../components/shop/B2BPackingList';
 import { useState } from 'react';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import { orderItemPresentation } from '../data/orderItemPresentation';
@@ -128,6 +129,19 @@ export default function OrderConfirmationPage({ orderId }) {
         </section>
       )}
       {server && !order.b2b && <OrderInvoice order={order} />}
+      {server && !order.b2b && order.shipping.plannedDate && (
+        <section className="confirmation-card">
+          <h2>Jadwal pengiriman wilayah</h2>
+          <p>
+            {order.shipping.regionName} · {order.shipping.plannedDate}
+          </p>
+          <p>
+            Jadwal ini dicatat saat pemesanan. Perubahan status pengiriman mengikuti pembaruan
+            Admin.
+          </p>
+        </section>
+      )}
+      {server && order.b2b && <B2BPackingList key={order.id} order={order} />}
       <OrderTracking
         status={orderStatus(order)}
         server={server}

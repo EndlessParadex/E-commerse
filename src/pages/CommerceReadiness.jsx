@@ -144,6 +144,16 @@ export default function CommerceReadiness() {
         <>
           <div className="commerce-readiness-grid">
             <div className="commerce-readiness-card">
+              <span className="commerce-readiness-label">WhatsApp OTP</span>
+              <h4>{data.whatsappConfigured ? 'Konfigurasi tersedia' : 'Belum diaktifkan'}</h4>
+              <p>
+                {data.whatsappConfigured
+                  ? 'Pengiriman nyata perlu dibuktikan dengan kode yang diterima pemilik nomor. Konfigurasi tersedia tidak menjamin layanan berhasil mengirim.'
+                  : 'Pengelola server perlu mengisi konfigurasi pengirim dan template OTP yang disetujui. Token tidak disimpan melalui browser.'}
+              </p>
+              <a href="#/akun">Buka verifikasi nomor pada akun →</a>
+            </div>
+            <div className="commerce-readiness-card">
               <span className="commerce-readiness-label">Email toko</span>
               <h4>{data.emailReady ? 'Pengaturan tersimpan' : 'Perlu disiapkan'}</h4>
               <p>
@@ -161,33 +171,51 @@ export default function CommerceReadiness() {
               )}
             </div>
             <div className="commerce-readiness-card">
-              <span className="commerce-readiness-label">{data.codOnly ? 'Pembayaran COD' : 'Transfer bank'}</span>
-              <h4>{data.codOnly ? 'COD aktif · ongkir gratis' : data.transferReady ? 'Rekening sudah diisi' : 'Rekening belum diisi'}</h4>
-              <p>{data.codOnly
-                ? 'Pembeli membayar saat barang diterima. Harga checkout final dan tidak memerlukan persetujuan ulang.'
-                : data.transferReady
-                  ? 'Pembeli mendapat rincian rekening setelah toko menyetujui pesanan.'
-                  : 'Isi rekening toko agar pembeli dapat memilih transfer bank.'}</p>
-              {!data.codOnly && <a href="#/admin/perusahaan">
-                {data.transferReady ? 'Lihat rekening toko' : 'Isi rekening toko'} →
-              </a>}
+              <span className="commerce-readiness-label">
+                {data.codOnly ? 'Pembayaran COD' : 'Transfer bank'}
+              </span>
+              <h4>
+                {data.codOnly
+                  ? 'COD aktif · ongkir gratis'
+                  : data.transferReady
+                    ? 'Rekening sudah diisi'
+                    : 'Rekening belum diisi'}
+              </h4>
+              <p>
+                {data.codOnly
+                  ? 'Pembeli membayar saat barang diterima. Harga checkout final dan tidak memerlukan persetujuan ulang.'
+                  : data.transferReady
+                    ? 'Pembeli mendapat rincian rekening setelah toko menyetujui pesanan.'
+                    : 'Isi rekening toko agar pembeli dapat memilih transfer bank.'}
+              </p>
+              {!data.codOnly && (
+                <a href="#/admin/perusahaan">
+                  {data.transferReady ? 'Lihat rekening toko' : 'Isi rekening toko'} →
+                </a>
+              )}
             </div>
             <div className="commerce-readiness-card">
-              <span className="commerce-readiness-label">{data.codOnly ? 'Pesanan perlu diproses' : 'Pesanan baru'}</span>
-              <h4>{data.codOnly
-                ? (data.processingOrders || 0) > 0
-                  ? data.processingOrders + ' pesanan menunggu pengiriman'
-                  : 'Tidak ada pesanan menunggu pengiriman'
-                : data.pendingOrders > 0
-                  ? data.pendingOrders + ' pesanan perlu diperiksa'
-                  : 'Tidak ada permintaan baru'}</h4>
-              <p>{data.codOnly
-                ? (data.processingOrders || 0) > 0
-                  ? 'Pesanan sudah tercatat dengan harga final. Siapkan barang lalu catat pengiriman.'
-                  : 'Pesanan yang dikirim atau selesai tetap tersedia di daftar pesanan.'
-                : data.pendingOrders > 0
-                  ? 'Periksa stok dan tentukan ongkir sebelum menyetujui pesanan.'
-                  : 'Pesanan yang sudah diproses tetap dapat dicari di daftar pesanan.'}</p>
+              <span className="commerce-readiness-label">
+                {data.codOnly ? 'Pesanan perlu diproses' : 'Pesanan baru'}
+              </span>
+              <h4>
+                {data.codOnly
+                  ? (data.processingOrders || 0) > 0
+                    ? data.processingOrders + ' pesanan menunggu pengiriman'
+                    : 'Tidak ada pesanan menunggu pengiriman'
+                  : data.pendingOrders > 0
+                    ? data.pendingOrders + ' pesanan perlu diperiksa'
+                    : 'Tidak ada permintaan baru'}
+              </h4>
+              <p>
+                {data.codOnly
+                  ? (data.processingOrders || 0) > 0
+                    ? 'Pesanan sudah tercatat dengan harga final. Siapkan barang lalu catat pengiriman.'
+                    : 'Pesanan yang dikirim atau selesai tetap tersedia di daftar pesanan.'
+                  : data.pendingOrders > 0
+                    ? 'Periksa stok dan tentukan ongkir sebelum menyetujui pesanan.'
+                    : 'Pesanan yang sudah diproses tetap dapat dicari di daftar pesanan.'}
+              </p>
               <a href="#/admin/pesanan">Buka daftar pesanan →</a>
             </div>
           </div>

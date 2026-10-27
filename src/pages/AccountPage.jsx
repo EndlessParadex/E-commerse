@@ -9,6 +9,7 @@ import AccountSecurity from '../components/account/AccountSecurity';
 import AccountAvatar from '../components/account/AccountAvatar';
 import AccountPhone from '../components/account/AccountPhone';
 import AccountEmailStatus from '../components/account/AccountEmailStatus';
+import AccountDeliveryCalendar from '../components/account/AccountDeliveryCalendar';
 import PhotoUpload from '../components/PhotoUpload';
 import { ActionIcon } from '../components/shop/ShopIcon';
 import useUnsavedChanges from '../state/useUnsavedChanges';
@@ -19,7 +20,12 @@ const tabs = [
   { id: 'profile', label: 'Profil', icon: 'user', description: 'Nama, kontak, dan foto' },
   { id: 'address', label: 'Alamat', icon: 'address', description: 'Alamat pengiriman' },
   { id: 'security', label: 'Keamanan', icon: 'shield', description: 'Password dan verifikasi' },
-  { id: 'calendar', label: 'Kalender pengiriman', icon: 'calendar', description: 'Informasi jadwal pengiriman' },
+  {
+    id: 'calendar',
+    label: 'Kalender pengiriman',
+    icon: 'calendar',
+    description: 'Informasi jadwal pengiriman',
+  },
   { id: 'appearance', label: 'Tampilan', icon: 'appearance', description: 'Pengaturan visual' },
 ];
 
@@ -167,7 +173,12 @@ export default function AccountPage() {
           </header>
           <div className="account-workspace account-premium">
             <aside className="account-sidebar account-premium-sidebar" aria-label="Navigasi akun">
-              <div className="account-tabs" role="tablist" aria-label="Pengaturan akun" aria-orientation="vertical">
+              <div
+                className="account-tabs"
+                role="tablist"
+                aria-label="Pengaturan akun"
+                aria-orientation="vertical"
+              >
                 {tabs.map((tab, index) => (
                   <button
                     key={tab.id}
@@ -183,14 +194,21 @@ export default function AccountPage() {
                     onClick={() => selectTab(tab.id)}
                     onKeyDown={(event) => navigateTab(event, index)}
                   >
-                    <span className="account-premium-nav-icon"><AccountCenterIcon name={tab.icon} /></span>
+                    <span className="account-premium-nav-icon">
+                      <AccountCenterIcon name={tab.icon} />
+                    </span>
                     <span className="account-premium-nav-text">
-                      <strong>{tab.label}</strong><small>{tab.description}</small>
+                      <strong>{tab.label}</strong>
+                      <small>{tab.description}</small>
                     </span>
                     {tab.id === 'address' && edited && (
                       <span className="account-draft-dot" aria-label="Perubahan belum disimpan" />
                     )}
-                    <AccountCenterIcon name="chevron" size={16} className="account-premium-chevron" />
+                    <AccountCenterIcon
+                      name="chevron"
+                      size={16}
+                      className="account-premium-chevron"
+                    />
                   </button>
                 ))}
               </div>
@@ -204,15 +222,20 @@ export default function AccountPage() {
                     <div className="account-premium-greeting-title">
                       <h2>Halo, {user.name}</h2>
                       <span className="account-premium-role">
-                        {user.role === 'admin' ? `Admin ${companyProfile.shortName}` : `Pelanggan ${companyProfile.shortName}`}
+                        {user.role === 'admin'
+                          ? `Admin ${companyProfile.shortName}`
+                          : `Pelanggan ${companyProfile.shortName}`}
                       </span>
                     </div>
                     <p>Kelola informasi akun, alamat pengiriman, dan pengaturan keamanan.</p>
                     <div className="account-premium-badges">
-                      <span className="account-premium-badge is-active">
-                        Akun aktif
-                      </span>
-                      <span className={'account-premium-badge ' + (user.emailVerified ? 'is-verified' : 'is-pending')}>
+                      <span className="account-premium-badge is-active">Akun aktif</span>
+                      <span
+                        className={
+                          'account-premium-badge ' +
+                          (user.emailVerified ? 'is-verified' : 'is-pending')
+                        }
+                      >
                         <AccountCenterIcon name="mail" size={15} />
                         {user.emailVerified ? 'Email terverifikasi' : 'Email belum terverifikasi'}
                       </span>
@@ -220,9 +243,16 @@ export default function AccountPage() {
                   </div>
                 </div>
                 <div className="account-premium-role-card">
-                  <span className="account-premium-role-mark"><AccountCenterIcon name="shield" size={23} /></span>
-                  <div><small>Jenis akun</small>
-                    <strong>{user.role === 'admin' ? `Admin ${companyProfile.shortName}` : `Pelanggan ${companyProfile.shortName}`}</strong>
+                  <span className="account-premium-role-mark">
+                    <AccountCenterIcon name="shield" size={23} />
+                  </span>
+                  <div>
+                    <small>Jenis akun</small>
+                    <strong>
+                      {user.role === 'admin'
+                        ? `Admin ${companyProfile.shortName}`
+                        : `Pelanggan ${companyProfile.shortName}`}
+                    </strong>
                     <span>Hak akses mengikuti jenis akun.</span>
                   </div>
                 </div>
@@ -238,103 +268,156 @@ export default function AccountPage() {
                 <div className="account-premium-profile-grid">
                   <div className="account-premium-profile-main">
                     <div className="account-panel-heading account-premium-card-heading">
-                      <div><h2><AccountCenterIcon name="user" /> Informasi profil</h2>
-                        <p>Informasi dasar akun yang Anda gunakan untuk berbelanja.</p></div>
-                      <button type="button" className="account-page-secondary"
-                        onClick={() => selectTab('address', true)}>
+                      <div>
+                        <h2>
+                          <AccountCenterIcon name="user" /> Informasi profil
+                        </h2>
+                        <p>Informasi dasar akun yang Anda gunakan untuk berbelanja.</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="account-page-secondary"
+                        onClick={() => selectTab('address', true)}
+                      >
                         <AccountCenterIcon name="edit" size={16} /> Edit profil
                       </button>
                     </div>
                     <div className="account-profile-layout">
-                  <div className="account-avatar-card">
-                    <AccountAvatar user={user} className="account-avatar-large" />
-                    <PhotoUpload
-                      id="account-photo"
-                      label="Foto profil"
-                      value={user.avatar || ''}
-                      disabled={saving}
-                      onBusyChange={setPhotoBusy}
-                      onChange={async (avatar) => {
-                        setPhotoNotice('');
-                        const result = await saveAvatar(avatar);
-                        if (!result.ok) throw new Error(result.error);
-                        setPhotoNotice(
-                          avatar
-                            ? 'Foto profil berhasil disimpan.'
-                            : 'Foto profil berhasil dihapus.',
-                        );
-                      }}
-                    />
-                    {photoNotice && <p role="status">{photoNotice}</p>}
-                  </div>
-                  <div className="account-profile-details">
-                    <dl className="account-biodata">
-                      <div>
-                        <dt>Nama</dt>
-                        <dd>{user.name}</dd>
+                      <div className="account-avatar-card">
+                        <AccountAvatar user={user} className="account-avatar-large" />
+                        <PhotoUpload
+                          id="account-photo"
+                          label="Foto profil"
+                          value={user.avatar || ''}
+                          disabled={saving}
+                          onBusyChange={setPhotoBusy}
+                          onChange={async (avatar) => {
+                            setPhotoNotice('');
+                            const result = await saveAvatar(avatar);
+                            if (!result.ok) throw new Error(result.error);
+                            setPhotoNotice(
+                              avatar
+                                ? 'Foto profil berhasil disimpan.'
+                                : 'Foto profil berhasil dihapus.',
+                            );
+                          }}
+                        />
+                        {photoNotice && <p role="status">{photoNotice}</p>}
                       </div>
-                      <div>
-                        <dt>Email</dt>
-                        <dd>
-                          {user.email}
-                          <AccountEmailStatus key={user.id} />
-                        </dd>
+                      <div className="account-profile-details">
+                        <dl className="account-biodata">
+                          <div>
+                            <dt>Nama</dt>
+                            <dd>{user.name}</dd>
+                          </div>
+                          <div>
+                            <dt>Email</dt>
+                            <dd>
+                              {user.email}
+                              <AccountEmailStatus key={user.id} />
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Jenis akun</dt>
+                            <dd>
+                              {user.role === 'admin'
+                                ? `Admin ${companyProfile.shortName}`
+                                : `Pelanggan ${companyProfile.shortName}`}
+                            </dd>
+                          </div>
+                        </dl>
+                        <button
+                          type="button"
+                          className="account-page-secondary"
+                          onClick={() => selectTab('address', true)}
+                        >
+                          Ubah nama dan alamat <span aria-hidden="true">→</span>
+                        </button>
+                        <p className="account-profile-help">
+                          Email digunakan untuk masuk ke akun Anda.
+                        </p>
+                        <AccountPhone key={user.id} />
                       </div>
-                      <div>
-                        <dt>Jenis akun</dt>
-                        <dd>
-                          {user.role === 'admin'
-                            ? `Admin ${companyProfile.shortName}`
-                            : `Pelanggan ${companyProfile.shortName}`}
-                        </dd>
-                      </div>
-                    </dl>
-                    <button
-                      type="button"
-                      className="account-page-secondary"
-                      onClick={() => selectTab('address', true)}
-                    >
-                      Ubah nama dan alamat <span aria-hidden="true">→</span>
-                    </button>
-                    <p className="account-profile-help">
-                      Email digunakan untuk masuk ke akun Anda.
-                    </p>
-                    <AccountPhone key={user.id} />
-                  </div>
-                </div>
+                    </div>
                   </div>
                   <div className="account-premium-profile-side">
-                    <section className="account-premium-aside-card" aria-labelledby="account-address-summary-title">
+                    <section
+                      className="account-premium-aside-card"
+                      aria-labelledby="account-address-summary-title"
+                    >
                       <div className="account-premium-aside-heading">
-                        <h3 id="account-address-summary-title"><AccountCenterIcon name="address" /> Alamat pengiriman utama</h3>
-                        <button type="button" className="account-page-secondary"
-                          onClick={() => selectTab('address', true)}>Kelola alamat →</button>
+                        <h3 id="account-address-summary-title">
+                          <AccountCenterIcon name="address" /> Alamat pengiriman utama
+                        </h3>
+                        <button
+                          type="button"
+                          className="account-page-secondary"
+                          onClick={() => selectTab('address', true)}
+                        >
+                          Kelola alamat →
+                        </button>
                       </div>
                       <div className="account-address-preview">
-                        <span className="account-premium-address-symbol"><AccountCenterIcon name="address" size={25} /></span>
+                        <span className="account-premium-address-symbol">
+                          <AccountCenterIcon name="address" size={25} />
+                        </span>
                         <div>
-                          <strong>{savedLocation?.storeName || user.storeName || 'Alamat akun'}</strong>
-                          <p>{savedLocation?.namaJalan || user.address || 'Alamat belum ditambahkan.'}</p>
+                          <strong>
+                            {savedLocation?.storeName || user.storeName || 'Alamat akun'}
+                          </strong>
+                          <p>
+                            {savedLocation?.namaJalan ||
+                              user.address ||
+                              'Alamat belum ditambahkan.'}
+                          </p>
                         </div>
                       </div>
                     </section>
-                    <section className="account-premium-aside-card" aria-labelledby="account-security-summary-title">
+                    <section
+                      className="account-premium-aside-card"
+                      aria-labelledby="account-security-summary-title"
+                    >
                       <div className="account-premium-aside-heading">
-                        <h3 id="account-security-summary-title"><AccountCenterIcon name="shield" /> Keamanan akun</h3>
-                        <button type="button" className="account-page-secondary"
-                          onClick={() => selectTab('security', true)}>Kelola keamanan →</button>
+                        <h3 id="account-security-summary-title">
+                          <AccountCenterIcon name="shield" /> Keamanan akun
+                        </h3>
+                        <button
+                          type="button"
+                          className="account-page-secondary"
+                          onClick={() => selectTab('security', true)}
+                        >
+                          Kelola keamanan →
+                        </button>
                       </div>
                       <div className="account-premium-security-row">
-                        <span className="account-premium-security-symbol"><AccountCenterIcon name="mail" /></span>
-                        <div><strong>Verifikasi email</strong>
-                          <small>{user.emailVerified ? 'Sudah terverifikasi' : 'Belum terverifikasi'}</small></div>
-                        <button type="button" onClick={() => selectTab('security', true)}>Lihat</button>
+                        <span className="account-premium-security-symbol">
+                          <AccountCenterIcon name="mail" />
+                        </span>
+                        <div>
+                          <strong>Verifikasi email</strong>
+                          <small>
+                            {user.emailVerified ? 'Sudah terverifikasi' : 'Belum terverifikasi'}
+                          </small>
+                        </div>
+                        <button type="button" onClick={() => selectTab('security', true)}>
+                          Lihat
+                        </button>
                       </div>
                       <div className="account-premium-security-row">
-                        <span className="account-premium-security-symbol"><AccountCenterIcon name="shield" /></span>
-                        <div><strong>Kata sandi</strong>
-                          <small>{user.role === 'admin' ? 'Dapat diubah pada pengaturan keamanan' : 'Hubungi Admin untuk bantuan akun'}</small></div>
-                        <button type="button" onClick={() => selectTab('security', true)}>Lihat</button>
+                        <span className="account-premium-security-symbol">
+                          <AccountCenterIcon name="shield" />
+                        </span>
+                        <div>
+                          <strong>Kata sandi</strong>
+                          <small>
+                            {user.role === 'admin'
+                              ? 'Dapat diubah pada pengaturan keamanan'
+                              : 'Hubungi Admin untuk bantuan akun'}
+                          </small>
+                        </div>
+                        <button type="button" onClick={() => selectTab('security', true)}>
+                          Lihat
+                        </button>
                       </div>
                     </section>
                   </div>
@@ -451,16 +534,12 @@ export default function AccountPage() {
                 hidden={activeTab !== 'calendar'}
               >
                 <div className="account-panel-heading">
-                  <h2><AccountCenterIcon name="calendar" /> Kalender pengiriman</h2>
+                  <h2>
+                    <AccountCenterIcon name="calendar" /> Kalender pengiriman
+                  </h2>
                   <p>Informasi pengiriman harus mengikuti jadwal toko atau wilayah yang berlaku.</p>
                 </div>
-                <div className="account-premium-calendar-empty">
-                  <AccountCenterIcon name="calendar" size={32} />
-                  <h3>Jadwal pengiriman akun</h3>
-                  <p>Rincian tanggal dan status pengiriman yang sudah ditetapkan dapat diperiksa
-                    pada detail pesanan. Tidak ada tanggal perkiraan yang dibuat otomatis di halaman ini.</p>
-                  <a className="account-page-secondary" href="#/pesanan">Lihat pesanan saya →</a>
-                </div>
+                {activeTab === 'calendar' && <AccountDeliveryCalendar key={user.id} />}
               </section>
               <section
                 id="account-panel-appearance"
@@ -486,19 +565,37 @@ export default function AccountPage() {
           </div>
           <nav className="account-premium-shortcuts" aria-label="Akses cepat akun">
             <a href="#/pesanan" className="account-premium-shortcut is-orders">
-              <span className="account-premium-shortcut-icon"><AccountCenterIcon name="orders" size={27} /></span>
-              <span><strong>Pesanan saya</strong><small>Lihat dan kelola riwayat pesanan Anda.</small></span>
+              <span className="account-premium-shortcut-icon">
+                <AccountCenterIcon name="orders" size={27} />
+              </span>
+              <span>
+                <strong>Pesanan saya</strong>
+                <small>Lihat dan kelola riwayat pesanan Anda.</small>
+              </span>
               <AccountCenterIcon name="chevron" />
             </a>
             <a href="#/favorit" className="account-premium-shortcut is-favorite">
-              <span className="account-premium-shortcut-icon"><AccountCenterIcon name="favorite" size={27} /></span>
-              <span><strong>Favorit</strong><small>Produk tersimpan untuk memudahkan belanja.</small></span>
+              <span className="account-premium-shortcut-icon">
+                <AccountCenterIcon name="favorite" size={27} />
+              </span>
+              <span>
+                <strong>Favorit</strong>
+                <small>Produk tersimpan untuk memudahkan belanja.</small>
+              </span>
               <AccountCenterIcon name="chevron" />
             </a>
-            <button type="button" className="account-premium-shortcut is-calendar"
-              onClick={() => selectTab('calendar', true)}>
-              <span className="account-premium-shortcut-icon"><AccountCenterIcon name="calendar" size={27} /></span>
-              <span><strong>Kalender pengiriman</strong><small>Lihat informasi jadwal pengiriman.</small></span>
+            <button
+              type="button"
+              className="account-premium-shortcut is-calendar"
+              onClick={() => selectTab('calendar', true)}
+            >
+              <span className="account-premium-shortcut-icon">
+                <AccountCenterIcon name="calendar" size={27} />
+              </span>
+              <span>
+                <strong>Kalender pengiriman</strong>
+                <small>Lihat informasi jadwal pengiriman.</small>
+              </span>
               <AccountCenterIcon name="chevron" />
             </button>
           </nav>

@@ -1,0 +1,165 @@
+.account-delivery-calendar {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.account-delivery-calendar > p {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.delivery-calendars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 20px;
+}
+.delivery-schedule-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.delivery-schedule-card header {
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+.delivery-schedule-card header > span {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+.delivery-schedule-card h3 {
+  margin: 6px 0;
+}
+.delivery-schedule-card p {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+.delivery-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.delivery-month-nav button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+}
+.delivery-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  text-align: center;
+  font-size: 0.875rem;
+}
+.delivery-month-grid > * {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+}
+.delivery-month-grid strong {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.delivery-month-grid .is-outside {
+  opacity: 0.35;
+}
+.delivery-month-grid .is-scheduled {
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  border-radius: 8px;
+  font-weight: 700;
+}
+.delivery-month-grid [aria-current='date'] {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+.delivery-calendar-legend {
+  margin: 12px 0;
+}
+.delivery-upcoming {
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.8;
+}
+.delivery-settings {
+  margin: 24px 0;
+}
+.delivery-settings-body {
+  padding: var(--admin-panel-padding, 24px);
+  display: grid;
+  gap: 24px;
+}
+.delivery-region-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.delivery-region-form > .admin-full {
+  grid-column: 1 / -1;
+}
+.delivery-region-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.delivery-region-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.delivery-region-list li > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.delivery-region-list small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.delivery-region-accounts {
+  display: grid;
+  gap: 12px;
+}
+.delivery-region-assignment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.delivery-region-assignment > div {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.delivery-region-assignment small {
+  display: block;
+  color: var(--color-text-muted);
+}
+@media (max-width: 650px) {
+  .delivery-region-form,
+  .delivery-region-assignment {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .delivery-schedule-card {
+    padding: 16px;
+  }
+}

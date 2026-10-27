@@ -1,4 +1,5 @@
 import CommerceReadiness from './CommerceReadiness';
+import AdminDeliverySettings from './AdminDeliverySettings';
 import { useRef, useState } from 'react';
 import { workflowUsesServer } from '../data/adminStore';
 import useCompany from '../state/useCompany';
@@ -179,7 +180,7 @@ export default function AdminCompanyPage() {
       >
         <fieldset className="admin-submit-lock" disabled={busy || !company.available}>
           <div className="admin-panel-heading">
-        <AdminSectionIcon name="company" />
+            <AdminSectionIcon name="company" />
             <div>
               <h2>Identitas perusahaan</h2>
               <p>
@@ -273,56 +274,62 @@ export default function AdminCompanyPage() {
               </div>
             </div>
             {company.commerce?.codOnly === true ? (
-              <section className="company-settings-section company-settings-divider" aria-labelledby="company-payment-title">
+              <section
+                className="company-settings-section company-settings-divider"
+                aria-labelledby="company-payment-title"
+              >
                 <div className="company-section-heading">
                   <h3 id="company-payment-title">Pembayaran toko</h3>
                   <p>COD (Bayar di Tempat) adalah metode pembayaran tetap untuk pesanan baru.</p>
                 </div>
                 <div className="company-mode-note">
                   <strong>COD aktif · Ongkir gratis</strong>
-                  <p>Harga pesanan final saat checkout. Pembeli membayar saat barang diterima, tanpa transfer bank atau persetujuan total tambahan.</p>
+                  <p>
+                    Harga pesanan final saat checkout. Pembeli membayar saat barang diterima, tanpa
+                    transfer bank atau persetujuan total tambahan.
+                  </p>
                 </div>
               </section>
             ) : (
-            <section
-              className="company-settings-section company-settings-divider"
-              aria-labelledby="company-payment-title"
-            >
-              <div className="company-section-heading">
-                <h3 id="company-payment-title">Pembayaran toko</h3>
-                <p>Pilih cara pembayaran yang tersedia untuk pelanggan.</p>
-              </div>
-              <div className="company-payment-layout">
-                <label className="company-toggle" htmlFor="company-codEnabled">
-                  <input
-                    id="company-codEnabled"
-                    type="checkbox"
-                    checked={draft.codEnabled !== false}
-                    onChange={(event) => update('codEnabled', event.target.checked)}
-                    aria-describedby="company-cod-help"
-                  />
-                  <span className="company-toggle-copy">
-                    <strong>Aktifkan COD</strong>
-                    <span id="company-cod-help">Pelanggan membayar saat pesanan diterima.</span>
-                  </span>
-                </label>
-                <div className="company-bank-settings">
-                  <div className="company-bank-heading">
-                    <h4>Transfer bank</h4>
-                    <p>
-                      Lengkapi nama bank, nomor rekening, dan pemilik rekening untuk mengaktifkan
-                      transfer. Rekening ditampilkan setelah penawaran disetujui toko.
-                    </p>
-                  </div>
-                  <div className="admin-form-grid">
-                    {field('bankName', 'Nama bank tujuan', 80)}
-                    {field('bankAccount', 'Nomor rekening', 40)}
-                    {field('bankHolder', 'Nama pemilik rekening', 100, false, true)}
-                    {field('bankInstructions', 'Petunjuk transfer', 500, true)}
+              <section
+                className="company-settings-section company-settings-divider"
+                aria-labelledby="company-payment-title"
+              >
+                <div className="company-section-heading">
+                  <h3 id="company-payment-title">Pembayaran toko</h3>
+                  <p>Pilih cara pembayaran yang tersedia untuk pelanggan.</p>
+                </div>
+                <div className="company-payment-layout">
+                  <label className="company-toggle" htmlFor="company-codEnabled">
+                    <input
+                      id="company-codEnabled"
+                      type="checkbox"
+                      checked={draft.codEnabled !== false}
+                      onChange={(event) => update('codEnabled', event.target.checked)}
+                      aria-describedby="company-cod-help"
+                    />
+                    <span className="company-toggle-copy">
+                      <strong>Aktifkan COD</strong>
+                      <span id="company-cod-help">Pelanggan membayar saat pesanan diterima.</span>
+                    </span>
+                  </label>
+                  <div className="company-bank-settings">
+                    <div className="company-bank-heading">
+                      <h4>Transfer bank</h4>
+                      <p>
+                        Lengkapi nama bank, nomor rekening, dan pemilik rekening untuk mengaktifkan
+                        transfer. Rekening ditampilkan setelah penawaran disetujui toko.
+                      </p>
+                    </div>
+                    <div className="admin-form-grid">
+                      {field('bankName', 'Nama bank tujuan', 80)}
+                      {field('bankAccount', 'Nomor rekening', 40)}
+                      {field('bankHolder', 'Nama pemilik rekening', 100, false, true)}
+                      {field('bankInstructions', 'Petunjuk transfer', 500, true)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
             )}
             <section
               className="company-settings-section company-settings-divider"
@@ -388,6 +395,7 @@ export default function AdminCompanyPage() {
           </div>
         </fieldset>
       </form>
+      {company.available && <AdminDeliverySettings />}
     </section>
   );
 }

@@ -269,13 +269,37 @@ export class CatalogRepository {
           id TEXT PRIMARY KEY COLLATE NOCASE, product_id TEXT REFERENCES catalog_products(id),
           size_value REAL NOT NULL, size_unit TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>0),
           old_price INTEGER NOT NULL CHECK(old_price>=0), position INTEGER NOT NULL,
-          packaging_type TEXT NOT NULL CHECK(packaging_type IN ('satuan','pack','dus')),
+          packaging_type TEXT NOT NULL CHECK(packaging_type IN ('satuan','pack','box','dus','renceng')),
           units_per_package INTEGER NOT NULL CHECK(units_per_package BETWEEN 1 AND 1000000 AND (packaging_type!='satuan' OR units_per_package=1) AND (packaging_type='satuan' OR units_per_package>=2)),
           packs_per_box INTEGER NOT NULL CHECK(packs_per_box>=0 AND (packs_per_box=0 OR (packaging_type='dus' AND packs_per_box>=2 AND units_per_package%packs_per_box=0 AND units_per_package/packs_per_box>=2))),
           UNIQUE(product_id,size_value,size_unit,packaging_type,units_per_package));
           INSERT INTO catalog_variants_packaging SELECT id,product_id,size_value,size_unit,price,old_price,position,'satuan',1,0 FROM catalog_variants;
           DROP TABLE catalog_variants;
           ALTER TABLE catalog_variants_packaging RENAME TO catalog_variants;`);
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
+    }
+    // Upgrade existing packaging catalogs without rewriting SKUs, photos, prices or stock.
+    const variantSchema = db
+      .prepare("SELECT sql FROM sqlite_master WHERE name='catalog_variants'")
+      .get().sql;
+    if (!variantSchema.includes("'renceng'")) {
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        db.exec(`CREATE TABLE catalog_variants_extended (
+          id TEXT PRIMARY KEY COLLATE NOCASE, product_id TEXT REFERENCES catalog_products(id),
+          size_value REAL NOT NULL, size_unit TEXT NOT NULL, price INTEGER NOT NULL CHECK(price>0),
+          old_price INTEGER NOT NULL CHECK(old_price>=0), position INTEGER NOT NULL,
+          packaging_type TEXT NOT NULL CHECK(packaging_type IN ('satuan','pack','box','dus','renceng')),
+          units_per_package INTEGER NOT NULL CHECK(units_per_package BETWEEN 1 AND 1000000 AND (packaging_type!='satuan' OR units_per_package=1) AND (packaging_type='satuan' OR units_per_package>=2)),
+          packs_per_box INTEGER NOT NULL CHECK(packs_per_box>=0 AND (packs_per_box=0 OR (packaging_type='dus' AND packs_per_box>=2 AND units_per_package%packs_per_box=0 AND units_per_package/packs_per_box>=2))),
+          UNIQUE(product_id,size_value,size_unit,packaging_type,units_per_package));
+          INSERT INTO catalog_variants_extended SELECT * FROM catalog_variants;
+          DROP TABLE catalog_variants;
+          ALTER TABLE catalog_variants_extended RENAME TO catalog_variants;`);
         db.exec('COMMIT');
       } catch (error) {
         db.exec('ROLLBACK');

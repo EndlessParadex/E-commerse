@@ -1,7 +1,9 @@
 export const packagingTypes = [
   { id: 'satuan', name: 'Satuan' },
   { id: 'pack', name: 'Pack' },
+  { id: 'box', name: 'Box' },
   { id: 'dus', name: 'Dus' },
+  { id: 'renceng', name: 'Renceng' },
 ];
 
 // Missing fields belong to the catalog before packaging variants were introduced.
@@ -16,7 +18,7 @@ export function packagingErrors(variant) {
   const value = packagingValues(variant);
   const errors = {};
   if (!packagingTypes.some((entry) => entry.id === value.packagingType))
-    errors.packagingType = 'Pilih Satuan, Pack, atau Dus.';
+    errors.packagingType = 'Pilih Satuan, Pack, Box, Dus, atau Renceng.';
   if (
     !Number.isSafeInteger(value.unitsPerPackage) ||
     value.unitsPerPackage > 1000000 ||

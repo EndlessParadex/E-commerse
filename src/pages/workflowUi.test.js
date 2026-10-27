@@ -164,8 +164,10 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await fill('#stock-satuan', value);
   };
   const stockAmountText = () =>
-    (stockCard().querySelector('.workflow-stock-amount') ||
-      stockCard().querySelector('.workflow-stock-compact-total')).textContent;
+    (
+      stockCard().querySelector('.workflow-stock-amount') ||
+      stockCard().querySelector('.workflow-stock-compact-total')
+    ).textContent;
   const setStock = async (value) => {
     await navigate('/admin/stok');
     await click(stockCard().querySelector('button'));
@@ -202,7 +204,10 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await click(button('Coba lagi'));
     await waitForAdmin(container, act);
     assert.ok(stockCard());
-    assert.match(stockCard().querySelector('.workflow-stock-compact-total').textContent, /120 satuan/);
+    assert.match(
+      stockCard().querySelector('.workflow-stock-compact-total').textContent,
+      /120 satuan/,
+    );
     await click(container.querySelector('input[name="stock-layout"][value="full"]'));
     assert.equal(stockCard().querySelector('.workflow-stock-photo img').src, stockPhoto);
     const packagingRow = (sku) =>
@@ -275,15 +280,17 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await click(stockCard().querySelector('button'));
     const stockDialog = container.querySelector('dialog.workflow-stock-dialog[open]');
     assert.ok(stockDialog, 'stok diedit melalui pop-up tanpa memanjangkan daftar');
-    assert.ok(stockDialog.querySelector('#stock-satuan'),
-      'isian satuan berada di dalam pop-up');
+    assert.ok(stockDialog.querySelector('#stock-satuan'), 'isian satuan berada di dalam pop-up');
     assert.equal(
       stockDialog.querySelector('.workflow-stock-dialog-product .workflow-stock-photo img').src,
       stockPhoto,
       'foto produk yang diedit tetap ditampilkan di header pop-up',
     );
-    assert.equal(stockCard().querySelector('.workflow-stock-package-editor'), null,
-      'daftar stok tidak memuat form di dalam kartu produk');
+    assert.equal(
+      stockCard().querySelector('.workflow-stock-package-editor'),
+      null,
+      'daftar stok tidak memuat form di dalam kartu produk',
+    );
     await fillStockUnits('10');
     await click(button('Simpan stok'));
     assert.equal(
@@ -449,6 +456,12 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     await navigate('/tidak-ada');
     assert.match(container.querySelector('h1').textContent, /Halaman tidak ditemukan/);
     await navigate('/akun');
+    for (
+      let attempt = 0;
+      !container.querySelector('#account-tab-address') && attempt < 100;
+      attempt++
+    )
+      await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
     await click(container.querySelector('#account-tab-address'));
     await fill('#account-name', 'Nama baru');
     await fill('#account-address', 'Alamat baru untuk pengujian');

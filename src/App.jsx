@@ -10,18 +10,18 @@ import ShopProvider from './state/ShopProvider';
 import WorkflowProvider from './state/WorkflowProvider';
 import ShopPage from './components/shop/ShopPage';
 import { SharedCartBar } from './components/shop/SharedCartPage';
-import AuthPage from './components/account/AuthPage';
+const AuthPage = lazy(() => import('./components/account/AuthPage'));
 import DeliveryProvider from './state/DeliveryProvider';
 import AppearanceProvider from './state/AppearanceProvider';
 import ProductDetailPage from './components/shop/ProductDetailPage';
-import FavoritesPage from './pages/FavoritesPage';
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
 import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
-import AccountPage from './pages/AccountPage';
+const AccountPage = lazy(() => import('./pages/AccountPage'));
 import OrdersPage from './pages/OrdersPage';
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const CustomerDirectoryPage = lazy(() => import('./pages/CustomerDirectoryPage'));
-import AccountRecoveryPage from './pages/AccountRecoveryPage';
+const AccountRecoveryPage = lazy(() => import('./pages/AccountRecoveryPage'));
 import { subscribeCatalog, catalogRevision, initializeCatalog } from './data/adminStore';
 import AdminAccess from './components/account/AdminAccess';
 import StoreFooter from './components/layout/StoreFooter';
@@ -178,62 +178,74 @@ function App() {
               Lewati ke isi halaman
             </a>
             <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
-              {isAdmin ? (
-                <Suspense fallback={<div role="status">Memuat ruang admin…</div>}>
-                  <AdminAccess>
-                    <AdminPage view={adminView} />
-                  </AdminAccess>
-                </Suspense>
-              ) : route === '/pelanggan' ? (
-                <Suspense
-                  fallback={
-                    <div className="shop-page" role="status">
-                      Memuat daftar pembeli…
-                    </div>
-                  }
-                >
-                  <CustomerDirectoryPage />
-                </Suspense>
-              ) : recoveryMatch ? (
-                <AccountRecoveryPage mode={recoveryMatch[1]} route={route} key={recoveryMatch[1]} />
-              ) : infoPage ? (
-                <StoreInfoPage page={infoPage} />
-              ) : route === '/pesanan' ? (
-                <OrdersPage />
-              ) : route === '/keranjang' ? (
-                <ShopPage type="cart" />
-              ) : route === '/checkout' ? (
-                <CheckoutPage />
-              ) : route === '/notifikasi' ? (
-                <ShopPage type="notifications" />
-              ) : route === '/favorit' ? (
-                <FavoritesPage />
-              ) : route === '/akun' ? (
-                <AccountPage />
-              ) : route === '/login' ? (
-                <AuthPage key="login" mode="login" />
-              ) : route === '/daftar' ? (
-                <AuthPage key="register" mode="register" />
-              ) : paymentMatch ? (
-                <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} />
-              ) : orderMatch ? (
-                <OrderConfirmationPage orderId={decodeId(orderMatch[1])} key={orderMatch[1]} />
-              ) : productMatch ? (
-                <ProductDetailPage
-                  productId={decodeId(productMatch[1])}
-                  returnTo={productReturnTo}
-                  key={productMatch[1]}
-                />
-              ) : catalog && catalog.kind !== 'invalid' ? (
-                <Home key={catalogNavigationKey(route)} catalog={catalog} />
-              ) : route === '/' ? (
-                <Home />
-              ) : (
-                <div className="shop-page">
-                  <h1>Halaman tidak ditemukan</h1>
-                  <a href="#/">Kembali ke beranda</a>
-                </div>
-              )}
+              <Suspense
+                fallback={
+                  <div className="shop-page" role="status">
+                    Memuat halaman…
+                  </div>
+                }
+              >
+                {isAdmin ? (
+                  <Suspense fallback={<div role="status">Memuat ruang admin…</div>}>
+                    <AdminAccess>
+                      <AdminPage view={adminView} />
+                    </AdminAccess>
+                  </Suspense>
+                ) : route === '/pelanggan' ? (
+                  <Suspense
+                    fallback={
+                      <div className="shop-page" role="status">
+                        Memuat daftar pembeli…
+                      </div>
+                    }
+                  >
+                    <CustomerDirectoryPage />
+                  </Suspense>
+                ) : recoveryMatch ? (
+                  <AccountRecoveryPage
+                    mode={recoveryMatch[1]}
+                    route={route}
+                    key={recoveryMatch[1]}
+                  />
+                ) : infoPage ? (
+                  <StoreInfoPage page={infoPage} />
+                ) : route === '/pesanan' ? (
+                  <OrdersPage />
+                ) : route === '/keranjang' ? (
+                  <ShopPage type="cart" />
+                ) : route === '/checkout' ? (
+                  <CheckoutPage />
+                ) : route === '/notifikasi' ? (
+                  <ShopPage type="notifications" />
+                ) : route === '/favorit' ? (
+                  <FavoritesPage />
+                ) : route === '/akun' ? (
+                  <AccountPage />
+                ) : route === '/login' ? (
+                  <AuthPage key="login" mode="login" />
+                ) : route === '/daftar' ? (
+                  <AuthPage key="register" mode="register" />
+                ) : paymentMatch ? (
+                  <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} />
+                ) : orderMatch ? (
+                  <OrderConfirmationPage orderId={decodeId(orderMatch[1])} key={orderMatch[1]} />
+                ) : productMatch ? (
+                  <ProductDetailPage
+                    productId={decodeId(productMatch[1])}
+                    returnTo={productReturnTo}
+                    key={productMatch[1]}
+                  />
+                ) : catalog && catalog.kind !== 'invalid' ? (
+                  <Home key={catalogNavigationKey(route)} catalog={catalog} />
+                ) : route === '/' ? (
+                  <Home />
+                ) : (
+                  <div className="shop-page">
+                    <h1>Halaman tidak ditemukan</h1>
+                    <a href="#/">Kembali ke beranda</a>
+                  </div>
+                )}
+              </Suspense>
             </main>
             {!isAdmin && <StoreFooter />}
           </AppearanceProvider>

@@ -1,6 +1,7 @@
 import useCompany from '../state/useCompany';
 import { useEffect, useRef, useState } from 'react';
 import PackagingSummary from '../components/shop/PackagingSummary';
+import DeliveryPlan from '../components/account/DeliveryPlan';
 import { cartItemPresentation } from '../data/cartItemPresentation';
 import { validateDelivery } from '../state/deliveryModel';
 import { useDelivery } from '../state/useDelivery';
@@ -267,6 +268,7 @@ export default function CheckoutPage() {
         </div>
       </header>
       <CartReview />
+      {live && <DeliveryPlan key={user?.id} />}
       <form
         id="checkout-form"
         className="checkout-layout"

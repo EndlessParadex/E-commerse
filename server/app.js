@@ -33,6 +33,7 @@ import { PhoneVerificationRepository } from './phoneVerification.js';
 import { PhoneLoginDirectory } from './phoneLoginDirectory.js';
 import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { createWhatsAppOtpSender } from './whatsappOtp.js';
+import { DeliveryScheduleRepository } from './deliverySchedules.js';
 
 const scrypt = promisify(scryptCallback);
 const digest = (token) => createHash('sha256').update(token).digest('hex');
@@ -77,16 +78,18 @@ export function readBody(req, limit = 100000) {
 function authFields(body, registration) {
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
   // Older login clients still submit "email"; new clients submit "identifier".
-  const rawLogin = typeof body?.identifier === 'string' ? body.identifier.trim()
-    : typeof body?.email === 'string' ? body.email.trim() : '';
-  const email = (registration
-    ? typeof body?.email === 'string' ? body.email.trim() : ''
-    : rawLogin).toLowerCase();
+  const rawLogin =
+    typeof body?.identifier === 'string'
+      ? body.identifier.trim()
+      : typeof body?.email === 'string'
+        ? body.email.trim()
+        : '';
+  const email = (
+    registration ? (typeof body?.email === 'string' ? body.email.trim() : '') : rawLogin
+  ).toLowerCase();
   const address = typeof body?.address === 'string' ? body.address.trim() : '';
   const password = typeof body?.password === 'string' ? body.password : '';
-  const phone = registration
-    ? normalizeWhatsApp(body?.phone)
-    : normalizeWhatsApp(rawLogin);
+  const phone = registration ? normalizeWhatsApp(body?.phone) : normalizeWhatsApp(rawLogin);
   const loginKey = phone || email;
   const errors = {};
   if (registration && (name.length < 2 || name.length > 100))
@@ -120,7 +123,8 @@ export function createApp({
   dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite',
   appOrigin = process.env.BAM_APP_ORIGIN || '',
   secureCookies = process.env.NODE_ENV === 'production' ||
-    process.env.BAM_SECURE_COOKIES === 'true' || /^https:\/\//i.test(appOrigin),
+    process.env.BAM_SECURE_COOKIES === 'true' ||
+    /^https:\/\//i.test(appOrigin),
   installMode = process.env.BAM_INSTALL_MODE || 'demo',
   now = () => Date.now(),
   reservationPolicy = reservationPolicyFromEnv(),
@@ -229,6 +233,8 @@ export function createApp({
   installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
   const accounts = new AccountRepository(db, now);
   const b2bStores = new B2BStoreRepository(db, now);
+  const deliverySchedules = new DeliveryScheduleRepository(db, b2bStores, now);
+  workflow.deliverySnapshot = (user) => deliverySchedules.snapshot(user);
   const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now, b2bCutoff);
   const b2bFinalization = new B2BFinalizationRepository(db, sharedCarts, workflow, messages);
   let site = createSite(catalog, company, {
@@ -396,6 +402,27 @@ export function createApp({
       const sharedCartMatch = path.match(
         /^\/api\/b2b\/stores\/([^/]+)\/(cart|carts|cart\/events)$/,
       );
+      if (
+        ['/api/delivery/calendar', '/api/delivery/personal'].includes(path) ||
+        path.startsWith('/api/admin/delivery/')
+      ) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        const params = new URL(req.url, 'http://bam.local').searchParams;
+        if (req.method === 'GET' && path === '/api/delivery/calendar')
+          return json(res, 200, deliverySchedules.calendar(actor, params));
+        if (req.method === 'GET' && path === '/api/delivery/personal')
+          return json(res, 200, { delivery: deliverySchedules.snapshot(actor) });
+        if (req.method === 'GET' && path === '/api/admin/delivery/regions')
+          return json(res, 200, deliverySchedules.regions(actor));
+        if (req.method === 'POST' && path === '/api/admin/delivery/regions')
+          return json(res, 200, deliverySchedules.saveRegion(actor, await readBody(req)));
+        if (req.method === 'GET' && path === '/api/admin/delivery/accounts')
+          return json(res, 200, deliverySchedules.accounts(actor, params));
+        if (req.method === 'POST' && path === '/api/admin/delivery/assignment')
+          return json(res, 200, deliverySchedules.assign(actor, await readBody(req)));
+        return sendError(res, 404, 'not_found');
+      }
       if (path === '/api/b2b/cart-context' || sharedCartMatch) {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
@@ -421,8 +448,7 @@ export function createApp({
       if (path === '/api/admin/b2b/banks') {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
-        if (req.method === 'GET')
-          return json(res, 200, b2bFinalization.banks(actor));
+        if (req.method === 'GET') return json(res, 200, b2bFinalization.banks(actor));
         if (req.method === 'PUT') {
           b2bStores.requireOwner(actor);
           const body = await readBody(req, 12000);
@@ -493,9 +519,13 @@ export function createApp({
           });
         const ownerMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/owner$/);
         if (ownerMatch && req.method === 'PUT')
-          return json(res, 200, { store: b2bStores.setOwner(
-            actor, decodeURIComponent(ownerMatch[1]), await readBody(req),
-          ) });
+          return json(res, 200, {
+            store: b2bStores.setOwner(
+              actor,
+              decodeURIComponent(ownerMatch[1]),
+              await readBody(req),
+            ),
+          });
         const deliveryScheduleMatch = path.match(/^\/api\/b2b\/stores\/([^/]+)\/schedule$/);
         if (deliveryScheduleMatch && req.method === 'POST') {
           const updated = b2bStores.setSchedule(
@@ -511,7 +541,11 @@ export function createApp({
           b2bStores.requireOwner(actor);
           const body = await readBody(req);
           if (!body?.deliverySchedule)
-            throw new CatalogError('Hari, frekuensi, dan tanggal acuan pengiriman wajib diisi.', 422, 'schedule_required');
+            throw new CatalogError(
+              'Hari, frekuensi, dan tanggal acuan pengiriman wajib diisi.',
+              422,
+              'schedule_required',
+            );
           return json(res, 201, { store: b2bStores.create(actor, body) });
         }
         if (req.method === 'POST' && path === '/api/b2b/sales/appoint')
@@ -623,6 +657,8 @@ export function createApp({
         if (path === '/api/admin/readiness' && req.method === 'GET')
           return json(res, 200, {
             emailReady: identity.ready,
+            whatsappConfigured: phoneVerification.ready,
+            deliveryCutoffConfigured: b2bCutoff != null,
             canManageEmail: isStoreOwner(db, user),
             verificationRequired: true,
             codOnly: !legacyCommerceFixture,
@@ -997,6 +1033,7 @@ export function createApp({
     emailSettings,
     accounts,
     b2bStores,
+    deliverySchedules,
     sharedCarts,
     b2bFinalization,
     refreshMailSettings,

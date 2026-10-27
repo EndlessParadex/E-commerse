@@ -23,7 +23,11 @@ import { savedProductPhotos } from '../data/productPhotos';
 import { productColorStyle } from '../data/catalogColors';
 import { stockBreakdown } from '../data/stockPresentation';
 import {
-  stockEditorTypes, stockEditorFactors, stockEditorCounts, stockEditorEmpty, previewStockEditor,
+  stockEditorTypes,
+  stockEditorFactors,
+  stockEditorCounts,
+  stockEditorEmpty,
+  previewStockEditor,
 } from '../data/stockEditorModel';
 import StockPackageEditor from '../components/shop/StockPackageEditor';
 import '../styles/workflow.css';
@@ -84,16 +88,19 @@ function StockPackagingRow({ variant, available }) {
 
 function StockOverview({ available, variants, compact = false }) {
   const breakdown = stockBreakdown(available, variants);
-  const summary = breakdown.items
-    .filter((item) => item.quantity > 0)
-    .map((item) => `${item.quantity.toLocaleString('id-ID')} ${item.name.toLowerCase()}`)
-    .join(' + ') || 'Stok kosong';
+  const summary =
+    breakdown.items
+      .filter((item) => item.quantity > 0)
+      .map((item) => `${item.quantity.toLocaleString('id-ID')} ${item.name.toLowerCase()}`)
+      .join(' + ') || 'Stok kosong';
   return (
     <section className="workflow-stock-overview" aria-label="Ringkasan pembagian stok">
       {compact ? (
         <div className="workflow-stock-compact-total">
           <span>Total stok</span>
-          <strong>{available.toLocaleString('id-ID')} <small>satuan</small></strong>
+          <strong>
+            {available.toLocaleString('id-ID')} <small>satuan</small>
+          </strong>
           <p>{summary}</p>
         </div>
       ) : (
@@ -107,7 +114,9 @@ function StockOverview({ available, variants, compact = false }) {
           <dl className="workflow-stock-summary">
             {breakdown.items.map((item) => (
               <div
-                className={'workflow-stock-stat' + (!item.unitsPerPackage ? ' is-unconfigured' : '')}
+                className={
+                  'workflow-stock-stat' + (!item.unitsPerPackage ? ' is-unconfigured' : '')
+                }
                 data-packaging={item.type}
                 key={item.type}
               >
@@ -125,7 +134,9 @@ function StockOverview({ available, variants, compact = false }) {
               </div>
             ))}
           </dl>
-          <p className="workflow-stock-hint">Total stok dibagi ke dus, pack, lalu satuan lepas.</p>
+          <p className="workflow-stock-hint">
+            Total stok dibagi menurut isi kemasan yang terdaftar, dari terbesar ke satuan lepas.
+          </p>
         </>
       )}
     </section>
@@ -133,16 +144,30 @@ function StockOverview({ available, variants, compact = false }) {
 }
 // Local dialog state avoids re-rendering every inventory card on each keystroke.
 function StockEditorSession({
-  target, busy, stockFailed, server, inputRef, error,
-  onSave, onCancel, onReload, onDirtyChange, onFocusError,
+  target,
+  busy,
+  stockFailed,
+  server,
+  inputRef,
+  error,
+  onSave,
+  onCancel,
+  onReload,
+  onDirtyChange,
+  onFocusError,
 }) {
   const [mode, setMode] = useState('replace');
-  const [quantities, setQuantities] = useState(() => stockEditorCounts(target.available, target.variants));
+  const [quantities, setQuantities] = useState(() =>
+    stockEditorCounts(target.available, target.variants),
+  );
   const [inputError, setInputError] = useState('');
   const factors = stockEditorFactors(target.variants);
   const initial = stockEditorCounts(target.available, target.variants);
   const preview = previewStockEditor({
-    mode, counts: quantities, available: target.available, factors,
+    mode,
+    counts: quantities,
+    available: target.available,
+    factors,
   });
   const changeMode = (value) => {
     setMode(value);
@@ -153,8 +178,9 @@ function StockEditorSession({
   const changeQuantity = (id, value) => {
     const next = { ...quantities, [id]: value };
     setQuantities(next);
-    onDirtyChange(mode !== 'replace' ||
-      stockEditorTypes.some((item) => next[item.id] !== initial[item.id]));
+    onDirtyChange(
+      mode !== 'replace' || stockEditorTypes.some((item) => next[item.id] !== initial[item.id]),
+    );
     setInputError('');
   };
   const submit = (event) => {
@@ -168,11 +194,21 @@ function StockEditorSession({
   };
   return (
     <StockPackageEditor
-      target={target} busy={busy} stockFailed={stockFailed} server={server}
-      mode={mode} quantities={quantities} factors={factors} preview={preview}
-      error={inputError || error} inputRef={inputRef} onSave={submit}
-      onCancel={onCancel} onReload={onReload}
-      onModeChange={changeMode} onQuantityChange={changeQuantity}
+      target={target}
+      busy={busy}
+      stockFailed={stockFailed}
+      server={server}
+      mode={mode}
+      quantities={quantities}
+      factors={factors}
+      preview={preview}
+      error={inputError || error}
+      inputRef={inputRef}
+      onSave={submit}
+      onCancel={onCancel}
+      onReload={onReload}
+      onModeChange={changeMode}
+      onQuantityChange={changeQuantity}
     />
   );
 }
@@ -339,9 +375,17 @@ export default function AdminStockPage() {
   const editor = () => (
     <StockEditorSession
       key={target.key + ':' + target.revision}
-      target={target} busy={busy} stockFailed={stockFailed} server={server}
-      error={error} inputRef={inputRef} onSave={save} onCancel={cancel}
-      onReload={reloadTarget} onDirtyChange={setDirty} onFocusError={focusEditor}
+      target={target}
+      busy={busy}
+      stockFailed={stockFailed}
+      server={server}
+      error={error}
+      inputRef={inputRef}
+      onSave={save}
+      onCancel={cancel}
+      onReload={reloadTarget}
+      onDirtyChange={setDirty}
+      onFocusError={focusEditor}
     />
   );
   return (
@@ -516,8 +560,11 @@ export default function AdminStockPage() {
                     {row.available ? (row.available <= 12 ? 'Menipis' : 'Tersedia') : 'Habis'}
                   </span>
                 </header>
-                <StockOverview available={row.available} variants={row.variants}
-                  compact={layout === 'compact'} />
+                <StockOverview
+                  available={row.available}
+                  variants={row.variants}
+                  compact={layout === 'compact'}
+                />
                 <footer className="workflow-stock-footer">
                   <button
                     id={'stock-edit-' + encodeURIComponent(row.key)}
@@ -577,8 +624,15 @@ export default function AdminStockPage() {
           <div className="workflow-stock-dialog-content">
             <header className="workflow-stock-dialog-header">
               <h2 id="stock-dialog-title">Ubah Stok Produk</h2>
-              <button type="button" className="workflow-stock-dialog-close"
-                aria-label="Tutup pop-up ubah stok" disabled={busy} onClick={cancel}>×</button>
+              <button
+                type="button"
+                className="workflow-stock-dialog-close"
+                aria-label="Tutup pop-up ubah stok"
+                disabled={busy}
+                onClick={cancel}
+              >
+                ×
+              </button>
             </header>
             <div className="workflow-stock-dialog-product" id="stock-dialog-description">
               <StockProductIdentity product={target.product} variants={target.variants} />
@@ -592,8 +646,14 @@ export default function AdminStockPage() {
                 <div className="workflow-stock-recovery" role="status">
                   <p>Isian perubahan tetap tersedia. Muat stok terbaru sebelum menyimpan.</p>
                   {server && (
-                    <button type="button" className="admin-secondary" disabled={busy}
-                      onClick={reloadTarget}>Muat stok terbaru</button>
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={busy}
+                      onClick={reloadTarget}
+                    >
+                      Muat stok terbaru
+                    </button>
                   )}
                 </div>
               )}

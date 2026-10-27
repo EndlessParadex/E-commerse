@@ -211,22 +211,34 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Pembeli Website');
     const accountCenter = container.querySelector('.account-premium');
     assert.ok(accountCenter, 'Premium Account Center is visible for signed-in accounts');
-    assert.match(accountCenter.querySelector('.account-premium-hero').textContent,
-      /Halo, Pembeli Website/);
-    assert.equal(accountCenter.querySelector('.account-tabs').getAttribute('aria-orientation'),
-      'vertical');
-    assert.equal(accountCenter.querySelectorAll('.account-menu a[href="#/admin"]').length, 0,
-      'buyer cannot see the Admin route');
+    assert.match(
+      accountCenter.querySelector('.account-premium-hero').textContent,
+      /Halo, Pembeli Website/,
+    );
+    assert.equal(
+      accountCenter.querySelector('.account-tabs').getAttribute('aria-orientation'),
+      'vertical',
+    );
+    assert.equal(
+      accountCenter.querySelectorAll('.account-menu a[href="#/admin"]').length,
+      0,
+      'buyer cannot see the Admin route',
+    );
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
-    assert.equal(container.querySelectorAll('.account-premium-shortcuts .account-premium-shortcut').length, 3,
-      'Quick links are rendered after the account workspace, at full page width');
+    assert.equal(
+      container.querySelectorAll('.account-premium-shortcuts .account-premium-shortcut').length,
+      3,
+      'Quick links are rendered after the account workspace, at full page width',
+    );
     await act(async () => {
       container.querySelector('#account-tab-calendar').click();
       await settle();
     });
-    assert.match(container.querySelector('#account-panel-calendar').textContent,
-      /Tidak ada tanggal perkiraan yang dibuat otomatis/);
+    assert.match(
+      container.querySelector('#account-panel-calendar').textContent,
+      /Jadwal rutin mengikuti data toko atau wilayah dari server/,
+    );
     await act(async () => {
       container.querySelector('#account-tab-profile').click();
       await settle();
@@ -347,10 +359,16 @@ test('account website: buyer security summary, admin password settings, registra
       await settle();
     });
     await wait(() => container.querySelector('#account-tab-security'));
-    assert.ok(container.querySelector('.account-premium-hero .account-premium-role').textContent.includes('Admin'),
-      'Admin profile displays the actual account role');
-    assert.ok(container.querySelector('.account-premium .account-menu a[href="#/admin"]'),
-      'Admin retains access to the admin dashboard');
+    assert.ok(
+      container
+        .querySelector('.account-premium-hero .account-premium-role')
+        .textContent.includes('Admin'),
+      'Admin profile displays the actual account role',
+    );
+    assert.ok(
+      container.querySelector('.account-premium .account-menu a[href="#/admin"]'),
+      'Admin retains access to the admin dashboard',
+    );
     assert.equal(
       container.querySelector('#account-phone').value,
       '+6281234567890',

@@ -4,7 +4,9 @@ export const maxStockUnits = 1_000_000_000;
 export const stockEditorTypes = [
   { id: 'dus', label: 'Dus' },
   { id: 'karton', label: 'Karton' },
+  { id: 'box', label: 'Box' },
   { id: 'pack', label: 'Pack' },
+  { id: 'renceng', label: 'Renceng' },
   { id: 'satuan', label: 'Satuan' },
 ];
 
@@ -14,7 +16,9 @@ export function stockEditorFactors(variants) {
   return {
     dus: items.find((item) => item.type === 'dus')?.unitsPerPackage || 0,
     karton: 0,
+    box: items.find((item) => item.type === 'box')?.unitsPerPackage || 0,
     pack: items.find((item) => item.type === 'pack')?.unitsPerPackage || 0,
+    renceng: items.find((item) => item.type === 'renceng')?.unitsPerPackage || 0,
     satuan: 1,
   };
 }
@@ -24,13 +28,15 @@ export function stockEditorCounts(available, variants) {
   return {
     dus: String(items.find((item) => item.type === 'dus')?.quantity || 0),
     karton: '0',
+    box: String(items.find((item) => item.type === 'box')?.quantity || 0),
     pack: String(items.find((item) => item.type === 'pack')?.quantity || 0),
+    renceng: String(items.find((item) => item.type === 'renceng')?.quantity || 0),
     satuan: String(items.find((item) => item.type === 'satuan')?.quantity || 0),
   };
 }
 
 export function stockEditorEmpty() {
-  return { dus: '0', karton: '0', pack: '0', satuan: '0' };
+  return { dus: '0', karton: '0', box: '0', pack: '0', renceng: '0', satuan: '0' };
 }
 
 export function previewStockEditor({ mode, counts, available, factors }) {
@@ -40,13 +46,13 @@ export function previewStockEditor({ mode, counts, available, factors }) {
     return invalid('Stok saat ini belum dapat diperiksa.');
   let units = 0;
   for (const { id, label } of stockEditorTypes) {
-    const text = counts?.[id];
+    const text = counts?.[id] ?? (['box', 'renceng'].includes(id) ? '0' : undefined);
     if (typeof text !== 'string' || !/^\d+$/.test(text))
       return invalid(`Jumlah ${label} harus bilangan bulat, minimal 0.`);
     const quantity = Number(text);
     if (!Number.isSafeInteger(quantity) || quantity > maxStockUnits)
       return invalid(`Jumlah ${label} terlalu besar.`);
-    const multiplier = factors?.[id];
+    const multiplier = factors?.[id] ?? (['box', 'renceng'].includes(id) ? 0 : undefined);
     if (!Number.isSafeInteger(multiplier) || multiplier < 0)
       return invalid('Konversi kemasan tidak valid.');
     if (!multiplier && quantity > 0)

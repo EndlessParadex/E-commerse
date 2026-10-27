@@ -177,7 +177,7 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await signIn('owner');
     await wait(() => account('buyer'));
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"][aria-current=page]'));
-    assert.ok(container.querySelector('.admin-header .b2b-admin-title-icon'),
+    assert.ok(container.querySelector('.admin-header .admin-page-title-icon'),
       'B2B store page title uses the existing Admin icon set');
     const guide = container.querySelector('.b2b-guide');
     assert.equal(guide?.querySelectorAll('.b2b-guide-step').length, 5,

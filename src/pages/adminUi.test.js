@@ -270,6 +270,11 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       'new variant creates an additional grid card');
     assert.ok(container.querySelector('#admin-variant-editor'),
       'new variant immediately opens its edit dialog');
+    assert.match(themeStyle.textContent,
+      /\.admin-shell \.admin-editor \.admin-variant-dialog\[open\]\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0;[^}]*margin:\s*auto;/,
+      'native dialog must be centered despite the global margin reset');
+    assert.match(themeStyle.textContent, /@media \(max-width: 1180px\)/,
+      'narrow desktop layouts stack preview instead of squeezing inputs');
     await fill('#variant-4-id', 'snack-pedas');
     assert.equal(container.querySelector('#variant-4-id').readOnly, false);
     await fill('#variant-4-id', 'SKU-UI-BARU');

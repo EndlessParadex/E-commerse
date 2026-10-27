@@ -646,12 +646,29 @@
   font-size: .8125rem; font-weight: 700; color: var(--color-link);
 }
 .admin-shell .admin-editor .admin-variant-dialog {
-  width: min(700px,calc(100vw - 32px)); max-width: 700px; max-height: 90dvh;
-  padding: 18px; overflow-y: auto; border: 1px solid var(--color-border);
-  border-radius: 16px; background: var(--color-surface); color: var(--color-text);
+  width: min(640px, calc(100vw - 32px));
+  max-width: 640px;
+  max-height: calc(100dvh - 40px);
+  padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text);
   box-shadow: 0 24px 80px rgb(0 0 0 / .3);
 }
-.admin-shell .admin-editor .admin-variant-dialog::backdrop { background: rgb(0 0 0 / .65); }
+/* global.css resets every margin to zero. Explicit auto margins are required
+   for native dialog centering in the top layer, including on narrow displays. */
+.admin-shell .admin-editor .admin-variant-dialog[open] {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 1000;
+}
+.admin-shell .admin-editor .admin-variant-dialog::backdrop {
+  background: rgb(0 0 0 / .48);
+}
 .admin-shell .admin-editor .admin-variant-dialog-heading {
   display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap;
   gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--color-border);
@@ -680,6 +697,18 @@
 .admin-shell .admin-editor .admin-preview-description { padding-top: 10px; overflow-wrap: anywhere; }
 @media (max-width: 1100px) {
   .admin-shell .admin-editor .admin-variant-cards { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 1180px) {
+  /* At laptop/tablet widths, prioritize usable fields over a squeezed sidebar. */
+  .admin-shell .admin-editor-grid { grid-template-columns: minmax(0,1fr); }
+  .admin-shell .admin-editor .admin-form-preview-side {
+    position: static;
+    max-height: none;
+    grid-row: 2;
+  }
+  .admin-shell .admin-editor .admin-form-preview-side .admin-preview-image {
+    width: min(100%,220px);
+  }
 }
 @media (max-width: 950px) {
   .admin-shell .admin-editor-grid { grid-template-columns: minmax(0,1fr); }

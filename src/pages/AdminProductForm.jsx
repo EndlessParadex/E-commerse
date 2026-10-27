@@ -20,9 +20,12 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
   const [photoError, setPhotoError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingVariant, setEditingVariant] = useState(null);
+  const [pendingInvalidFocus, setPendingInvalidFocus] = useState(false);
   const savePending = useRef(false);
   const heading = useRef(null);
   const form = useRef(null);
+  const variantDialog = useRef(null);
   const photoRequest = useRef(0);
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
   const category = categories.find((entry) => entry.id === draft.categoryId);
@@ -38,6 +41,36 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     };
   }, []);
   useUnsavedChanges(dirty, onNavigate, saving);
+  useEffect(() => {
+    if (editingVariant === null) return undefined;
+    const dialog = variantDialog.current;
+    if (!dialog) return undefined;
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    dialog.querySelector('input, select')?.focus();
+    return () => {
+      if (typeof dialog.close === 'function' && dialog.open) dialog.close();
+      else dialog.removeAttribute('open');
+    };
+  }, [editingVariant]);
+  useEffect(() => {
+    if (!pendingInvalidFocus) return;
+    const invalid = form.current?.querySelector('[aria-invalid="true"]');
+    invalid?.closest('details.admin-section-card')?.setAttribute('open', '');
+    invalid?.focus();
+    setPendingInvalidFocus(false);
+  }, [pendingInvalidFocus, editingVariant, errors]);
+  useEffect(() => {
+    if (photoError || errors.gallery || errors.image)
+      form.current?.querySelector('details.admin-photo-card')?.setAttribute('open', '');
+  }, [photoError, errors.gallery, errors.image]);
+  const closeVariantEditor = () => {
+    const index = editingVariant;
+    setEditingVariant(null);
+    requestAnimationFrame(() => {
+      form.current?.querySelector(`[data-variant-index="${index}"]`)?.focus();
+    });
+  };
   const update = (name, value) => {
     setDraft((current) => ({ ...current, [name]: value }));
     setErrors({});
@@ -178,11 +211,10 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     setSaving(false);
     if (result.errors) {
       setErrors(result.errors);
-      requestAnimationFrame(() => {
-        const invalid = form.current?.querySelector('[aria-invalid="true"]');
-        invalid?.closest('details.admin-variant-collapse')?.setAttribute('open', '');
-        invalid?.focus();
-      });
+      const firstVariantError = Object.keys(result.errors)
+        .find((key) => /^variants\.\d+\./.test(key));
+      if (firstVariantError) setEditingVariant(Number(firstVariantError.split('.')[1]));
+      setPendingInvalidFocus(true);
     } else if (result.storageError) setStorageError(result.storageError);
     else onSaved(result.groupId);
   };
@@ -231,6 +263,141 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       )}
     </div>
   );
+  const renderVariantFields = (variant, index) => (
+    <fieldset className="admin-variant-row">
+      <legend>Rincian varian {index + 1}</legend>
+    <div className="admin-variant-heading">
+      <span>
+        {variant.sizeValue
+          ? `${variant.sizeValue} ${variant.sizeUnit} · ${packagingLabel(variant)}`
+          : 'Varian baru'}
+      </span>
+      <button
+        type="button"
+        className="admin-text-button"
+        disabled={
+          draft.variants.length === 1 || fixedIds.has(initial.variants[index]?.id)
+        }
+        onClick={() => {
+          setDraft((current) => ({
+            ...current,
+            variants: current.variants.filter((_, row) => row !== index),
+          }));
+          setEditingVariant(null);
+          setErrors({});
+        }}
+        aria-label={`Hapus varian ${index + 1}`}
+      >
+        Hapus varian
+      </button>
+    </div>
+    <div className="admin-variant-fields">
+      {['id', 'sizeValue', 'price', 'oldPrice'].map((name) => {
+        const key = `variants.${index}.${name}`;
+        const id = `variant-${index}-${name}`;
+        return (
+          <div
+            className={'admin-field ' + (name === 'id' ? 'admin-sku' : '')}
+            key={name}
+          >
+            <label htmlFor={id}>
+              {
+                {
+                  id: 'SKU *',
+                  sizeValue: 'Ukuran per satuan *',
+                  price: 'Harga per kemasan (Rp) *',
+                  oldPrice: 'Sebelum diskon (Rp)',
+                }[name]
+              }
+            </label>
+            <input
+              id={id}
+              value={variant[name]}
+              readOnly={name === 'id' && fixedIds.has(initial.variants[index]?.id)}
+              type={name === 'id' ? 'text' : 'number'}
+              step={name === 'sizeValue' ? 'any' : '1'}
+              min={name === 'id' ? undefined : '0'}
+              maxLength={name === 'id' ? 64 : undefined}
+              onChange={(event) => updateVariant(index, name, event.target.value)}
+              aria-invalid={Boolean(errors[key])}
+              aria-describedby={errors[key] ? `${id}-error` : undefined}
+              placeholder={
+                name === 'id'
+                  ? 'Contoh: KRP-180G'
+                  : name === 'oldPrice'
+                    ? 'Opsional'
+                    : '0'
+              }
+            />
+            {errors[key] && (
+              <small className="admin-error" id={`${id}-error`}>
+                {errors[key]}
+              </small>
+            )}
+          </div>
+        );
+      })}
+      <div className="admin-field">
+        <label htmlFor={`variant-${index}-unit`}>Satuan *</label>
+        <select
+          id={`variant-${index}-unit`}
+          value={variant.sizeUnit}
+          onChange={(event) => updateVariant(index, 'sizeUnit', event.target.value)}
+        >
+          <option value="g">Gram (g)</option>
+          <option value="ml">Mililiter (ml)</option>
+          <option value="pcs">Buah (pcs)</option>
+        </select>
+      </div>
+      <div className="admin-field">
+        <label htmlFor={`variant-${index}-packagingType`}>Jenis kemasan *</label>
+        <select
+          id={`variant-${index}-packagingType`}
+          value={variant.packagingType}
+          onChange={(event) => updatePackaging(index, event.target.value)}
+          aria-invalid={Boolean(errors[`variants.${index}.packagingType`])}
+        >
+          {packagingTypes.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {variant.packagingType !== 'satuan' &&
+        packagingInput(
+          variant,
+          index,
+          'unitsPerPackage',
+          `Isi ${variant.packagingType} (jumlah satuan) *`,
+        )}
+      {variant.packagingType === 'dus' &&
+        packagingInput(variant, index, 'packsPerBox', 'Jumlah pack dalam dus', true)}
+    </div>
+    <p className="admin-form-hint">
+      {Number(variant.unitsPerPackage) > 0
+        ? packagingContents({
+            ...variant,
+            sizeLabel: variant.sizeValue
+              ? `${variant.sizeValue}${variant.sizeUnit}`
+              : '',
+          })
+        : 'Isi jumlah satuan dalam kemasan.'}{' '}
+      Harga jual berlaku untuk 1 {variant.packagingType}.
+    </p>
+    {variant.packagingType === 'dus' && (
+      <p className="admin-form-hint">
+        Isi dus adalah total satuan. Jumlah pack opsional; contoh: 24 satuan dalam 4
+        pack, masing-masing berisi 6 satuan.
+      </p>
+    )}
+    {fixedIds.has(initial.variants[index]?.id) && (
+      <p className="admin-form-hint">
+        SKU yang sudah ada dipertahankan agar tautan produk tetap tersedia.
+      </p>
+    )}
+    </fieldset>
+  );
   return (
     <form ref={form} className="admin-editor" onSubmit={submit} noValidate>
       <fieldset className="admin-submit-lock" disabled={saving}>
@@ -253,8 +420,12 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
         )}
         <div className="admin-editor-grid">
           <div className="admin-editor-sections">
-            <section className="admin-form-section">
-              <h3>01 · Informasi produk</h3>
+            <details className="admin-form-section admin-section-card admin-info-card"
+              open={!groupId}>
+              <summary className="admin-compact-section-heading">
+                <strong>01 · Informasi produk</strong>
+                <small>{draft.baseName || 'Nama belum diisi'} · {draft.brand || 'Merek belum dipilih'}</small>
+              </summary>
               <div className="admin-form-grid">
                 {field('baseName', 'Nama produk *', {
                   maxLength: 120,
@@ -315,9 +486,13 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   <small>{draft.description.length}/3.000 karakter</small>
                 </div>
               </div>
-            </section>
-            <section className="admin-form-section admin-product-photos" aria-busy={uploading}>
-              <h3>02 · Foto produk</h3>
+            </details>
+            <details className="admin-form-section admin-product-photos admin-section-card admin-photo-card"
+              aria-busy={uploading} open={Boolean(draft.gallery.length)}>
+              <summary className="admin-compact-section-heading">
+                <strong>02 · Foto produk</strong>
+                <small>{draft.gallery.length}/{MAX_PRODUCT_PHOTOS} foto · Klik untuk mengatur</small>
+              </summary>
               <p>
                 Tambahkan hingga {MAX_PRODUCT_PHOTOS} foto. JPG, PNG, atau WebP, maksimal 1 MB per
                 foto. Foto digunakan pada semua ukuran dan kemasan.
@@ -401,8 +576,8 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   Foto pertama menjadi foto utama; ubah urutan untuk mengganti foto utama.
                 </p>
               )}
-            </section>
-            <section className="admin-form-section">
+            </details>
+            <section className="admin-form-section admin-variants-section">
               <div className="admin-section-heading">
                 <div>
                   <h3>03 · Ukuran, kemasan, dan harga</h3>
@@ -416,10 +591,12 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   type="button"
                   disabled={draft.variants.length >= 20}
                   onClick={() => {
+                    const index = draft.variants.length;
                     setDraft((current) => ({
                       ...current,
                       variants: [...current.variants, emptyVariant()],
                     }));
+                    setEditingVariant(index);
                     setErrors({});
                   }}
                 >
@@ -431,149 +608,53 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   {errors.variants}
                 </p>
               )}
-              {draft.variants.map((variant, index) => (
-                <details className="admin-variant-collapse" key={index}
-                  open={index === 0 || !variant.id}>
-                  <summary className="admin-variant-summary">
-                    <strong>Varian {index + 1} · {variant.sizeValue || '…'}{variant.sizeUnit} · {packagingLabel(variant)}</strong>
-                    <span>
-                      {Number(variant.price) > 0 ? rupiah(Number(variant.price)) : 'Harga belum diisi'}
-                    </span>
-                  </summary>
-                  <fieldset className="admin-variant-row">
-                    <legend>Rincian varian {index + 1}</legend>
-                  <div className="admin-variant-heading">
-                    <span>
-                      {variant.sizeValue
-                        ? `${variant.sizeValue} ${variant.sizeUnit} · ${packagingLabel(variant)}`
-                        : 'Varian baru'}
-                    </span>
+              <ul className="admin-variant-cards" aria-label="Daftar varian produk">
+                {draft.variants.map((variant, index) => (
+                  <li key={index}>
                     <button
                       type="button"
-                      className="admin-text-button"
-                      disabled={
-                        draft.variants.length === 1 || fixedIds.has(initial.variants[index]?.id)
-                      }
-                      onClick={() => {
-                        setDraft((current) => ({
-                          ...current,
-                          variants: current.variants.filter((_, row) => row !== index),
-                        }));
-                        setErrors({});
-                      }}
-                      aria-label={`Hapus varian ${index + 1}`}
+                      className="admin-variant-card"
+                      data-variant-index={index}
+                      aria-haspopup="dialog"
+                      aria-controls={editingVariant === index ? 'admin-variant-editor' : undefined}
+                      onClick={() => setEditingVariant(index)}
                     >
-                      Hapus varian
+                      <span className="admin-variant-card-header">
+                        <strong>{variant.sizeValue || '…'}{variant.sizeUnit} · {packagingLabel(variant)}</strong>
+                        <small>Varian {index + 1}</small>
+                      </span>
+                      <span className="admin-variant-card-price">
+                        {Number(variant.price) > 0 ? rupiah(Number(variant.price)) : 'Harga belum diisi'}
+                      </span>
+                      <small className="admin-variant-card-sku">SKU: {variant.id || 'Belum diisi'}</small>
+                      <span className="admin-variant-card-edit">Edit varian</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {editingVariant !== null && draft.variants[editingVariant] && (
+                <dialog
+                  id="admin-variant-editor"
+                  ref={variantDialog}
+                  className="admin-variant-dialog"
+                  aria-labelledby="admin-variant-dialog-title"
+                  onCancel={(event) => {
+                    event.preventDefault();
+                    closeVariantEditor();
+                  }}
+                >
+                  <div className="admin-variant-dialog-heading">
+                    <div>
+                      <h3 id="admin-variant-dialog-title">Edit varian {editingVariant + 1}</h3>
+                      <p>Ubah rincian, lalu klik Selesai. Simpan produk untuk menyimpan ke database.</p>
+                    </div>
+                    <button type="button" className="admin-secondary" onClick={closeVariantEditor}>
+                      Selesai mengedit
                     </button>
                   </div>
-                  <div className="admin-variant-fields">
-                    {['id', 'sizeValue', 'price', 'oldPrice'].map((name) => {
-                      const key = `variants.${index}.${name}`;
-                      const id = `variant-${index}-${name}`;
-                      return (
-                        <div
-                          className={'admin-field ' + (name === 'id' ? 'admin-sku' : '')}
-                          key={name}
-                        >
-                          <label htmlFor={id}>
-                            {
-                              {
-                                id: 'SKU *',
-                                sizeValue: 'Ukuran per satuan *',
-                                price: 'Harga per kemasan (Rp) *',
-                                oldPrice: 'Sebelum diskon (Rp)',
-                              }[name]
-                            }
-                          </label>
-                          <input
-                            id={id}
-                            value={variant[name]}
-                            readOnly={name === 'id' && fixedIds.has(initial.variants[index]?.id)}
-                            type={name === 'id' ? 'text' : 'number'}
-                            step={name === 'sizeValue' ? 'any' : '1'}
-                            min={name === 'id' ? undefined : '0'}
-                            maxLength={name === 'id' ? 64 : undefined}
-                            onChange={(event) => updateVariant(index, name, event.target.value)}
-                            aria-invalid={Boolean(errors[key])}
-                            aria-describedby={errors[key] ? `${id}-error` : undefined}
-                            placeholder={
-                              name === 'id'
-                                ? 'Contoh: KRP-180G'
-                                : name === 'oldPrice'
-                                  ? 'Opsional'
-                                  : '0'
-                            }
-                          />
-                          {errors[key] && (
-                            <small className="admin-error" id={`${id}-error`}>
-                              {errors[key]}
-                            </small>
-                          )}
-                        </div>
-                      );
-                    })}
-                    <div className="admin-field">
-                      <label htmlFor={`variant-${index}-unit`}>Satuan *</label>
-                      <select
-                        id={`variant-${index}-unit`}
-                        value={variant.sizeUnit}
-                        onChange={(event) => updateVariant(index, 'sizeUnit', event.target.value)}
-                      >
-                        <option value="g">Gram (g)</option>
-                        <option value="ml">Mililiter (ml)</option>
-                        <option value="pcs">Buah (pcs)</option>
-                      </select>
-                    </div>
-                    <div className="admin-field">
-                      <label htmlFor={`variant-${index}-packagingType`}>Jenis kemasan *</label>
-                      <select
-                        id={`variant-${index}-packagingType`}
-                        value={variant.packagingType}
-                        onChange={(event) => updatePackaging(index, event.target.value)}
-                        aria-invalid={Boolean(errors[`variants.${index}.packagingType`])}
-                      >
-                        {packagingTypes.map((entry) => (
-                          <option key={entry.id} value={entry.id}>
-                            {entry.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {variant.packagingType !== 'satuan' &&
-                      packagingInput(
-                        variant,
-                        index,
-                        'unitsPerPackage',
-                        `Isi ${variant.packagingType} (jumlah satuan) *`,
-                      )}
-                    {variant.packagingType === 'dus' &&
-                      packagingInput(variant, index, 'packsPerBox', 'Jumlah pack dalam dus', true)}
-                  </div>
-                  <p className="admin-form-hint">
-                    {Number(variant.unitsPerPackage) > 0
-                      ? packagingContents({
-                          ...variant,
-                          sizeLabel: variant.sizeValue
-                            ? `${variant.sizeValue}${variant.sizeUnit}`
-                            : '',
-                        })
-                      : 'Isi jumlah satuan dalam kemasan.'}{' '}
-                    Harga jual berlaku untuk 1 {variant.packagingType}.
-                  </p>
-                  {variant.packagingType === 'dus' && (
-                    <p className="admin-form-hint">
-                      Isi dus adalah total satuan. Jumlah pack opsional; contoh: 24 satuan dalam 4
-                      pack, masing-masing berisi 6 satuan.
-                    </p>
-                  )}
-                  {fixedIds.has(initial.variants[index]?.id) && (
-                    <p className="admin-form-hint">
-                      SKU yang sudah ada dipertahankan agar tautan produk tetap tersedia.
-                    </p>
-                  )}
-                  </fieldset>
-                </details>
-              ))}
+                  {renderVariantFields(draft.variants[editingVariant], editingVariant)}
+                </dialog>
+              )}
               <p className="admin-form-hint">
                 Maksimal 20 varian. Harga sebelum diskon boleh dikosongkan.
               </p>

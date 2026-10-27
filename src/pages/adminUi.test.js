@@ -116,8 +116,12 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       'preview follows the compact editing sections in the desktop grid');
     assert.equal(container.querySelector('#product-description')?.getAttribute('rows'), '3',
       'description begins at three lines and can be resized');
-    assert.ok(container.querySelector('details.admin-variant-collapse'),
-      'SKU variants are shown as expandable compact rows');
+    assert.ok(container.querySelector('.admin-variant-cards .admin-variant-card'),
+      'SKU variants appear as editable cards');
+    assert.ok(container.querySelector('details.admin-info-card'),
+      'product information can expand on demand');
+    assert.ok(container.querySelector('details.admin-photo-card'),
+      'photo controls can expand on demand');
     assert.ok(container.querySelector('.admin-editor .admin-product-photos .admin-photo-controls'),
       'photo upload remains accessible in the compact photo section');
     await fill('#product-baseName', 'Isian belum disimpan');
@@ -262,11 +266,19 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       container.querySelector('button[aria-label="Edit Keripik Singkong Balado ukuran 180g"]'),
     );
     await click(button('+ Tambah varian'));
+    assert.equal(container.querySelectorAll('.admin-variant-card').length, 5,
+      'new variant creates an additional grid card');
+    assert.ok(container.querySelector('#admin-variant-editor'),
+      'new variant immediately opens its edit dialog');
     await fill('#variant-4-id', 'snack-pedas');
     assert.equal(container.querySelector('#variant-4-id').readOnly, false);
     await fill('#variant-4-id', 'SKU-UI-BARU');
     assert.equal(container.querySelector('#variant-4-id').value, 'SKU-UI-BARU');
+    await click(button('Selesai mengedit'));
+    assert.match(container.querySelectorAll('.admin-variant-card')[4].textContent, /SKU-UI-BARU/);
+    await click(container.querySelector('.admin-variant-card[data-variant-index="0"]'));
     assert.equal(container.querySelector('#variant-0-id').readOnly, true);
+    await click(button('Selesai mengedit'));
     await click(button('Batal'));
     await render('suppliers');
     const usedDelete = container.querySelector(

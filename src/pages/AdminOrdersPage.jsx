@@ -116,17 +116,14 @@ export default function AdminOrdersPage() {
           {loading ? 'Memuat…' : `${total ?? orders.length} pesanan`}
         </span>
       </div>
-      {!loading && !failed && (
-        <p className="workflow-preview">
-          Menampilkan {orders.length} dari {total ?? orders.length} pesanan
-          {query.trim() || filter !== 'all' ? ' yang sesuai filter' : ''}.
+      <details className="admin-order-help">
+        <summary>Informasi pembayaran dan pengiriman</summary>
+        <p>
+          {server
+            ? 'Pesanan tersimpan di database dan terhubung ke akun pelanggan. Pembayaran dicatat admin setelah diperiksa; layanan pembayaran dan kurir belum terhubung otomatis.'
+            : 'Simulasi di tab browser ini. Pesanan belum tersimpan ke server. Perubahan di sini langsung terlihat pada detail pesanan pembeli di tab yang sama.'}
         </p>
-      )}
-      <p className="workflow-preview">
-        {server
-          ? 'Pesanan tersimpan di database dan terhubung ke akun pelanggan. Pembayaran dicatat admin setelah diperiksa; layanan pembayaran dan kurir belum terhubung otomatis.'
-          : 'Simulasi di tab browser ini. Pesanan belum tersimpan ke server. Perubahan di sini langsung terlihat pada detail pesanan pembeli di tab yang sama.'}
-      </p>
+      </details>
       {company.commerce?.version === 31 && <CommerceReadiness />}
       <div className="workflow-filters">
         <div className="admin-field">
@@ -155,6 +152,12 @@ export default function AdminOrdersPage() {
           </select>
         </div>
       </div>
+      {!loading && !failed && (
+        <p className="admin-order-results" role="status">
+          Menampilkan {orders.length} dari {total ?? orders.length} pesanan
+          {query.trim() || filter !== 'all' ? ' yang sesuai filter' : ''}.
+        </p>
+      )}
       {notice && (
         <p className="workflow-notice" role="status">
           {notice}

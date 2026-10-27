@@ -186,6 +186,29 @@ export default function AdminPage({ view = 'overview' }) {
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
   const workflowView = view === 'orders' || view === 'stock';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
+  const ownerSettingsView = ['company', 'email', 'accounts', 'approvals'].includes(view);
+  const areaLabel = b2bView
+    ? 'Pengelolaan toko B2B'
+    : workflowView
+      ? 'Operasional pesanan & stok'
+      : ownerSettingsView
+        ? 'Pengaturan & akses'
+        : 'Pengelolaan katalog';
+  const areaDescription = {
+    company: 'Perbarui identitas perusahaan, alamat, dan pengaturan toko.',
+    email: 'Atur pengiriman email verifikasi, pemulihan akun, dan pembaruan pesanan.',
+    accounts: 'Kelola akses akun pembeli dan admin operasional.',
+    approvals: 'Periksa dan putuskan permohonan pendaftaran akun.',
+    suppliers: 'Kelola perusahaan pemasok dan relasinya dengan produk.',
+    brands: 'Kelola merek dan perusahaan pemasok yang terhubung.',
+    categories: 'Susun kategori dan subkategori katalog toko.',
+    stock: workflowUsesServer
+      ? 'Kelola stok produk yang tersimpan di database.'
+      : 'Kelola stok produk pada pratinjau frontend.',
+    orders: workflowUsesServer
+      ? 'Kelola pesanan pelanggan yang tersimpan di database.'
+      : 'Kelola pesanan pelanggan pada pratinjau frontend.',
+  };
   const pageTitle = {
     overview: 'Dashboard Admin',
     products: 'Daftar produk',
@@ -346,11 +369,7 @@ export default function AdminPage({ view = 'overview' }) {
           <div>
             <span className="admin-eyebrow">
               {companyProfile.shortName} ·{' '}
-              {b2bView
-                ? 'Pengelolaan toko B2B'
-                : ['email', 'accounts'].includes(view)
-                  ? 'Pengaturan pemilik'
-                  : 'Pengelolaan katalog'}
+              {areaLabel}
             </span>
             <h1><span className="admin-page-title-icon">
               <AdminIcon name={view === 'approvals' ? 'accounts'
@@ -361,27 +380,20 @@ export default function AdminPage({ view = 'overview' }) {
                 ? view === 'sharedCarts'
                   ? 'Kelola keranjang per toko dan periode, edit barang yang masih terbuka, lalu periksa riwayat perubahan.'
                   : 'Kelola toko pelanggan, akun pembeli, dan penugasan Sales.'
-                : view === 'accounts'
-                  ? 'Kelola akses akun pembeli dan admin operasional.'
-                  : view === 'email'
-                    ? 'Atur pengiriman email verifikasi, pemulihan akun dan pembaruan pesanan.'
-                    : workflowView
-                      ? workflowUsesServer
-                        ? 'Kelola pesanan dan persediaan yang tersimpan di database.'
-                        : 'Kelola alur pesanan dan persediaan pada pratinjau frontend.'
-                      : isProducts
-                        ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.'
-                        : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`}
+                : areaDescription[view] ||
+                  (isProducts
+                    ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.'
+                    : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`)}
             </p>
           </div>
           <span className="admin-demo-badge">
             {b2bView
               ? 'B2B · Database'
-              : ['email', 'accounts'].includes(view)
-                ? 'Akses pemilik toko'
+              : ownerSettingsView
+                ? 'Administrasi · Database'
                 : workflowView
                   ? workflowUsesServer
-                    ? 'Pesanan & stok · Database'
+                    ? 'Operasional · Database'
                     : 'Pratinjau · Simulasi'
                   : catalogUsesServer
                     ? 'Katalog · Database'
@@ -395,6 +407,10 @@ export default function AdminPage({ view = 'overview' }) {
               : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
             : view === 'accounts'
               ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
+              : view === 'approvals'
+                ? 'Tinjau pendaftaran yang menunggu persetujuan. Persetujuan akun tidak menggantikan verifikasi email.'
+              : view === 'company'
+                ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
               : view === 'email'
                 ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
                 : workflowView

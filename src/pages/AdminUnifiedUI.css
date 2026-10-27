@@ -158,3 +158,199 @@
     margin-left: auto;
   }
 }
+
+
+/* BAM Admin visual consistency pass — shared spacing, controls and hierarchy.
+   Scoped to Admin pages; storefront/shared-cart business rules are untouched. */
+.admin-shell .admin-content {
+  --admin-space-xs: 8px;
+  --admin-space-sm: 12px;
+  --admin-space-md: 16px;
+  --admin-space-lg: 20px;
+  --admin-card-radius: 14px;
+}
+.admin-shell .admin-header {
+  align-items: center;
+  gap: var(--admin-space-lg);
+  margin-bottom: var(--admin-space-md);
+}
+.admin-shell .admin-header > div { min-width: 0; }
+.admin-shell .admin-header .admin-page-title-icon { flex: 0 0 35px; }
+.admin-shell .admin-demo-badge {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: 33px;
+  max-width: 100%;
+  padding: 6px 12px;
+  line-height: 1.35;
+  text-align: center;
+}
+.admin-shell .admin-preview-notice {
+  margin: 0 0 var(--admin-space-md);
+  padding: 12px 15px;
+  line-height: 1.55;
+}
+.admin-shell .admin-page-guide {
+  margin: 0 0 var(--admin-space-lg);
+}
+.admin-shell .admin-page-guide-step {
+  min-height: 63px;
+  align-items: center;
+}
+.admin-shell .admin-page-guide-copy small { overflow-wrap: anywhere; }
+.admin-shell .admin-page-guide + :is(.admin-home-hero,.admin-panel,.admin-next,.workflow-admin-orders,.workflow-admin-stock) {
+  margin-top: 0;
+}
+.admin-shell .admin-home-hero { margin-top: 0; margin-bottom: var(--admin-space-lg); }
+.admin-shell .admin-metrics {
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+  gap: var(--admin-space-md);
+  margin-bottom: var(--admin-space-lg);
+}
+.admin-shell .admin-metric {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 151px;
+  padding: var(--admin-space-lg);
+}
+.admin-shell .admin-metric > strong { margin: 10px 0; }
+.admin-shell .admin-metric p { margin-top: auto; }
+.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) {
+  padding: var(--admin-space-md) 18px;
+  gap: var(--admin-space-sm);
+  min-height: 73px;
+}
+.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > div:not(.admin-unified-section-icon) {
+  min-width: 0;
+}
+.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions {
+  justify-content: flex-end;
+  gap: 9px;
+}
+.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > :is(.admin-result-pill,.admin-heading-actions) {
+  flex-shrink: 0;
+}
+.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) .admin-result-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 33px;
+}
+.admin-shell .admin-panel :is(.admin-field input,.admin-field select) {
+  min-height: 44px;
+}
+.admin-shell :is(.admin-panel,.admin-next) {
+  border-radius: var(--admin-card-radius);
+}
+/* Status messages should remain distinct from routine informational copy. */
+.admin-shell .admin-order-results {
+  padding: 12px 20px 0;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+.admin-shell .admin-order-help {
+  margin: 12px 20px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-soft);
+}
+.admin-shell .admin-order-help > summary {
+  cursor: pointer;
+  padding: 11px 13px;
+  color: var(--color-text-secondary);
+  font-size: .82rem;
+  font-weight: 700;
+}
+.admin-shell .admin-order-help > summary:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.admin-shell .admin-order-help > p {
+  margin: 0;
+  padding: 0 13px 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  font-size: .81rem;
+}
+/* Keep the catalog toolbar and the entire table aligned to the same gutter. */
+.admin-shell .admin-products-panel .admin-panel-heading {
+  padding: var(--admin-space-md) 20px;
+  gap: 12px;
+}
+.admin-shell .admin-products-panel .admin-panel-heading > .admin-heading-actions {
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.admin-shell .admin-products-panel .admin-filters {
+  padding: var(--admin-space-lg) 20px var(--admin-space-md);
+  gap: var(--admin-space-sm);
+}
+.admin-shell .admin-products-panel .admin-results {
+  padding: 12px 20px;
+  min-height: 46px;
+  margin: 0;
+  border-bottom: 1px solid var(--color-border);
+  align-items: center;
+}
+.admin-shell .admin-products-panel .admin-results p { margin: 0; }
+.admin-shell .admin-products-panel .admin-table-wrap { width: 100%; overflow-x: auto; }
+.admin-shell .admin-products-panel .admin-table {
+  min-width: 920px;
+  table-layout: auto;
+}
+.admin-shell .admin-products-panel .admin-table th,
+.admin-shell .admin-products-panel .admin-table td {
+  padding: 13px 14px;
+  vertical-align: middle;
+}
+.admin-shell .admin-products-panel .admin-table th:last-child,
+.admin-shell .admin-products-panel .admin-table td:last-child {
+  min-width: 300px;
+}
+.admin-shell .admin-products-panel .admin-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+}
+.admin-shell .admin-products-panel .admin-row-actions > :is(button,a) {
+  min-height: 36px;
+  white-space: nowrap;
+}
+.admin-shell .admin-products-panel .admin-row-actions > .admin-text-button {
+  padding: 7px 8px;
+}
+.admin-shell .admin-products-panel .admin-row-actions > .admin-danger {
+  padding: 7px 10px;
+}
+.admin-shell .admin-products-panel .admin-row-actions > .admin-view-product {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 6px;
+}
+@media (max-width: 950px) {
+  .admin-shell .admin-content { padding-inline: 18px; }
+  .admin-shell .admin-metric { min-height: 138px; }
+}
+@media (max-width: 650px) {
+  .admin-shell .admin-content { padding-inline: 14px; }
+  .admin-shell .admin-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .admin-shell .admin-demo-badge { align-self: flex-start; }
+  .admin-shell .admin-preview-notice { margin-bottom: 14px; }
+  .admin-shell .admin-page-guide { margin-bottom: 16px; }
+  .admin-shell .admin-metrics { gap: 10px; }
+  .admin-shell .admin-metric { padding: 14px; min-height: 122px; }
+  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) { min-height: 0; padding: 13px 14px; }
+  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions { width: 100%; }
+  .admin-shell .admin-products-panel .admin-panel-heading { padding: 14px; }
+  .admin-shell .admin-products-panel .admin-filters { padding: 14px; }
+  .admin-shell .admin-products-panel .admin-results { padding: 11px 14px; }
+  .admin-shell .admin-order-results { padding: 12px 14px 0; }
+  .admin-shell .admin-order-help { margin: 10px 14px 0; }
+}

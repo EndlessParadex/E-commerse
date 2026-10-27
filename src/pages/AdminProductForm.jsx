@@ -178,7 +178,11 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     setSaving(false);
     if (result.errors) {
       setErrors(result.errors);
-      requestAnimationFrame(() => form.current?.querySelector('[aria-invalid="true"]')?.focus());
+      requestAnimationFrame(() => {
+        const invalid = form.current?.querySelector('[aria-invalid="true"]');
+        invalid?.closest('details.admin-variant-collapse')?.setAttribute('open', '');
+        invalid?.focus();
+      });
     } else if (result.storageError) setStorageError(result.storageError);
     else onSaved(result.groupId);
   };
@@ -392,19 +396,19 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   ))}
                 </ul>
               )}
-              <p className="admin-form-hint">
-                Foto pertama menjadi foto utama. Tanpa foto, ilustrasi produk akan ditampilkan.
-              </p>
+              {!!draft.gallery.length && (
+                <p className="admin-form-hint">
+                  Foto pertama menjadi foto utama; ubah urutan untuk mengganti foto utama.
+                </p>
+              )}
             </section>
             <section className="admin-form-section">
               <div className="admin-section-heading">
                 <div>
                   <h3>03 · Ukuran, kemasan, dan harga</h3>
                   <p>
-                    Tambahkan Satuan, Pack, Box, Dus, dan Renceng sebagai varian agar pembeli
-                    memilih kemasan di bawah gramasi. Setiap kombinasi ukuran dan kemasan memiliki
-                    SKU serta harga sendiri. Ukuran diisi per satuan, harga diisi per kemasan yang
-                    dijual.
+                    Klik varian untuk mengedit SKU, gramasi, kemasan (Satuan/Pack/Box/Dus/Renceng),
+                    dan harga masing-masing.
                   </p>
                 </div>
                 <button
@@ -428,8 +432,16 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                 </p>
               )}
               {draft.variants.map((variant, index) => (
-                <fieldset className="admin-variant-row" key={index}>
-                  <legend>Varian {index + 1}</legend>
+                <details className="admin-variant-collapse" key={index}
+                  open={index === 0 || !variant.id}>
+                  <summary className="admin-variant-summary">
+                    <strong>Varian {index + 1} · {variant.sizeValue || '…'}{variant.sizeUnit} · {packagingLabel(variant)}</strong>
+                    <span>
+                      {Number(variant.price) > 0 ? rupiah(Number(variant.price)) : 'Harga belum diisi'}
+                    </span>
+                  </summary>
+                  <fieldset className="admin-variant-row">
+                    <legend>Rincian varian {index + 1}</legend>
                   <div className="admin-variant-heading">
                     <span>
                       {variant.sizeValue
@@ -559,52 +571,48 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                       SKU yang sudah ada dipertahankan agar tautan produk tetap tersedia.
                     </p>
                   )}
-                </fieldset>
+                  </fieldset>
+                </details>
               ))}
               <p className="admin-form-hint">
                 Maksimal 20 varian. Harga sebelum diskon boleh dikosongkan.
               </p>
             </section>
           </div>
-          <details className="admin-form-preview admin-form-preview-compact">
-            <summary className="admin-preview-summary">
-              <span>Pratinjau produk</span>
-              <small>{draft.baseName || 'Produk baru'} · {draft.variants.length} varian</small>
-            </summary>
-            <div className="admin-preview-content">
-              <div className="admin-preview-image" style={productColorStyle(draft.color)}>
-                <ProductImage
-                  product={{
-                    name: draft.baseName || 'Produk baru',
-                    image: draft.image,
-                    imageAlt: draft.imageAlt,
-                    icon: '📦',
-                  }}
-                />
-              </div>
-              <div className="admin-preview-meta">
-                <span className="admin-eyebrow">{draft.brand || 'Merek produk'}</span>
-                <h4>{draft.baseName || 'Nama produk'}</h4>
-                <p>{suppliers.find((entry) => entry.id === draft.supplierId)?.name || 'PT pemasok'}</p>
-                <strong>
-                  {Number(draft.variants[0]?.price) > 0
-                    ? rupiah(Number(draft.variants[0].price))
-                    : 'Harga belum diisi'}
-                </strong>
-                <div className="admin-preview-sizes">
-                  {draft.variants.map((variant, index) => (
-                    <span key={index} className="admin-size">
-                      {variant.sizeValue || '…'}
-                      {variant.sizeUnit} · {packagingLabel(variant)}
-                    </span>
-                  ))}
-                </div>
-                <p className="admin-preview-description">
-                  {draft.description || 'Deskripsi produk akan tampil di sini.'}
-                </p>
-              </div>
+          <aside className="admin-form-preview admin-form-preview-side" aria-label="Pratinjau produk">
+            <h3>Pratinjau produk</h3>
+            <div className="admin-preview-image" style={productColorStyle(draft.color)}>
+              <ProductImage
+                product={{
+                  name: draft.baseName || 'Produk baru',
+                  image: draft.image,
+                  imageAlt: draft.imageAlt,
+                  icon: '📦',
+                }}
+              />
             </div>
-          </details>
+            <div className="admin-preview-meta">
+              <span className="admin-eyebrow">{draft.brand || 'Merek produk'}</span>
+              <h4>{draft.baseName || 'Nama produk'}</h4>
+              <p>{suppliers.find((entry) => entry.id === draft.supplierId)?.name || 'PT pemasok'}</p>
+              <strong>
+                {Number(draft.variants[0]?.price) > 0
+                  ? rupiah(Number(draft.variants[0].price))
+                  : 'Harga belum diisi'}
+              </strong>
+              <div className="admin-preview-sizes">
+                {draft.variants.map((variant, index) => (
+                  <span key={index} className="admin-size">
+                    {variant.sizeValue || '…'}
+                    {variant.sizeUnit} · {packagingLabel(variant)}
+                  </span>
+                ))}
+              </div>
+              <p className="admin-preview-description">
+                {draft.description || 'Deskripsi produk akan tampil di sini.'}
+              </p>
+            </div>
+          </aside>
         </div>
         <div className="admin-form-footer">
           <p>

@@ -110,12 +110,16 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
     assert.match(adminTheme, /@media\(max-width:950px\)/);
     await click(button('+ Tambah produk'));
-    assert.ok(container.querySelector('details.admin-form-preview'),
-      'preview stays accessible without a permanent sidebar');
-    assert.equal(container.querySelector('details.admin-form-preview').hasAttribute('open'), false,
-      'preview starts closed to save vertical space');
+    assert.ok(container.querySelector('aside.admin-form-preview .admin-preview-image'),
+      'product photo remains visible in the right-side preview');
+    assert.ok(container.querySelector('.admin-editor-grid .admin-editor-sections + aside.admin-form-preview'),
+      'preview follows the compact editing sections in the desktop grid');
     assert.equal(container.querySelector('#product-description')?.getAttribute('rows'), '3',
       'description begins at three lines and can be resized');
+    assert.ok(container.querySelector('details.admin-variant-collapse'),
+      'SKU variants are shown as expandable compact rows');
+    assert.ok(container.querySelector('.admin-editor .admin-product-photos .admin-photo-controls'),
+      'photo upload remains accessible in the compact photo section');
     await fill('#product-baseName', 'Isian belum disimpan');
     await click(container.querySelector('nav a[href="#/admin"]'));
     assert.equal(container.querySelector('#product-baseName').value, 'Isian belum disimpan');

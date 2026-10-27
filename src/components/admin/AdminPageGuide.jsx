@@ -70,8 +70,10 @@ export default function AdminPageGuide({ view }) {
   const steps = adminGuideByView[view];
   if (!steps?.length) return null;
   return (
-    <nav className="admin-page-guide" aria-label="Panduan halaman Admin">
-      <ol className="admin-page-guide-steps">
+    <details className="admin-page-guide">
+      <summary>Petunjuk halaman (opsional)</summary>
+      <nav aria-label="Panduan halaman Admin">
+        <ol className="admin-page-guide-steps">
         {steps.map(([icon, label, description], index) => (
           <li className="admin-page-guide-step" key={label}>
             <span className="admin-page-guide-number">{index + 1}</span>
@@ -82,7 +84,8 @@ export default function AdminPageGuide({ view }) {
             </span>
           </li>
         ))}
-      </ol>
-    </nav>
+        </ol>
+      </nav>
+    </details>
   );
 }

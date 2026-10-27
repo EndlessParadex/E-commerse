@@ -13,6 +13,7 @@ import ProductImage from '../components/shop/ProductImage';
 import AdminIcon from '../components/admin/AdminIcon';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import AdminPageGuide from '../components/admin/AdminPageGuide';
+import { paginateAdminList } from '../data/adminPagination';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import AdminProductForm from './AdminProductForm';
 import {
@@ -132,6 +133,7 @@ export default function AdminPage({ view = 'overview' }) {
   });
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
+  const [productPage, setProductPage] = useState(1);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
@@ -175,8 +177,10 @@ export default function AdminPage({ view = 'overview' }) {
   const metrics = getMetrics();
   const brands = adminBrands(supplierId);
   const filtered = filterAdminProducts({ query, supplierId, brandId });
+  const productPagination = paginateAdminList(filtered, productPage, 24);
   const hasFilters = Boolean(query || supplierId || brandId);
   const reset = () => {
+    setProductPage(1);
     setQuery('');
     try { window.sessionStorage.removeItem('bam.admin.catalog-search'); }
     catch { /* Private browsing may prevent storage. */ }
@@ -702,7 +706,10 @@ export default function AdminPage({ view = 'overview' }) {
                   type="search"
                   maxLength={200}
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setProductPage(1);
+                  }}
                   placeholder="Nama, merek, ukuran, atau SKU"
                 />
               </div>
@@ -714,6 +721,7 @@ export default function AdminPage({ view = 'overview' }) {
                   onChange={(event) => {
                     setSupplierId(event.target.value);
                     setBrandId('');
+                    setProductPage(1);
                   }}
                 >
                   <option value="">Semua pemasok</option>
@@ -729,7 +737,10 @@ export default function AdminPage({ view = 'overview' }) {
                 <select
                   id="admin-brand"
                   value={brandId}
-                  onChange={(event) => setBrandId(event.target.value)}
+                  onChange={(event) => {
+                    setBrandId(event.target.value);
+                    setProductPage(1);
+                  }}
                 >
                   <option value="">Semua merek</option>
                   {brands.map((brand) => (
@@ -742,8 +753,8 @@ export default function AdminPage({ view = 'overview' }) {
             </AdminProductFilters>
             <div className="admin-results">
               <p role="status">
-                Menampilkan <strong>{filtered.length}</strong> dari {adminProducts.length} varian
-                produk
+                Menampilkan <strong>{productPagination.items.length}</strong> dari {filtered.length} hasil
+                ({adminProducts.length} SKU tersedia)
               </p>
               {hasFilters && (
                 <button type="button" className="admin-text-button" onClick={reset}>
@@ -769,7 +780,7 @@ export default function AdminPage({ view = 'overview' }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((product) => (
+                      {productPagination.items.map((product) => (
                         <tr key={product.id}>
                           <td>
                             <ProductIdentity product={product} />
@@ -788,7 +799,7 @@ export default function AdminPage({ view = 'overview' }) {
                   </table>
                 </div>
                 <ul className="admin-mobile-products">
-                  {filtered.map((product) => (
+                  {productPagination.items.map((product) => (
                     <li key={product.id}>
                       <ProductIdentity product={product} />
                       <dl>
@@ -816,6 +827,29 @@ export default function AdminPage({ view = 'overview' }) {
                     </li>
                   ))}
                 </ul>
+                {productPagination.pages > 1 && (
+                  <nav className="admin-list-pagination" aria-label="Halaman katalog produk">
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={productPagination.page <= 1}
+                      onClick={() => setProductPage(productPagination.page - 1)}
+                    >
+                      Sebelumnya
+                    </button>
+                    <span role="status">
+                      Halaman {productPagination.page} dari {productPagination.pages}
+                    </span>
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={productPagination.page >= productPagination.pages}
+                      onClick={() => setProductPage(productPagination.page + 1)}
+                    >
+                      Berikutnya
+                    </button>
+                  </nav>
+                )}
               </>
             ) : (
               <div className="admin-empty">

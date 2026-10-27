@@ -30,6 +30,8 @@ test('every BAM Admin route has a concise accessible guide except Toko & Sales',
       }
       const html = renderToStaticMarkup(createElement(AdminPageGuide, { view: route }));
       assert.match(html, /aria-label="Panduan halaman Admin"/);
+      assert.match(html, /<details class="admin-page-guide">/);
+      assert.match(html, /<summary>Petunjuk halaman \(opsional\)<\/summary>/);
       assert.equal((html.match(/class="admin-page-guide-step"/g) || []).length,
         adminGuideByView[route].length);
     }

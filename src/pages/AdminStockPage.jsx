@@ -19,6 +19,7 @@ import useWorkflow from '../state/useWorkflow';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import ProductImage from '../components/shop/ProductImage';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
+import { paginateAdminList } from '../data/adminPagination';
 import { savedProductPhotos } from '../data/productPhotos';
 import { productColorStyle } from '../data/catalogColors';
 import { stockBreakdown } from '../data/stockPresentation';
@@ -223,6 +224,7 @@ export default function AdminStockPage() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [layout, setLayout] = useState('compact');
+  const [stockPage, setStockPage] = useState(1);
   const [target, setTarget] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
@@ -324,6 +326,7 @@ export default function AdminStockPage() {
         .toLocaleLowerCase('id')
         .includes(query.trim().toLocaleLowerCase('id')),
   );
+  const stockPagination = paginateAdminList(visible, stockPage, 20);
   const save = async (units) => {
     if (pending.current || !target || stockFailed) return;
     if (!Number.isSafeInteger(units) || units < 0 || units > 1_000_000_000) {
@@ -394,7 +397,7 @@ export default function AdminStockPage() {
         <AdminSectionIcon name="stock" />
         <div>
           <h2>Stok per ukuran</h2>
-          <p>Satuan, pack, dan dus dengan ukuran yang sama menggunakan stok bersama.</p>
+          <p>Satuan, Pack, Box, Dus, dan Renceng dengan ukuran yang sama menggunakan stok bersama.</p>
         </div>
         <span className="admin-result-pill">{rows.length} ukuran</span>
       </div>
@@ -439,7 +442,10 @@ export default function AdminStockPage() {
               disabled={busy}
               onChange={(event) => {
                 const value = event.target.value;
-                changeList(() => setQuery(value));
+                changeList(() => {
+                  setQuery(value);
+                  setStockPage(1);
+                });
               }}
             />
           </div>
@@ -451,7 +457,10 @@ export default function AdminStockPage() {
               disabled={busy}
               onChange={(event) => {
                 const value = event.target.value;
-                changeList(() => setFilter(value));
+                changeList(() => {
+                  setFilter(value);
+                  setStockPage(1);
+                });
               }}
             >
               <option value="all">Semua stok</option>
@@ -462,7 +471,7 @@ export default function AdminStockPage() {
         </div>
         <div className="workflow-stock-controls">
           <p role="status">
-            {stockFailed ? 'Memeriksa stok' : `${visible.length} dari ${rows.length} ukuran`}
+            {stockFailed ? 'Memeriksa stok' : `${stockPagination.items.length} dari ${visible.length} hasil (${rows.length} ukuran)`}
           </p>
           <fieldset className="workflow-stock-layout">
             <legend>Tampilan</legend>
@@ -492,6 +501,7 @@ export default function AdminStockPage() {
                 changeList(() => {
                   setQuery('');
                   setFilter('all');
+                  setStockPage(1);
                 })
               }
             >
@@ -534,6 +544,7 @@ export default function AdminStockPage() {
               changeList(() => {
                 setQuery('');
                 setFilter('all');
+                setStockPage(1);
               })
             }
           >
@@ -542,7 +553,7 @@ export default function AdminStockPage() {
         </div>
       ) : (
         <ul className={'workflow-stock-list is-' + layout}>
-          {visible.map((row) => {
+          {stockPagination.items.map((row) => {
             return (
               <li className="workflow-stock-card" key={row.key}>
                 <header>
@@ -608,6 +619,29 @@ export default function AdminStockPage() {
             );
           })}
         </ul>
+      )}
+      {!stockFailed && stockPagination.pages > 1 && (
+        <nav className="admin-list-pagination" aria-label="Halaman stok produk">
+          <button
+            type="button"
+            className="admin-secondary"
+            disabled={busy || stockPagination.page <= 1}
+            onClick={() => changeList(() => setStockPage(stockPagination.page - 1))}
+          >
+            Sebelumnya
+          </button>
+          <span role="status">
+            Halaman {stockPagination.page} dari {stockPagination.pages}
+          </span>
+          <button
+            type="button"
+            className="admin-secondary"
+            disabled={busy || stockPagination.page >= stockPagination.pages}
+            onClick={() => changeList(() => setStockPage(stockPagination.page + 1))}
+          >
+            Berikutnya
+          </button>
+        </nav>
       )}
       {target && (
         <dialog

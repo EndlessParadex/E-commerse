@@ -3,10 +3,36 @@ import { accountApi } from '../components/account/accountApi';
 import { useDelivery } from '../state/useDelivery';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
+import AdminIcon from '../components/admin/AdminIcon';
 import { nextStoreDelivery } from '../data/b2bDeliverySchedule';
 import './AdminB2BStoresPage.css';
 
 const emptyStore = { storeName: '', phone: '', address: '' };
+
+const managementSteps = [
+  { icon: 'b2bStores', title: 'Daftar toko', note: 'Pilih atau tambahkan toko.' },
+  { icon: 'details', title: 'Detail toko', note: 'Periksa informasi toko.' },
+  { icon: 'calendar', title: 'Jadwal pengiriman', note: 'Lihat jadwal rutin.' },
+  { icon: 'owner', title: 'Penanggung jawab', note: 'Periksa pemilik toko.' },
+  { icon: 'accounts', title: 'Kelola Sales', note: 'Atur penugasan Sales.' },
+];
+
+function SectionHeading({ icon, title, description, id, action, level = 'h2' }) {
+  const Heading = level;
+  return (
+    <div className="b2b-section-heading">
+      <span className={'b2b-section-icon b2b-section-icon--' + icon}>
+        <AdminIcon name={icon} />
+      </span>
+      <div className="b2b-section-copy">
+        <Heading id={id}>{title}</Heading>
+        {description && <p>{description}</p>}
+      </div>
+      {action && <div className="b2b-section-action">{action}</div>}
+    </div>
+  );
+}
+
 
 const weekdayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const blankDelivery = { weekday: '1', intervalWeeks: '1', anchorDate: '' };
@@ -550,6 +576,20 @@ export default function AdminB2BStoresPage() {
     );
   return (
     <div className="b2b-page">
+      <nav className="b2b-guide" aria-label="Panduan pengelolaan Toko dan Sales">
+        <ol className="b2b-guide-steps">
+          {managementSteps.map((step, index) => (
+            <li className={'b2b-guide-step b2b-guide-step--' + (index + 1)} key={step.title}>
+              <span className="b2b-guide-number">{index + 1}</span>
+              <span className="b2b-guide-icon"><AdminIcon name={step.icon} /></span>
+              <span className="b2b-guide-copy">
+                <strong>{step.title}</strong>
+                <small>{step.note}</small>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </nav>
       {notice && (
         <p className="b2b-notice" role="status">
           {notice}
@@ -568,7 +608,15 @@ export default function AdminB2BStoresPage() {
 
       {owner && (
         <details className="admin-panel b2b-panel b2b-create">
-          <summary>Tambah toko</summary>
+          <summary className="b2b-create-summary">
+            <span className="b2b-section-icon b2b-section-icon--b2bStores">
+              <AdminIcon name="plus" />
+            </span>
+            <span><strong>Tambah toko</strong>
+              <small>Buat toko baru beserta penanggung jawab dan jadwal tetapnya.</small>
+            </span>
+            <span className="b2b-create-chevron" aria-hidden="true">⌄</span>
+          </summary>
           <form
             id="b2b-create-form"
             onSubmit={(event) => {
@@ -668,12 +716,12 @@ export default function AdminB2BStoresPage() {
 
       <div className="b2b-workspace">
         <section className="admin-panel b2b-panel" aria-labelledby="b2b-list-heading">
-          <div className="b2b-heading">
-            <h2 id="b2b-list-heading">Daftar toko</h2>
-            <button className="admin-secondary" type="button" disabled={busy} onClick={reload}>
+          <SectionHeading icon="b2bStores" title="Daftar toko"
+            description="Cari dan pilih toko untuk melihat detail dan penugasannya."
+            id="b2b-list-heading"
+            action={<button className="admin-secondary" type="button" disabled={busy} onClick={reload}>
               Muat ulang
-            </button>
-          </div>
+            </button>} />
           <div className="admin-field">
             <label htmlFor="b2b-store-search">Cari nama, kode, atau nomor HP</label>
             <input
@@ -702,7 +750,11 @@ export default function AdminB2BStoresPage() {
                         setSalesId('');
                       }}
                     >
-                      <strong>{store.storeName}</strong>
+                      <span className="b2b-store-entry">
+                        <span className="b2b-store-entry-icon"><AdminIcon name="b2bStores" /></span>
+                        <strong>{store.storeName}</strong>
+                        <span className="b2b-store-entry-arrow" aria-hidden="true">›</span>
+                      </span>
                       <span className="b2b-store-line">
                         <span>{store.storeCode}</span>
                         <span>{store.phone}</span>
@@ -728,10 +780,15 @@ export default function AdminB2BStoresPage() {
           {loadMessage(details, 'detail toko')}
           {current && (
             <>
+              <SectionHeading icon="details" title="Detail toko"
+                description="Informasi toko yang sedang dipilih." level="h3" />
               <div className="b2b-detail-top">
                 <div className="b2b-detail-identity">
                   <span className="b2b-code">{current.store.storeCode}</span>
                   <h2>{current.store.storeName}</h2>
+                  {Number(current.store.active) === 1 && (
+                    <span className="b2b-status-tag">Aktif</span>
+                  )}
                   <div className="b2b-detail-contact">
                     <span>{current.store.phone}</span>
                     <span className="b2b-address">{current.store.address}</span>
@@ -744,9 +801,11 @@ export default function AdminB2BStoresPage() {
                   </button>
                 )}
               </div>
-              <div className="b2b-schedule-section">
-                <h3>Jadwal pengiriman tetap</h3>
-                <p>{scheduleLabel(current.store.deliverySchedule)}</p>
+              <div className="b2b-detail-grid">
+                <div className="b2b-schedule-section">
+                  <SectionHeading icon="calendar" title="Jadwal pengiriman tetap"
+                    description="Hari dan frekuensi rutin toko ini." level="h3" />
+                  <p>{scheduleLabel(current.store.deliverySchedule)}</p>
                 {current.store.deliverySchedule && (
                   <DeliveryCalendar
                     key={current.store.id + ':' + current.store.deliverySchedule.anchorDate}
@@ -786,9 +845,10 @@ export default function AdminB2BStoresPage() {
                   </form>
                 )}
               </div>
-              <section className="b2b-owner-overview" aria-label="Penanggung jawab toko">
-                <div>
-                  <h3>Penanggung jawab toko</h3>
+                <section className="b2b-owner-overview" aria-label="Penanggung jawab toko">
+                  <div>
+                    <SectionHeading icon="owner" title="Penanggung jawab toko"
+                      description="Akun pembeli utama toko ini." level="h3" />
                   {current.store.owner ? (
                     <>
                       <strong>{current.store.owner.name}</strong>
@@ -797,11 +857,12 @@ export default function AdminB2BStoresPage() {
                     </>
                   ) : <p className="b2b-owner-warning">Belum ditetapkan. Pilih pemilik toko yang benar.</p>}
                 </div>
-                {owner && <button type="button" className="admin-secondary" disabled={busy}
-                  onClick={() => {
-                    setOwnerEditor(!ownerEditor); setTransferOwner(null); setKeepPreviousMember(false);
-                  }}>{ownerEditor ? 'Tutup' : current.store.owner ? 'Ganti pemilik' : 'Tetapkan pemilik'}</button>}
-              </section>
+                  {owner && <button type="button" className="admin-secondary" disabled={busy}
+                    onClick={() => {
+                      setOwnerEditor(!ownerEditor); setTransferOwner(null); setKeepPreviousMember(false);
+                    }}>{ownerEditor ? 'Tutup' : current.store.owner ? 'Ganti pemilik' : 'Tetapkan pemilik'}</button>}
+                </section>
+              </div>
               {owner && ownerEditor && (
                 <div className="b2b-owner-editor">
                   <BuyerAccountPicker id="transfer-owner" selected={transferOwner}
@@ -822,7 +883,13 @@ export default function AdminB2BStoresPage() {
               )}
               <details className="b2b-assignments-disclosure" key={current.store.id}>
                 <summary>
-                  <span className="b2b-assignments-title">Kelola akun &amp; Sales</span>
+                  <span className="b2b-section-icon b2b-section-icon--accounts">
+                    <AdminIcon name="accounts" />
+                  </span>
+                  <span className="b2b-assignments-copy">
+                    <strong className="b2b-assignments-title">Kelola akun &amp; Sales</strong>
+                    <small>Kelola pembeli dan penugasan Sales toko ini.</small>
+                  </span>
                   <span className="b2b-assignments-count">
                     {current.members.length} pembeli · {current.sales.length} Sales
                   </span>
@@ -831,7 +898,7 @@ export default function AdminB2BStoresPage() {
                 <div className="b2b-assignments-content">
                   <div className="b2b-assignment-grid">
                     <section>
-                      <h3>Akun pembeli</h3>
+                      <h3><AdminIcon name="owner" /> Akun pembeli</h3>
                       <AccountList
                         accounts={current.members}
                         empty="Belum ada pembeli yang dihubungkan."
@@ -840,7 +907,7 @@ export default function AdminB2BStoresPage() {
                       />
                     </section>
                     <section>
-                      <h3>Sales yang ditugaskan</h3>
+                      <h3><AdminIcon name="sales" /> Sales yang ditugaskan</h3>
                       <AccountList
                         accounts={current.sales}
                         empty="Belum ada Sales yang ditugaskan."
@@ -897,16 +964,22 @@ export default function AdminB2BStoresPage() {
         </section>
       </div>
 
-      <section className="admin-panel b2b-panel" aria-labelledby="b2b-sales-heading">
-        <h2 id="b2b-sales-heading">Sales terdaftar</h2>
+      <section className="admin-panel b2b-panel b2b-sales-section" aria-labelledby="b2b-sales-heading">
+        <SectionHeading icon="sales" title="Sales terdaftar"
+          description="Seluruh Sales yang tersedia untuk penugasan toko." id="b2b-sales-heading" />
         {loadMessage(sales, 'Sales')}
         {sales.data &&
           (sales.data.sales.length ? (
-            <ul className="b2b-sales-list">
+            <ul className="b2b-sales-list b2b-sales-rows">
+              <li className="b2b-sales-column-head" aria-hidden="true">
+                <span>Nama Sales</span><span>Email</span><span>Jumlah toko</span>
+              </li>
               {sales.data.sales.map((account) => (
                 <li key={account.id}>
-                  <strong>{account.name}</strong>
-                  <span>{account.email}</span>
+                  <span className="b2b-sales-name"><AdminIcon name="sales" />
+                    <strong>{account.name}</strong>
+                  </span>
+                  <span className="b2b-sales-email">{account.email}</span>
                   <span>{account.assignedStores} toko ditugaskan</span>
                 </li>
               ))}
@@ -918,11 +991,8 @@ export default function AdminB2BStoresPage() {
 
       {owner && (
         <section className="admin-panel b2b-panel" aria-labelledby="b2b-accounts-heading">
-          <h2 id="b2b-accounts-heading">Hubungkan akun</h2>
-          <p className="b2b-muted">
-            Cari akun aktif yang sudah disetujui. Hubungkan pembeli ke toko yang dipilih, atau
-            daftarkan akun staf sebagai Sales.
-          </p>
+          <SectionHeading icon="accounts" id="b2b-accounts-heading"
+            title="Hubungkan akun" description="Cari akun yang disetujui untuk menghubungkan pembeli atau mendaftarkan Sales." />
           <div className="admin-field">
             <label htmlFor="b2b-account-search">Cari nama atau email akun</label>
             <input

@@ -177,6 +177,16 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await signIn('owner');
     await wait(() => account('buyer'));
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"][aria-current=page]'));
+    assert.ok(container.querySelector('.admin-header .b2b-admin-title-icon'),
+      'B2B store page title uses the existing Admin icon set');
+    const guide = container.querySelector('.b2b-guide');
+    assert.equal(guide?.querySelectorAll('.b2b-guide-step').length, 5,
+      'five explanatory steps guide new admins without becoming a compulsory wizard');
+    assert.match(guide.textContent, /Kelola Sales/);
+    assert.ok(container.querySelector('.b2b-create-summary .admin-icon'));
+    assert.ok(container.querySelector('#b2b-list-heading'));
+    assert.match(container.querySelector('.b2b-workspace .b2b-section-copy p').textContent,
+      /Cari dan pilih toko/);
     await click(container.querySelector('.b2b-create summary'));
     await fill('#b2b-store-name', 'Toko Pertama');
     await fill('#b2b-store-phone', '081234567890');
@@ -244,6 +254,13 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.match(accessPanel.querySelector('summary').textContent, /1 pembeli/);
     assert.ok(container.querySelector('.b2b-detail-top .b2b-edit-store'),
       'edit action remains available in the compact header');
+    assert.ok(container.querySelector('.b2b-detail-grid'),
+      'the schedule and store owner share a responsive detail grid');
+    assert.equal(container.querySelectorAll(
+      '[aria-label="Detail dan penugasan toko"] .b2b-section-heading',
+    ).length, 3, 'store detail, schedule and owner each have a labeled icon header');
+    assert.equal(container.querySelector('.b2b-status-tag')?.textContent, 'Aktif',
+      'active status is only rendered from the stored active flag');
     await click(accessPanel.querySelector('summary'));
     assert.equal(accessPanel.open, true, 'Owner can expand account management');
     const savedCalendarDetails = container.querySelector(
@@ -421,6 +438,10 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.equal(container.querySelector('#b2b-create-form'), null);
     assert.equal(container.querySelector('#b2b-account-search'), null);
     assert.equal(container.querySelector('#b2b-assign-form'), null);
+    assert.equal(container.querySelectorAll('.b2b-guide-step').length, 5,
+      'read-only admin sees the same explanatory sections');
+    assert.ok(container.querySelector('.b2b-sales-section .b2b-section-heading'));
+    assert.equal(container.querySelector('.b2b-detail-top .b2b-edit-store'), null);
     assert.equal(buttonText('Ubah data toko'), undefined);
     assert.equal(buttonText('Cabut penugasan'), undefined);
     assert.equal(

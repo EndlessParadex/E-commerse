@@ -12,6 +12,14 @@ const paths = {
     'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M17 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87',
   email: 'M3 5h18v14H3z M3 5l9 7 9-7',
   store: 'M14 3h7v7 M21 3 11 13 M10 3H3v18h18v-7',
+  calendar: 'M8 2v4 M16 2v4 M3 10h18 M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M8 14h3 M8 17h3',
+  owner: 'M20 21v-2a6 6 0 0 0-6-6H10a6 6 0 0 0-6 6v2 M12 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+  sales: 'M3 7h18v13H3z M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M3 13h18 M10 13v2h4v-2',
+  details: 'M3 3h18v18H3z M3 9h18 M9 9v12 M14 13h4 M14 17h4',
+  info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20 M12 11v6 M12 7h.01',
+  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16 M17 17l5 5',
+  plus: 'M12 5v14 M5 12h14',
+
 };
 
 export default function AdminIcon({ name }) {

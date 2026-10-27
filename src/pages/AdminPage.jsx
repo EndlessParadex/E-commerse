@@ -349,7 +349,9 @@ export default function AdminPage({ view = 'overview' }) {
                   ? 'Pengaturan pemilik'
                   : 'Pengelolaan katalog'}
             </span>
-            <h1>{pageTitle}</h1>
+            <h1>{view === 'b2bStores' && (
+              <span className="b2b-admin-title-icon"><AdminIcon name="b2bStores" /></span>
+            )}{pageTitle}</h1>
             <p>
               {b2bView
                 ? view === 'sharedCarts'

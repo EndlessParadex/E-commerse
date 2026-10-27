@@ -6,6 +6,19 @@
   margin-bottom: 24px;
   color: var(--color-text);
 }
+.admin-shell .company-mode-note {
+  padding: var(--admin-panel-padding);
+  margin-bottom: var(--admin-space-panel);
+}
+.admin-shell :is(.company-settings-layout, .company-profile-sections, .company-payment-layout) {
+  gap: var(--admin-space-panel);
+}
+.admin-shell .company-settings-divider {
+  padding-top: var(--admin-space-panel);
+}
+.admin-shell .company-settings-actions {
+  padding: var(--admin-space-lg) var(--admin-panel-padding);
+}
 .company-mode-note strong {
   font-size: 1.125rem;
 }

@@ -10,7 +10,7 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   const themeStyle = dom.document.createElement('style');
   themeStyle.textContent = (
     await Promise.all(
-      ['../styles/themes.css', '../styles/global.css', './AdminPage.css'].map((path) =>
+      ['../styles/themes.css', '../styles/global.css', './AdminPage.css', './AdminDesign2.css', './AdminUnifiedUI.css'].map((path) =>
         readFile(new URL(path, import.meta.url), 'utf8'),
       ),
     )
@@ -95,13 +95,14 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/keranjang"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/produk"]'));
-    const unifiedTheme = await readFile(new URL('./AdminUnifiedUI.css', import.meta.url), 'utf8');
-    assert.match(unifiedTheme, /\.admin-shell \.admin-page-guide\s*\{[^}]*margin:\s*0 0 var\(--admin-space-lg\)/,
+    assert.equal(dom.getComputedStyle(container.querySelector('.admin-page-guide')).marginBottom, '20px',
       'shared guide has a consistent gap to the following panel');
-    assert.match(unifiedTheme, /\.admin-shell \.admin-metric\s*\{[^}]*min-height:\s*151px/,
+    assert.equal(dom.getComputedStyle(container.querySelector('.admin-metric')).minHeight, '160px',
       'metric cards have a consistent baseline height');
-    assert.match(unifiedTheme, /\.admin-shell \.admin-products-panel \.admin-table td\s*\{[^}]*vertical-align:\s*middle/,
+    await render('products');
+    assert.equal(dom.getComputedStyle(container.querySelector('.admin-table td')).verticalAlign, 'middle',
       'product rows and actions use the same vertical alignment');
+    await render('overview');
     const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
     assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);
     assert.match(adminTheme, /\.admin-shell \.admin-home-hero\s*\{/);

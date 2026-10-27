@@ -7,6 +7,20 @@
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
 }
+.admin-shell .workflow-stock-toolbar {
+  border-top: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.admin-shell .workflow-stock-controls {
+  padding: 0 var(--admin-panel-padding) var(--admin-panel-padding);
+  gap: 12px 16px;
+}
+.admin-shell .workflow-stock-toolbar .workflow-stock-layout label {
+  min-height: var(--admin-control-height);
+  display: inline-flex;
+  align-items: center;
+}
 .workflow-stock-controls {
   display: flex;
   align-items: center;

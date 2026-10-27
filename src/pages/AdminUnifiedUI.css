@@ -1,356 +1,555 @@
-
-/* Shared admin panel visual hierarchy — consistent with Toko & Sales. */
-.admin-shell .admin-page-title-icon {
+/* Final admin presentation layer. Keep it after page styles in AdminPage.jsx.
+   All dimensions are scoped to admin; colors follow the selected theme. */
+.admin-shell {
+  --admin-space-xs: 8px;
+  --admin-space-sm: 12px;
+  --admin-space-md: 16px;
+  --admin-space-lg: 20px;
+  --admin-space-panel: 24px;
+  --admin-panel-padding: 24px;
+  --admin-card-radius: 20px;
+  --admin-control-height: 44px;
+  --admin-icon-size: 36px;
+}
+.admin-shell .admin-content > :is(.admin-header, .admin-preview-notice, .admin-page-guide) {
+  margin: 0 0 var(--admin-space-lg);
+}
+.admin-shell
+  .admin-content
+  > :is(
+    .admin-panel,
+    .admin-next,
+    .admin-metrics,
+    .admin-home-hero,
+    .admin-ops-overview,
+    .admin-overview-grid
+  ) {
+  margin: 0 0 var(--admin-space-panel);
+}
+.admin-shell .admin-header {
+  align-items: center;
+  gap: var(--admin-space-lg);
+}
+.admin-shell .admin-header > div {
+  min-width: 0;
+  flex: 1;
+}
+.admin-shell .admin-header h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-space-sm);
+  line-height: 1.3;
+  margin: 8px 0;
+  letter-spacing: -0.035em;
+}
+.admin-shell .admin-page-title-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-shell .admin-header p {
+  margin: 0;
+  line-height: 1.6;
+}
+.admin-shell :is(.admin-page-title-icon, .admin-unified-section-icon, .b2b-section-icon) {
   display: inline-grid;
-  vertical-align: middle;
   place-items: center;
-  width: 35px;
-  height: 35px;
-  margin-right: 10px;
+  flex: 0 0 var(--admin-icon-size);
+  width: var(--admin-icon-size);
+  height: var(--admin-icon-size);
+  margin: 0;
   border-radius: 10px;
   background: var(--color-info-soft);
   color: var(--color-info-text);
 }
-.admin-shell .admin-page-title-icon .admin-icon { width: 21px; height: 21px; }
-
-.admin-shell .admin-page-guide {
-  min-width: 0;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: thin;
+.admin-shell .admin-page-title-icon .admin-icon {
+  width: 21px;
+  height: 21px;
 }
-.admin-shell .admin-page-guide-steps {
-  display: grid;
-  grid-template-columns: repeat(var(--admin-guide-columns, 3), minmax(0,1fr));
-  gap: 9px;
+.admin-shell :is(.admin-unified-section-icon, .b2b-section-icon) .admin-icon {
+  width: 19px;
+  height: 19px;
+}
+.admin-shell
+  :is(
+    .admin-unified-section-icon--stock,
+    .admin-unified-section-icon--accounts,
+    .b2b-section-icon--accounts
+  ) {
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+.admin-shell :is(.admin-demo-badge, .admin-result-pill, .workflow-badge, .accounts-status) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  max-width: 100%;
+  padding: 6px 12px;
+  line-height: 1.5;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.admin-shell .admin-demo-badge {
+  flex: 0 1 auto;
+  text-align: center;
+}
+.admin-shell .admin-preview-notice {
+  padding: 14px 16px;
+  line-height: 1.6;
+}
+/* Guides wrap instead of forcing a 720-890px strip onto a phone. */
+.admin-shell :is(.admin-page-guide, .b2b-guide) {
   min-width: 0;
+  overflow: visible;
   padding: 0;
+}
+.admin-shell :is(.admin-page-guide-steps, .b2b-guide-steps) {
+  display: grid;
+  grid-template-columns: repeat(var(--admin-guide-columns, 3), minmax(0, 1fr));
+  gap: var(--admin-space-sm);
+  min-width: 0;
   margin: 0;
+  padding: 0;
   list-style: none;
 }
-.admin-shell .admin-page-guide-steps:has(> :nth-child(4)) { --admin-guide-columns: 4; }
-.admin-shell .admin-page-guide-step {
+.admin-shell .admin-page-guide-steps:has(> :nth-child(4)) {
+  --admin-guide-columns: 4;
+}
+.admin-shell .b2b-guide-steps {
+  --admin-guide-columns: 5;
+}
+.admin-shell :is(.admin-page-guide-step, .b2b-guide-step) {
   display: flex;
   align-items: center;
   min-width: 0;
-  gap: 8px;
-  padding: 10px 11px;
+  min-height: 68px;
+  gap: var(--admin-space-xs);
+  padding: 12px;
   border: 1px solid var(--color-border);
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--color-surface);
 }
 .admin-shell .admin-page-guide-step:first-child {
-  border-color: var(--color-border-info, var(--color-border));
   background: var(--color-info-soft);
+  border-color: var(--color-border-info);
 }
-.admin-shell .admin-page-guide-number {
+.admin-shell :is(.admin-page-guide-number, .b2b-guide-number) {
   display: grid;
-  flex: 0 0 24px;
   place-items: center;
+  flex: 0 0 24px;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   background: var(--color-info-soft);
   color: var(--color-info-text);
-  font-size: .73rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
-.admin-shell .admin-page-guide-step:first-child .admin-page-guide-number {
-  background: var(--color-action);
+.admin-shell
+  :is(
+    .admin-page-guide-step:first-child .admin-page-guide-number,
+    .b2b-guide-step:first-child .b2b-guide-number
+  ) {
   color: var(--color-on-action);
+  background: var(--color-action);
 }
-.admin-shell .admin-page-guide-icon {
-  flex: 0 0 28px;
+.admin-shell :is(.admin-page-guide-icon, .b2b-guide-icon) {
   display: grid;
   place-items: center;
+  flex: 0 0 28px;
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  color: var(--color-info-text);
   background: var(--color-surface-soft);
-}
-.admin-shell .admin-page-guide-step:first-child .admin-page-guide-icon {
-  background: var(--color-surface);
-}
-.admin-shell .admin-page-guide-icon .admin-icon { width: 17px; height: 17px; }
-.admin-shell .admin-page-guide-copy {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-.admin-shell .admin-page-guide-copy strong {
-  color: var(--color-text);
-  font-size: .78rem;
-  line-height: 1.3;
-}
-.admin-shell .admin-page-guide-copy small {
-  color: var(--color-text-secondary);
-  font-size: .72rem;
-  line-height: 1.4;
-}
-.admin-shell .admin-unified-section-icon {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--color-info-soft);
   color: var(--color-info-text);
 }
-.admin-shell .admin-unified-section-icon--stock,
-.admin-shell .admin-unified-section-icon--accounts {
-  background: var(--color-success-soft);
-  color: var(--color-success-text);
+.admin-shell :is(.admin-page-guide-icon, .b2b-guide-icon) .admin-icon {
+  width: 17px;
+  height: 17px;
 }
-.admin-shell .admin-unified-section-icon .admin-icon { width: 19px; height: 19px; }
+.admin-shell :is(.admin-page-guide-copy, .b2b-guide-copy) {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-shell :is(.admin-page-guide-copy, .b2b-guide-copy) strong {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+.admin-shell :is(.admin-page-guide-copy, .b2b-guide-copy) small {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+/* Shared panel header: icon, flexible copy, actions. */
+.admin-shell
+  :is(.admin-panel, .admin-next, .admin-form-section, .admin-form-preview, .company-mode-note) {
+  border-radius: var(--admin-card-radius);
+}
+.admin-shell .admin-panel-heading {
+  padding: var(--admin-panel-padding);
+  gap: var(--admin-space-md);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
 .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--admin-icon-size) minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px 13px;
-  padding-block: 15px;
 }
-.admin-shell .admin-panel-heading > .admin-unified-section-icon + div {
-  flex: 1;
+.admin-shell .admin-panel-heading > div {
   min-width: 0;
 }
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) h2 {
+.admin-shell .admin-panel-heading h2 {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.3;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) p {
-  margin: 3px 0 0;
-  font-size: .79rem;
+.admin-shell .admin-panel-heading p {
+  margin: 5px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.admin-shell .admin-heading-actions {
+  justify-content: flex-end;
+  gap: var(--admin-space-sm);
+  min-width: 0;
+}
+.admin-shell
+  :is(
+    .admin-form-section,
+    .admin-form-preview,
+    .admin-next,
+    .accounts-content,
+    .email-settings-body,
+    .company-settings-body,
+    .admin-suppliers,
+    .admin-master-list
+  ) {
+  padding: var(--admin-panel-padding);
+}
+.admin-shell :is(.admin-editor-sections, .b2b-page, .company-settings-body, .email-settings-body) {
+  gap: var(--admin-space-panel);
+}
+.admin-shell :is(.admin-form-section > h3, .admin-section-heading, .company-section-heading) {
+  padding-bottom: 14px;
+  margin-bottom: var(--admin-space-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.admin-shell :is(.admin-section-heading, .company-section-heading) h3 {
+  margin: 0;
+}
+.admin-shell
+  :is(
+    .admin-primary,
+    .admin-secondary,
+    .admin-danger,
+    .admin-text-button,
+    .bam-button-secondary,
+    .shop-primary,
+    .admin-topbar-search button
+  ) {
+  min-height: var(--admin-control-height);
+  font-size: 0.875rem;
   line-height: 1.5;
 }
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-result-pill,
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions {
-  margin-left: auto;
+.admin-shell
+  :is(
+    .admin-field,
+    .accounts-action-fields,
+    .email-settings-confirm,
+    .b2b-edit-fields,
+    .shared-cart-page
+  )
+  :where(input:not([type='checkbox']):not([type='radio']):not([type='file']), select) {
+  min-height: var(--admin-control-height);
+  font-size: 0.875rem;
 }
-.admin-shell .admin-form-section > h3,
-.admin-shell .admin-section-heading > h3,
-.admin-shell .company-section-heading > h3,
-.admin-shell .email-setup-heading {
+.admin-shell .admin-field label {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.admin-shell :is(.admin-field, .accounts-action-fields) textarea {
   color: var(--color-text);
-  letter-spacing: -.01em;
+  background: var(--color-surface);
 }
-.admin-shell .admin-form-section > h3,
-.admin-shell .admin-section-heading,
-.admin-shell .company-section-heading {
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 10px;
-  margin-bottom: 12px;
+.admin-shell :is(button, a, input, textarea, select, summary):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
-@media (max-width: 1150px) {
-  .admin-shell .admin-page-guide-steps { min-width: 720px; }
-}
-@media (max-width: 650px) {
-  .admin-shell .admin-page-title-icon { width: 30px; height: 30px; }
-  .admin-shell .admin-page-guide-steps { min-width: 720px; }
-  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) {
-    flex-wrap: wrap;
-    padding-block: 12px;
-  }
-  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-result-pill,
-  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions {
-    margin-left: auto;
-  }
-}
-
-
-/* BAM Admin visual consistency pass — shared spacing, controls and hierarchy.
-   Scoped to Admin pages; storefront/shared-cart business rules are untouched. */
-.admin-shell .admin-content {
-  --admin-space-xs: 8px;
-  --admin-space-sm: 12px;
-  --admin-space-md: 16px;
-  --admin-space-lg: 20px;
-  --admin-card-radius: 14px;
-}
-.admin-shell .admin-header {
-  align-items: center;
-  gap: var(--admin-space-lg);
-  margin-bottom: var(--admin-space-md);
-}
-.admin-shell .admin-header > div { min-width: 0; }
-.admin-shell .admin-header .admin-page-title-icon { flex: 0 0 35px; }
-.admin-shell .admin-demo-badge {
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  min-height: 33px;
-  max-width: 100%;
-  padding: 6px 12px;
-  line-height: 1.35;
-  text-align: center;
-}
-.admin-shell .admin-preview-notice {
-  margin: 0 0 var(--admin-space-md);
-  padding: 12px 15px;
-  line-height: 1.55;
-}
-.admin-shell .admin-page-guide {
-  margin: 0 0 var(--admin-space-lg);
-}
-.admin-shell .admin-page-guide-step {
-  min-height: 63px;
-  align-items: center;
-}
-.admin-shell .admin-page-guide-copy small { overflow-wrap: anywhere; }
-.admin-shell .admin-page-guide + :is(.admin-home-hero,.admin-panel,.admin-next,.workflow-admin-orders,.workflow-admin-stock) {
-  margin-top: 0;
-}
-.admin-shell .admin-home-hero { margin-top: 0; margin-bottom: var(--admin-space-lg); }
 .admin-shell .admin-metrics {
-  align-items: stretch;
   grid-auto-rows: 1fr;
+  align-items: stretch;
   gap: var(--admin-space-md);
-  margin-bottom: var(--admin-space-lg);
 }
 .admin-shell .admin-metric {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 151px;
-  padding: var(--admin-space-lg);
-}
-.admin-shell .admin-metric > strong { margin: 10px 0; }
-.admin-shell .admin-metric p { margin-top: auto; }
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) {
-  padding: var(--admin-space-md) 18px;
-  gap: var(--admin-space-sm);
-  min-height: 73px;
-}
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > div:not(.admin-unified-section-icon) {
-  min-width: 0;
-}
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions {
-  justify-content: flex-end;
-  gap: 9px;
-}
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > :is(.admin-result-pill,.admin-heading-actions) {
-  flex-shrink: 0;
-}
-.admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) .admin-result-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 33px;
-}
-.admin-shell .admin-panel :is(.admin-field input,.admin-field select) {
-  min-height: 44px;
-}
-.admin-shell :is(.admin-panel,.admin-next) {
+  min-height: 160px;
+  padding: var(--admin-panel-padding);
   border-radius: var(--admin-card-radius);
 }
-/* Status messages should remain distinct from routine informational copy. */
-.admin-shell .admin-order-results {
-  padding: 12px 20px 0;
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: .82rem;
-  line-height: 1.5;
+.admin-shell .admin-metric > strong {
+  margin: 12px 0;
 }
-.admin-shell .admin-order-help {
-  margin: 12px 20px 0;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-surface-soft);
+.admin-shell .admin-metric p {
+  margin-top: auto;
 }
-.admin-shell .admin-order-help > summary {
-  cursor: pointer;
-  padding: 11px 13px;
-  color: var(--color-text-secondary);
-  font-size: .82rem;
-  font-weight: 700;
-}
-.admin-shell .admin-order-help > summary:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: -3px;
-}
-.admin-shell .admin-order-help > p {
-  margin: 0;
-  padding: 0 13px 12px;
-  color: var(--color-text-secondary);
-  line-height: 1.55;
-  font-size: .81rem;
-}
-/* Keep the catalog toolbar and the entire table aligned to the same gutter. */
-.admin-shell .admin-products-panel .admin-panel-heading {
-  padding: var(--admin-space-md) 20px;
-  gap: 12px;
-}
-.admin-shell .admin-products-panel .admin-panel-heading > .admin-heading-actions {
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  min-width: 0;
-}
+/* Catalog keeps sticky filters, mobile cards and internal table scrolling. */
 .admin-shell .admin-products-panel .admin-filters {
-  padding: var(--admin-space-lg) 20px var(--admin-space-md);
-  gap: var(--admin-space-sm);
+  padding: var(--admin-panel-padding);
+  gap: var(--admin-space-md);
 }
 .admin-shell .admin-products-panel .admin-results {
-  padding: 12px 20px;
-  min-height: 46px;
+  padding: 12px var(--admin-panel-padding);
   margin: 0;
   border-bottom: 1px solid var(--color-border);
-  align-items: center;
 }
-.admin-shell .admin-products-panel .admin-results p { margin: 0; }
-.admin-shell .admin-products-panel .admin-table-wrap { width: 100%; overflow-x: auto; }
+.admin-shell .admin-products-panel .admin-results p {
+  margin: 0;
+}
+.admin-shell .admin-products-panel .admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
 .admin-shell .admin-products-panel .admin-table {
   min-width: 920px;
   table-layout: auto;
 }
-.admin-shell .admin-products-panel .admin-table th,
-.admin-shell .admin-products-panel .admin-table td {
-  padding: 13px 14px;
+.admin-shell .admin-products-panel .admin-table :is(th, td) {
+  padding: 16px;
   vertical-align: middle;
 }
-.admin-shell .admin-products-panel .admin-table th:last-child,
-.admin-shell .admin-products-panel .admin-table td:last-child {
-  min-width: 300px;
+.admin-shell .admin-products-panel .admin-table th {
+  border-top: 0;
+}
+.admin-shell .admin-products-panel .admin-table :is(th, td):first-child {
+  padding-left: var(--admin-panel-padding);
+}
+.admin-shell .admin-products-panel .admin-table :is(th, td):last-child {
+  min-width: 260px;
+  padding-right: var(--admin-panel-padding);
 }
 .admin-shell .admin-products-panel .admin-row-actions {
-  display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 7px 10px;
+  gap: 8px 12px;
 }
-.admin-shell .admin-products-panel .admin-row-actions > :is(button,a) {
-  min-height: 36px;
-  white-space: nowrap;
+.admin-shell .admin-products-panel .admin-row-actions > :is(button, a) {
+  min-height: var(--admin-control-height);
+  white-space: normal;
 }
-.admin-shell .admin-products-panel .admin-row-actions > .admin-text-button {
-  padding: 7px 8px;
-}
-.admin-shell .admin-products-panel .admin-row-actions > .admin-danger {
-  padding: 7px 10px;
-}
-.admin-shell .admin-products-panel .admin-row-actions > .admin-view-product {
+.admin-shell .admin-products-panel .admin-view-product {
   display: inline-flex;
   align-items: center;
-  padding: 7px 6px;
+  padding: 8px 4px;
+}
+.admin-shell .admin-products-panel .admin-mobile-products {
+  padding: 0 var(--admin-panel-padding) var(--admin-panel-padding);
+}
+.admin-shell :is(.workflow-filters, .workflow-order-list, .workflow-stock-list) {
+  padding: var(--admin-panel-padding);
+  gap: var(--admin-space-md);
+}
+.admin-shell .admin-order-results {
+  padding: 0 var(--admin-panel-padding);
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.admin-shell .admin-order-help {
+  margin: var(--admin-space-lg) var(--admin-panel-padding) 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.admin-shell .admin-order-help > summary {
+  padding: 12px 16px;
+  min-height: var(--admin-control-height);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.admin-shell .admin-order-help > p {
+  margin: 0;
+  padding: 0 16px 16px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.admin-shell .workflow-admin-orders .commerce-readiness {
+  margin: var(--admin-space-panel) var(--admin-panel-padding) 0;
+  padding: var(--admin-panel-padding);
+  border-radius: var(--admin-card-radius);
+}
+.admin-shell .commerce-readiness h3 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+.admin-shell .workflow-notice {
+  margin-inline: var(--admin-panel-padding);
+}
+/* Shell brand, search and long profile names. */
+.admin-shell .admin-logo {
+  font-size: 1.875rem;
+  letter-spacing: -0.04em;
+}
+.admin-shell .admin-logo .company-brand {
+  gap: 10px;
+  align-items: center;
+}
+.admin-shell .admin-logo .company-brand-logo {
+  width: 40px;
+  height: 40px;
+}
+.admin-shell .admin-logo .company-brand-text {
+  line-height: 1.25;
+}
+.admin-shell .admin-logo small {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
+}
+.admin-shell .admin-topbar {
+  gap: var(--admin-space-lg);
+  margin-bottom: var(--admin-space-panel);
+  padding-bottom: var(--admin-space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+.admin-shell .admin-topbar-search {
+  flex: 1 1 360px;
+}
+.admin-shell .admin-topbar-profile {
+  flex: 0 1 280px;
+  overflow-wrap: anywhere;
+}
+.admin-shell .admin-topbar-profile > div {
+  min-width: 0;
+}
+.admin-shell .admin-topbar-avatar {
+  flex: 0 0 40px;
+}
+.admin-shell .admin-navigation a {
+  min-height: var(--admin-control-height);
+}
+@media (max-width: 1250px) {
+  .admin-shell .b2b-guide-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 @media (max-width: 950px) {
-  .admin-shell .admin-content { padding-inline: 18px; }
-  .admin-shell .admin-metric { min-height: 138px; }
+  .admin-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-shell .admin-sidebar {
+    position: static;
+    height: auto;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--admin-space-md);
+    padding: 16px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .admin-shell .admin-logo {
+    padding: 0;
+  }
+  .admin-shell .admin-navigation {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .admin-shell .admin-navigation .admin-store-link {
+    grid-column: 1 / -1;
+  }
+  .admin-shell .admin-menu-toggle {
+    min-height: var(--admin-control-height);
+    align-self: center;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+  .admin-shell .admin-content {
+    padding-inline: 20px;
+  }
+  .admin-shell :is(.admin-page-guide-steps, .b2b-guide-steps) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 650px) {
-  .admin-shell .admin-content { padding-inline: 14px; }
-  .admin-shell .admin-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .admin-shell .admin-demo-badge { align-self: flex-start; }
-  .admin-shell .admin-preview-notice { margin-bottom: 14px; }
-  .admin-shell .admin-page-guide { margin-bottom: 16px; }
-  .admin-shell .admin-metrics { gap: 10px; }
-  .admin-shell .admin-metric { padding: 14px; min-height: 122px; }
-  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) { min-height: 0; padding: 13px 14px; }
-  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) > .admin-heading-actions { width: 100%; }
-  .admin-shell .admin-products-panel .admin-panel-heading { padding: 14px; }
-  .admin-shell .admin-products-panel .admin-filters { padding: 14px; }
-  .admin-shell .admin-products-panel .admin-results { padding: 11px 14px; }
-  .admin-shell .admin-order-results { padding: 12px 14px 0; }
-  .admin-shell .admin-order-help { margin: 10px 14px 0; }
+  .admin-shell {
+    --admin-panel-padding: 16px;
+  }
+  .admin-shell .admin-content {
+    padding-inline: 16px;
+  }
+  .admin-shell .admin-sidebar {
+    padding-inline: 16px;
+  }
+  .admin-shell .admin-navigation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-shell .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--admin-space-sm);
+  }
+  .admin-shell .admin-demo-badge {
+    align-self: flex-start;
+  }
+  .admin-shell .admin-topbar-profile {
+    display: none;
+  }
+  .admin-shell .admin-topbar-profile > div {
+    display: none;
+  }
+  .admin-shell .admin-topbar {
+    gap: 12px;
+  }
+  .admin-shell :is(.admin-page-guide-steps, .b2b-guide-steps) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-shell :is(.admin-page-guide-step, .b2b-guide-step) {
+    min-height: 64px;
+  }
+  .admin-shell .admin-panel-heading:has(> .admin-unified-section-icon) {
+    grid-template-columns: var(--admin-icon-size) minmax(0, 1fr);
+  }
+  .admin-shell
+    .admin-panel-heading:has(> .admin-unified-section-icon)
+    > :is(.admin-result-pill, .admin-heading-actions, a, button) {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin: 0;
+  }
+  .admin-shell .admin-heading-actions {
+    justify-content: flex-start;
+  }
+  .admin-shell .admin-metric {
+    min-height: 144px;
+  }
+  .admin-shell .accounts-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-shell
+    :is(
+      .admin-field,
+      .accounts-action-fields,
+      .email-settings-confirm,
+      .b2b-edit-fields,
+      .shared-cart-page
+    )
+    :is(input, textarea, select) {
+    font-size: 1rem;
+  }
 }

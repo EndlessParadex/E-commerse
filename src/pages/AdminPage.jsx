@@ -14,9 +14,6 @@ import AdminIcon from '../components/admin/AdminIcon';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import AdminPageGuide from '../components/admin/AdminPageGuide';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
-import './AdminPage.css';
-import './AdminDesign2.css';
-import './AdminUnifiedUI.css';
 import AdminProductForm from './AdminProductForm';
 import {
   catalogLoadError,
@@ -37,6 +34,10 @@ import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
 import AdminOpsOverview from './AdminOpsOverview';
 import { approveNextRoute } from '../state/routeGuards';
+// Load the final shared layer after every admin view's styles.
+import './AdminPage.css';
+import './AdminDesign2.css';
+import './AdminUnifiedUI.css';
 
 const getMetrics = () => [
   {
@@ -374,7 +375,7 @@ export default function AdminPage({ view = 'overview' }) {
             <h1><span className="admin-page-title-icon">
               <AdminIcon name={view === 'approvals' ? 'accounts'
                 : view === 'sharedCarts' ? 'orders' : view} />
-            </span>{pageTitle}</h1>
+            </span><span className="admin-page-title-text">{pageTitle}</span></h1>
             <p>
               {b2bView
                 ? view === 'sharedCarts'

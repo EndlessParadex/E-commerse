@@ -374,13 +374,6 @@
   align-items: stretch;
 }
 .admin-shell .admin-ops-overview .admin-panel { min-width: 0; }
-.admin-shell .admin-ops-overview .admin-panel-heading {
-  flex-wrap: wrap;
-  padding: 19px 21px;
-}
-.admin-shell .admin-ops-overview .admin-panel-heading h2 {
-  font-size: 1.07rem;
-}
 .admin-shell .admin-ops-table-wrap {
   overflow-x: auto;
   margin: 0 17px;

@@ -86,7 +86,7 @@
   align-items: center;
 }
 .accounts-row-actions button {
-  min-height: 40px;
+  min-height: 44px;
 }
 .accounts-row-actions .accounts-delete {
   color: var(--color-danger-text);

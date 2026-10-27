@@ -14,6 +14,43 @@
 .shared-cart-page {
   max-width: 1200px;
 }
+.admin-shell .shared-cart-page {
+  max-width: none;
+  min-width: 0;
+}
+.admin-shell :is(.shared-admin-workspace, .shared-admin-main, .shared-admin-sidebar) {
+  gap: var(--admin-space-panel);
+}
+.admin-shell :is(.shared-admin-work-card, .shared-admin-active-store, .shared-admin-empty-state, .shared-admin-help, .admin-cart-queue, .admin-cart-processing) {
+  padding: var(--admin-panel-padding);
+  border-radius: var(--admin-card-radius);
+}
+.admin-shell .shared-admin-card-heading {
+  gap: var(--admin-space-sm);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--admin-space-md);
+}
+.admin-shell .shared-admin-card-heading :is(h2, h3) {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+.admin-shell .shared-admin-steps {
+  margin: 0 0 var(--admin-space-panel);
+}
+.admin-shell .shared-admin-steps li {
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .admin-shell .shared-admin-steps {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--admin-panel-padding);
+  }
+  .admin-shell .shared-admin-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .shared-admin-navigation {
   margin: 20px 0 12px;
   padding: 10px;

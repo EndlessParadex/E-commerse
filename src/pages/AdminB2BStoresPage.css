@@ -3,6 +3,56 @@
   gap: 20px;
   min-width: 0;
 }
+
+/* Page-specific alignment with the shared Admin standards. */
+.admin-shell .b2b-panel,
+.admin-shell .b2b-workspace > .b2b-panel {
+  padding: var(--admin-panel-padding);
+}
+.admin-shell .b2b-workspace {
+  gap: var(--admin-space-panel);
+}
+.admin-shell .b2b-panel > .b2b-section-heading {
+  gap: var(--admin-space-sm);
+  padding-bottom: 14px;
+  margin-bottom: var(--admin-space-md);
+}
+.admin-shell .b2b-panel > .b2b-section-heading .b2b-section-copy h2 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+.admin-shell .b2b-section-copy p {
+  font-size: .875rem;
+  line-height: 1.6;
+}
+.admin-shell .b2b-section-action button,
+.admin-shell .b2b-calendar-navigation button.admin-secondary {
+  min-height: var(--admin-control-height);
+}
+.admin-shell .b2b-calendar-navigation button.admin-secondary {
+  min-width: var(--admin-control-height);
+}
+.admin-shell .b2b-assignments-content #b2b-sales-choice {
+  min-height: var(--admin-control-height);
+}
+.admin-shell .b2b-create > .b2b-create-summary {
+  border-top: 0;
+  padding-top: 0;
+}
+.admin-shell .b2b-assignments-content .b2b-inline-form {
+  padding-top: 12px;
+}
+@media (max-width: 650px) {
+  .admin-shell .b2b-workspace > .b2b-panel {
+    padding: var(--admin-panel-padding);
+  }
+  .admin-shell .b2b-assignments-content .b2b-assignment-grid section + section {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--color-border);
+    padding-top: 16px;
+  }
+}
 .b2b-panel {
   padding: 24px;
   min-width: 0;

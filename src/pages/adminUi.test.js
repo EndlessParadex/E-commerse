@@ -81,6 +81,14 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.ok(container.querySelector('.admin-ops-orders'), 'live order activity panel is present');
     assert.ok(container.querySelector('.admin-ops-inventory'), 'real inventory summary panel is present');
     assert.ok(container.querySelector('.admin-navigation a[aria-current="page"]'), 'current route remains accessible');
+    assert.ok(container.querySelector('.admin-header .admin-page-title-icon .admin-icon'),
+      'all Admin routes use the same icon style as Toko & Sales');
+    assert.equal(container.querySelectorAll('.admin-page-guide-step').length, 4,
+      'dashboard shows a concise four-step Admin guide');
+    assert.ok(container.querySelector('.admin-ops-orders .admin-unified-section-icon'),
+      'order overview has its own clear section icon and separator');
+    assert.ok(container.querySelector('.admin-ops-inventory .admin-unified-section-icon'),
+      'inventory overview has its own clear section icon');
     assert.equal(container.querySelectorAll('.admin-metric').length, 4);
     assert.ok(container.querySelector('.admin-overview-table'), 'dashboard uses the real catalog table');
     assert.ok(container.querySelector('.admin-topbar-search'), 'catalog search is available in the Admin toolbar');
@@ -106,6 +114,10 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(container.querySelector('nav a[href="#/admin/produk"]'));
     assert.equal(container.querySelector('.admin-editor'), null);
     await render('suppliers');
+    assert.equal(container.querySelectorAll('.admin-page-guide-step').length, 3,
+      'supplier page has short practical steps');
+    assert.ok(container.querySelector('.admin-panel-heading .admin-unified-section-icon'),
+      'supplier heading uses the shared icon system');
     await click(button('+ Tambah PT pemasok'));
     await fill('#master-name', 'Isian PT sementara');
     accepted = false;
@@ -192,6 +204,10 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(button('Simpan kategori'));
     assert.match(container.textContent, /Aksesori UI Uji/);
     await render('products');
+    assert.ok(container.querySelector('.admin-page-guide'),
+      'product catalog exposes its quick-start guide');
+    assert.ok(container.querySelector('.admin-products-panel .admin-unified-section-icon'),
+      'products use the unified section header');
     const filterPanel = container.querySelector('.admin-products-panel');
     assert.ok(filterPanel, 'product catalog has its own sticky filter container');
     assert.ok(filterPanel.querySelector('.admin-filters #admin-search'));

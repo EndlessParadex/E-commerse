@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDelivery } from '../state/useDelivery';
 import useUnsavedChanges from '../state/useUnsavedChanges';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { accountApi } from '../components/account/accountApi';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import './AdminAccountsPage.css';
@@ -163,6 +164,7 @@ export default function AdminAccountsPage() {
   return (
     <section className="admin-panel accounts-page">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="accounts" />
         <div>
           <h2>Kelola akun</h2>
           <p>Cari akun pengguna dan atur aksesnya ke toko.</p>

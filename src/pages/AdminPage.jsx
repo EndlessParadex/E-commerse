@@ -11,9 +11,12 @@ import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCa
 import { rupiah } from '../components/shop/shopPresentation';
 import ProductImage from '../components/shop/ProductImage';
 import AdminIcon from '../components/admin/AdminIcon';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
+import AdminPageGuide from '../components/admin/AdminPageGuide';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import './AdminPage.css';
 import './AdminDesign2.css';
+import './AdminUnifiedUI.css';
 import AdminProductForm from './AdminProductForm';
 import {
   catalogLoadError,
@@ -349,9 +352,10 @@ export default function AdminPage({ view = 'overview' }) {
                   ? 'Pengaturan pemilik'
                   : 'Pengelolaan katalog'}
             </span>
-            <h1>{view === 'b2bStores' && (
-              <span className="b2b-admin-title-icon"><AdminIcon name="b2bStores" /></span>
-            )}{pageTitle}</h1>
+            <h1><span className="admin-page-title-icon">
+              <AdminIcon name={view === 'approvals' ? 'accounts'
+                : view === 'sharedCarts' ? 'orders' : view} />
+            </span>{pageTitle}</h1>
             <p>
               {b2bView
                 ? view === 'sharedCarts'
@@ -401,6 +405,7 @@ export default function AdminPage({ view = 'overview' }) {
                     ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
                     : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
         </p>
+        {!editor && view !== 'b2bStores' && <AdminPageGuide view={view} />}
         {pendingLocalImport && view === 'overview' && !editor && (
           <section className="admin-next">
             <h2>Data pratinjau sebelumnya ditemukan</h2>
@@ -537,6 +542,7 @@ export default function AdminPage({ view = 'overview' }) {
               <div className="admin-overview-main">
                 <section className="admin-panel admin-overview-products" aria-labelledby="admin-overview-products-title">
                   <div className="admin-panel-heading">
+                    <AdminSectionIcon name="products" />
                     <div>
                       <h2 id="admin-overview-products-title">Daftar produk</h2>
                       <p>Ringkasan SKU yang tersimpan dalam katalog BAM.</p>
@@ -580,6 +586,7 @@ export default function AdminPage({ view = 'overview' }) {
                 </section>
             <section className="admin-panel">
               <div className="admin-panel-heading">
+                <AdminSectionIcon name="suppliers" />
                 <div>
                   <h2>PT pemasok</h2>
                   <p>Sebaran produk utama dan varian pada setiap pemasok.</p>
@@ -648,6 +655,7 @@ export default function AdminPage({ view = 'overview' }) {
         ) : (
           <section className="admin-panel admin-products-panel">
             <div className="admin-panel-heading">
+              <AdminSectionIcon name="products" />
               <div>
                 <h2>Katalog produk</h2>
                 <p>

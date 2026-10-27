@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { workflowUsesServer } from '../data/adminStore';
 import useCompany from '../state/useCompany';
 import useUnsavedChanges from '../state/useUnsavedChanges';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { companyProfileErrors } from '../data/companyProfile';
 import { saveCompany, refreshCompany } from '../data/companyStore';
 import './AdminCompanyPage.css';
@@ -178,6 +179,7 @@ export default function AdminCompanyPage() {
       >
         <fieldset className="admin-submit-lock" disabled={busy || !company.available}>
           <div className="admin-panel-heading">
+        <AdminSectionIcon name="company" />
             <div>
               <h2>Identitas perusahaan</h2>
               <p>

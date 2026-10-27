@@ -18,6 +18,7 @@ import useUnsavedChanges from '../state/useUnsavedChanges';
 import useWorkflow from '../state/useWorkflow';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import ProductImage from '../components/shop/ProductImage';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { savedProductPhotos } from '../data/productPhotos';
 import { productColorStyle } from '../data/catalogColors';
 import { stockBreakdown } from '../data/stockPresentation';
@@ -346,6 +347,7 @@ export default function AdminStockPage() {
   return (
     <section className="admin-panel workflow-admin-stock">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="stock" />
         <div>
           <h2>Stok per ukuran</h2>
           <p>Satuan, pack, dan dus dengan ukuran yang sama menggunakan stok bersama.</p>

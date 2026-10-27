@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { accountApi } from '../components/account/accountApi';
 import { useDelivery } from '../state/useDelivery';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
@@ -64,6 +65,7 @@ export default function AdminApprovalsPage() {
   return (
     <section className="admin-panel accounts-page">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="accounts" />
         <div><h2>Persetujuan akun baru</h2><p>Hanya Admin atau Pemilik yang dapat menyetujui pendaftaran. Verifikasi email tetap diperlukan sebelum checkout.</p></div>
         <span className="admin-result-pill">{data?.total ?? '…'} pendaftaran</span>
       </div>

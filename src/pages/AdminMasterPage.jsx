@@ -10,6 +10,7 @@ import {
   masterDeleteReason,
 } from '../data/adminStore';
 import useUnsavedChanges from '../state/useUnsavedChanges';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { catalogColors, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
 import { categoryIconGroups } from '../data/categoryIcons';
 import PhotoUpload from '../components/PhotoUpload';
@@ -367,6 +368,7 @@ export default function AdminMasterPage({ type }) {
       )}
       <section className="admin-panel">
         <div className="admin-panel-heading">
+        <AdminSectionIcon name={type} />
           <div>
             <h2>Daftar {labels[type]}</h2>
             <p>

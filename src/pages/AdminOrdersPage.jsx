@@ -10,6 +10,7 @@ import { paymentMethod } from '../state/paymentMethods';
 import { dateLabel, rupiah } from '../components/shop/shopPresentation';
 import { orderItemPresentation } from '../data/orderItemPresentation';
 import ProductImage from '../components/shop/ProductImage';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
@@ -102,6 +103,7 @@ export default function AdminOrdersPage() {
   return (
     <section className="admin-panel workflow-admin-orders">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="orders" />
         <div>
           <h2>Pesanan toko</h2>
           <p>

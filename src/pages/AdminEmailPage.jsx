@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDelivery } from '../state/useDelivery';
 import useUnsavedChanges from '../state/useUnsavedChanges';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { accountApi } from '../components/account/accountApi';
 import { refreshCompany } from '../data/companyStore';
 import './AdminEmailPage.css';
@@ -160,6 +161,7 @@ export default function AdminEmailPage() {
   return (
     <section className="admin-panel email-settings-page">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="email" />
         <div>
           <h2>Pengaturan email toko</h2>
           <p>

@@ -1,4 +1,5 @@
 import useWorkflow from '../state/useWorkflow';
+import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { serverStock } from '../state/serverWorkflow';
 import { stockKey } from '../state/frontendWorkflow';
 import { products } from '../data/products';
@@ -11,6 +12,7 @@ function RecentOrders() {
   return (
     <section className="admin-panel admin-ops-orders" aria-labelledby="admin-ops-orders-title">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="orders" />
         <div>
           <h2 id="admin-ops-orders-title">Pesanan terbaru</h2>
           <p>Pesanan yang tersedia untuk akun Admin saat ini.</p>
@@ -70,6 +72,7 @@ function InventorySummary() {
   return (
     <section className="admin-panel admin-ops-inventory" aria-labelledby="admin-ops-stock-title">
       <div className="admin-panel-heading">
+        <AdminSectionIcon name="stock" />
         <div>
           <h2 id="admin-ops-stock-title">Ringkasan stok</h2>
           <p>Jumlah jenis stok produk, bukan jumlah unit barang.</p>

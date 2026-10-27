@@ -589,3 +589,121 @@
   color: var(--color-text-secondary);
   font-weight: 600;
 }
+
+/* Compact product editor: uses the full width; optional preview is above the fields. */
+.admin-shell .admin-editor-heading { margin-bottom: 14px; }
+.admin-shell .admin-editor-heading h2 { margin: 4px 0 6px; }
+.admin-shell .admin-editor-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.admin-shell .admin-editor-sections {
+  grid-row: 2;
+  gap: 14px;
+}
+.admin-shell .admin-editor .admin-form-section { padding: 18px 20px; }
+.admin-shell .admin-editor .admin-form-section > h3,
+.admin-shell .admin-editor .admin-section-heading {
+  padding-bottom: 9px;
+  margin-bottom: 12px;
+}
+.admin-shell .admin-editor .admin-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+.admin-shell .admin-editor .admin-field { min-width: 0; }
+.admin-shell .admin-editor .admin-field label { font-size: 0.8125rem; }
+.admin-shell .admin-editor #product-description {
+  min-height: 82px;
+  max-height: 300px;
+  line-height: 1.5;
+}
+.admin-shell .admin-editor .admin-variant-row {
+  margin-top: 12px;
+  padding: 12px 16px;
+}
+.admin-shell .admin-editor .admin-variant-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.admin-shell .admin-editor .admin-variant-fields .admin-sku { grid-column: auto; }
+.admin-shell .admin-editor .admin-form-footer {
+  margin-top: 14px;
+  padding: 14px 18px;
+}
+.admin-shell .admin-editor .admin-form-preview-compact {
+  grid-row: 1;
+  position: static;
+  top: auto;
+  padding: 0;
+  border-radius: 12px;
+  max-width: none;
+  width: 100%;
+}
+.admin-shell .admin-editor .admin-preview-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  min-height: 44px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.admin-shell .admin-editor .admin-preview-summary small {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-shell .admin-editor .admin-form-preview-compact[open] > summary {
+  border-bottom: 1px solid var(--color-border);
+}
+.admin-shell .admin-editor .admin-preview-content {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  min-width: 0;
+}
+.admin-shell .admin-editor .admin-preview-image {
+  width: 112px;
+  height: 112px;
+  margin: 0;
+}
+.admin-shell .admin-editor .admin-preview-meta { min-width: 0; }
+.admin-shell .admin-editor .admin-preview-meta h4 { margin: 2px 0; }
+.admin-shell .admin-editor .admin-preview-meta > strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 1.125rem;
+  color: var(--color-info-text);
+}
+.admin-shell .admin-editor .admin-preview-sizes { margin: 8px 0; }
+.admin-shell .admin-editor .admin-preview-description {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1199px) {
+  .admin-shell .admin-editor .admin-form-grid,
+  .admin-shell .admin-editor .admin-variant-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .admin-shell .admin-editor .admin-form-section { padding: 16px; }
+  .admin-shell .admin-editor .admin-form-grid,
+  .admin-shell .admin-editor .admin-variant-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-shell .admin-editor .admin-preview-content {
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  .admin-shell .admin-editor .admin-preview-image { width: 80px; height: 80px; }
+}

@@ -110,6 +110,12 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
     assert.match(adminTheme, /@media\(max-width:950px\)/);
     await click(button('+ Tambah produk'));
+    assert.ok(container.querySelector('details.admin-form-preview'),
+      'preview stays accessible without a permanent sidebar');
+    assert.equal(container.querySelector('details.admin-form-preview').hasAttribute('open'), false,
+      'preview starts closed to save vertical space');
+    assert.equal(container.querySelector('#product-description')?.getAttribute('rows'), '3',
+      'description begins at three lines and can be resized');
     await fill('#product-baseName', 'Isian belum disimpan');
     await click(container.querySelector('nav a[href="#/admin"]'));
     assert.equal(container.querySelector('#product-baseName').value, 'Isian belum disimpan');

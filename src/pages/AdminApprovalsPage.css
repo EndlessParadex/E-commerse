@@ -1,0 +1,272 @@
+.admin-shell .approvals-page .approval-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.admin-shell .approvals-page .approval-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  font: inherit;
+  line-height: 1.5;
+}
+.admin-shell .approval-summary-card > span {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.admin-shell .approval-summary-card > strong {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+.admin-shell .approval-summary-card[aria-pressed='true'] {
+  border-color: var(--color-focus);
+  background: var(--color-info-soft);
+}
+.admin-shell .approval-summary-card:not(:disabled):hover {
+  border-color: var(--color-focus);
+}
+.admin-shell .approval-summary-card:disabled {
+  opacity: 1;
+}
+.admin-shell .approvals-page .approval-summary-caption {
+  margin: -8px 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+.admin-shell .approvals-page .accounts-filters--approvals {
+  --approval-control-height: max(48px, calc(1.5rem + 24px));
+  padding: 0;
+}
+.admin-shell
+  .approvals-page
+  .accounts-filters--approvals
+  :is(.accounts-filter-search, .accounts-approvals-refresh) {
+  height: var(--approval-control-height);
+  min-height: var(--approval-control-height);
+}
+.admin-shell .approvals-page .approval-status-select {
+  position: relative;
+  min-width: 0;
+}
+.admin-shell .approvals-page .accounts-filters--approvals #approval-status {
+  display: block;
+  appearance: none;
+  box-sizing: border-box;
+  height: var(--approval-control-height);
+  min-height: var(--approval-control-height);
+  padding: 11px 42px 11px 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.admin-shell .approval-status-select > svg {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  color: var(--color-text-muted);
+}
+.admin-shell .approvals-page :is(.approval-help, .approval-detail) {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  background: var(--color-surface);
+}
+.admin-shell .approval-help {
+  border-left: 3px solid var(--color-focus);
+}
+.admin-shell .approval-help strong {
+  font-size: 0.875rem;
+}
+.admin-shell .approvals-page .approval-help p {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.admin-shell .approval-results,
+.admin-shell .approval-loading {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+.admin-shell .approval-detail header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+}
+.admin-shell .approval-detail header p {
+  margin: 0 0 6px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+.admin-shell .approval-detail h3 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.admin-shell .approval-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+.admin-shell .approval-detail dl > div {
+  min-width: 0;
+}
+.admin-shell .approval-detail dt {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+.admin-shell .approval-detail dd {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-shell .approval-detail small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+.admin-shell .approval-detail-wide {
+  grid-column: 1 / -1;
+}
+.admin-shell .approval-detail-note {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.admin-shell .approval-status.is-pending {
+  color: var(--color-warning-text);
+  background: var(--color-warning-pill);
+}
+.admin-shell .approval-status.is-approved {
+  color: var(--color-success-text);
+  background: var(--color-success-pill);
+}
+.admin-shell .approval-status.is-rejected {
+  color: var(--color-danger-text);
+  background: var(--color-danger-pill);
+}
+.admin-shell .approvals-table {
+  min-width: 840px;
+}
+.admin-shell .approvals-table td:first-child {
+  min-width: 200px;
+  max-width: 280px;
+}
+.admin-shell .approvals-table td:last-child {
+  min-width: 165px;
+}
+.admin-shell .approval-phone {
+  white-space: nowrap;
+}
+.admin-shell .approvals-table .accounts-row-actions {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 8px;
+  align-items: center;
+}
+.admin-shell .approvals-table .accounts-row-actions > button:first-child {
+  grid-column: 1 / -1;
+}
+.admin-shell .approvals-table .accounts-row-actions > .approval-action-note {
+  grid-column: 1 / -1;
+}
+.admin-shell .approval-email {
+  font-size: 0.8125rem;
+  color: var(--color-warning-text);
+}
+.admin-shell .approval-email.is-verified {
+  color: var(--color-success-text);
+}
+.admin-shell .approval-action-note {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+.admin-shell .approvals-page .approval-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 36px 20px;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  text-align: center;
+}
+.admin-shell .approval-empty h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.admin-shell .approval-empty p {
+  margin: 0;
+  max-width: 580px;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+.admin-shell .approval-owner-link {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.approval-confirm-help {
+  margin-top: 16px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+@media (max-width: 1100px) {
+  .admin-shell .approvals-page .approval-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .admin-shell .approvals-page .accounts-filters--approvals #approval-status {
+    font-size: 1rem;
+  }
+  .admin-shell .approvals-table {
+    min-width: 0;
+  }
+  .admin-shell .approvals-table td:first-child,
+  .admin-shell .approvals-table td:last-child {
+    min-width: 0;
+    max-width: none;
+  }
+  .admin-shell .approval-detail dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 420px) {
+  .admin-shell .approvals-page .approval-summary-card {
+    padding: 12px;
+  }
+  .admin-shell .approvals-page .approval-summary-card > span {
+    font-size: 0.8125rem;
+  }
+  .admin-shell .approvals-page .approval-summary-card > strong {
+    font-size: 1.5rem;
+  }
+}

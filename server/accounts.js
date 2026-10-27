@@ -31,6 +31,9 @@ export class AccountRepository {
       id TEXT PRIMARY KEY,actor_id TEXT NOT NULL,target_id TEXT NOT NULL,
       action TEXT NOT NULL,reason TEXT NOT NULL,created_at INTEGER NOT NULL
     );`);
+    db.exec(
+      'CREATE INDEX IF NOT EXISTS account_audit_target_action ON account_management_audit(target_id,action,created_at DESC)',
+    );
   }
   requireOwner(actor) {
     if (!isStoreOwner(this.db, actor))
@@ -40,13 +43,21 @@ export class AccountRepository {
     if (!row) return null;
     // Explicit store ownership differs from BAM administration permissions.
     // One account may be a buyer at multiple stores; show its actual relations.
-    const linkedStores = this.db.prepare(`SELECT s.store_code AS storeCode,
+    const linkedStores = this.db
+      .prepare(
+        `SELECT s.store_code AS storeCode,
       s.store_name AS storeName,CASE WHEN own.user_id=m.user_id THEN 'owner' ELSE 'member' END AS storeRole
       FROM b2b_store_members m JOIN b2b_stores s ON s.id=m.store_id
       LEFT JOIN b2b_store_owners own ON own.store_id=m.store_id
-      WHERE m.user_id=? AND s.active=1 ORDER BY s.store_name,s.store_code LIMIT 6`).all(row.id);
-    const linkedStoreCount = this.db.prepare(`SELECT COUNT(*) AS n FROM b2b_store_members m
-      JOIN b2b_stores s ON s.id=m.store_id WHERE m.user_id=? AND s.active=1`).get(row.id).n;
+      WHERE m.user_id=? AND s.active=1 ORDER BY s.store_name,s.store_code LIMIT 6`,
+      )
+      .all(row.id);
+    const linkedStoreCount = this.db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM b2b_store_members m
+      JOIN b2b_stores s ON s.id=m.store_id WHERE m.user_id=? AND s.active=1`,
+      )
+      .get(row.id).n;
     const protectedReason =
       row.id === actor.id
         ? 'Akun yang sedang digunakan.'
@@ -163,46 +174,85 @@ export class AccountRepository {
     const query = (params.get('q') || '').trim().toLocaleLowerCase('id');
     const page = Number(params.get('page') || 1);
     if (
-      !['pending', 'rejected', 'all'].includes(status) ||
+      !['pending', 'rejected', 'approved', 'all', 'any'].includes(status) ||
       query.length > 200 ||
       !Number.isSafeInteger(page) ||
       page < 1 ||
       page > 100000
     )
       fail('Filter persetujuan tidak valid.');
-    const where = ["u.role='user'", "a.status IN ('pending','rejected')"];
+    const where = ["u.role='user'"];
     const args = [];
-    if (status !== 'all') {
+    if (query) {
+      const phoneQuery = normalizeWhatsApp(query);
+      where.push(
+        "(instr(lower(u.name||' '||u.email||' '||COALESCE(p.phone,'')),?)>0" +
+          (phoneQuery ? ' OR p.phone=?' : '') +
+          ')',
+      );
+      args.push(query);
+      if (phoneQuery) args.push(phoneQuery);
+    }
+    const from = `FROM account_approvals a JOIN users u ON u.id=a.user_id
+      LEFT JOIN auth_account_state s ON s.user_id=u.id
+      LEFT JOIN user_contact_phones p ON p.user_id=u.id
+      LEFT JOIN users manager ON manager.id=a.decided_by`;
+    const summary = { pending: 0, approved: 0, rejected: 0, total: 0 };
+    for (const row of this.db
+      .prepare(
+        'SELECT a.status,COUNT(*) AS n ' +
+          from +
+          ' WHERE ' +
+          where.join(' AND ') +
+          ' GROUP BY a.status',
+      )
+      .all(...args)) {
+      summary[row.status] = row.n;
+      summary.total += row.n;
+    }
+    // Keep the existing "all" contract (pending + rejected); "any" includes decided registrations.
+    if (status === 'all') where.push("a.status IN ('pending','rejected')");
+    else if (status !== 'any') {
       where.push('a.status=?');
       args.push(status);
     }
-    if (query) {
-      where.push("instr(lower(u.name||' '||u.email),?)>0");
-      args.push(query);
-    }
     const clause = ' WHERE ' + where.join(' AND ');
-    const from =
-      'FROM account_approvals a JOIN users u ON u.id=a.user_id LEFT JOIN auth_account_state s ON s.user_id=u.id';
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from + clause).get(...args).n;
     const pageSize = 25;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const actualPage = Math.min(page, pages);
     const users = this.db
       .prepare(
-        'SELECT u.id,u.name,u.email,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,s.verified_at AS verifiedAt ' +
+        `SELECT u.id,u.name,u.email,u.address,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,
+          s.verified_at AS verifiedAt,p.phone,p.verified_at AS phoneVerifiedAt,
+          a.decided_at AS decidedAt,manager.name AS decidedByName,
+          (SELECT reason FROM account_management_audit audit WHERE audit.target_id=u.id AND audit.actor_id=a.decided_by
+            AND audit.action=CASE a.status WHEN 'approved' THEN 'registration:approve' WHEN 'rejected' THEN 'registration:reject' END
+            ORDER BY audit.created_at DESC,audit.id DESC LIMIT 1) AS decisionReason ` +
           from +
           clause +
           ' ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?',
       )
-      .all(...args, pageSize, (page - 1) * pageSize)
+      .all(...args, pageSize, (actualPage - 1) * pageSize)
       .map((row) => ({
         id: row.id,
         name: row.name,
         email: row.email,
+        address: row.address,
+        phone: row.phone || '',
+        phoneVerified: row.phoneVerifiedAt != null,
         createdAt: row.createdAt,
         approvalStatus: row.approvalStatus,
         revision: row.revision,
         emailVerified: row.verifiedAt != null,
+        emailVerifiedAt: row.verifiedAt ?? null,
+        decidedAt: row.decidedAt ?? null,
+        decidedByName: row.decidedByName || '',
+        decisionReason: row.decisionReason || '',
+        canApprove: ['pending', 'rejected'].includes(row.approvalStatus),
+        canReject: row.approvalStatus === 'pending',
       }));
-    return { users, total, page, pageSize, pages: Math.max(1, Math.ceil(total / pageSize)) };
+    return { users, total, page: actualPage, pageSize, pages, summary };
   }
   reviewApproval(actor, id, body) {
     this.requireApprover(actor);

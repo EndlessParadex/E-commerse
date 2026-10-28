@@ -217,8 +217,8 @@ function CartQuantity({ item, shared }) {
         void save(draft);
       }}
     >
-      <label>
-        Jumlah kemasan
+      <div className="shared-quantity-label">
+        <label htmlFor={'shared-quantity-' + item.id}>Jumlah kemasan</label>
         <span className="shared-quantity-controls shared-admin-quantity-stepper">
           <button
             type="button"
@@ -230,6 +230,7 @@ function CartQuantity({ item, shared }) {
             −
           </button>
           <input
+            id={'shared-quantity-' + item.id}
             type="number"
             min="1"
             max="99"
@@ -266,7 +267,7 @@ function CartQuantity({ item, shared }) {
             +
           </button>
         </span>
-      </label>
+      </div>
       <button type="submit" className="shared-quantity-submit-sr">Simpan jumlah</button>
       <button
         type="button"

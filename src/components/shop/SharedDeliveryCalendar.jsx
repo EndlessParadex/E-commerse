@@ -11,7 +11,13 @@ const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 const isoDate = (time) => new Date(time).toISOString().slice(0, 10);
 const firstOfMonth = (date) => (date || new Date().toISOString().slice(0, 10)).slice(0, 7) + '-01';
 
-export default function SharedDeliveryCalendar({ date, schedule, disabled, onChoose, compact = false }) {
+export default function SharedDeliveryCalendar({
+  date,
+  schedule,
+  disabled,
+  onChoose,
+  compact = false,
+}) {
   const [month, setMonth] = useState(() => firstOfMonth(date));
   useEffect(() => {
     if (date) {
@@ -44,9 +50,17 @@ export default function SharedDeliveryCalendar({ date, schedule, disabled, onCho
       >
         {compact ? (
           <>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
-              strokeLinejoin="round" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <path d="M7 3v4M17 3v4M3 10h18" />
             </svg>

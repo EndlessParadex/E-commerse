@@ -1386,7 +1386,9 @@
 }
 
 /* Buyer/Sales cart: date control is next to the period, main action follows subtotal. */
-.shared-cart-page .shared-cart-heading { position: relative; }
+.shared-cart-page .shared-cart-heading {
+  position: relative;
+}
 .shared-cart-page .shared-cart-dateline {
   display: flex;
   flex-wrap: wrap;

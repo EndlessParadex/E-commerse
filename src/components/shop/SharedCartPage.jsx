@@ -1126,12 +1126,8 @@ export default function SharedCartPage({ adminView = false }) {
           </nav>
           <header className="shop-page-header">
             <h1>Keranjang bersama toko</h1>
-            <p>Pembeli dan Sales yang ditugaskan mengisi daftar barang yang sama.</p>
+            <p>Atur jumlah kemasan; Admin memeriksa dan memfinalisasi pesanan.</p>
           </header>
-          <p className="shared-cart-explanation">
-            Keranjang tersimpan bersama. Tanggal adalah rencana pengiriman; stok dicadangkan setelah
-            Admin memfinalisasi pesanan.
-          </p>
         </>
       )}
       {shared.status === 'loading' && <p role="status">Memuat toko dan keranjang…</p>}
@@ -1222,16 +1218,6 @@ export default function SharedCartPage({ adminView = false }) {
           aria-labelledby={isAdmin ? 'shared-tab-' + adminSection : undefined}
         >
           {(!cart || isAdmin) && storePicker}
-          {cart && !isAdmin && (
-            <SharedDeliveryCalendar
-              date={cart.date}
-              schedule={cart.store.deliverySchedule}
-              disabled={frozen}
-              onChoose={(selected) =>
-                void shared.choose({ storeId: cart.store.id, date: selected })
-              }
-            />
-          )}
           {shared.reading && <p role="status">Memuat keranjang terbaru…</p>}
           {shared.notice && (
             <p className="shared-save-notice" role="status">
@@ -1243,12 +1229,25 @@ export default function SharedCartPage({ adminView = false }) {
               <section className="shared-cart-heading" data-revision={cart.revision}>
                 <div>
                   <h2>{cart.store.storeName}</h2>
-                  <p>
-                    {cart.store.storeCode} · {dateLabel(cart.date)}
-                    {cart.overdue && (
-                      <strong className="shared-overdue-label"> · Lewat jadwal</strong>
+                  <div className="shared-cart-dateline">
+                    <span>
+                      {cart.store.storeCode} · {dateLabel(cart.date)}
+                      {cart.overdue && (
+                        <strong className="shared-overdue-label"> · Lewat jadwal</strong>
+                      )}
+                    </span>
+                    {!isAdmin && (
+                      <SharedDeliveryCalendar
+                        compact
+                        date={cart.date}
+                        schedule={cart.store.deliverySchedule}
+                        disabled={frozen}
+                        onChoose={(selected) =>
+                          void shared.choose({ storeId: cart.store.id, date: selected })
+                        }
+                      />
                     )}
-                  </p>
+                  </div>
                   <p className="shared-cart-overview">
                     {cart.items.length} SKU · {shop.quantity} kemasan
                     <span className={'shared-cart-status status-' + cart.status}>
@@ -1421,6 +1420,42 @@ export default function SharedCartPage({ adminView = false }) {
                       <p>
                         Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
                       </p>
+                      {!isAdmin && cart.status === 'open' && (
+                        <div className="shared-cart-actions">
+                          {cart.reviewRequested ? (
+                            <p className="shared-review-message" role="status">
+                              Permintaan pemeriksaan telah dicatat. Admin dapat mengunci dan
+                              memfinalisasi. Jika isi keranjang berubah, ajukan kembali.
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              className="shop-primary shared-request-review"
+                              disabled={!shared.canEdit || !cart.items.length}
+                              onClick={() => void shared.mutate('request_review')}
+                            >
+                              Ajukan keranjang ke Admin →
+                            </button>
+                          )}
+                          {shared.role === 'sales' && sharedDraftWhatsAppUrl(cart) && (
+                            <a
+                              className="bam-button-secondary shared-whatsapp-link"
+                              href={sharedDraftWhatsAppUrl(cart)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Buka rekap draft di WhatsApp
+                            </a>
+                          )}
+                          {shared.role === 'sales' && (
+                            <small>
+                              Rekap WhatsApp belum final. Periksa nomor penerima dan pastikan toko
+                              setuju menerima pesan. Pengiriman dilakukan di WhatsApp.
+                            </small>
+                          )}
+                        </div>
+                      )}
+
                       <section
                         className="shared-cart-payment shared-cart-payment-compact"
                         aria-labelledby="shared-payment-title"
@@ -1465,41 +1500,6 @@ export default function SharedCartPage({ adminView = false }) {
                         )}
                       </section>
 
-                      {!isAdmin && cart.status === 'open' && (
-                        <div className="shared-cart-actions">
-                          {cart.reviewRequested ? (
-                            <p className="shared-review-message" role="status">
-                              Permintaan pemeriksaan telah dicatat. Admin dapat mengunci dan
-                              memfinalisasi. Jika isi keranjang berubah, ajukan kembali.
-                            </p>
-                          ) : (
-                            <button
-                              type="button"
-                              className="shop-primary shared-request-review"
-                              disabled={!shared.canEdit || !cart.items.length}
-                              onClick={() => void shared.mutate('request_review')}
-                            >
-                              Ajukan keranjang ke Admin →
-                            </button>
-                          )}
-                          {shared.role === 'sales' && sharedDraftWhatsAppUrl(cart) && (
-                            <a
-                              className="bam-button-secondary shared-whatsapp-link"
-                              href={sharedDraftWhatsAppUrl(cart)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Buka rekap draft di WhatsApp
-                            </a>
-                          )}
-                          {shared.role === 'sales' && (
-                            <small>
-                              Rekap WhatsApp belum final. Periksa nomor penerima dan pastikan toko
-                              setuju menerima pesan. Pengiriman dilakukan di WhatsApp.
-                            </small>
-                          )}
-                        </div>
-                      )}
                       <details className="shared-summary-help">
                         <summary>Catatan harga dan stok</summary>
                         <p>

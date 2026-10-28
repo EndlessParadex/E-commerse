@@ -1384,3 +1384,29 @@
   display: grid;
   gap: 5px;
 }
+
+/* Buyer/Sales cart: date control is next to the period, main action follows subtotal. */
+.shared-cart-page .shared-cart-heading { position: relative; }
+.shared-cart-page .shared-cart-dateline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 3px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.87rem;
+}
+.shared-cart-page .shared-cart-actions {
+  padding: 10px 0 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.shared-cart-page .shared-cart-actions .shared-whatsapp-link {
+  background: #167a43;
+  border-color: #167a43;
+  color: #fff;
+}
+.shared-cart-page .shared-cart-actions .shared-whatsapp-link:hover,
+.shared-cart-page .shared-cart-actions .shared-whatsapp-link:focus-visible {
+  background: #106735;
+  color: #fff;
+}

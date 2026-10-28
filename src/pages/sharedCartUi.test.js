@@ -137,9 +137,12 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await openDate();
     await wait(() => container.querySelector('.shared-selection-panel')?.open === false);
     assert.ok(
-      container.querySelector('.shared-delivery-calendar'),
-      'calendar replaces the full-width store selection after opening a cart',
+      container.querySelector('.shared-cart-heading .shared-delivery-calendar.is-inline'),
+      'calendar is a compact control next to the active delivery period',
     );
+    assert.equal(container.querySelector('.shared-cart-page > .shared-delivery-calendar'), null);
+    assert.equal(container.querySelector('.shared-cart-bar'), null, 'redundant banner removed');
+    assert.equal(container.querySelector('.shared-cart-explanation'), null);
     assert.ok(
       container.querySelector('.shared-cart-summary .shared-selection-panel'),
       'store selection is inside the cart summary',
@@ -199,6 +202,13 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.ok(container.querySelector('.shared-quantity-controls'));
     assert.ok(container.querySelector('.shared-packaging-pill'));
     assert.ok(button('Ajukan keranjang ke Admin →'));
+    const summary = container.querySelector('.shared-cart-summary');
+    assert.ok(summary.querySelector('.shared-cart-actions'));
+    assert.ok(
+      [...summary.children].indexOf(summary.querySelector('.shared-cart-actions')) <
+        [...summary.children].indexOf(summary.querySelector('.shared-cart-payment')),
+      'request review follows subtotal, before payment settings',
+    );
     await fill('.shared-quantity input', '4');
     await submit('.shared-quantity');
     await wait(

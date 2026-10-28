@@ -11,7 +11,7 @@ const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 const isoDate = (time) => new Date(time).toISOString().slice(0, 10);
 const firstOfMonth = (date) => (date || new Date().toISOString().slice(0, 10)).slice(0, 7) + '-01';
 
-export default function SharedDeliveryCalendar({ date, schedule, disabled, onChoose }) {
+export default function SharedDeliveryCalendar({ date, schedule, disabled, onChoose, compact = false }) {
   const [month, setMonth] = useState(() => firstOfMonth(date));
   useEffect(() => {
     if (date) {
@@ -33,17 +33,38 @@ export default function SharedDeliveryCalendar({ date, schedule, disabled, onCho
     if (next >= '2000-01-01' && next <= '2099-12-01') setMonth(next);
   };
   return (
-    <details className="shared-delivery-calendar" key={date ? date.slice(0, 7) : 'empty'}>
-      <summary className="shared-delivery-calendar-summary">
-        <span>
-          <strong>Kalender pengiriman</strong>
-          <small>
-            {date
-              ? 'Periode aktif: ' + date.split('-').reverse().join('/')
-              : 'Pilih periode pengiriman'}
-          </small>
-        </span>
-        <span className="shared-delivery-calendar-action">Lihat kalender</span>
+    <details
+      className={'shared-delivery-calendar' + (compact ? ' is-inline' : '')}
+      key={date ? date.slice(0, 7) : 'empty'}
+    >
+      <summary
+        className="shared-delivery-calendar-summary"
+        aria-label={compact ? 'Buka kalender pengiriman' : undefined}
+        title={compact ? 'Lihat kalender pengiriman' : undefined}
+      >
+        {compact ? (
+          <>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+              strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M7 3v4M17 3v4M3 10h18" />
+            </svg>
+            <span>Kalender</span>
+          </>
+        ) : (
+          <>
+            <span>
+              <strong>Kalender pengiriman</strong>
+              <small>
+                {date
+                  ? 'Periode aktif: ' + date.split('-').reverse().join('/')
+                  : 'Pilih periode pengiriman'}
+              </small>
+            </span>
+            <span className="shared-delivery-calendar-action">Lihat kalender</span>
+          </>
+        )}
       </summary>
       <div className="shared-delivery-calendar-content">
         <div className="shared-delivery-calendar-nav">

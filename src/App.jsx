@@ -183,7 +183,9 @@ function App() {
         <ShopProvider>
           <AppearanceProvider>
             {!isAdmin && <Navbar />}
-            {!isAdmin && !isAccountRoute && route !== '/order-cepat' && <SharedCartBar />}
+            {!isAdmin && !isAccountRoute && !['/order-cepat', '/keranjang'].includes(route) && (
+              <SharedCartBar />
+            )}
             <a
               className="skip-to-content"
               href="#main-content"

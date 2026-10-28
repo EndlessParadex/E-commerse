@@ -194,3 +194,40 @@
     padding: 10px;
   }
 }
+
+/* Compact expandable calendar, positioned under the active period heading. */
+.shared-cart-page .shared-delivery-calendar.is-inline {
+  position: static;
+  display: inline-block;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  overflow: visible;
+  background: transparent;
+}
+.shared-cart-page .shared-delivery-calendar.is-inline > .shared-delivery-calendar-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  min-height: 40px;
+  border: 1px solid var(--color-border-info);
+  border-radius: 10px;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.shared-cart-page .shared-delivery-calendar.is-inline > .shared-delivery-calendar-content {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(352px, 100%);
+  z-index: 50;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 14px 38px rgb(27 56 93 / 17%);
+}

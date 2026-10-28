@@ -278,7 +278,7 @@ const Navbar = () => {
             onSubmit={(event) => {
               event.preventDefault();
               setShowSearchSuggestions(false);
-              window.location.hash = searchHref(searchQuery);
+              window.location.hash = b2bCart ? '/order-cepat?q=' + encodeURIComponent(searchQuery) : searchHref(searchQuery);
             }}
           >
             <div className="search-icon-left">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useShop } from '../state/useShop';
 import { products } from '../data/products';
 import ProductImage from '../components/shop/ProductImage';
@@ -9,7 +9,13 @@ import './FastOrderPage.css';
 
 export default function FastOrderPage() {
   const { shared, setCartMode } = useShop();
-  const [query, setQuery] = useState('');
+  const queryFromRoute = () => new URLSearchParams(window.location.hash.split('?')[1] || '').get('q') || '';
+  const [query, setQuery] = useState(queryFromRoute);
+  useEffect(() => {
+    const syncQuery = () => setQuery(queryFromRoute());
+    window.addEventListener('hashchange', syncQuery);
+    return () => window.removeEventListener('hashchange', syncQuery);
+  }, []);
   const validRole = ['sales', 'buyer'].includes(shared?.role);
   const cart = shared?.cart;
   const totals = fastOrderTotals(cart);
@@ -29,7 +35,7 @@ export default function FastOrderPage() {
 
   if (!validRole || shared?.status !== 'ready') {
     return (
-      <main className="shop-page bam-fast-order">
+      <div className="shop-page bam-fast-order">
         <h1>Order Cepat</h1>
         <p>
           {shared?.status === 'loading'
@@ -39,24 +45,24 @@ export default function FastOrderPage() {
         <a className="bam-button-secondary" href="#/keranjang">
           Buka keranjang
         </a>
-      </main>
+      </div>
     );
   }
   if (!cart) {
     return (
-      <main className="shop-page bam-fast-order">
+      <div className="shop-page bam-fast-order">
         <h1>Order Cepat</h1>
         <p>Pilih toko dan periode pengiriman sebelum mulai memasukkan barang.</p>
         <a className="shop-primary" href="#/keranjang" onClick={() => setCartMode('store')}>
           Pilih toko aktif →
         </a>
-      </main>
+      </div>
     );
   }
 
   const wa = sharedDraftWhatsAppUrl(cart);
   return (
-    <main className="shop-page bam-fast-order">
+    <div className="shop-page bam-fast-order">
       <div className="bam-fast-head">
         <div>
           <span className="bam-fast-kicker">MODE LAPANGAN · KERANJANG BERSAMA</span>
@@ -176,6 +182,6 @@ export default function FastOrderPage() {
           {' '}Harga sementara, pesanan final oleh Admin
         </small>
       </footer>
-    </main>
+    </div>
   );
 }

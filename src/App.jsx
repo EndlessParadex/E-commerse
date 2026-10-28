@@ -183,7 +183,7 @@ function App() {
         <ShopProvider>
           <AppearanceProvider>
             {!isAdmin && <Navbar />}
-            {!isAdmin && !isAccountRoute && <SharedCartBar />}
+            {!isAdmin && !isAccountRoute && route !== '/order-cepat' && <SharedCartBar />}
             <a
               className="skip-to-content"
               href="#main-content"

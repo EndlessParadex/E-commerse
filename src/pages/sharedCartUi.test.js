@@ -353,7 +353,15 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       control.getAttribute('aria-label')?.startsWith('Tambah '),
     );
     assert.ok(increment && !increment.disabled, 'new SKU must have an enabled increment control');
+    const beforeStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    assert.equal(lastStepper.querySelector('input')?.value, '3',
+      'visible stepper should show the current quantity before increment');
+    assert.equal(beforeStep.items.find((row) => row.id === 'snack-pedas-62g').quantity, 3);
     await click(increment);
+    const afterStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    assert.equal(afterStep.items.find((row) => row.id === 'snack-pedas-62g').quantity, 4,
+      JSON.stringify({ input: lastStepper.querySelector('input')?.value,
+        before: beforeStep.items, after: afterStep.items, event: afterStep.events[0] }));
     await wait(() =>
       api.sharedCarts
         .read(actors.operator, first.id, '2026-10-21')

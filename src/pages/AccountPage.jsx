@@ -172,6 +172,22 @@ export default function AccountPage() {
             <p>Kelola profil, alamat pengiriman, dan kenyamanan tampilan.</p>
           </header>
           <div className="account-workspace account-premium">
+            <div className="account-mobile-navigation" aria-label="Pilih pengaturan akun">
+              <label htmlFor="account-mobile-tab">Bagian akun</label>
+              <select
+                id="account-mobile-tab"
+                value={activeTab}
+                onChange={(event) => selectTab(event.target.value)}
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.id} value={tab.id}>{tab.label}</option>
+                ))}
+              </select>
+              <details className="account-mobile-more">
+                <summary>Pesanan, favorit, dan menu lainnya</summary>
+                <AccountMenu hideProfile />
+              </details>
+            </div>
             <aside className="account-sidebar account-premium-sidebar" aria-label="Navigasi akun">
               <div
                 className="account-tabs"

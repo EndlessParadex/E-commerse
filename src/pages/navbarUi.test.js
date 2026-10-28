@@ -83,6 +83,23 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     const navigation = container.querySelector('.store-navigation');
     assert.ok(navigation.querySelector('.navbar [aria-label="Cari produk"]'));
     assert.ok(navigation.querySelector('.secondary-navbar[aria-label="Navigasi belanja"]'));
+    const bottom = navigation.querySelector('.mobile-bottom-navigation');
+    assert.ok(bottom, 'mobile navigation is present for responsive CSS');
+    assert.deepEqual([...bottom.querySelectorAll('a')].map((link) => link.textContent),
+      ['Beranda', 'Katalog', 'Keranjang', 'Akun']);
+    assert.equal(bottom.querySelectorAll('[aria-current="page"]').length, 1);
+    assert.equal(bottom.querySelector('[aria-current="page"]').textContent, 'Beranda');
+    await act(async () => {
+      dom.location.hash = '/keranjang';
+      dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
+      await settle();
+    });
+    assert.equal(bottom.querySelector('[aria-current="page"]').textContent, 'Keranjang');
+    await act(async () => {
+      dom.location.hash = '/';
+      dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
+      await settle();
+    });
     for (const route of ['/keranjang', '/notifikasi', '/akun'])
       assert.ok(navigation.querySelector(`a[href="#${route}"]`));
     navigationHeight = 165.5;

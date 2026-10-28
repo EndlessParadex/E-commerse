@@ -8,6 +8,7 @@ import { normalizeDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
 import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
+import NavigationIcon from './NavigationIcon';
 import { productVariants } from '../../data/products';
 
 const Navbar = () => {
@@ -57,6 +58,19 @@ const Navbar = () => {
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
   const { shared, setCartMode } = useShop();
+  const [mobileRoute, setMobileRoute] = useState(() => window.location.hash.slice(1).split('?')[0] || '/');
+  useEffect(() => {
+    const updateRoute = () => setMobileRoute(window.location.hash.slice(1).split('?')[0] || '/');
+    window.addEventListener('hashchange', updateRoute);
+    return () => window.removeEventListener('hashchange', updateRoute);
+  }, []);
+  const b2bCart = shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
+  const bottomLinks = [
+    { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
+    { label: 'Katalog', href: '#/cari?q=', icon: 'products', active: ['/cari', '/kategori', '/produk'].some((route) => mobileRoute === route || mobileRoute.startsWith(route + '/')) },
+    { label: 'Keranjang', href: '#/keranjang', icon: 'cart', active: mobileRoute === '/keranjang' || mobileRoute === '/checkout' },
+    { label: 'Akun', href: user ? '#/akun' : '#/login', icon: 'account', active: ['/akun', '/login', '/daftar'].includes(mobileRoute) },
+  ];
   const b2bNavLabel =
     shared?.status === 'ready'
       ? shared.role === 'sales'
@@ -470,6 +484,22 @@ const Navbar = () => {
             </a>
           </div>
         </div>
+      </nav>
+      <nav className="mobile-bottom-navigation" aria-label="Navigasi utama mobile">
+        {bottomLinks.map((link) => (
+          <a
+            key={link.label}
+            href={link.href}
+            aria-current={link.active ? 'page' : undefined}
+            onClick={() => {
+              if (link.label === 'Keranjang' && b2bCart) setCartMode?.('store');
+              setShowDeliverPopup(false);
+            }}
+          >
+            <NavigationIcon name={link.icon} />
+            <span>{link.label}</span>
+          </a>
+        ))}
       </nav>
     </div>
   );

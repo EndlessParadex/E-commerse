@@ -1,5 +1,7 @@
 const paths = {
   overview: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',
+  home: 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3V10.5Z',
+  cart: 'M2 4h3l2.8 12.5h11.5L22 7H6M9 21h.01M19 21h.01',
   products: 'M4 7h16v14H4zM3 3h18v4H3zM9 11h6',
   orders: 'M7 5H5v16h14V5h-2M9 3h6v4H9zM8 12h8M8 16h5',
   stock: 'm3 7 9-4 9 4-9 4-9-4Zm0 0v10l9 4 9-4V7M12 11v10M7 5l9 4',

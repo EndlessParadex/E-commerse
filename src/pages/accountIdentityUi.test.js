@@ -224,6 +224,22 @@ test('account website: buyer security summary, admin password settings, registra
       0,
       'buyer cannot see the Admin route',
     );
+    const mobileAccount = accountCenter.querySelector('#account-mobile-tab');
+    assert.ok(mobileAccount, 'mobile account has a compact section picker');
+    assert.equal(mobileAccount.value, 'profile');
+    assert.ok(accountCenter.querySelector('.account-mobile-more .account-menu'));
+    await act(async () => {
+      mobileAccount.value = 'address';
+      mobileAccount.dispatchEvent(new dom.Event('change', { bubbles: true }));
+      await settle();
+    });
+    assert.equal(container.querySelector('#account-panel-address').hidden, false);
+    assert.equal(container.querySelector('#account-panel-profile').hidden, true);
+    await act(async () => {
+      mobileAccount.value = 'profile';
+      mobileAccount.dispatchEvent(new dom.Event('change', { bubbles: true }));
+      await settle();
+    });
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
     assert.equal(

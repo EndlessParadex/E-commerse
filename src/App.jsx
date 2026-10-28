@@ -83,13 +83,14 @@ function App() {
   const isAdmin = Boolean(adminView);
   const accountRoute = /^\/akun(?:\/(profil|alamat|keamanan|kalender|tampilan))?$/.exec(route);
   const isAccountRoute = Boolean(accountRoute);
-  const accountSection = {
-    profil: 'profile',
-    alamat: 'address',
-    keamanan: 'security',
-    kalender: 'calendar',
-    tampilan: 'appearance',
-  }[accountRoute?.[1]] || null;
+  const accountSection =
+    {
+      profil: 'profile',
+      alamat: 'address',
+      keamanan: 'security',
+      kalender: 'calendar',
+      tampilan: 'appearance',
+    }[accountRoute?.[1]] || null;
   const recoveryMatch = route.match(
     /^\/(forgot-password|reset-password|verifikasi-email)(?:\?[^#]*)?$/,
   );

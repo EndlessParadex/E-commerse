@@ -227,7 +227,10 @@ test('account website: buyer security summary, admin password settings, registra
     const mobileHub = container.querySelector('.account-mobile-hub');
     assert.ok(mobileHub, 'mobile account uses a menu hub, not a dropdown');
     assert.equal(container.querySelector('#account-mobile-tab'), null);
-    assert.match(mobileHub.querySelector('.account-mobile-identity').textContent, /Pembeli Website/);
+    assert.match(
+      mobileHub.querySelector('.account-mobile-identity').textContent,
+      /Pembeli Website/,
+    );
     for (const section of ['profil', 'alamat', 'kalender', 'keamanan', 'tampilan']) {
       assert.ok(mobileHub.querySelector(`a[href="#/akun/${section}"]`));
     }
@@ -238,8 +241,11 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(container.querySelector('#account-panel-profile').hidden, true);
     assert.equal(container.querySelector('.account-mobile-hub'), null);
     assert.ok(container.querySelector('.account-mobile-page-header a[href="#/akun"]'));
-    assert.equal(container.querySelector('.shared-cart-bar'), null,
-      'account detail suppresses the B2B shopping banner');
+    assert.equal(
+      container.querySelector('.shared-cart-bar'),
+      null,
+      'account detail suppresses the B2B shopping banner',
+    );
     await route('/akun', () => container.querySelector('.account-mobile-hub'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));

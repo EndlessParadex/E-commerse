@@ -57,8 +57,13 @@ export default function AccountPage({ section = null }) {
 
   const openSection = (id) => {
     if (window.matchMedia('(max-width: 760px)').matches) {
-      const slug = { profile: 'profil', address: 'alamat', security: 'keamanan',
-        calendar: 'kalender', appearance: 'tampilan' }[id];
+      const slug = {
+        profile: 'profil',
+        address: 'alamat',
+        security: 'keamanan',
+        calendar: 'kalender',
+        appearance: 'tampilan',
+      }[id];
       window.location.hash = '/akun/' + slug;
       return;
     }
@@ -138,25 +143,57 @@ export default function AccountPage({ section = null }) {
     );
 
   const roleLabel =
-    user?.role === 'owner' ? 'Pemilik BAM'
-      : user?.role === 'admin' ? 'Admin BAM'
-        : user?.role === 'sales' ? 'Sales BAM'
-          : user?.storeName ? 'Mitra Toko BAM' : 'Pembeli BAM';
+    user?.role === 'owner'
+      ? 'Pemilik BAM'
+      : user?.role === 'admin'
+        ? 'Admin BAM'
+        : user?.role === 'sales'
+          ? 'Sales BAM'
+          : user?.storeName
+            ? 'Mitra Toko BAM'
+            : 'Pembeli BAM';
   const menuItems = [
-    { id: 'profile', slug: 'profil', label: 'Profil dan kontak',
-      description: 'Foto, informasi akun, dan nomor HP', icon: 'user' },
-    { id: 'address', slug: 'alamat', label: 'Data toko dan alamat',
-      description: 'Nama toko, penerima, dan alamat pengiriman', icon: 'address' },
-    { id: 'calendar', slug: 'kalender', label: 'Jadwal pengiriman rutin',
-      description: 'Lihat kalender dan hari pengiriman', icon: 'calendar' },
-    { id: 'security', slug: 'keamanan', label: 'Keamanan dan kata sandi',
-      description: 'Verifikasi akun dan pengaturan keamanan', icon: 'shield' },
-    { id: 'appearance', slug: 'tampilan', label: 'Tampilan aplikasi',
-      description: 'Tema dan preferensi visual', icon: 'appearance' },
+    {
+      id: 'profile',
+      slug: 'profil',
+      label: 'Profil dan kontak',
+      description: 'Foto, informasi akun, dan nomor HP',
+      icon: 'user',
+    },
+    {
+      id: 'address',
+      slug: 'alamat',
+      label: 'Data toko dan alamat',
+      description: 'Nama toko, penerima, dan alamat pengiriman',
+      icon: 'address',
+    },
+    {
+      id: 'calendar',
+      slug: 'kalender',
+      label: 'Jadwal pengiriman rutin',
+      description: 'Lihat kalender dan hari pengiriman',
+      icon: 'calendar',
+    },
+    {
+      id: 'security',
+      slug: 'keamanan',
+      label: 'Keamanan dan kata sandi',
+      description: 'Verifikasi akun dan pengaturan keamanan',
+      icon: 'shield',
+    },
+    {
+      id: 'appearance',
+      slug: 'tampilan',
+      label: 'Tampilan aplikasi',
+      description: 'Tema dan preferensi visual',
+      icon: 'appearance',
+    },
   ];
   const activeMenu = menuItems.find((item) => item.id === section);
   return (
-    <div className={'account-page ' + (section ? 'is-mobile-account-detail' : 'is-account-overview')}>
+    <div
+      className={'account-page ' + (section ? 'is-mobile-account-detail' : 'is-account-overview')}
+    >
       <nav className="shop-breadcrumb" aria-label="Breadcrumb">
         <a href="#/">Beranda</a>
         <span aria-hidden="true">/</span>

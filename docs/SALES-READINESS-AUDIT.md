@@ -20,19 +20,19 @@ atau sistem WhatsApp eksternal.
 
 ## Hasil pemeriksaan kode dan tes
 
-| Area | Temuan kode | Bukti / status |
-| --- | --- | --- |
-| Pembatasan toko | `b2bStores.page()` dan `sharedCarts.access()` membatasi toko ke member atau Sales yang ditugaskan. Admin memiliki akses operasional. | Ditambah tes `server/salesReadiness.test.js` untuk pencarian, toko lain, pencabutan Sales dan penolakan akses ulang. |
-| Nomor kontak | `b2bStores.create/update()` menormalisasi dan memvalidasi nomor toko Indonesia. | Tes kesiapan memeriksa nomor toko yang dapat diakses Sales. Belum ada persetujuan/opt-out WhatsApp toko yang diuji. |
-| Draft vs pesanan | Mutasi keranjang hanya mencatat item dan audit; tidak otomatis membuat order atau mencadangkan stok. | Tes kesiapan memastikan draft bukan pesanan. Rekap WA harus diberi label **DRAFT — belum final / bukan bukti pemesanan resmi**. |
-| Konkurensi | Revisi dan `requestId` dipakai untuk konflik serta retry idempoten. | Tes baru memeriksa konflik buyer/Sales serta retry setelah hak Sales dicabut. Tes yang sudah ada meliputi dua koneksi/worker dan gangguan respons. |
-| Finalisasi | `b2bFinalization.admin()` mewajibkan Admin, disertai review/token, validasi stok, dan satu order per periode. | Tes baru mencakup penguncian, penolakan edit Sales dan finalisasi/retry satu kali. |
-| Pembayaran | Pembeli/Sales memilih COD atau transfer; Admin memeriksa, rekening dikonfigurasi Pemilik. Bukti transfer tidak otomatis berarti lunas. | Sudah ada `server/b2bFinalization.test.js`; perlu uji penerimaan dana nyata secara manual pada pilot. |
-| Penjadwalan | Jadwal pengiriman toko dan kalender profil sudah ada. | Tidak boleh dianggap sebagai jadwal **kunjungan Sales**. Today's Call membutuhkan jadwal/otorisasi baru tersendiri. |
-| Cadangan data | Tersedia backup, verifikasi, dan restore ke database terpisah. | Tes otomatis memakai database contoh. Backup dan restore **database instalasi nyata** masih wajib dilakukan operator. |
-| Pengujian | Workflow CI memeriksa build, lint, tes, audit dependensi, dan Prettier. | Semua harus hijau pada commit kandidat sebelum fitur dimulai. |
-| Mobile | Sudah terdapat aturan responsif dan tes komponen. | Belum terbukti nyaman untuk Sales di lapangan; masih perlu pengujian browser/perangkat dan koneksi buruk. |
-| Branch | Branch pengembangan belum dilindungi aturan branch protection. | Aktifkan required checks dan review pada pengaturan GitHub; perubahan ini tidak dilakukan otomatis. |
+| Area             | Temuan kode                                                                                                                            | Bukti / status                                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pembatasan toko  | `b2bStores.page()` dan `sharedCarts.access()` membatasi toko ke member atau Sales yang ditugaskan. Admin memiliki akses operasional.   | Ditambah tes `server/salesReadiness.test.js` untuk pencarian, toko lain, pencabutan Sales dan penolakan akses ulang.                               |
+| Nomor kontak     | `b2bStores.create/update()` menormalisasi dan memvalidasi nomor toko Indonesia.                                                        | Tes kesiapan memeriksa nomor toko yang dapat diakses Sales. Belum ada persetujuan/opt-out WhatsApp toko yang diuji.                                |
+| Draft vs pesanan | Mutasi keranjang hanya mencatat item dan audit; tidak otomatis membuat order atau mencadangkan stok.                                   | Tes kesiapan memastikan draft bukan pesanan. Rekap WA harus diberi label **DRAFT — belum final / bukan bukti pemesanan resmi**.                    |
+| Konkurensi       | Revisi dan `requestId` dipakai untuk konflik serta retry idempoten.                                                                    | Tes baru memeriksa konflik buyer/Sales serta retry setelah hak Sales dicabut. Tes yang sudah ada meliputi dua koneksi/worker dan gangguan respons. |
+| Finalisasi       | `b2bFinalization.admin()` mewajibkan Admin, disertai review/token, validasi stok, dan satu order per periode.                          | Tes baru mencakup penguncian, penolakan edit Sales dan finalisasi/retry satu kali.                                                                 |
+| Pembayaran       | Pembeli/Sales memilih COD atau transfer; Admin memeriksa, rekening dikonfigurasi Pemilik. Bukti transfer tidak otomatis berarti lunas. | Sudah ada `server/b2bFinalization.test.js`; perlu uji penerimaan dana nyata secara manual pada pilot.                                              |
+| Penjadwalan      | Jadwal pengiriman toko dan kalender profil sudah ada.                                                                                  | Tidak boleh dianggap sebagai jadwal **kunjungan Sales**. Today's Call membutuhkan jadwal/otorisasi baru tersendiri.                                |
+| Cadangan data    | Tersedia backup, verifikasi, dan restore ke database terpisah.                                                                         | Tes otomatis memakai database contoh. Backup dan restore **database instalasi nyata** masih wajib dilakukan operator.                              |
+| Pengujian        | Workflow CI memeriksa build, lint, tes, audit dependensi, dan Prettier.                                                                | Semua harus hijau pada commit kandidat sebelum fitur dimulai.                                                                                      |
+| Mobile           | Sudah terdapat aturan responsif dan tes komponen.                                                                                      | Belum terbukti nyaman untuk Sales di lapangan; masih perlu pengujian browser/perangkat dan koneksi buruk.                                          |
+| Branch           | Branch pengembangan belum dilindungi aturan branch protection.                                                                         | Aktifkan required checks dan review pada pengaturan GitHub; perubahan ini tidak dilakukan otomatis.                                                |
 
 ## Keputusan desain yang harus dikunci sebelum menambah fitur
 

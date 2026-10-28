@@ -291,6 +291,87 @@ function CartQuantity({ item, shared }) {
   );
 }
 
+function AdminCartQuantity({ item, shared }) {
+  const [draft, setDraft] = useState(null);
+  const value = draft?.value ?? String(item.quantity);
+  const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 99;
+  return (
+    <form
+      className="shared-quantity shared-admin-quantity-legacy"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (valid) {
+          await shared.mutate('set', item.id, Number(value), draft?.revision);
+          setDraft(null);
+        }
+      }}
+    >
+      <label>
+        Jumlah kemasan
+        <input
+          type="number"
+          min="1"
+          max="99"
+          step="1"
+          inputMode="numeric"
+          aria-label={'Jumlah ' + item.name}
+          value={value}
+          disabled={!shared.canEdit}
+          onChange={(event) =>
+            setDraft({
+              value: event.target.value,
+              revision: draft?.revision ?? shared.cart.revision,
+            })
+          }
+        />
+      </label>
+      {['admin', 'owner'].includes(shared.role) && (
+        <div
+          className="shared-admin-quantity-stepper"
+          role="group"
+          aria-label={'Penyesuaian cepat ' + item.name}
+        >
+          <button
+            type="button"
+            aria-label={'Kurangi ' + item.name}
+            disabled={!shared.canEdit || draft !== null || item.quantity <= 1}
+            onClick={() => void shared.mutate('set', item.id, item.quantity - 1)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label={'Tambah ' + item.name}
+            disabled={!shared.canEdit || draft !== null || item.quantity >= 99}
+            onClick={() => void shared.mutate('set', item.id, item.quantity + 1)}
+          >
+            +
+          </button>
+        </div>
+      )}
+      <button
+        className="bam-button-secondary"
+        disabled={!shared.canEdit || !valid || Number(value) === item.quantity}
+      >
+        Simpan jumlah
+      </button>
+      <button
+        type="button"
+        className="bam-button-danger"
+        disabled={!shared.canEdit}
+        onClick={() => shared.mutate('remove', item.id)}
+      >
+        Hapus
+      </button>
+      {draft && draft.revision !== shared.cart.revision && (
+        <p role="status">
+          Keranjang berubah saat Anda mengisi. Periksa isian terbaru sebelum menyimpan.
+        </p>
+      )}
+    </form>
+  );
+}
+
 export function SharedCartBar() {
   const { shared, setCartMode } = useShop();
   if (shared?.personal)
@@ -603,7 +684,7 @@ function AdminCartWorkspace({
                             </div>
                           </div>
                           {cart.canEdit ? (
-                            <CartQuantity item={item} shared={shared} />
+                            <AdminCartQuantity item={item} shared={shared} />
                           ) : (
                             <p>
                               <strong>

@@ -1376,3 +1376,6 @@
     right: 10px;
   }
 }
+
+.shared-cart-page .shared-admin-quantity-legacy { padding-right: 0; }
+.shared-cart-page .shared-quantity-label { display: grid; gap: 5px; }

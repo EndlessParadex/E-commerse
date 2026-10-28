@@ -1,0 +1,44 @@
+name: One-time Sales readiness formatting
+
+on:
+  push:
+    branches:
+      - feature/b2b-store-sales-shared-cart
+    paths:
+      - .github/workflows/format-sales-readiness.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Format only the new readiness files
+        run: |
+          npx prettier --write docs/SALES-READINESS-AUDIT.md server/salesReadiness.test.js
+          npm run format:check
+          git diff --check
+      - name: Validate before committing formatting
+        run: |
+          node --test server/salesReadiness.test.js
+          npm run lint
+          npm run build
+      - name: Commit formatted readiness files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/SALES-READINESS-AUDIT.md server/salesReadiness.test.js
+          if ! git diff --cached --quiet; then
+            git commit -m "style(b2b): format Sales readiness audit and tests"
+            git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          fi

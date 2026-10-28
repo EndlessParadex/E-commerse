@@ -226,6 +226,7 @@ test('account website: buyer security summary, admin password settings, registra
     );
     const mobileHub = container.querySelector('.account-mobile-hub');
     assert.ok(mobileHub, 'mobile account uses a menu hub, not a dropdown');
+    assert.equal(container.querySelector('.account-mobile-page-header a').getAttribute('href'), '#/');
     assert.equal(container.querySelector('#account-mobile-tab'), null);
     assert.match(
       mobileHub.querySelector('.account-mobile-identity').textContent,

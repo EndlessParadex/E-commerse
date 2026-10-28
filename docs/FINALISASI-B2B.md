@@ -13,6 +13,15 @@ Foto produk tidak wajib untuk finalisasi. Barang, ukuran, harga, isi kemasan dan
 7. Tunggu pesan keberhasilan. Pesanan masuk status **Diproses** dan stok dicadangkan. Link **Lihat pesanan toko** membuka snapshot final. Periode tersebut tidak dapat diedit atau difinalisasi menjadi pesanan kedua.
 8. Admin melanjutkan pengiriman, penyelesaian atau pembatalan dari **Admin → Pesanan**. Pembatalan yang diizinkan sebelum pengiriman mengembalikan stok sekali; penyelesaian mencatat penjualan sekali. Pesanan yang dibatalkan tetap menjadi riwayat periode tersebut, bukan membuka ulang keranjang final.
 
+## Permintaan pemeriksaan dari Sales / pembeli toko
+
+- Selama keranjang **terbuka** dan berisi barang, Sales yang ditugaskan atau pembeli toko dapat menekan **Ajukan keranjang ke Admin**.
+- Permintaan dicatat di `cart_events` sebagai `request_review`, tetap pada **keranjang terbuka**, dan ditandai **Menunggu pemeriksaan Admin** di antrean Admin. Tidak dibuat pesanan atau cadangan stok.
+- Permintaan ulang tanpa perubahan tidak menggandakan aktivitas. Jika jumlah, SKU, atau metode pembayaran diubah kemudian, tanda permintaan gugur sampai pengajuan berikutnya.
+- Admin tetap wajib mengunci, memeriksa harga/kemasan/stok, lalu memfinalisasi. Sales dan pembeli toko tidak mendapat hak finalisasi dari tombol pengajuan.
+- Penyesuaian jumlah menggunakan tombol minus/plus atau isian angka (tersimpan otomatis setelah jeda). Konflik revisi dan pengulangan permintaan tetap diperiksa server.
+- Tombol **Buka rekap draft di WhatsApp** untuk Sales hanya membuka draft pesan ke nomor kontak toko yang terdaftar. Tidak mengirim otomatis, tidak membuat order, dan tidak menjamin pesan terkirim. Sales wajib memeriksa nomor penerima dan memastikan toko mengizinkan komunikasi. Pesan menghindari harga dan diberi label **DRAFT — BELUM MENJADI PESANAN**.
+
 ## Pembayaran COD dan transfer manual B2B
 
 - Pembeli toko atau Sales yang ditugaskan memilih metode pembayaran pada keranjang **open**: COD, transfer BCA, transfer BRI, atau transfer Mandiri. Pilihan berlaku bersama untuk satu toko dan periode; perubahan tercatat di `cart_events` beserta pelaku, revisi dan pilihan sebelumnya. Admin/Pemilik melihat dan memeriksa metode tersebut tetapi tidak dapat menggantinya.

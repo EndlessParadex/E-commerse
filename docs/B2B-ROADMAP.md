@@ -27,6 +27,13 @@ Branch: `feature/b2b-store-sales-shared-cart`. Dokumen ini menggantikan status p
 - Cut-off B2B dapat dikonfigurasi di server; tidak ada tenggat operasional yang dibuat tanpa keputusan BAM.
 - Konfigurasi email/WhatsApp tidak membuktikan pesan diterima. Cetak browser tidak membuktikan kesesuaian printer fisik.
 
+## Gerbang sebelum fitur Sales baru
+
+Audit kode, skenario pengujian lintas-peran, dan keputusan yang harus
+dikonfirmasi ada pada [audit kesiapan fitur Sales](SALES-READINESS-AUDIT.md).
+Jangan menambahkan rekap WA, frequent items, mode lapangan atau Today's Call
+sebelum syarat manual dan privasi terkait dipenuhi.
+
 ## Gerbang penggunaan operasional
 
 1. Backup instalasi sebenarnya dan buktikan restore ke lokasi terpisah.

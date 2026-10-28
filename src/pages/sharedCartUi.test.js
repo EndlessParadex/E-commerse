@@ -344,6 +344,9 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     await wait(() => container.querySelectorAll('.shared-item').length === 2);
     assert.equal(container.querySelectorAll('.shared-admin-summary-stats > div').length, 4);
+    await wait(() =>
+      [...container.querySelectorAll('.shared-quantity input')].at(-1)?.value === '3',
+    );
     const lastStepper = [...container.querySelectorAll('.shared-admin-quantity-stepper')].at(-1);
     assert.ok(lastStepper, 'Admin has quick +/- quantity controls');
     await click(lastStepper.querySelector('button:last-child'));

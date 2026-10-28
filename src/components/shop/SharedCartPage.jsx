@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import ProductImage from './ProductImage';
 import { products } from '../../data/products';
@@ -9,6 +9,8 @@ import './SharedCartPage.css';
 import AdminCartProcessing, { AdminB2BBanks, AdminCartQueue } from './AdminCartProcessing';
 import { paymentMethod } from '../../state/paymentMethods';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
+import { packagingLabel } from '../../data/productPackaging';
+import { sharedDraftWhatsAppUrl } from '../../data/sharedDraftWhatsApp';
 import SharedDeliveryCalendar from './SharedDeliveryCalendar';
 
 const dateLabel = (value) =>
@@ -40,6 +42,7 @@ function eventLabel(event) {
       ? `Mengosongkan keranjang (${event.details.clearedItems.length} SKU)`
       : 'Mengosongkan keranjang';
   if (event.action === 'refresh') return 'Memperbarui informasi dan harga dari katalog';
+  if (event.action === 'request_review') return 'Mengajukan pemeriksaan keranjang kepada Admin';
   if (event.action === 'lock') return 'Mengunci keranjang untuk pemeriksaan Admin';
   if (event.action === 'unlock') return 'Membuka kembali keranjang: ' + event.details.reason;
   if (event.action === 'finalize') return 'Memfinalisasi pesanan ' + event.details.orderId;
@@ -183,80 +186,105 @@ function AdminCartAdd({ shared }) {
 
 function CartQuantity({ item, shared }) {
   const [draft, setDraft] = useState(null);
+  const debounce = useRef(null);
   const value = draft?.value ?? String(item.quantity);
   const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 99;
+  useEffect(() => () => window.clearTimeout(debounce.current), []);
+
+  const save = async (candidate) => {
+    window.clearTimeout(debounce.current);
+    if (!shared.canEdit || !candidate) return;
+    const next = Number(candidate.value);
+    if (!/^\d+$/.test(candidate.value) || next < 1 || next > 99) return;
+    if (next === item.quantity && candidate.revision === shared.cart.revision) {
+      setDraft(null);
+      return;
+    }
+    await shared.mutate('set', item.id, next, candidate.revision);
+    setDraft((current) => current === candidate ? null : current);
+  };
+  const step = (difference) => {
+    if (!shared.canEdit || !valid) return;
+    const next = Number(value) + difference;
+    if (next < 1 || next > 99) return;
+    void save({ value: String(next), revision: draft?.revision ?? shared.cart.revision });
+  };
   return (
     <form
       className="shared-quantity"
-      onSubmit={async (event) => {
+      onSubmit={(event) => {
         event.preventDefault();
-        if (valid) {
-          await shared.mutate('set', item.id, Number(value), draft?.revision);
-          setDraft(null);
-        }
+        void save(draft);
       }}
     >
       <label>
         Jumlah kemasan
-        <input
-          type="number"
-          min="1"
-          max="99"
-          step="1"
-          inputMode="numeric"
-          aria-label={'Jumlah ' + item.name}
-          value={value}
-          disabled={!shared.canEdit}
-          onChange={(event) =>
-            setDraft({
-              value: event.target.value,
-              revision: draft?.revision ?? shared.cart.revision,
-            })
-          }
-        />
-      </label>
-      {['admin', 'owner'].includes(shared.role) && (
-        <div
-          className="shared-admin-quantity-stepper"
-          role="group"
-          aria-label={'Penyesuaian cepat ' + item.name}
-        >
+        <span className="shared-quantity-controls shared-admin-quantity-stepper">
           <button
             type="button"
+            className="shared-quantity-step"
             aria-label={'Kurangi ' + item.name}
-            disabled={!shared.canEdit || draft !== null || item.quantity <= 1}
-            onClick={() => void shared.mutate('set', item.id, item.quantity - 1)}
+            disabled={!shared.canEdit || !valid || Number(value) <= 1}
+            onClick={() => step(-1)}
           >
             −
           </button>
+          <input
+            type="number"
+            min="1"
+            max="99"
+            step="1"
+            inputMode="numeric"
+            aria-label={'Jumlah ' + item.name}
+            aria-invalid={!valid}
+            value={value}
+            disabled={!shared.canEdit}
+            onChange={(event) => {
+              const next = {
+                value: event.target.value,
+                revision: draft?.revision ?? shared.cart.revision,
+              };
+              window.clearTimeout(debounce.current);
+              setDraft(next);
+              if (/^\d+$/.test(next.value) && Number(next.value) >= 1 &&
+                  Number(next.value) <= 99 && Number(next.value) !== item.quantity) {
+                debounce.current = window.setTimeout(() => void save(next), 700);
+              }
+            }}
+            onBlur={(event) => {
+              if (event.relatedTarget?.closest('.shared-quantity-step')) return;
+              if (draft) void save(draft);
+            }}
+          />
           <button
             type="button"
+            className="shared-quantity-step"
             aria-label={'Tambah ' + item.name}
-            disabled={!shared.canEdit || draft !== null || item.quantity >= 99}
-            onClick={() => void shared.mutate('set', item.id, item.quantity + 1)}
+            disabled={!shared.canEdit || !valid || Number(value) >= 99}
+            onClick={() => step(1)}
           >
             +
           </button>
-        </div>
-      )}
-      <button
-        className="bam-button-secondary"
-        disabled={!shared.canEdit || !valid || Number(value) === item.quantity}
-      >
-        Simpan jumlah
-      </button>
+        </span>
+      </label>
+      <button type="submit" className="shared-quantity-submit-sr">Simpan jumlah</button>
       <button
         type="button"
-        className="bam-button-danger"
+        className="shared-quantity-remove"
         disabled={!shared.canEdit}
-        onClick={() => shared.mutate('remove', item.id)}
+        aria-label={'Hapus ' + item.name + ' dari keranjang'}
+        title="Hapus barang"
+        onClick={() => void shared.mutate('remove', item.id)}
       >
-        Hapus
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true">
+          <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
+        </svg>
       </button>
+      {!valid && <small role="alert">Masukkan 1–99 kemasan.</small>}
       {draft && draft.revision !== shared.cart.revision && (
-        <p role="status">
-          Keranjang berubah saat Anda mengisi. Periksa isian terbaru sebelum menyimpan.
-        </p>
+        <p role="status">Keranjang berubah saat Anda mengisi. Periksa isian terbaru.</p>
       )}
     </form>
   );
@@ -481,7 +509,7 @@ function AdminCartWorkspace({
           )}
           {cart ? (
             <>
-              <section className="shared-cart-heading shared-admin-active-store">
+              <section className="shared-cart-heading shared-admin-active-store" data-revision={cart.revision}>
                 <div>
                   <h2>{cart.store.storeName}</h2>
                   <p>
@@ -490,8 +518,17 @@ function AdminCartWorkspace({
                       <strong className="shared-overdue-label"> · Lewat jadwal</strong>
                     )}
                   </p>
-                  <p>
-                    {shop.quantity} kemasan · {cart.items.length} SKU · Versi {cart.revision}
+                  <p className="shared-cart-overview">
+                    {cart.items.length} SKU · {shop.quantity} kemasan
+                    <span className={'shared-cart-status status-' + cart.status}>
+                      {cart.status === 'open'
+                        ? cart.reviewRequested
+                          ? 'Menunggu pemeriksaan Admin'
+                          : 'Draft terbuka'
+                        : cart.status === 'locked'
+                          ? 'Diperiksa Admin'
+                          : 'Pesanan final'}
+                    </span>
                   </p>
                 </div>
                 <button
@@ -499,8 +536,15 @@ function AdminCartWorkspace({
                   className="bam-button-secondary"
                   disabled={frozen}
                   onClick={shared.refresh}
+                  aria-label="Muat terbaru"
+                  title="Muat terbaru"
                 >
-                  Muat terbaru
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+                  </svg>
+                  <span className="shared-quantity-submit-sr">Muat terbaru</span>
                 </button>
               </section>
               {!cart.canEdit && (
@@ -1089,7 +1133,7 @@ export default function SharedCartPage({ adminView = false }) {
           )}
           {cart && (
             <>
-              <section className="shared-cart-heading">
+              <section className="shared-cart-heading" data-revision={cart.revision}>
                 <div>
                   <h2>{cart.store.storeName}</h2>
                   <p>
@@ -1098,8 +1142,17 @@ export default function SharedCartPage({ adminView = false }) {
                       <strong className="shared-overdue-label"> · Lewat jadwal</strong>
                     )}
                   </p>
-                  <p>
-                    {shop.quantity} kemasan · {cart.items.length} SKU · Versi {cart.revision}
+                  <p className="shared-cart-overview">
+                    {cart.items.length} SKU · {shop.quantity} kemasan
+                    <span className={'shared-cart-status status-' + cart.status}>
+                      {cart.status === 'open'
+                        ? cart.reviewRequested
+                          ? 'Menunggu pemeriksaan Admin'
+                          : 'Draft terbuka'
+                        : cart.status === 'locked'
+                          ? 'Diperiksa Admin'
+                          : 'Pesanan final'}
+                    </span>
                   </p>
                 </div>
                 <button
@@ -1107,8 +1160,15 @@ export default function SharedCartPage({ adminView = false }) {
                   className="bam-button-secondary"
                   disabled={frozen}
                   onClick={shared.refresh}
+                  aria-label="Muat terbaru"
+                  title="Muat terbaru"
                 >
-                  Muat terbaru
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+                  </svg>
+                  <span className="shared-quantity-submit-sr">Muat terbaru</span>
                 </button>
               </section>
               {showCart && (
@@ -1186,10 +1246,10 @@ export default function SharedCartPage({ adminView = false }) {
                                     </h3>
                                     <p className="shared-sku">SKU: {item.id}</p>
                                     <p>{display.sizeLabel}</p>
-                                    <PackagingSummary
-                                      packaging={item.packaging}
-                                      quantity={item.quantity}
-                                    />
+                                    <div className="shared-packaging-pill">
+                                      <strong>Kemasan: {packagingLabel(item.packaging || {})}</strong>
+                                      <PackagingSummary packaging={item.packaging} quantity={item.quantity} />
+                                    </div>
                                     <p>
                                       {rupiah(item.price)} /{' '}
                                       {item.packaging?.packagingType || 'kemasan'}
@@ -1285,7 +1345,42 @@ export default function SharedCartPage({ adminView = false }) {
                         )}
                       </section>
 
-                      <details className="shared-summary-help">
+                      {!isAdmin && cart.status === 'open' && (
+                        <div className="shared-cart-actions">
+                          {cart.reviewRequested ? (
+                            <p className="shared-review-message" role="status">
+                              Permintaan pemeriksaan telah dicatat. Admin dapat mengunci dan
+                              memfinalisasi. Jika isi keranjang berubah, ajukan kembali.
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              className="shop-primary shared-request-review"
+                              disabled={!shared.canEdit || !cart.items.length}
+                              onClick={() => void shared.mutate('request_review')}
+                            >
+                              Ajukan keranjang ke Admin →
+                            </button>
+                          )}
+                          {shared.role === 'sales' && sharedDraftWhatsAppUrl(cart) && (
+                            <a
+                              className="bam-button-secondary shared-whatsapp-link"
+                              href={sharedDraftWhatsAppUrl(cart)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Buka rekap draft di WhatsApp
+                            </a>
+                          )}
+                          {shared.role === 'sales' && (
+                            <small>
+                              Rekap WhatsApp belum final. Periksa nomor penerima dan pastikan
+                              toko setuju menerima pesan. Pengiriman dilakukan di WhatsApp.
+                            </small>
+                          )}
+                        </div>
+                      )}
+                                            <details className="shared-summary-help">
                         <summary>Catatan harga dan stok</summary>
                         <p>
                           {cart.status === 'finalized'

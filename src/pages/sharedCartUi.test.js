@@ -349,7 +349,11 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     const lastStepper = [...container.querySelectorAll('.shared-admin-quantity-stepper')].at(-1);
     assert.ok(lastStepper, 'Admin has quick +/- quantity controls');
-    await click(lastStepper.querySelector('button:last-child'));
+    const increment = [...lastStepper.querySelectorAll('button')].find((control) =>
+      control.getAttribute('aria-label')?.startsWith('Tambah '),
+    );
+    assert.ok(increment && !increment.disabled, 'new SKU must have an enabled increment control');
+    await click(increment);
     await wait(() =>
       api.sharedCarts
         .read(actors.operator, first.id, '2026-10-21')

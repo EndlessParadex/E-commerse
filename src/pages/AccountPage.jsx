@@ -231,7 +231,10 @@ export default function AccountPage({ section = null }) {
       ) : (
         <>
           <header className="account-mobile-page-header">
-            <a href={section ? '#/akun' : '#/'} aria-label={section ? 'Kembali ke Akun Saya' : 'Kembali ke beranda'}>
+            <a
+              href={section ? '#/akun' : '#/'}
+              aria-label={section ? 'Kembali ke Akun Saya' : 'Kembali ke beranda'}
+            >
               <span aria-hidden="true">←</span>
             </a>
             <h1>{activeMenu?.label || 'Akun Saya'}</h1>

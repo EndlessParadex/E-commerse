@@ -25,6 +25,11 @@ export function sharedDraftWhatsAppUrl(cart) {
     }),
     ...(cart.items.length > 30 ? ['Dan ' + (cart.items.length - 30) + ' SKU lainnya.'] : []),
     '',
+    'Estimasi total barang: ' + new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(cart.items.reduce((sum, item) => sum + item.quantity * item.price, 0)),
     'Harga, stok, dan pesanan resmi baru pasti setelah pemeriksaan dan finalisasi Admin BAM.',
   ];
   return 'https://wa.me/' + phone.slice(1) + '?text=' + encodeURIComponent(lines.join('\n'));

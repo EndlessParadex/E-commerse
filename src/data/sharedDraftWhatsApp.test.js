@@ -21,6 +21,8 @@ test('WhatsApp recap is explicitly a draft, uses true packaging, and never sends
   assert.match(message, /DRAFT KERANJANG/);
   assert.match(message, /2 dus \(isi 24 satuan\)/);
   assert.match(message, /finalisasi Admin BAM/);
+  assert.match(message, /Estimasi total barang: Rp/);
+  assert.match(message, /24\.000/);
   assert.equal(sharedDraftWhatsAppUrl({ ...cart, status: 'finalized' }), null);
   assert.equal(sharedDraftWhatsAppUrl({ ...cart, store: { phone: '0812' } }), null);
   assert.equal(sharedDraftWhatsAppUrl({ ...cart, items: [] }), null);

@@ -8,6 +8,7 @@ import { normalizeDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
 import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
+import { rupiah } from '../shop/shopPresentation';
 import NavigationIcon from './NavigationIcon';
 import { productVariants } from '../../data/products';
 
@@ -69,7 +70,15 @@ const Navbar = () => {
   const isAccountRoute = mobileRoute === '/akun' || mobileRoute.startsWith('/akun/');
   const isAccountDetailRoute = mobileRoute.startsWith('/akun/');
   const b2bCart = shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
-  const bottomLinks = [
+  const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
+  const activeB2BDate = shared?.cart?.date || '';
+  const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  const b2bSubtotal = shared?.cart?.items?.reduce((total, item) => total + item.quantity * item.price, 0) || 0;
+  const bottomLinks = b2bCart ? [
+    { label: 'Toko', href: '#/', icon: 'home', active: mobileRoute === '/' },
+    { label: 'Order Cepat', href: '#/order-cepat', icon: 'products', active: mobileRoute === '/order-cepat' || mobileRoute === '/keranjang' },
+    { label: 'Akun', href: '#/akun', icon: 'account', active: isAccountRoute },
+  ] : [
     { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
     {
       label: 'Katalog',
@@ -225,7 +234,8 @@ const Navbar = () => {
         'store-navigation' +
         (scrolled ? ' is-scrolled' : '') +
         (isAccountRoute ? ' is-account-route' : '') +
-        (isAccountDetailRoute ? ' is-account-detail-route' : '')
+        (isAccountDetailRoute ? ' is-account-detail-route' : '') +
+        (b2bCart ? ' is-b2b-context' : '')
       }
       ref={navigationRef}
     >
@@ -244,6 +254,22 @@ const Navbar = () => {
               <span className="navbar-brand-subtitle">Grosir &amp; Kebutuhan Toko</span>
             </a>
           </div>
+
+          {b2bCart && (
+            <a
+              className="b2b-active-store"
+              href="#/keranjang"
+              onClick={() => setCartMode('store')}
+              title="Buka keranjang untuk mengganti toko dan periode"
+            >
+              <span className="b2b-active-store-icon" aria-hidden="true">▣</span>
+              <span className="b2b-active-store-copy">
+                <strong>{activeB2BStore}</strong>
+                <small>{activeB2BDate ? 'Kirim: ' + activeB2BDate : 'Pilih toko dan periode'}</small>
+              </span>
+              <span aria-hidden="true">⌄</span>
+            </a>
+          )}
 
           {/* Tengah: Search */}
           <form
@@ -343,6 +369,24 @@ const Navbar = () => {
 
           {/* Kanan: Actions */}
           <div className="navbar-actions">
+            {b2bCart && (
+              <>
+                <a className="b2b-header-search" href="#/order-cepat" aria-label="Cari barang di Order Cepat">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-4-4" />
+                  </svg>
+                </a>
+                <a className="b2b-header-cart" href="#/keranjang" onClick={() => setCartMode('store')}>
+                  {b2bPackages} kemasan · {rupiah(b2bSubtotal)}
+                </a>
+                <a className="b2b-header-account" href="#/akun">
+                  {shared.role === 'sales' ? 'Sales' : 'Toko'}: {user?.name || 'BAM'}
+                </a>
+              </>
+            )}
             {/* Kirim Ke dengan Pop-Up */}
             <div
               className="deliver-to"
@@ -521,7 +565,7 @@ const Navbar = () => {
             href={link.href}
             aria-current={link.active ? 'page' : undefined}
             onClick={() => {
-              if (link.label === 'Keranjang' && b2bCart) setCartMode?.('store');
+              if ((link.label === 'Keranjang' || link.label === 'Order Cepat') && b2bCart) setCartMode?.('store');
               setShowDeliverPopup(false);
             }}
           >

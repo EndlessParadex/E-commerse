@@ -29,12 +29,12 @@ const tabs = [
   { id: 'appearance', label: 'Tampilan', icon: 'appearance', description: 'Pengaturan visual' },
 ];
 
-export default function AccountPage() {
+export default function AccountPage({ section = null }) {
   const { profile: companyProfile } = useCompany();
   const { user, savedLocation, saveLocation, saveAvatar, authLoading, authError } = useDelivery();
   const [photoNotice, setPhotoNotice] = useState('');
   const [photoBusy, setPhotoBusy] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(section || 'profile');
   const [values, setValues] = useState(() =>
     user
       ? { namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' }
@@ -55,6 +55,15 @@ export default function AccountPage() {
     }
   }, [user, edited]);
 
+  const openSection = (id) => {
+    if (window.matchMedia('(max-width: 760px)').matches) {
+      const slug = { profile: 'profil', address: 'alamat', security: 'keamanan',
+        calendar: 'kalender', appearance: 'tampilan' }[id];
+      window.location.hash = '/akun/' + slug;
+      return;
+    }
+    selectTab(id, true);
+  };
   const selectTab = (id, focus = false) => {
     setActiveTab(id);
     if (focus) tabButtons.current[tabs.findIndex((tab) => tab.id === id)]?.focus();
@@ -128,8 +137,26 @@ export default function AccountPage() {
       </div>
     );
 
+  const roleLabel =
+    user?.role === 'owner' ? 'Pemilik BAM'
+      : user?.role === 'admin' ? 'Admin BAM'
+        : user?.role === 'sales' ? 'Sales BAM'
+          : user?.storeName ? 'Mitra Toko BAM' : 'Pembeli BAM';
+  const menuItems = [
+    { id: 'profile', slug: 'profil', label: 'Profil dan kontak',
+      description: 'Foto, informasi akun, dan nomor HP', icon: 'user' },
+    { id: 'address', slug: 'alamat', label: 'Data toko dan alamat',
+      description: 'Nama toko, penerima, dan alamat pengiriman', icon: 'address' },
+    { id: 'calendar', slug: 'kalender', label: 'Jadwal pengiriman rutin',
+      description: 'Lihat kalender dan hari pengiriman', icon: 'calendar' },
+    { id: 'security', slug: 'keamanan', label: 'Keamanan dan kata sandi',
+      description: 'Verifikasi akun dan pengaturan keamanan', icon: 'shield' },
+    { id: 'appearance', slug: 'tampilan', label: 'Tampilan aplikasi',
+      description: 'Tema dan preferensi visual', icon: 'appearance' },
+  ];
+  const activeMenu = menuItems.find((item) => item.id === section);
   return (
-    <div className="account-page">
+    <div className={'account-page ' + (section ? 'is-mobile-account-detail' : 'is-account-overview')}>
       <nav className="shop-breadcrumb" aria-label="Breadcrumb">
         <a href="#/">Beranda</a>
         <span aria-hidden="true">/</span>
@@ -166,30 +193,50 @@ export default function AccountPage() {
         </>
       ) : (
         <>
+          <header className="account-mobile-page-header">
+            <a href="#/akun" aria-label={section ? 'Kembali ke Akun Saya' : 'Kembali ke beranda'}>
+              <span aria-hidden="true">←</span>
+            </a>
+            <h1>{activeMenu?.label || 'Akun Saya'}</h1>
+          </header>
           <header className="account-page-heading">
             <span className="section-eyebrow">Ruang pribadi Anda</span>
             <h1>Akun saya</h1>
             <p>Kelola profil, alamat pengiriman, dan kenyamanan tampilan.</p>
           </header>
-          <div className="account-workspace account-premium">
-            <div className="account-mobile-navigation" aria-label="Pilih pengaturan akun">
-              <label htmlFor="account-mobile-tab">Bagian akun</label>
-              <select
-                id="account-mobile-tab"
-                value={activeTab}
-                onChange={(event) => selectTab(event.target.value)}
-              >
-                {tabs.map((tab) => (
-                  <option key={tab.id} value={tab.id}>
-                    {tab.label}
-                  </option>
+          {!section && (
+            <section className="account-mobile-hub" aria-label="Pusat akun mobile">
+              <div className="account-mobile-identity">
+                <AccountAvatar user={user} className="account-mobile-avatar" />
+                <div>
+                  <strong>{user.name}</strong>
+                  <span>{user.phone || user.email || 'Kelola kontak di profil'}</span>
+                  <span className="account-mobile-role">{roleLabel}</span>
+                </div>
+                <a href="#/akun/profil" aria-label="Lihat dan edit profil">
+                  <AccountCenterIcon name="chevron" />
+                </a>
+              </div>
+              <h2>Pengaturan akun</h2>
+              <nav className="account-mobile-menu" aria-label="Menu pengaturan akun">
+                {menuItems.map((item) => (
+                  <a key={item.id} href={'#/akun/' + item.slug}>
+                    <span className="account-mobile-menu-icon">
+                      <AccountCenterIcon name={item.icon} size={21} />
+                    </span>
+                    <span className="account-mobile-menu-copy">
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                    <AccountCenterIcon name="chevron" size={18} />
+                  </a>
                 ))}
-              </select>
-              <details className="account-mobile-more">
-                <summary>Pesanan, favorit, dan menu lainnya</summary>
-                <AccountMenu hideProfile />
-              </details>
-            </div>
+              </nav>
+              <h2>Akses lainnya</h2>
+              <AccountMenu hideProfile />
+            </section>
+          )}
+          <div className="account-workspace account-premium">
             <aside className="account-sidebar account-premium-sidebar" aria-label="Navigasi akun">
               <div
                 className="account-tabs"
@@ -295,7 +342,7 @@ export default function AccountPage() {
                       <button
                         type="button"
                         className="account-page-secondary"
-                        onClick={() => selectTab('address', true)}
+                        onClick={() => openSection('address')}
                       >
                         <AccountCenterIcon name="edit" size={16} /> Edit profil
                       </button>
@@ -347,7 +394,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           className="account-page-secondary"
-                          onClick={() => selectTab('address', true)}
+                          onClick={() => openSection('address')}
                         >
                           Ubah nama dan alamat <span aria-hidden="true">→</span>
                         </button>
@@ -370,7 +417,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           className="account-page-secondary"
-                          onClick={() => selectTab('address', true)}
+                          onClick={() => openSection('address')}
                         >
                           Kelola alamat →
                         </button>
@@ -402,7 +449,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           className="account-page-secondary"
-                          onClick={() => selectTab('security', true)}
+                          onClick={() => openSection('security')}
                         >
                           Kelola keamanan →
                         </button>
@@ -417,7 +464,7 @@ export default function AccountPage() {
                             {user.emailVerified ? 'Sudah terverifikasi' : 'Belum terverifikasi'}
                           </small>
                         </div>
-                        <button type="button" onClick={() => selectTab('security', true)}>
+                        <button type="button" onClick={() => openSection('security')}>
                           Lihat
                         </button>
                       </div>
@@ -433,7 +480,7 @@ export default function AccountPage() {
                               : 'Hubungi Admin untuk bantuan akun'}
                           </small>
                         </div>
-                        <button type="button" onClick={() => selectTab('security', true)}>
+                        <button type="button" onClick={() => openSection('security')}>
                           Lihat
                         </button>
                       </div>
@@ -605,7 +652,7 @@ export default function AccountPage() {
             <button
               type="button"
               className="account-premium-shortcut is-calendar"
-              onClick={() => selectTab('calendar', true)}
+              onClick={() => openSection('calendar')}
             >
               <span className="account-premium-shortcut-icon">
                 <AccountCenterIcon name="calendar" size={27} />

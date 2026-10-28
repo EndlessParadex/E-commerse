@@ -1667,3 +1667,25 @@
     padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Account routes use their own focused page header on phones, not the shop header. */
+@media (max-width: 600px) {
+  .store-navigation.is-account-route {
+    position: static;
+    height: 0;
+    min-height: 0;
+    border: 0;
+    box-shadow: none;
+    padding-top: 0;
+  }
+  .store-navigation.is-account-route > .navbar,
+  .store-navigation.is-account-route > .secondary-navbar {
+    display: none;
+  }
+  .store-navigation.is-account-detail-route .mobile-bottom-navigation {
+    display: none;
+  }
+  body:has(.store-navigation.is-account-detail-route) {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

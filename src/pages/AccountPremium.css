@@ -782,3 +782,199 @@
     white-space: normal;
   }
 }
+
+/* A mobile account hub with full-page, individually routed settings. */
+.account-mobile-page-header,
+.account-mobile-hub {
+  display: none;
+}
+@media (max-width: 760px) {
+  .account-page {
+    padding: 14px 14px 30px;
+  }
+  .account-page > .shop-breadcrumb,
+  .account-page > .account-page-heading {
+    display: none;
+  }
+  .account-mobile-page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    margin-bottom: 16px;
+  }
+  .account-mobile-page-header > a {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 1.6rem;
+    color: var(--color-text);
+  }
+  .account-mobile-page-header > a:hover {
+    background: var(--color-surface-soft);
+  }
+  .account-mobile-page-header h1 {
+    min-width: 0;
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.16rem;
+    line-height: 1.4;
+    font-weight: 800;
+  }
+  .account-page.is-account-overview > .account-workspace,
+  .account-page.is-account-overview > .account-premium-shortcuts {
+    display: none;
+  }
+  .account-mobile-hub {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+  }
+  .account-mobile-identity {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 10px 18px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .account-mobile-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .account-mobile-identity > div {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+  .account-mobile-identity strong {
+    color: var(--color-text);
+    font-size: 1rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+  }
+  .account-mobile-identity > div > span:not(.account-mobile-role) {
+    color: var(--color-text-secondary);
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+  }
+  .account-mobile-role {
+    justify-self: start;
+    border-radius: 999px;
+    background: var(--color-info-soft);
+    color: var(--color-link);
+    padding: 5px 9px;
+    font-size: 0.72rem;
+    font-weight: 750;
+  }
+  .account-mobile-identity > a {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    color: var(--color-text-secondary);
+  }
+  .account-mobile-hub h2 {
+    margin: 8px 2px 0;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--color-text-secondary);
+  }
+  .account-mobile-menu,
+  .account-mobile-hub > .account-menu {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: var(--color-surface);
+  }
+  .account-mobile-menu > a {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 10px;
+    min-height: 70px;
+    padding: 11px 13px;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .account-mobile-menu > a + a,
+  .account-mobile-hub .account-menu .account-menu-link + .account-menu-link {
+    border-top: 1px solid var(--color-border);
+  }
+  .account-mobile-menu-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--color-info-soft);
+    color: var(--color-link);
+  }
+  .account-mobile-menu-copy {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+  .account-mobile-menu-copy strong {
+    font-size: 0.88rem;
+    font-weight: 750;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .account-mobile-menu-copy small {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    line-height: 1.45;
+  }
+  .account-mobile-menu > a > svg {
+    color: var(--color-text-muted);
+  }
+  .account-mobile-hub .account-menu {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-mobile-hub .account-menu .account-menu-link {
+    min-height: 64px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 0;
+  }
+  .account-mobile-hub .account-menu .account-menu-copy strong {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .account-mobile-menu > a:focus-visible,
+  .account-mobile-identity > a:focus-visible,
+  .account-mobile-page-header > a:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: -3px;
+  }
+  .account-page.is-mobile-account-detail .account-premium-hero,
+  .account-page.is-mobile-account-detail > .account-premium-shortcuts {
+    display: none;
+  }
+  .account-page.is-mobile-account-detail .account-premium > .account-content {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .account-page.is-mobile-account-detail .account-tab-panel:not([hidden]) {
+    padding: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+  }
+  .account-page.is-mobile-account-detail #account-panel-profile {
+    padding: 0;
+  }
+}

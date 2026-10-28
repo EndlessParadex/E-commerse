@@ -81,6 +81,15 @@ function App() {
     '/admin/keranjang': 'sharedCarts',
   }[route];
   const isAdmin = Boolean(adminView);
+  const accountRoute = /^\/akun(?:\/(profil|alamat|keamanan|kalender|tampilan))?$/.exec(route);
+  const isAccountRoute = Boolean(accountRoute);
+  const accountSection = {
+    profil: 'profile',
+    alamat: 'address',
+    keamanan: 'security',
+    kalender: 'calendar',
+    tampilan: 'appearance',
+  }[accountRoute?.[1]] || null;
   const recoveryMatch = route.match(
     /^\/(forgot-password|reset-password|verifikasi-email)(?:\?[^#]*)?$/,
   );
@@ -130,6 +139,11 @@ function App() {
                   '/notifikasi': 'Notifikasi',
                   '/favorit': 'Favorit Saya',
                   '/akun': 'Akun Saya',
+                  '/akun/profil': 'Profil',
+                  '/akun/alamat': 'Alamat Pengiriman',
+                  '/akun/keamanan': 'Keamanan Akun',
+                  '/akun/kalender': 'Jadwal Pengiriman',
+                  '/akun/tampilan': 'Tampilan Akun',
                   '/login': 'Masuk',
                   '/daftar': 'Daftar',
                   '/tentang': `Tentang ${companyProfile.shortName}`,
@@ -166,7 +180,7 @@ function App() {
         <ShopProvider>
           <AppearanceProvider>
             {!isAdmin && <Navbar />}
-            {!isAdmin && <SharedCartBar />}
+            {!isAdmin && !isAccountRoute && <SharedCartBar />}
             <a
               className="skip-to-content"
               href="#main-content"
@@ -219,8 +233,8 @@ function App() {
                   <ShopPage type="notifications" />
                 ) : route === '/favorit' ? (
                   <FavoritesPage />
-                ) : route === '/akun' ? (
-                  <AccountPage />
+                ) : isAccountRoute ? (
+                  <AccountPage key={route} section={accountSection} />
                 ) : route === '/login' ? (
                   <AuthPage key="login" mode="login" />
                 ) : route === '/daftar' ? (

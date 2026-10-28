@@ -66,6 +66,8 @@ const Navbar = () => {
     window.addEventListener('hashchange', updateRoute);
     return () => window.removeEventListener('hashchange', updateRoute);
   }, []);
+  const isAccountRoute = mobileRoute === '/akun' || mobileRoute.startsWith('/akun/');
+  const isAccountDetailRoute = mobileRoute.startsWith('/akun/');
   const b2bCart = shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
   const bottomLinks = [
     { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
@@ -87,7 +89,7 @@ const Navbar = () => {
       label: 'Akun',
       href: user ? '#/akun' : '#/login',
       icon: 'account',
-      active: ['/akun', '/login', '/daftar'].includes(mobileRoute),
+      active: isAccountRoute || ['/login', '/daftar'].includes(mobileRoute),
     },
   ];
   const b2bNavLabel =
@@ -218,7 +220,15 @@ const Navbar = () => {
   }, []);
 
   return (
-    <div className={'store-navigation' + (scrolled ? ' is-scrolled' : '')} ref={navigationRef}>
+    <div
+      className={
+        'store-navigation' +
+        (scrolled ? ' is-scrolled' : '') +
+        (isAccountRoute ? ' is-account-route' : '') +
+        (isAccountDetailRoute ? ' is-account-detail-route' : '')
+      }
+      ref={navigationRef}
+    >
       <header className="navbar">
         <div className="navbar-container">
           {/* Kiri: Logo */}

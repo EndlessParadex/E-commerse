@@ -98,6 +98,14 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     });
     assert.equal(bottom.querySelector('[aria-current="page"]').textContent, 'Keranjang');
     await act(async () => {
+      dom.location.hash = '/akun/keamanan';
+      dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
+      await settle();
+    });
+    assert.ok(navigation.classList.contains('is-account-route'));
+    assert.ok(navigation.classList.contains('is-account-detail-route'));
+    assert.equal(bottom.querySelector('[aria-current="page"]').textContent, 'Akun');
+    await act(async () => {
       dom.location.hash = '/';
       dom.dispatchEvent(new dom.HashChangeEvent('hashchange'));
       await settle();

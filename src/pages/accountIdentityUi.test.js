@@ -224,22 +224,23 @@ test('account website: buyer security summary, admin password settings, registra
       0,
       'buyer cannot see the Admin route',
     );
-    const mobileAccount = accountCenter.querySelector('#account-mobile-tab');
-    assert.ok(mobileAccount, 'mobile account has a compact section picker');
-    assert.equal(mobileAccount.value, 'profile');
-    assert.ok(accountCenter.querySelector('.account-mobile-more .account-menu'));
-    await act(async () => {
-      mobileAccount.value = 'address';
-      mobileAccount.dispatchEvent(new dom.Event('change', { bubbles: true }));
-      await settle();
-    });
+    const mobileHub = container.querySelector('.account-mobile-hub');
+    assert.ok(mobileHub, 'mobile account uses a menu hub, not a dropdown');
+    assert.equal(container.querySelector('#account-mobile-tab'), null);
+    assert.match(mobileHub.querySelector('.account-mobile-identity').textContent, /Pembeli Website/);
+    for (const section of ['profil', 'alamat', 'kalender', 'keamanan', 'tampilan']) {
+      assert.ok(mobileHub.querySelector(`a[href="#/akun/${section}"]`));
+    }
+    assert.ok(mobileHub.querySelector('a[href="#/pesanan"]'));
+    assert.ok(mobileHub.querySelector('.account-menu-logout'));
+    await route('/akun/alamat', () => container.querySelector('#account-panel-address'));
     assert.equal(container.querySelector('#account-panel-address').hidden, false);
     assert.equal(container.querySelector('#account-panel-profile').hidden, true);
-    await act(async () => {
-      mobileAccount.value = 'profile';
-      mobileAccount.dispatchEvent(new dom.Event('change', { bubbles: true }));
-      await settle();
-    });
+    assert.equal(container.querySelector('.account-mobile-hub'), null);
+    assert.ok(container.querySelector('.account-mobile-page-header a[href="#/akun"]'));
+    assert.equal(container.querySelector('.shared-cart-bar'), null,
+      'account detail suppresses the B2B shopping banner');
+    await route('/akun', () => container.querySelector('.account-mobile-hub'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
     assert.equal(

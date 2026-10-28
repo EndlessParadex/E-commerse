@@ -171,9 +171,14 @@ export default function CommercePayment({ order }) {
           ) : (
             <>
               <p>
-                {order.b2b
-                  ? 'Unggah bukti transfer setelah pembayaran dilakukan. Admin akan memeriksa penerimaan dana sebelum menyatakan lunas.'
-                  : <>Batas pembayaran: <strong>{dateLabel(order.payment.expiresAt)}</strong>. Jika sudah mentransfer tetapi mengalami kendala, hubungi toko dan simpan buktinya.</>}
+                {order.b2b ? (
+                  'Unggah bukti transfer setelah pembayaran dilakukan. Admin akan memeriksa penerimaan dana sebelum menyatakan lunas.'
+                ) : (
+                  <>
+                    Batas pembayaran: <strong>{dateLabel(order.payment.expiresAt)}</strong>. Jika
+                    sudah mentransfer tetapi mengalami kendala, hubungi toko dan simpan buktinya.
+                  </>
+                )}
               </p>
               {proof?.status === 'rejected' && (
                 <p className="workflow-error" role="alert">

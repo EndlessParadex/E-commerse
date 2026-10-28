@@ -654,7 +654,6 @@
   margin-bottom: 18px;
 }
 
-
 /* BAM homepage: hero at left, stacked promotions at right. */
 .home-landing {
   max-width: 1580px;
@@ -663,11 +662,13 @@
 }
 .home-feature-rail {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(350px, .95fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(350px, 0.95fr);
   gap: 16px;
   align-items: stretch;
 }
-.home-feature-rail > * { min-width: 0; }
+.home-feature-rail > * {
+  min-width: 0;
+}
 .home-feature-rail .bam-promo {
   display: flex;
   flex-direction: column;
@@ -677,7 +678,7 @@
 }
 .home-feature-rail .bam-promo-slide {
   flex: 1 1 auto;
-  grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
   gap: 16px;
   padding: 26px 28px 18px;
 }
@@ -685,7 +686,7 @@
   margin-bottom: 16px;
 }
 .home-feature-rail .bam-promo-brand > span:last-child {
-  font-size: clamp(.9rem,1.2vw,1.2rem);
+  font-size: clamp(0.9rem, 1.2vw, 1.2rem);
 }
 .home-feature-rail .bam-promo-copy h1 {
   font-size: clamp(1.85rem, 2.7vw, 3.15rem);
@@ -722,7 +723,7 @@
 }
 @media (max-width: 1190px) {
   .home-feature-rail {
-    grid-template-columns: minmax(0, 1.35fr) minmax(315px, .85fr);
+    grid-template-columns: minmax(0, 1.35fr) minmax(315px, 0.85fr);
     gap: 12px;
   }
   .home-feature-rail .bam-promo-slide {
@@ -730,7 +731,7 @@
     gap: 12px;
   }
   .home-feature-rail .bam-promo-copy h1 {
-    font-size: clamp(1.55rem,2.5vw,2.35rem);
+    font-size: clamp(1.55rem, 2.5vw, 2.35rem);
   }
 }
 @media (max-width: 960px) {
@@ -746,7 +747,7 @@
     gap: 22px;
   }
   .home-feature-rail .bam-promo-copy h1 {
-    font-size: clamp(2rem,4vw,2.9rem);
+    font-size: clamp(2rem, 4vw, 2.9rem);
   }
   .home-feature-rail .bam-promo-products {
     --promo-stage-height: 240px;
@@ -756,7 +757,7 @@
     grid-template-rows: auto;
   }
   .home-feature-rail .bam-vertical-promo-item {
-    grid-template-columns: 68px minmax(0,1fr) auto;
+    grid-template-columns: 68px minmax(0, 1fr) auto;
   }
   .home-feature-rail .bam-vertical-promo-action {
     grid-column: auto;
@@ -779,8 +780,12 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .home-feature-rail .bam-vertical-promo-item {
-    grid-template-columns: 72px minmax(0,1fr) auto;
+    grid-template-columns: 72px minmax(0, 1fr) auto;
   }
-  .home-landing .home-categories { margin-top: 20px; }
-  .home-landing .bam-promotions { margin-top: 22px; }
+  .home-landing .home-categories {
+    margin-top: 20px;
+  }
+  .home-landing .bam-promotions {
+    margin-top: 22px;
+  }
 }

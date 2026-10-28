@@ -11,7 +11,10 @@ test('home promo rail selects distinct catalog products, prioritizing only valid
     { id: 'd', price: 100, oldPrice: 100 },
   ];
   const result = homePromotions(catalog, 3);
-  assert.deepEqual(result.items.map((entry) => entry.product.id), ['c', 'a-small', 'b']);
+  assert.deepEqual(
+    result.items.map((entry) => entry.product.id),
+    ['c', 'a-small', 'b'],
+  );
   assert.equal(result.discountedCount, 2);
   assert.equal(result.items[0].discount, 50);
   assert.equal(result.items[1].discount, 25);
@@ -20,7 +23,8 @@ test('home promo rail selects distinct catalog products, prioritizing only valid
 
 test('home promo rail has a truthful fallback when no discount is configured', () => {
   const result = homePromotions([
-    { id: 'a', price: 1900 }, { id: 'b', price: 2500, oldPrice: 1000 },
+    { id: 'a', price: 1900 },
+    { id: 'b', price: 2500, oldPrice: 1000 },
   ]);
   assert.equal(result.discountedCount, 0);
   assert.equal(result.items.length, 2);

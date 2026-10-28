@@ -5,10 +5,14 @@ export function invoiceDiscount(item) {
   const oldPrice = item?.oldPrice;
   const quantity = item?.quantity;
   if (
-    !Number.isSafeInteger(price) || price < 0 ||
-    !Number.isSafeInteger(oldPrice) || oldPrice <= price ||
-    !Number.isSafeInteger(quantity) || quantity <= 0
-  ) return null;
+    !Number.isSafeInteger(price) ||
+    price < 0 ||
+    !Number.isSafeInteger(oldPrice) ||
+    oldPrice <= price ||
+    !Number.isSafeInteger(quantity) ||
+    quantity <= 0
+  )
+    return null;
   const savings = (oldPrice - price) * quantity;
   if (!Number.isSafeInteger(savings)) return null;
   const percentage = ((oldPrice - price) / oldPrice) * 100;

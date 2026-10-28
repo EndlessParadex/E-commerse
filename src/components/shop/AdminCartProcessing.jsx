@@ -117,7 +117,9 @@ export function AdminCartQueue({ shared, onOpenCart }) {
                   type="button"
                   className="bam-button-secondary"
                   disabled={frozen}
-                  onClick={() => (onOpenCart || shared.choose)({ storeId: cart.storeId, date: cart.date })}
+                  onClick={() =>
+                    (onOpenCart || shared.choose)({ storeId: cart.storeId, date: cart.date })
+                  }
                 >
                   Periksa keranjang
                 </button>
@@ -173,9 +175,13 @@ export function AdminB2BBanks() {
         setAccount(initial?.account || '');
         setHolder(initial?.holder || '');
       },
-      (failure) => { if (alive) setError(failure.message); },
+      (failure) => {
+        if (alive) setError(failure.message);
+      },
     );
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
   const current = banks?.find((item) => item.bank === bank);
   const select = (value) => {
@@ -194,9 +200,18 @@ export function AdminB2BBanks() {
     setError('');
     setNotice('');
     try {
-      const result = await accountApi('/api/admin/b2b/banks', {
-        bank, account, holder, revision: current.revision, currentPassword,
-      }, 15000, 'PUT');
+      const result = await accountApi(
+        '/api/admin/b2b/banks',
+        {
+          bank,
+          account,
+          holder,
+          revision: current.revision,
+          currentPassword,
+        },
+        15000,
+        'PUT',
+      );
       setBanks(result.banks);
       setCurrentPassword('');
       setNotice('Rekening resmi ' + bank + ' berhasil disimpan.');
@@ -210,37 +225,66 @@ export function AdminB2BBanks() {
     <section className="admin-cart-queue" aria-labelledby="b2b-bank-title">
       <h2 id="b2b-bank-title">Rekening transfer BAM</h2>
       <p>
-        Hanya Pemilik BAM yang dapat menyimpan rekening resmi. Pembeli toko dan Sales hanya
-        memilih metode pembayaran; Admin memeriksanya saat finalisasi.
+        Hanya Pemilik BAM yang dapat menyimpan rekening resmi. Pembeli toko dan Sales hanya memilih
+        metode pembayaran; Admin memeriksanya saat finalisasi.
       </p>
-        <form className="shared-admin-add-fields" onSubmit={save}>
-          <label htmlFor="b2b-bank-selector">Bank
-            <select id="b2b-bank-selector" value={bank} onChange={(event) => select(event.target.value)}>
-              <option value="BCA">BCA</option>
-              <option value="BRI">BRI</option>
-              <option value="Mandiri">Mandiri</option>
-            </select>
-          </label>
-          <label htmlFor="b2b-bank-account">Nomor rekening
-            <input id="b2b-bank-account" inputMode="numeric" required
-              pattern="[0-9]{8,25}" minLength={8} maxLength={25}
-              value={account} onChange={(event) => setAccount(event.target.value)} />
-          </label>
-          <label htmlFor="b2b-bank-holder">Nama pemilik rekening
-            <input id="b2b-bank-holder" required maxLength={100}
-              value={holder} onChange={(event) => setHolder(event.target.value)} />
-          </label>
-          <label htmlFor="b2b-bank-password">Kata sandi Pemilik BAM
-            <input id="b2b-bank-password" type="password" autoComplete="current-password"
-              required value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)} />
-          </label>
-          <button className="bam-button-secondary" disabled={busy || !current || !currentPassword}>
-            {busy ? 'Menyimpan…' : 'Simpan rekening transfer'}
-          </button>
-        </form>
-        {error && <p className="shop-warning" role="alert">{error}</p>}
-        {notice && <p role="status">{notice}</p>}
+      <form className="shared-admin-add-fields" onSubmit={save}>
+        <label htmlFor="b2b-bank-selector">
+          Bank
+          <select
+            id="b2b-bank-selector"
+            value={bank}
+            onChange={(event) => select(event.target.value)}
+          >
+            <option value="BCA">BCA</option>
+            <option value="BRI">BRI</option>
+            <option value="Mandiri">Mandiri</option>
+          </select>
+        </label>
+        <label htmlFor="b2b-bank-account">
+          Nomor rekening
+          <input
+            id="b2b-bank-account"
+            inputMode="numeric"
+            required
+            pattern="[0-9]{8,25}"
+            minLength={8}
+            maxLength={25}
+            value={account}
+            onChange={(event) => setAccount(event.target.value)}
+          />
+        </label>
+        <label htmlFor="b2b-bank-holder">
+          Nama pemilik rekening
+          <input
+            id="b2b-bank-holder"
+            required
+            maxLength={100}
+            value={holder}
+            onChange={(event) => setHolder(event.target.value)}
+          />
+        </label>
+        <label htmlFor="b2b-bank-password">
+          Kata sandi Pemilik BAM
+          <input
+            id="b2b-bank-password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+          />
+        </label>
+        <button className="bam-button-secondary" disabled={busy || !current || !currentPassword}>
+          {busy ? 'Menyimpan…' : 'Simpan rekening transfer'}
+        </button>
+      </form>
+      {error && (
+        <p className="shop-warning" role="alert">
+          {error}
+        </p>
+      )}
+      {notice && <p role="status">{notice}</p>}
     </section>
   );
 }
@@ -293,7 +337,10 @@ export default function AdminCartProcessing({ shared }) {
     setReason('');
     const tomorrow = new Date(Date.now() + 86400000);
     const todayWib = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     }).format(tomorrow);
     setTargetDate(nextStoreDelivery(cart.store.deliverySchedule, todayWib) || todayWib);
     setDialog({ action, storeId: cart.store.id, date: cart.date, revision: cart.revision });
@@ -356,9 +403,17 @@ export default function AdminCartProcessing({ shared }) {
       )}
       {cart.overdue && cart.status !== 'finalized' && (
         <div className="admin-cart-actions">
-          <p className="shop-warning">Tanggal pengiriman telah terlewat. Keranjang belum menjadi pesanan.</p>
-          <button type="button" className="bam-button-secondary" disabled={frozen}
-            onClick={() => open('reschedule')}>Jadwalkan ulang keranjang</button>
+          <p className="shop-warning">
+            Tanggal pengiriman telah terlewat. Keranjang belum menjadi pesanan.
+          </p>
+          <button
+            type="button"
+            className="bam-button-secondary"
+            disabled={frozen}
+            onClick={() => open('reschedule')}
+          >
+            Jadwalkan ulang keranjang
+          </button>
         </div>
       )}
       {cart.orderId && (
@@ -428,21 +483,36 @@ export default function AdminCartProcessing({ shared }) {
           )}
           {dialog.action === 'reschedule' && (
             <>
-              <p>Barang akan tetap di keranjang yang sama, terkunci untuk pemeriksaan Admin.
-                Perubahan dicatat dalam audit; tidak ada pesanan baru yang otomatis dibuat.</p>
+              <p>
+                Barang akan tetap di keranjang yang sama, terkunci untuk pemeriksaan Admin.
+                Perubahan dicatat dalam audit; tidak ada pesanan baru yang otomatis dibuat.
+              </p>
               <label className="admin-cart-reason" htmlFor="cart-reschedule-date">
                 Tanggal pengiriman baru
-                <input type="date" id="cart-reschedule-date" required
-                  value={targetDate} disabled={shared.busy}
-                  onChange={(event) => setTargetDate(event.target.value)} />
+                <input
+                  type="date"
+                  id="cart-reschedule-date"
+                  required
+                  value={targetDate}
+                  disabled={shared.busy}
+                  onChange={(event) => setTargetDate(event.target.value)}
+                />
               </label>
-              <p>Jika toko memiliki jadwal tetap, pilih tanggal yang sesuai dengan jadwal tersebut.</p>
+              <p>
+                Jika toko memiliki jadwal tetap, pilih tanggal yang sesuai dengan jadwal tersebut.
+              </p>
               <label className="admin-cart-reason" htmlFor="cart-reschedule-reason">
                 Alasan penjadwalan ulang
-                <textarea id="cart-reschedule-reason" rows={3}
-                  minLength={5} maxLength={200} required
-                  value={reason} disabled={shared.busy}
-                  onChange={(event) => setReason(event.target.value)} />
+                <textarea
+                  id="cart-reschedule-reason"
+                  rows={3}
+                  minLength={5}
+                  maxLength={200}
+                  required
+                  value={reason}
+                  disabled={shared.busy}
+                  onChange={(event) => setReason(event.target.value)}
+                />
               </label>
             </>
           )}

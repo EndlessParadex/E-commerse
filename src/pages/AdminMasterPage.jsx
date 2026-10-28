@@ -368,7 +368,7 @@ export default function AdminMasterPage({ type }) {
       )}
       <section className="admin-panel">
         <div className="admin-panel-heading">
-        <AdminSectionIcon name={type} />
+          <AdminSectionIcon name={type} />
           <div>
             <h2>Daftar {labels[type]}</h2>
             <p>

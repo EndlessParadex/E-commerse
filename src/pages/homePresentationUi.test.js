@@ -125,8 +125,12 @@ test('beranda: kategori admin menghitung produk, foto tetap dalam kategori/SKU, 
   categories.splice(
     0,
     categories.length,
-    { id: 'snack', name: 'Snack & Makanan', icon: '🍫',
-      children: [{ id: 'keripik', name: 'Keripik' }] },
+    {
+      id: 'snack',
+      name: 'Snack & Makanan',
+      icon: '🍫',
+      children: [{ id: 'keripik', name: 'Keripik' }],
+    },
     { id: 'qa-custom', name: 'Kategori Baru dari Admin', icon: '📦', children: [] },
     { id: 'qa-empty', name: 'Kategori Kosong', icon: '🧼', children: [] },
   );
@@ -327,21 +331,38 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
     assert.ok(categoriesSection, 'Kategori berada dalam baris penemuan produk');
     assert.ok(supplierSection, 'Mitra pemasok berada dalam baris yang sama');
-    assert.deepEqual([...discoveryRow.children], [categoriesSection, supplierSection],
-      'Kategori di kiri dan mitra pemasok di kanan');
     assert.deepEqual(
-      [sections.indexOf(featureRail), sections.indexOf(discoveryRow),
-        sections.indexOf(promotionSection), sections.indexOf(featuredSection)],
+      [...discoveryRow.children],
+      [categoriesSection, supplierSection],
+      'Kategori di kiri dan mitra pemasok di kanan',
+    );
+    assert.deepEqual(
+      [
+        sections.indexOf(featureRail),
+        sections.indexOf(discoveryRow),
+        sections.indexOf(promotionSection),
+        sections.indexOf(featuredSection),
+      ],
       [0, 1, 2, 3],
       'Beranda menampilkan banner, kategori/pemasok, promo katalog, lalu produk',
     );
-    const discoveryStyles = await readFile(new URL('./StorefrontDesign2.css', import.meta.url), 'utf8');
-    assert.ok(discoveryStyles.includes('.home-landing .home-discovery-row {'),
-      'Layout kategori dan mitra pemasok mempunyai CSS grid');
-    assert.match(discoveryStyles, /grid-template-columns:\s*minmax\(0,\s*1\.12fr\)\s+minmax\(0,\s*0?\.88fr\)/,
-      'Desktop membagi kategori dan pemasok menjadi dua kolom');
-    assert.ok(discoveryStyles.includes('@media (max-width: 960px)'),
-      'Tablet dan HP mempunyai aturan tata letak responsif');
+    const discoveryStyles = await readFile(
+      new URL('./StorefrontDesign2.css', import.meta.url),
+      'utf8',
+    );
+    assert.ok(
+      discoveryStyles.includes('.home-landing .home-discovery-row {'),
+      'Layout kategori dan mitra pemasok mempunyai CSS grid',
+    );
+    assert.match(
+      discoveryStyles,
+      /grid-template-columns:\s*minmax\(0,\s*1\.12fr\)\s+minmax\(0,\s*0?\.88fr\)/,
+      'Desktop membagi kategori dan pemasok menjadi dua kolom',
+    );
+    assert.ok(
+      discoveryStyles.includes('@media (max-width: 960px)'),
+      'Tablet dan HP mempunyai aturan tata letak responsif',
+    );
   } finally {
     await act(async () => root.unmount());
     await server.close();

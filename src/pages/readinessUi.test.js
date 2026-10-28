@@ -129,7 +129,14 @@ test('readiness explains skipped mail, respects owner settings links and disting
     await click(button('Muat ulang status'));
     await wait(() => container.querySelector('[role="alert"]'));
     failRead = false;
-    data = { ...data, delivery: [], skippedReasons: [], failedMessages: [], emailReady: false, processingOrders: 0 };
+    data = {
+      ...data,
+      delivery: [],
+      skippedReasons: [],
+      failedMessages: [],
+      emailReady: false,
+      processingOrders: 0,
+    };
     await click(button('Muat ulang status'));
     await wait(() => container.querySelector('.commerce-delivery-empty'));
     assert.match(container.textContent, /Perlu disiapkan/);

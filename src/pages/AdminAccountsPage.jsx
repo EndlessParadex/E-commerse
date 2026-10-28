@@ -320,7 +320,10 @@ export default function AdminAccountsPage() {
                               </a>
                             ))}
                             {account.linkedStoreCount > account.linkedStores.length && (
-                              <span>Dan {account.linkedStoreCount - account.linkedStores.length} toko lainnya</span>
+                              <span>
+                                Dan {account.linkedStoreCount - account.linkedStores.length} toko
+                                lainnya
+                              </span>
                             )}
                           </div>
                         )}

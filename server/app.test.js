@@ -434,7 +434,6 @@ test('pembuatan admin melalui perintah lokal menghasilkan akun yang bisa masuk',
   }
 });
 
-
 test('public HTTPS app origin enables Secure session cookies even without NODE_ENV production', async () => {
   const app = createApp({
     dbPath: ':memory:',
@@ -455,5 +454,7 @@ test('public HTTPS app origin enables Secure session cookies even without NODE_E
     // Session cookies are issued only after a successful login/verification.
     // This test checks that the origin-specific safety policy is enabled.
     assert.equal(response.headers?.['set-cookie']?.includes('Secure') ?? true, true);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });

@@ -13,8 +13,12 @@ import {
 import '../styles/themes.css';
 import '../styles/preferences.css';
 import {
-  advancedCssVariables, defaultAdvancedAppearance, advancedStorageKey,
-  normalizeAdvancedAppearance, readAdvancedAppearance, writeAdvancedAppearance,
+  advancedCssVariables,
+  defaultAdvancedAppearance,
+  advancedStorageKey,
+  normalizeAdvancedAppearance,
+  readAdvancedAppearance,
+  writeAdvancedAppearance,
 } from './appearanceAdvanced.js';
 import '../styles/advancedAppearance.css';
 import '../styles/uiConsistency.css';
@@ -44,14 +48,16 @@ export default function AppearanceProvider({ children }) {
   const stored = useMemo(() => readAppearance(browserStorage(), owner), [owner]);
   const storedAdvanced = useMemo(() => readAdvancedAppearance(browserStorage(), owner), [owner]);
   const [selection, setSelection] = useState(() => ({ owner, preferences: stored }));
-  const [advancedSelection, setAdvancedSelection] = useState(() =>
-    ({ owner, preferences: storedAdvanced }));
+  const [advancedSelection, setAdvancedSelection] = useState(() => ({
+    owner,
+    preferences: storedAdvanced,
+  }));
   // Feedback describes the most recent save, not whichever settings group was edited first.
   const [feedback, setFeedback] = useState(() => ({ owner, message: '' }));
   const systemDark = useSyncExternalStore(subscribeSystem, systemSnapshot, () => false);
   const preferences = selection.owner === owner ? selection.preferences : stored;
-  const advanced = advancedSelection.owner === owner
-    ? advancedSelection.preferences : storedAdvanced;
+  const advanced =
+    advancedSelection.owner === owner ? advancedSelection.preferences : storedAdvanced;
   const effectiveMode = resolveAppearanceMode(preferences.mode, systemDark);
 
   useEffect(() => {
@@ -94,9 +100,11 @@ export default function AppearanceProvider({ children }) {
     };
     const vars = advancedCssVariables(advanced, effectiveMode);
     const oldAttributes = Object.fromEntries(
-      Object.keys(attrs).map((key) => [key, root.getAttribute(key)]));
+      Object.keys(attrs).map((key) => [key, root.getAttribute(key)]),
+    );
     const oldStyles = Object.fromEntries(
-      Object.keys(vars).map((key) => [key, root.style.getPropertyValue(key)]));
+      Object.keys(vars).map((key) => [key, root.style.getPropertyValue(key)]),
+    );
     for (const [key, value] of Object.entries(attrs)) root.setAttribute(key, value);
     for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);
     return () => {
@@ -114,14 +122,18 @@ export default function AppearanceProvider({ children }) {
   useEffect(() => {
     const sync = (event) => {
       if (event.storageArea && event.storageArea !== browserStorage()) return;
-      if (event.key !== null &&
-          event.key !== appearanceStorageKey(owner) &&
-          event.key !== advancedStorageKey(owner)) return;
+      if (
+        event.key !== null &&
+        event.key !== appearanceStorageKey(owner) &&
+        event.key !== advancedStorageKey(owner)
+      )
+        return;
       if (event.key === null || event.key === appearanceStorageKey(owner))
         setSelection({ owner, preferences: readAppearance(browserStorage(), owner) });
       if (event.key === null || event.key === advancedStorageKey(owner))
         setAdvancedSelection({
-          owner, preferences: readAdvancedAppearance(browserStorage(), owner),
+          owner,
+          preferences: readAdvancedAppearance(browserStorage(), owner),
         });
       setFeedback({ owner, message: '' });
     };

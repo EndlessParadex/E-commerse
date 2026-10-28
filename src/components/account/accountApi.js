@@ -24,9 +24,11 @@ export async function accountApi(path, body, timeoutMs = 15000, method) {
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     const detail = payload?.errors?.form;
-    const message = typeof detail === 'string' && detail.trim()
-      ? detail : errorsByStatus[response.status] ||
-        'Layanan akun belum dapat memproses permintaan. Coba kembali.';
+    const message =
+      typeof detail === 'string' && detail.trim()
+        ? detail
+        : errorsByStatus[response.status] ||
+          'Layanan akun belum dapat memproses permintaan. Coba kembali.';
     const failure = new Error(message);
     failure.status = response.status;
     failure.code = payload?.error || null;

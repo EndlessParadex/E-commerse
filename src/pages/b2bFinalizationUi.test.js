@@ -132,8 +132,14 @@ test('Admin locks and reviews B2B cart, rejects a stale review, safely retries a
     await click(button('Periksa keranjang'));
     await wait(() => button('Kunci untuk diperiksa'));
     assert.ok(container.querySelector('.shared-admin-workspace'));
-    assert.equal(container.querySelector('.shared-admin-steps .is-current').textContent.trim(), '2Kelola barang');
-    assert.equal(container.querySelector('[role="tab"][aria-selected="true"]').textContent, 'Isi Keranjang');
+    assert.equal(
+      container.querySelector('.shared-admin-steps .is-current').textContent.trim(),
+      '2Kelola barang',
+    );
+    assert.equal(
+      container.querySelector('[role="tab"][aria-selected="true"]').textContent,
+      'Isi Keranjang',
+    );
     await click(button('Riwayat'));
     await wait(() => container.querySelector('.shared-history'));
     assert.equal(button('Kunci untuk diperiksa'), undefined);

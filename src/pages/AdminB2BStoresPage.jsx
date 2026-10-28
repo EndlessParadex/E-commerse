@@ -33,15 +33,21 @@ function SectionHeading({ icon, title, description, id, action, level = 'h2' }) 
   );
 }
 
-
 const weekdayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const blankDelivery = { weekday: '1', intervalWeeks: '1', anchorDate: '' };
-const scheduleLabel = (schedule) => schedule
-  ? weekdayNames[schedule.weekday] + ' · setiap ' + schedule.intervalWeeks +
-    ' minggu · mulai ' + schedule.anchorDate
-  : 'Jadwal belum ditetapkan';
+const scheduleLabel = (schedule) =>
+  schedule
+    ? weekdayNames[schedule.weekday] +
+      ' · setiap ' +
+      schedule.intervalWeeks +
+      ' minggu · mulai ' +
+      schedule.anchorDate
+    : 'Jadwal belum ditetapkan';
 const isoDate = (year, month, day) =>
-  String(year).padStart(4, '0') + '-' + String(month).padStart(2, '0') + '-' +
+  String(year).padStart(4, '0') +
+  '-' +
+  String(month).padStart(2, '0') +
+  '-' +
   String(day).padStart(2, '0');
 // Capture the local date once when this module loads, not during React render.
 const calendarToday = (() => {
@@ -51,24 +57,36 @@ const calendarToday = (() => {
 const parseDeliveryDate = (value) => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(value + 'T00:00:00Z');
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
-    ? date : null;
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
 };
 const calendarDateLabel = (value) => {
   const date = parseDeliveryDate(value);
-  return date ? new Intl.DateTimeFormat('id-ID', {
-    timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric',
-  }).format(date) : value;
+  return date
+    ? new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(date)
+    : value;
 };
 const calendarShortDateLabel = (value) => {
   const date = parseDeliveryDate(value);
-  return date ? new Intl.DateTimeFormat('id-ID', {
-    timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric',
-  }).format(date) : value;
+  return date
+    ? new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(date)
+    : value;
 };
-const calendarMonthLabel = (year, month) => new Intl.DateTimeFormat('id-ID', {
-  timeZone: 'UTC', month: 'long', year: 'numeric',
-}).format(new Date(Date.UTC(year, month, 1)));
+const calendarMonthLabel = (year, month) =>
+  new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(Date.UTC(year, month, 1)));
 const validAnchorWeekday = (schedule) => {
   const date = parseDeliveryDate(schedule?.anchorDate);
   return Boolean(date && date.getUTCDay() === Number(schedule.weekday));
@@ -95,70 +113,129 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
     return days >= 0 && days % stepDays === 0;
   };
   const today = calendarToday;
-  const startPreviewDate = readOnly && validAnchor
-    ? nextStoreDelivery(schedule, today) : schedule?.anchorDate;
+  const startPreviewDate =
+    readOnly && validAnchor ? nextStoreDelivery(schedule, today) : schedule?.anchorDate;
   const startPreview = parseDeliveryDate(startPreviewDate);
   const exampleDates = startPreview
     ? Array.from({ length: 3 }, (_, index) => {
-      const next = new Date(startPreview.getTime() + index * stepDays * 86400000);
-      return next.toISOString().slice(0, 10);
-    }) : [];
+        const next = new Date(startPreview.getTime() + index * stepDays * 86400000);
+        return next.toISOString().slice(0, 10);
+      })
+    : [];
   const panel = (
-    <div className="b2b-calendar-panel" aria-label={readOnly ? 'Kalender jadwal pengiriman tetap' : 'Kalender pilih tanggal acuan'}>
+    <div
+      className="b2b-calendar-panel"
+      aria-label={readOnly ? 'Kalender jadwal pengiriman tetap' : 'Kalender pilih tanggal acuan'}
+    >
       <div className="b2b-calendar-top">
         <div>
           <strong>{calendarMonthLabel(month.year, month.month)}</strong>
-          <small>{readOnly ? 'Tanggal pengiriman rutin' : 'Pilih tanggal pada hari ' + weekdayNames[Number(schedule.weekday)]}</small>
+          <small>
+            {readOnly
+              ? 'Tanggal pengiriman rutin'
+              : 'Pilih tanggal pada hari ' + weekdayNames[Number(schedule.weekday)]}
+          </small>
         </div>
         <div className="b2b-calendar-navigation">
-          <button type="button" className="admin-secondary"
-            aria-label={'Bulan sebelumnya - ' + prefix} onClick={() => moveMonth(-1)}>‹</button>
-          <button type="button" className="admin-secondary"
-            aria-label={'Bulan berikutnya - ' + prefix} onClick={() => moveMonth(1)}>›</button>
+          <button
+            type="button"
+            className="admin-secondary"
+            aria-label={'Bulan sebelumnya - ' + prefix}
+            onClick={() => moveMonth(-1)}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="admin-secondary"
+            aria-label={'Bulan berikutnya - ' + prefix}
+            onClick={() => moveMonth(1)}
+          >
+            ›
+          </button>
         </div>
       </div>
       <div className="b2b-calendar-grid" aria-label={calendarMonthLabel(month.year, month.month)}>
         {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((name) => (
-          <span key={name} className="b2b-calendar-weekday">{name}</span>
+          <span key={name} className="b2b-calendar-weekday">
+            {name}
+          </span>
         ))}
         {Array.from({ length: cellCount }, (_, index) => {
           const day = index - offset + 1;
           if (day < 1 || day > dayCount)
-            return <span className="b2b-calendar-empty" key={'empty-' + index} aria-hidden="true" />;
+            return (
+              <span className="b2b-calendar-empty" key={'empty-' + index} aria-hidden="true" />
+            );
           const date = new Date(Date.UTC(month.year, month.month, day));
           const value = isoDate(month.year, month.month + 1, day);
           const chosen = value === schedule.anchorDate;
           const eligible = date.getUTCDay() === Number(schedule.weekday);
           const recurring = isScheduled(date);
-          const className = 'b2b-calendar-date' +
+          const className =
+            'b2b-calendar-date' +
             (chosen ? ' is-selected' : '') +
             (recurring ? ' is-scheduled' : '') +
             (value === today ? ' is-today' : '');
-          return readOnly
-            ? <span className={className + (recurring ? '' : ' is-unavailable')}
-                key={value} aria-label={calendarDateLabel(value) + (recurring ? ', pengiriman tetap' : '')}
-                data-calendar-date={value}>{day}</span>
-            : <button type="button" key={value} className={className}
-                data-calendar-date={value} aria-pressed={chosen}
-                aria-label={'Pilih ' + calendarDateLabel(value)}
-                title={eligible ? 'Pilih tanggal acuan' : 'Hanya hari ' + weekdayNames[Number(schedule.weekday)] + ' yang dapat dipilih'}
-                disabled={!eligible}
-                onClick={() => onChange({ ...schedule, anchorDate: value })}>{day}</button>;
+          return readOnly ? (
+            <span
+              className={className + (recurring ? '' : ' is-unavailable')}
+              key={value}
+              aria-label={calendarDateLabel(value) + (recurring ? ', pengiriman tetap' : '')}
+              data-calendar-date={value}
+            >
+              {day}
+            </span>
+          ) : (
+            <button
+              type="button"
+              key={value}
+              className={className}
+              data-calendar-date={value}
+              aria-pressed={chosen}
+              aria-label={'Pilih ' + calendarDateLabel(value)}
+              title={
+                eligible
+                  ? 'Pilih tanggal acuan'
+                  : 'Hanya hari ' + weekdayNames[Number(schedule.weekday)] + ' yang dapat dipilih'
+              }
+              disabled={!eligible}
+              onClick={() => onChange({ ...schedule, anchorDate: value })}
+            >
+              {day}
+            </button>
+          );
         })}
       </div>
       <div className="b2b-calendar-legend">
-        <span><i className="b2b-calendar-key eligible" />{readOnly ? 'Tanggal pengiriman' : 'Hari yang dapat dipilih'}</span>
-        <span><i className="b2b-calendar-key selected" />{readOnly ? 'Tanggal acuan' : 'Pilihan Anda'}</span>
+        <span>
+          <i className="b2b-calendar-key eligible" />
+          {readOnly ? 'Tanggal pengiriman' : 'Hari yang dapat dipilih'}
+        </span>
+        <span>
+          <i className="b2b-calendar-key selected" />
+          {readOnly ? 'Tanggal acuan' : 'Pilihan Anda'}
+        </span>
       </div>
       {validAnchor && !readOnly && (
         <div className="b2b-calendar-preview">
-          <strong>{readOnly ? 'Tiga jadwal pengiriman berikutnya' : 'Pratinjau jadwal berdasarkan tanggal acuan'}</strong>
-          <div>{exampleDates.map((date) => <span key={date}>{calendarDateLabel(date)}</span>)}</div>
+          <strong>
+            {readOnly
+              ? 'Tiga jadwal pengiriman berikutnya'
+              : 'Pratinjau jadwal berdasarkan tanggal acuan'}
+          </strong>
+          <div>
+            {exampleDates.map((date) => (
+              <span key={date}>{calendarDateLabel(date)}</span>
+            ))}
+          </div>
           <small>Tanggal berikutnya akan dihitung otomatis setiap {stepDays} hari.</small>
         </div>
       )}
       {!validAnchor && !readOnly && (
-        <p className="b2b-calendar-help">Tanggal acuan belum dipilih. Pilih salah satu tanggal yang tersedia pada kalender.</p>
+        <p className="b2b-calendar-help">
+          Tanggal acuan belum dipilih. Pilih salah satu tanggal yang tersedia pada kalender.
+        </p>
       )}
     </div>
   );
@@ -176,8 +253,11 @@ function DeliveryCalendar({ schedule, onChange, prefix, readOnly = false }) {
         </span>
         <span className="b2b-saved-calendar-dates">
           {exampleDates.map((value) => (
-            <span key={value} title={calendarDateLabel(value)}
-              aria-label={calendarDateLabel(value)}>
+            <span
+              key={value}
+              title={calendarDateLabel(value)}
+              aria-label={calendarDateLabel(value)}
+            >
               {calendarShortDateLabel(value)}
             </span>
           ))}
@@ -193,38 +273,56 @@ function DeliveryScheduleInputs({ schedule, onChange, prefix }) {
     <div className="b2b-delivery-fields">
       <div className="admin-field">
         <label htmlFor={prefix + '-weekday'}>Hari pengiriman tetap</label>
-        <select id={prefix + '-weekday'} value={schedule.weekday}
+        <select
+          id={prefix + '-weekday'}
+          value={schedule.weekday}
           onChange={(event) => {
             const weekday = event.target.value;
             const matches = parseDeliveryDate(schedule.anchorDate)?.getUTCDay() === Number(weekday);
             onChange({ ...schedule, weekday, anchorDate: matches ? schedule.anchorDate : '' });
-          }}>
+          }}
+        >
           {weekdayNames.map((day, index) => (
-            <option key={day} value={index}>{day}</option>
+            <option key={day} value={index}>
+              {day}
+            </option>
           ))}
         </select>
       </div>
       <div className="admin-field">
         <label htmlFor={prefix + '-frequency'}>Frekuensi pengiriman</label>
-        <select id={prefix + '-frequency'} value={schedule.intervalWeeks}
-          onChange={(event) => onChange({ ...schedule, intervalWeeks: event.target.value })}>
+        <select
+          id={prefix + '-frequency'}
+          value={schedule.intervalWeeks}
+          onChange={(event) => onChange({ ...schedule, intervalWeeks: event.target.value })}
+        >
           <option value="1">Setiap 1 minggu</option>
           <option value="2">Setiap 2 minggu</option>
         </select>
       </div>
       <div className="b2b-full">
-        <DeliveryCalendar key={prefix + ':' + schedule.anchorDate}
-          schedule={schedule} onChange={onChange} prefix={prefix} />
+        <DeliveryCalendar
+          key={prefix + ':' + schedule.anchorDate}
+          schedule={schedule}
+          onChange={onChange}
+          prefix={prefix}
+        />
       </div>
       <div className="b2b-date-fallback b2b-full">
         <label htmlFor={prefix + '-anchor'}>Atau masukkan tanggal acuan secara manual</label>
-        <input id={prefix + '-anchor'} type="date" required value={schedule.anchorDate}
+        <input
+          id={prefix + '-anchor'}
+          type="date"
+          required
+          value={schedule.anchorDate}
           aria-invalid={!isValid}
           aria-describedby={prefix + '-date-help'}
-          onChange={(event) => onChange({ ...schedule, anchorDate: event.target.value })} />
+          onChange={(event) => onChange({ ...schedule, anchorDate: event.target.value })}
+        />
         <small id={prefix + '-date-help'} className={!isValid ? 'b2b-calendar-error' : ''}>
-          {!isValid ? 'Tanggal harus sesuai hari ' + weekdayNames[Number(schedule.weekday)] + '.' :
-            'Tanggal hanya dapat ditetapkan satu kali. Setelah disimpan, jadwal terkunci.'}
+          {!isValid
+            ? 'Tanggal harus sesuai hari ' + weekdayNames[Number(schedule.weekday)] + '.'
+            : 'Tanggal hanya dapat ditetapkan satu kali. Setelah disimpan, jadwal terkunci.'}
         </small>
       </div>
     </div>
@@ -286,7 +384,10 @@ function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
   const [page, setPage] = useState(1);
   const pickerRef = useRef(null);
   useEffect(() => {
-    const timer = setTimeout(() => { setSearch(query.trim()); setPage(1); }, 250);
+    const timer = setTimeout(() => {
+      setSearch(query.trim());
+      setPage(1);
+    }, 250);
     return () => clearTimeout(timer);
   }, [query]);
   useEffect(() => {
@@ -297,11 +398,17 @@ function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
     document.addEventListener('pointerdown', closeOutside);
     return () => document.removeEventListener('pointerdown', closeOutside);
   }, [open]);
-  const result = useResource(open
-    ? '/api/b2b/accounts?' + new URLSearchParams({
-      purpose: 'owner', q: search, page: String(page),
-    })
-    : null, revision);
+  const result = useResource(
+    open
+      ? '/api/b2b/accounts?' +
+          new URLSearchParams({
+            purpose: 'owner',
+            q: search,
+            page: String(page),
+          })
+      : null,
+    revision,
+  );
   const choose = (account) => {
     onSelect(account);
     setOpen(false);
@@ -310,40 +417,82 @@ function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
   return (
     <div className="b2b-owner-picker" ref={pickerRef}>
       <label id={id + '-label'}>Akun penanggung jawab toko</label>
-      <button type="button" className="b2b-owner-trigger" disabled={disabled}
-        aria-expanded={open} aria-haspopup="listbox"
-        aria-labelledby={id + '-label'} aria-controls={id + '-options'}
-        onClick={() => setOpen((value) => !value)}>
+      <button
+        type="button"
+        className="b2b-owner-trigger"
+        disabled={disabled}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-labelledby={id + '-label'}
+        aria-controls={id + '-options'}
+        onClick={() => setOpen((value) => !value)}
+      >
         <span className="b2b-owner-trigger-text">
           {selected ? (
             <>
               <strong>{selected.name}</strong>
               <small>{selected.email}</small>
             </>
-          ) : <span>Pilih akun pembeli yang belum memiliki toko</span>}
+          ) : (
+            <span>Pilih akun pembeli yang belum memiliki toko</span>
+          )}
         </span>
-        <span className="b2b-owner-chevron" aria-hidden="true">⌄</span>
+        <span className="b2b-owner-chevron" aria-hidden="true">
+          ⌄
+        </span>
       </button>
       {open && (
-        <div className="b2b-owner-popover" onKeyDown={(event) => {
-          if (event.key === 'Escape') { event.stopPropagation(); setOpen(false); }
-        }}>
+        <div
+          className="b2b-owner-popover"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              setOpen(false);
+            }
+          }}
+        >
           <label htmlFor={id + '-search'}>Cari akun</label>
-          <input id={id + '-search'} type="search" value={query} maxLength={200}
-            autoComplete="off" placeholder="Cari nama atau email…" disabled={disabled}
+          <input
+            id={id + '-search'}
+            type="search"
+            value={query}
+            maxLength={200}
+            autoComplete="off"
+            placeholder="Cari nama atau email…"
+            disabled={disabled}
             onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
-          {result.loading && <p role="status" className="b2b-muted">Memuat akun…</p>}
-          {result.error && <p className="b2b-error" role="alert">{result.error}</p>}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.preventDefault();
+            }}
+          />
+          {result.loading && (
+            <p role="status" className="b2b-muted">
+              Memuat akun…
+            </p>
+          )}
+          {result.error && (
+            <p className="b2b-error" role="alert">
+              {result.error}
+            </p>
+          )}
           {result.data && (
             <>
-              <ul className="b2b-owner-options" id={id + '-options'} role="listbox"
-                aria-labelledby={id + '-label'}>
+              <ul
+                className="b2b-owner-options"
+                id={id + '-options'}
+                role="listbox"
+                aria-labelledby={id + '-label'}
+              >
                 {result.data.users.map((account) => (
                   <li key={account.id} role="presentation">
-                    <button type="button" role="option" className="b2b-owner-option"
-                      aria-selected={selected?.id === account.id} disabled={disabled}
-                      onClick={() => choose(account)}>
+                    <button
+                      type="button"
+                      role="option"
+                      className="b2b-owner-option"
+                      aria-selected={selected?.id === account.id}
+                      disabled={disabled}
+                      onClick={() => choose(account)}
+                    >
                       <strong>{account.name}</strong>
                       <span>{account.email}</span>
                     </button>
@@ -351,17 +500,28 @@ function BuyerAccountPicker({ id, selected, onSelect, revision, disabled }) {
                 ))}
               </ul>
               {!result.data.total && (
-                <p className="b2b-muted">Tidak ada akun pembeli yang tersedia.
-                  Akun harus aktif, disetujui, belum terhubung ke toko,
-                  dan bukan Sales atau Admin.</p>
+                <p className="b2b-muted">
+                  Tidak ada akun pembeli yang tersedia. Akun harus aktif, disetujui, belum terhubung
+                  ke toko, dan bukan Sales atau Admin.
+                </p>
               )}
-              <Pagination data={result.data} onPage={setPage} busy={disabled}
-                label="Daftar akun pemilik toko" />
+              <Pagination
+                data={result.data}
+                onPage={setPage}
+                busy={disabled}
+                label="Daftar akun pemilik toko"
+              />
             </>
           )}
           {selected && (
-            <button type="button" className="admin-text-button"
-              disabled={disabled} onClick={() => choose(null)}>Kosongkan pilihan</button>
+            <button
+              type="button"
+              className="admin-text-button"
+              disabled={disabled}
+              onClick={() => choose(null)}
+            >
+              Kosongkan pilihan
+            </button>
           )}
         </div>
       )}
@@ -460,9 +620,13 @@ export default function AdminB2BStoresPage() {
     return () => clearTimeout(timer);
   }, [accountQuery]);
   useUnsavedChanges(
-    Object.values(form).some(Boolean) || deliveryForm.anchorDate !== '' ||
-      legacyDelivery.anchorDate !== '' || Boolean(salesId) || Boolean(change) ||
-      Boolean(newOwner) || Boolean(transferOwner),
+    Object.values(form).some(Boolean) ||
+      deliveryForm.anchorDate !== '' ||
+      legacyDelivery.anchorDate !== '' ||
+      Boolean(salesId) ||
+      Boolean(change) ||
+      Boolean(newOwner) ||
+      Boolean(transferOwner),
     undefined,
     busy,
   );
@@ -533,12 +697,22 @@ export default function AdminB2BStoresPage() {
         'PUT',
       );
     if (change.kind === 'owner') {
-      if (!change.account?.id) { setError('Pilih akun penanggung jawab.'); return; }
-      return mutate(path + '/owner',
+      if (!change.account?.id) {
+        setError('Pilih akun penanggung jawab.');
+        return;
+      }
+      return mutate(
+        path + '/owner',
         { userId: change.account.id, revision, keepPreviousMember },
         'Penanggung jawab toko berhasil diubah. Akses akun telah disesuaikan.',
-        () => { setChange(null); setOwnerEditor(false); setTransferOwner(null); setKeepPreviousMember(false); },
-        'PUT');
+        () => {
+          setChange(null);
+          setOwnerEditor(false);
+          setTransferOwner(null);
+          setKeepPreviousMember(false);
+        },
+        'PUT',
+      );
     }
     if (change.kind === 'replace') {
       if (!replacement) {
@@ -592,7 +766,9 @@ export default function AdminB2BStoresPage() {
           {managementSteps.map((step, index) => (
             <li className={'b2b-guide-step b2b-guide-step--' + (index + 1)} key={step.title}>
               <span className="b2b-guide-number">{index + 1}</span>
-              <span className="b2b-guide-icon"><AdminIcon name={step.icon} /></span>
+              <span className="b2b-guide-icon">
+                <AdminIcon name={step.icon} />
+              </span>
               <span className="b2b-guide-copy">
                 <strong>{step.title}</strong>
                 <small>{step.note}</small>
@@ -623,10 +799,13 @@ export default function AdminB2BStoresPage() {
             <span className="b2b-section-icon b2b-section-icon--b2bStores">
               <AdminIcon name="plus" />
             </span>
-            <span><strong>Tambah toko</strong>
+            <span>
+              <strong>Tambah toko</strong>
               <small>Buat toko baru beserta penanggung jawab dan jadwal tetapnya.</small>
             </span>
-            <span className="b2b-create-chevron" aria-hidden="true">⌄</span>
+            <span className="b2b-create-chevron" aria-hidden="true">
+              ⌄
+            </span>
           </summary>
           <form
             id="b2b-create-form"
@@ -694,10 +873,17 @@ export default function AdminB2BStoresPage() {
               </div>
               <div className="b2b-full b2b-owner-section">
                 <h3>Pilih penanggung jawab utama</h3>
-                <p className="b2b-muted">Akun pembeli akan langsung dihubungkan ke toko.
-                  Daftarkan atau setujui akunnya terlebih dahulu jika belum tersedia.</p>
-                <BuyerAccountPicker id="create-owner" selected={newOwner}
-                  onSelect={setNewOwner} disabled={busy} revision={revision} />
+                <p className="b2b-muted">
+                  Akun pembeli akan langsung dihubungkan ke toko. Daftarkan atau setujui akunnya
+                  terlebih dahulu jika belum tersedia.
+                </p>
+                <BuyerAccountPicker
+                  id="create-owner"
+                  selected={newOwner}
+                  onSelect={setNewOwner}
+                  disabled={busy}
+                  revision={revision}
+                />
               </div>
               <div className="b2b-full b2b-schedule-section">
                 <h3>Jadwal pengiriman tetap</h3>
@@ -708,14 +894,21 @@ export default function AdminB2BStoresPage() {
                 />
               </div>
               <div className="b2b-actions b2b-full">
-                <button className="admin-primary" type="submit"
-                  disabled={busy || !newOwner || !validAnchorWeekday(deliveryForm)}>
+                <button
+                  className="admin-primary"
+                  type="submit"
+                  disabled={busy || !newOwner || !validAnchorWeekday(deliveryForm)}
+                >
                   {busy ? 'Menyimpan…' : 'Simpan toko'}
                 </button>
                 <button
                   className="admin-secondary"
                   type="button"
-                  onClick={() => { setForm(emptyStore); setNewOwner(null); setDeliveryForm(blankDelivery); }}
+                  onClick={() => {
+                    setForm(emptyStore);
+                    setNewOwner(null);
+                    setDeliveryForm(blankDelivery);
+                  }}
                 >
                   Kosongkan form
                 </button>
@@ -727,12 +920,17 @@ export default function AdminB2BStoresPage() {
 
       <div className="b2b-workspace">
         <section className="admin-panel b2b-panel" aria-labelledby="b2b-list-heading">
-          <SectionHeading icon="b2bStores" title="Daftar toko"
+          <SectionHeading
+            icon="b2bStores"
+            title="Daftar toko"
             description="Cari dan pilih toko untuk melihat detail dan penugasannya."
             id="b2b-list-heading"
-            action={<button className="admin-secondary" type="button" disabled={busy} onClick={reload}>
-              Muat ulang
-            </button>} />
+            action={
+              <button className="admin-secondary" type="button" disabled={busy} onClick={reload}>
+                Muat ulang
+              </button>
+            }
+          />
           <div className="admin-field">
             <label htmlFor="b2b-store-search">Cari nama, kode, atau nomor HP</label>
             <input
@@ -762,15 +960,23 @@ export default function AdminB2BStoresPage() {
                       }}
                     >
                       <span className="b2b-store-entry">
-                        <span className="b2b-store-entry-icon"><AdminIcon name="b2bStores" /></span>
+                        <span className="b2b-store-entry-icon">
+                          <AdminIcon name="b2bStores" />
+                        </span>
                         <strong>{store.storeName}</strong>
-                        <span className="b2b-store-entry-arrow" aria-hidden="true">›</span>
+                        <span className="b2b-store-entry-arrow" aria-hidden="true">
+                          ›
+                        </span>
                       </span>
                       <span className="b2b-store-line">
                         <span>{store.storeCode}</span>
                         <span>{store.phone}</span>
                       </span>
-                      <span>{store.owner ? 'Pemilik: ' + store.owner.name : 'Belum ada penanggung jawab'}</span>
+                      <span>
+                        {store.owner
+                          ? 'Pemilik: ' + store.owner.name
+                          : 'Belum ada penanggung jawab'}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -791,8 +997,12 @@ export default function AdminB2BStoresPage() {
           {loadMessage(details, 'detail toko')}
           {current && (
             <>
-              <SectionHeading icon="details" title="Detail toko"
-                description="Informasi toko yang sedang dipilih." level="h3" />
+              <SectionHeading
+                icon="details"
+                title="Detail toko"
+                description="Informasi toko yang sedang dipilih."
+                level="h3"
+              />
               <div className="b2b-detail-top">
                 <div className="b2b-detail-identity">
                   <span className="b2b-code">{current.store.storeCode}</span>
@@ -806,90 +1016,143 @@ export default function AdminB2BStoresPage() {
                   </div>
                 </div>
                 {owner && (
-                  <button type="button" className="admin-secondary b2b-edit-store"
-                    disabled={busy} onClick={() => openChange('edit')}>
+                  <button
+                    type="button"
+                    className="admin-secondary b2b-edit-store"
+                    disabled={busy}
+                    onClick={() => openChange('edit')}
+                  >
                     Ubah data toko
                   </button>
                 )}
               </div>
               <div className="b2b-detail-grid">
                 <div className="b2b-schedule-section">
-                  <SectionHeading icon="calendar" title="Jadwal pengiriman tetap"
-                    description="Hari dan frekuensi rutin toko ini." level="h3" />
-                  <p>{scheduleLabel(current.store.deliverySchedule)}</p>
-                {current.store.deliverySchedule && (
-                  <DeliveryCalendar
-                    key={current.store.id + ':' + current.store.deliverySchedule.anchorDate}
-                    schedule={current.store.deliverySchedule}
-                    prefix="b2b-saved-delivery"
-                    readOnly
+                  <SectionHeading
+                    icon="calendar"
+                    title="Jadwal pengiriman tetap"
+                    description="Hari dan frekuensi rutin toko ini."
+                    level="h3"
                   />
-                )}
-                {!current.store.deliverySchedule && owner && (
-                  <form
-                    className="b2b-form-grid b2b-schedule-assignment"
-                    aria-label="Tetapkan jadwal pengiriman toko"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      mutate(
-                        '/api/b2b/stores/' + encodeURIComponent(current.store.id) + '/schedule',
-                        {
-                          ...legacyDelivery,
-                          weekday: Number(legacyDelivery.weekday),
-                          intervalWeeks: Number(legacyDelivery.intervalWeeks),
-                          revision: current.store.revision,
-                        },
-                        'Jadwal pengiriman toko ditetapkan dan dikunci.',
-                        () => setLegacyDelivery(blankDelivery),
-                      );
-                    }}
-                  >
-                    <DeliveryScheduleInputs
-                      schedule={legacyDelivery}
-                      onChange={setLegacyDelivery}
-                      prefix="b2b-legacy-delivery"
+                  <p>{scheduleLabel(current.store.deliverySchedule)}</p>
+                  {current.store.deliverySchedule && (
+                    <DeliveryCalendar
+                      key={current.store.id + ':' + current.store.deliverySchedule.anchorDate}
+                      schedule={current.store.deliverySchedule}
+                      prefix="b2b-saved-delivery"
+                      readOnly
                     />
-                    <button type="submit" className="admin-primary"
-                      disabled={busy || !validAnchorWeekday(legacyDelivery)}>
-                      Tetapkan jadwal sekali
-                    </button>
-                  </form>
-                )}
-              </div>
+                  )}
+                  {!current.store.deliverySchedule && owner && (
+                    <form
+                      className="b2b-form-grid b2b-schedule-assignment"
+                      aria-label="Tetapkan jadwal pengiriman toko"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        mutate(
+                          '/api/b2b/stores/' + encodeURIComponent(current.store.id) + '/schedule',
+                          {
+                            ...legacyDelivery,
+                            weekday: Number(legacyDelivery.weekday),
+                            intervalWeeks: Number(legacyDelivery.intervalWeeks),
+                            revision: current.store.revision,
+                          },
+                          'Jadwal pengiriman toko ditetapkan dan dikunci.',
+                          () => setLegacyDelivery(blankDelivery),
+                        );
+                      }}
+                    >
+                      <DeliveryScheduleInputs
+                        schedule={legacyDelivery}
+                        onChange={setLegacyDelivery}
+                        prefix="b2b-legacy-delivery"
+                      />
+                      <button
+                        type="submit"
+                        className="admin-primary"
+                        disabled={busy || !validAnchorWeekday(legacyDelivery)}
+                      >
+                        Tetapkan jadwal sekali
+                      </button>
+                    </form>
+                  )}
+                </div>
                 <section className="b2b-owner-overview" aria-label="Penanggung jawab toko">
                   <div>
-                    <SectionHeading icon="owner" title="Penanggung jawab toko"
-                      description="Akun pembeli utama toko ini." level="h3" />
-                  {current.store.owner ? (
-                    <>
-                      <strong>{current.store.owner.name}</strong>
-                      <span>{current.store.owner.email}</span>
-                      {!current.store.owner.active && <small className="b2b-owner-warning">Akun tidak aktif.</small>}
-                    </>
-                  ) : <p className="b2b-owner-warning">Belum ditetapkan. Pilih pemilik toko yang benar.</p>}
-                </div>
-                  {owner && <button type="button" className="admin-secondary" disabled={busy}
-                    onClick={() => {
-                      setOwnerEditor(!ownerEditor); setTransferOwner(null); setKeepPreviousMember(false);
-                    }}>{ownerEditor ? 'Tutup' : current.store.owner ? 'Ganti pemilik' : 'Tetapkan pemilik'}</button>}
+                    <SectionHeading
+                      icon="owner"
+                      title="Penanggung jawab toko"
+                      description="Akun pembeli utama toko ini."
+                      level="h3"
+                    />
+                    {current.store.owner ? (
+                      <>
+                        <strong>{current.store.owner.name}</strong>
+                        <span>{current.store.owner.email}</span>
+                        {!current.store.owner.active && (
+                          <small className="b2b-owner-warning">Akun tidak aktif.</small>
+                        )}
+                      </>
+                    ) : (
+                      <p className="b2b-owner-warning">
+                        Belum ditetapkan. Pilih pemilik toko yang benar.
+                      </p>
+                    )}
+                  </div>
+                  {owner && (
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={busy}
+                      onClick={() => {
+                        setOwnerEditor(!ownerEditor);
+                        setTransferOwner(null);
+                        setKeepPreviousMember(false);
+                      }}
+                    >
+                      {ownerEditor
+                        ? 'Tutup'
+                        : current.store.owner
+                          ? 'Ganti pemilik'
+                          : 'Tetapkan pemilik'}
+                    </button>
+                  )}
                 </section>
               </div>
               {owner && ownerEditor && (
                 <div className="b2b-owner-editor">
-                  <BuyerAccountPicker id="transfer-owner" selected={transferOwner}
-                    onSelect={setTransferOwner} disabled={busy} revision={revision} />
+                  <BuyerAccountPicker
+                    id="transfer-owner"
+                    selected={transferOwner}
+                    onSelect={setTransferOwner}
+                    disabled={busy}
+                    revision={revision}
+                  />
                   {current.store.owner && (
                     <label className="b2b-keep-previous">
-                      <input type="checkbox" checked={keepPreviousMember} disabled={busy}
-                        onChange={event => setKeepPreviousMember(event.target.checked)} />
+                      <input
+                        type="checkbox"
+                        checked={keepPreviousMember}
+                        disabled={busy}
+                        onChange={(event) => setKeepPreviousMember(event.target.checked)}
+                      />
                       Pertahankan pemilik sebelumnya sebagai anggota toko (tetap mempunyai akses).
                     </label>
                   )}
-                  <p className="b2b-muted">Secara default akses pemilik sebelumnya dicabut dari toko ini.
-                    Riwayat keranjang dan pesanan tidak dihapus.</p>
-                  <button className="admin-primary" type="button"
-                    disabled={busy || !transferOwner || transferOwner.id === current.store.owner?.id}
-                    onClick={() => openChange('owner', transferOwner)}>Tinjau perubahan pemilik</button>
+                  <p className="b2b-muted">
+                    Secara default akses pemilik sebelumnya dicabut dari toko ini. Riwayat keranjang
+                    dan pesanan tidak dihapus.
+                  </p>
+                  <button
+                    className="admin-primary"
+                    type="button"
+                    disabled={
+                      busy || !transferOwner || transferOwner.id === current.store.owner?.id
+                    }
+                    onClick={() => openChange('owner', transferOwner)}
+                  >
+                    Tinjau perubahan pemilik
+                  </button>
                 </div>
               )}
               <details className="b2b-assignments-disclosure" key={current.store.id}>
@@ -904,12 +1167,16 @@ export default function AdminB2BStoresPage() {
                   <span className="b2b-assignments-count">
                     {current.members.length} pembeli · {current.sales.length} Sales
                   </span>
-                  <span className="b2b-assignments-toggle" aria-hidden="true">⌄</span>
+                  <span className="b2b-assignments-toggle" aria-hidden="true">
+                    ⌄
+                  </span>
                 </summary>
                 <div className="b2b-assignments-content">
                   <div className="b2b-assignment-grid">
                     <section>
-                      <h3><AdminIcon name="owner" /> Akun pembeli</h3>
+                      <h3>
+                        <AdminIcon name="owner" /> Akun pembeli
+                      </h3>
                       <AccountList
                         accounts={current.members}
                         empty="Belum ada pembeli yang dihubungkan."
@@ -918,7 +1185,9 @@ export default function AdminB2BStoresPage() {
                       />
                     </section>
                     <section>
-                      <h3><AdminIcon name="sales" /> Sales yang ditugaskan</h3>
+                      <h3>
+                        <AdminIcon name="sales" /> Sales yang ditugaskan
+                      </h3>
                       <AccountList
                         accounts={current.sales}
                         empty="Belum ada Sales yang ditugaskan."
@@ -975,19 +1244,29 @@ export default function AdminB2BStoresPage() {
         </section>
       </div>
 
-      <section className="admin-panel b2b-panel b2b-sales-section" aria-labelledby="b2b-sales-heading">
-        <SectionHeading icon="sales" title="Sales terdaftar"
-          description="Seluruh Sales yang tersedia untuk penugasan toko." id="b2b-sales-heading" />
+      <section
+        className="admin-panel b2b-panel b2b-sales-section"
+        aria-labelledby="b2b-sales-heading"
+      >
+        <SectionHeading
+          icon="sales"
+          title="Sales terdaftar"
+          description="Seluruh Sales yang tersedia untuk penugasan toko."
+          id="b2b-sales-heading"
+        />
         {loadMessage(sales, 'Sales')}
         {sales.data &&
           (sales.data.sales.length ? (
             <ul className="b2b-sales-list b2b-sales-rows">
               <li className="b2b-sales-column-head" aria-hidden="true">
-                <span>Nama Sales</span><span>Email</span><span>Jumlah toko</span>
+                <span>Nama Sales</span>
+                <span>Email</span>
+                <span>Jumlah toko</span>
               </li>
               {sales.data.sales.map((account) => (
                 <li key={account.id}>
-                  <span className="b2b-sales-name"><AdminIcon name="sales" />
+                  <span className="b2b-sales-name">
+                    <AdminIcon name="sales" />
                     <strong>{account.name}</strong>
                   </span>
                   <span className="b2b-sales-email">{account.email}</span>
@@ -1002,8 +1281,12 @@ export default function AdminB2BStoresPage() {
 
       {owner && (
         <section className="admin-panel b2b-panel" aria-labelledby="b2b-accounts-heading">
-          <SectionHeading icon="accounts" id="b2b-accounts-heading"
-            title="Hubungkan akun" description="Cari akun yang disetujui untuk menghubungkan pembeli atau mendaftarkan Sales." />
+          <SectionHeading
+            icon="accounts"
+            id="b2b-accounts-heading"
+            title="Hubungkan akun"
+            description="Cari akun yang disetujui untuk menghubungkan pembeli atau mendaftarkan Sales."
+          />
           <div className="admin-field">
             <label htmlFor="b2b-account-search">Cari nama atau email akun</label>
             <input
@@ -1086,10 +1369,10 @@ export default function AdminB2BStoresPage() {
               : change.kind === 'owner'
                 ? 'Konfirmasi pemilik toko'
                 : change.kind === 'replace'
-                ? 'Ganti Sales toko'
-                : change.kind === 'sales'
-                  ? 'Cabut penugasan Sales?'
-                  : 'Lepas pembeli dari toko?'
+                  ? 'Ganti Sales toko'
+                  : change.kind === 'sales'
+                    ? 'Cabut penugasan Sales?'
+                    : 'Lepas pembeli dari toko?'
           }
           confirmLabel={
             change.kind === 'edit' || change.kind === 'replace' || change.kind === 'owner'
@@ -1120,11 +1403,14 @@ export default function AdminB2BStoresPage() {
             </p>
           )}
           {change.kind === 'owner' ? (
-            <p>Pastikan akun pemilik baru benar. Akun baru langsung mendapat akses toko.
-              {change.store.owner && (keepPreviousMember
-                ? ' Pemilik sebelumnya tetap mempunyai akses sebagai anggota.'
-                : ' Hubungan pemilik sebelumnya sebagai anggota akan dicabut.')}
-              Perubahan tercatat dalam audit.</p>
+            <p>
+              Pastikan akun pemilik baru benar. Akun baru langsung mendapat akses toko.
+              {change.store.owner &&
+                (keepPreviousMember
+                  ? ' Pemilik sebelumnya tetap mempunyai akses sebagai anggota.'
+                  : ' Hubungan pemilik sebelumnya sebagai anggota akan dicabut.')}
+              Perubahan tercatat dalam audit.
+            </p>
           ) : change.kind === 'edit' ? (
             <fieldset disabled={busy} className="b2b-edit-fields">
               <label htmlFor="b2b-edit-name">
@@ -1234,16 +1520,16 @@ export default function AdminB2BStoresPage() {
             {appointment.email}
           </p>
           <p>
-            Akun ini akan menjadi Sales, bukan pembeli toko. Akses Sales hanya berlaku pada
-            toko yang secara khusus ditugaskan oleh Pemilik BAM. Pastikan akun ini benar-benar
-            digunakan oleh staf.
+            Akun ini akan menjadi Sales, bukan pembeli toko. Akses Sales hanya berlaku pada toko
+            yang secara khusus ditugaskan oleh Pemilik BAM. Pastikan akun ini benar-benar digunakan
+            oleh staf.
           </p>
           {appointment.memberStores > 0 && (
             <p>
-              Akun ini masih tercatat sebagai pembeli di {appointment.memberStores} toko.
-              Hubungan pembeli akan dicabut saat pendaftaran Sales. Untuk tetap mengakses toko,
-              tugaskan kembali akun ini sebagai Sales melalui pengelolaan toko. Riwayat keranjang
-              dan pesanan tetap disimpan.
+              Akun ini masih tercatat sebagai pembeli di {appointment.memberStores} toko. Hubungan
+              pembeli akan dicabut saat pendaftaran Sales. Untuk tetap mengakses toko, tugaskan
+              kembali akun ini sebagai Sales melalui pengelolaan toko. Riwayat keranjang dan pesanan
+              tetap disimpan.
             </p>
           )}
         </ConfirmDialog>

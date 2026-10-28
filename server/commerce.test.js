@@ -290,12 +290,18 @@ test('v31: no SMTP accepts an unverified registration using its original passwor
     assert.equal(pendingLogin.headers['set-cookie'], undefined);
     const registered = app.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
     assert.ok(registered);
-    const review = await request(app, 'POST', '/api/admin/approvals/' + registered.id, {
-      action: 'approve',
-      revision: 0,
-      reason: 'Setujui pelanggan pengujian',
-      currentPassword: pass,
-    }, admin);
+    const review = await request(
+      app,
+      'POST',
+      '/api/admin/approvals/' + registered.id,
+      {
+        action: 'approve',
+        revision: 0,
+        reason: 'Setujui pelanggan pengujian',
+        currentPassword: pass,
+      },
+      admin,
+    );
     assert.equal(review.status, 200, JSON.stringify(review.body));
     const login = await request(app, 'POST', '/api/auth/login', {
       email: fields.email,

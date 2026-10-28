@@ -167,10 +167,11 @@ test('stok ringkas: edit modal, konflik perangkat, isian offline, guard filter d
     };
     const preview = () => container.querySelector('#stock-total-preview')?.textContent.trim();
     assert.ok(container.querySelector('.workflow-stock-list.is-compact'));
-    assert.match(card().querySelector('.workflow-stock-compact-total').textContent,
-      /119\s*satuan/);
-    assert.match(card().querySelector('.workflow-stock-compact-total').textContent,
-      /2 dus \+ 3 pack \+ 9 satuan/);
+    assert.match(card().querySelector('.workflow-stock-compact-total').textContent, /119\s*satuan/);
+    assert.match(
+      card().querySelector('.workflow-stock-compact-total').textContent,
+      /2 dus \+ 3 pack \+ 9 satuan/,
+    );
     await click(container.querySelector('input[name="stock-layout"][value="full"]'));
     assert.equal(card().querySelector('details').open, true);
     assert.deepEqual(
@@ -185,13 +186,19 @@ test('stok ringkas: edit modal, konflik perangkat, isian offline, guard filter d
     const stockDialog = () => container.querySelector('dialog.workflow-stock-dialog');
     assert.ok(stockDialog(), 'stok ditampilkan pada pop-up');
     assert.equal(stockDialog().hasAttribute('open'), true);
-    assert.match(stockDialog().querySelector('#stock-dialog-title').textContent, /Ubah Stok Produk/);
+    assert.match(
+      stockDialog().querySelector('#stock-dialog-title').textContent,
+      /Ubah Stok Produk/,
+    );
     assert.ok(stockDialog().querySelector('#stock-satuan'));
     assert.ok(stockDialog().querySelector('#stock-dus'));
     assert.equal(stockDialog().querySelector('#stock-karton').disabled, true);
     assert.match(stockDialog().textContent, /Jenis karton belum tersedia di katalog/);
-    assert.equal(card().querySelector('.workflow-stock-package-editor'), null,
-      'kartu stok tidak memanjang saat pop-up dibuka');
+    assert.equal(
+      card().querySelector('.workflow-stock-package-editor'),
+      null,
+      'kartu stok tidak memanjang saat pop-up dibuka',
+    );
     assert.equal(preview(), '119 satuan', 'Default kemasan sesuai stok awal');
     assert.equal(scrollCalls, beforeEditScroll);
     await fillUnits('150');

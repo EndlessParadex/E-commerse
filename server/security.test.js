@@ -85,7 +85,11 @@ function clean(directory) {
 }
 
 test('reservation abuse: order cap is atomic; retries at the cap succeed and another buyer can order', () => {
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', reservationPolicy: policy });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    reservationPolicy: policy,
+  });
   users(app);
   try {
     const body = input(app);
@@ -105,7 +109,11 @@ test('reservation abuse: order cap is atomic; retries at the cap succeed and ano
 });
 
 test('reservation abuse: packaging aliases share a quantity cap; totals across products are bounded', () => {
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', reservationPolicy: policy });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    reservationPolicy: policy,
+  });
   users(app);
   try {
     const candidate = app.catalog.snapshot();
@@ -161,7 +169,12 @@ test('reservation abuse: packaging aliases share a quantity cap; totals across p
 
 test('COD confirmation: admin-only, expires once, confirmed/shipped orders survive and late confirmation fails', () => {
   let time = 1700000000000;
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', now: () => time, reservationPolicy: policy });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    now: () => time,
+    reservationPolicy: policy,
+  });
   users(app);
   try {
     const pending = app.workflow.create(alice, input(app));
@@ -227,7 +240,12 @@ test('legacy COD migration grants one review window, survives restart, and prese
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-migration-'));
   const dbPath = join(directory, 'test.sqlite');
   let time = 1700000000000;
-  let app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
+  let app = createApp({
+    legacyCommerceFixture: true,
+    dbPath,
+    now: () => time,
+    reservationPolicy: policy,
+  });
   users(app);
   try {
     const pending = app.workflow.create(alice, input(app));
@@ -243,7 +261,12 @@ test('legacy COD migration grants one review window, survives restart, and prese
     );
     app.db.close();
     time += 5000;
-    app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
+    app = createApp({
+      legacyCommerceFixture: true,
+      dbPath,
+      now: () => time,
+      reservationPolicy: policy,
+    });
     const review = app.workflow.get(alice, pending.id);
     assert.equal(review.status, 'awaiting_confirmation');
     assert.equal(review.codConfirmation.expiresAt, time + 1000);
@@ -251,7 +274,12 @@ test('legacy COD migration grants one review window, survives restart, and prese
     const deadline = review.codConfirmation.expiresAt;
     app.db.close();
     time += 500;
-    app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
+    app = createApp({
+      legacyCommerceFixture: true,
+      dbPath,
+      now: () => time,
+      reservationPolicy: policy,
+    });
     assert.equal(app.workflow.get(alice, pending.id).codConfirmation.expiresAt, deadline);
     assert.equal(app.workflow.get(bob, shipped.id).status, 'shipped');
     time = deadline;
@@ -267,7 +295,12 @@ test('public inventory is read-only during expiry and works while another WAL co
   const directory = mkdtempSync(join(tmpdir(), 'bam-security-read-'));
   const dbPath = join(directory, 'test.sqlite');
   let time = 1700000000000;
-  const app = createApp({ legacyCommerceFixture: true, dbPath, now: () => time, reservationPolicy: policy });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath,
+    now: () => time,
+    reservationPolicy: policy,
+  });
   users(app);
   const writer = new DatabaseSync(dbPath);
   try {
@@ -326,7 +359,9 @@ test('parallel checkout cannot cross the outstanding-order cap across backend pr
           },
         );
         let result;
-        worker.on('message', (value) => { result = value; });
+        worker.on('message', (value) => {
+          result = value;
+        });
         worker.on('error', reject);
         worker.on('exit', (code) => {
           if (code) reject(new Error('worker failed'));
@@ -346,7 +381,8 @@ test('parallel checkout cannot cross the outstanding-order cap across backend pr
 
 test('login executes a password check for missing and existing emails and returns the same failure', async () => {
   const seen = [];
-  const app = createApp({ legacyCommerceFixture: true,
+  const app = createApp({
+    legacyCommerceFixture: true,
     dbPath: ':memory:',
     passwordCheck: async (password, encoded) => {
       seen.push({ password, encoded });
@@ -390,7 +426,8 @@ test('parallel password work is bounded; a flooded account still admits its owne
   });
   let active = 0,
     maximum = 0;
-  const app = createApp({ legacyCommerceFixture: true,
+  const app = createApp({
+    legacyCommerceFixture: true,
     dbPath: ':memory:',
     passwordQueueOptions: { maxActive: 2, perIp: 1, maxQueued: 4, perIpQueued: 2 },
     authLimits: { loginIp: 4, loginPair: 2 },
@@ -501,9 +538,13 @@ test('failed-login limits persist on the same source; registration throttling do
     };
     for (const email of ['first@test.id', 'second@test.id'])
       assert.equal(
-        (await request(app, 'POST', '/api/auth/register', {
-          ...fields, email, phone: email.startsWith('first') ? '081234560008' : '081234560009',
-        })).status,
+        (
+          await request(app, 'POST', '/api/auth/register', {
+            ...fields,
+            email,
+            phone: email.startsWith('first') ? '081234560008' : '081234560009',
+          })
+        ).status,
         202,
       );
     assert.equal(
@@ -512,10 +553,13 @@ test('failed-login limits persist on the same source; registration throttling do
     );
     time += 60000;
     assert.equal(
-      (await request(app, 'POST', '/api/auth/register', {
-          ...fields, email: 'second@test.id', phone: '081234560009',
-        }))
-        .status,
+      (
+        await request(app, 'POST', '/api/auth/register', {
+          ...fields,
+          email: 'second@test.id',
+          phone: '081234560009',
+        })
+      ).status,
       202,
     );
     assert.equal(
@@ -539,7 +583,8 @@ test('failed-login limits persist on the same source; registration throttling do
 
 test('unexpected errors are logged with request correlation and no credentials/body/error-message leak', async () => {
   const entries = [];
-  const app = createApp({ legacyCommerceFixture: true,
+  const app = createApp({
+    legacyCommerceFixture: true,
     dbPath: ':memory:',
     logger: (entry) => entries.push(entry),
     passwordCheck: async () => {
@@ -608,7 +653,9 @@ test('failed-login source counters are shared across backend processes', async (
             },
           );
           let result;
-          worker.on('message', (value) => { result = value; });
+          worker.on('message', (value) => {
+            result = value;
+          });
           worker.on('error', reject);
           worker.on('exit', (code) => {
             if (code) reject(new Error('worker failed'));
@@ -628,7 +675,8 @@ test('failed-login source counters are shared across backend processes', async (
 
 test('active limiter buckets cannot be evicted by churn; expired buckets recover without trusting forwarded IP', async () => {
   let time = 1700000000000;
-  const app = createApp({ legacyCommerceFixture: true,
+  const app = createApp({
+    legacyCommerceFixture: true,
     dbPath: ':memory:',
     now: () => time,
     authLimits: { loginIp: 1 },
@@ -708,7 +756,8 @@ test('invalid reservation configuration fails closed instead of silently disabli
 
 test('checkout checks overdue reservations even when the maintenance timer has not run', () => {
   let time = 1700000000000;
-  const app = createApp({ legacyCommerceFixture: true,
+  const app = createApp({
+    legacyCommerceFixture: true,
     dbPath: ':memory:',
     now: () => time,
     reservationPolicy: { ...policy, maxOpenOrders: 1 },

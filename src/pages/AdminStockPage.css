@@ -303,7 +303,6 @@
   }
 }
 
-
 /* Modern, compact packaging-based stock editor. Existing inventory math remains server-authoritative. */
 .workflow-stock-card.is-editing .workflow-stock-footer {
   min-width: 0;
@@ -321,7 +320,7 @@
   border: 1px solid var(--color-border-info-strong);
   border-radius: 16px;
   background: var(--color-surface);
-  box-shadow: 0 6px 20px rgba(30, 70, 125, .05);
+  box-shadow: 0 6px 20px rgba(30, 70, 125, 0.05);
 }
 .workflow-stock-editor-title {
   display: flex;
@@ -333,12 +332,12 @@
 .workflow-stock-editor-title h4 {
   font-size: 1.05rem;
   color: var(--color-text);
-  letter-spacing: -.015em;
+  letter-spacing: -0.015em;
 }
 .workflow-stock-editor-title p {
   margin-top: 4px;
   color: var(--color-text-secondary);
-  font-size: .83rem;
+  font-size: 0.83rem;
 }
 .workflow-stock-before {
   border: 1px solid var(--color-border-info);
@@ -346,9 +345,11 @@
   padding: 10px 12px;
   border-radius: 10px;
   color: var(--color-text-secondary);
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
-.workflow-stock-before strong { color: var(--color-text); }
+.workflow-stock-before strong {
+  color: var(--color-text);
+}
 .workflow-stock-editor-mode {
   display: flex;
   align-items: center;
@@ -363,7 +364,7 @@
   width: 100%;
   padding-bottom: 7px;
   color: var(--color-text);
-  font-size: .87rem;
+  font-size: 0.87rem;
   font-weight: 750;
 }
 .workflow-stock-editor-mode label {
@@ -375,7 +376,7 @@
   border: 1px solid var(--color-input-border);
   border-radius: 11px;
   background: var(--color-surface);
-  font-size: .85rem;
+  font-size: 0.85rem;
   font-weight: 650;
   cursor: pointer;
 }
@@ -388,16 +389,20 @@
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
-.workflow-stock-editor-mode input { accent-color: var(--color-action); }
+.workflow-stock-editor-mode input {
+  accent-color: var(--color-action);
+}
 .workflow-stock-quantity-heading {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 8px 16px;
 }
-.workflow-stock-quantity-heading strong { font-size: .92rem; }
+.workflow-stock-quantity-heading strong {
+  font-size: 0.92rem;
+}
 .workflow-stock-quantity-heading small {
-  font-size: .79rem;
+  font-size: 0.79rem;
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
@@ -415,7 +420,7 @@
 .workflow-stock-quantity label {
   color: var(--color-text);
   font-weight: 750;
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
 .workflow-stock-quantity input {
   min-width: 0;
@@ -435,19 +440,19 @@
   outline-offset: 2px;
 }
 .workflow-stock-quantity input:disabled {
-  opacity: .68;
+  opacity: 0.68;
   background: var(--color-surface-soft);
   cursor: not-allowed;
 }
 .workflow-stock-quantity small {
-  font-size: .75rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
 .workflow-stock-editor-explanation,
 .workflow-stock-package-editor .workflow-stock-editor-note {
   color: var(--color-text-secondary);
-  font-size: .82rem;
+  font-size: 0.82rem;
   line-height: 1.55;
   margin: 0;
 }
@@ -459,14 +464,17 @@
   border: 1px solid var(--color-border-info);
   background: var(--color-surface-soft);
 }
-.workflow-stock-calc-rows { display: grid; gap: 7px; }
+.workflow-stock-calc-rows {
+  display: grid;
+  gap: 7px;
+}
 .workflow-stock-calc-rows > div {
   display: flex;
   align-items: baseline;
   gap: 14px;
   justify-content: space-between;
   color: var(--color-text-secondary);
-  font-size: .81rem;
+  font-size: 0.81rem;
 }
 .workflow-stock-calc-rows > div span:last-child {
   font-variant-numeric: tabular-nums;
@@ -474,7 +482,7 @@
 }
 .workflow-stock-calc > p {
   color: var(--color-text-secondary);
-  font-size: .81rem;
+  font-size: 0.81rem;
   margin-top: 5px;
 }
 .workflow-stock-calc-total {
@@ -486,7 +494,9 @@
   padding-top: 12px;
   border-top: 1px solid var(--color-border-info);
 }
-.workflow-stock-calc-total strong { font-size: .94rem; }
+.workflow-stock-calc-total strong {
+  font-size: 0.94rem;
+}
 .workflow-stock-calc-total output {
   color: var(--color-link);
   font-size: clamp(1.15rem, 1.8vw, 1.5rem);
@@ -507,15 +517,19 @@
   }
 }
 @media (max-width: 700px) {
-  .workflow-stock-package-editor { padding: 14px; gap: 12px; }
-  .workflow-stock-calc-rows > div { gap: 8px; }
+  .workflow-stock-package-editor {
+    padding: 14px;
+    gap: 12px;
+  }
+  .workflow-stock-calc-rows > div {
+    gap: 8px;
+  }
 }
 @media (max-width: 420px) {
   .workflow-stock-package-editor .workflow-stock-edit-actions button {
     flex: 1 1 100%;
   }
 }
-
 
 /* Compact stock cards: one primary stock total instead of three competing counters. */
 .is-compact .workflow-stock-compact-total {
@@ -528,7 +542,7 @@
   background: var(--color-surface-soft);
 }
 .is-compact .workflow-stock-compact-total > span {
-  font-size: .8rem;
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
 }
 .is-compact .workflow-stock-compact-total > strong {
@@ -538,12 +552,12 @@
   line-height: 1.2;
 }
 .is-compact .workflow-stock-compact-total > strong small {
-  font-size: .85rem;
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
 }
 .is-compact .workflow-stock-compact-total > p {
   color: var(--color-text-secondary);
-  font-size: .84rem;
+  font-size: 0.84rem;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -556,10 +570,11 @@
 .is-compact .workflow-stock-card.is-editing .workflow-stock-package-editor {
   max-width: none;
 }
-@media(max-width: 700px) {
-  .is-compact .workflow-stock-card .workflow-stock-footer > button { max-width: none; }
+@media (max-width: 700px) {
+  .is-compact .workflow-stock-card .workflow-stock-footer > button {
+    max-width: none;
+  }
 }
-
 
 /* Stock edit popup, Modern Light BAM: modal stays above the compact stock list. */
 .workflow-stock-dialog {
@@ -580,7 +595,7 @@
   overscroll-behavior: contain;
 }
 .workflow-stock-dialog::backdrop {
-  background: rgba(12, 27, 54, .59);
+  background: rgba(12, 27, 54, 0.59);
   backdrop-filter: blur(2px);
 }
 .workflow-stock-dialog-content {
@@ -600,7 +615,7 @@
   font-size: clamp(1.08rem, 2vw, 1.3rem);
   line-height: 1.3;
   color: var(--color-text);
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 .workflow-stock-dialog-close {
   display: grid;
@@ -618,7 +633,9 @@
   line-height: 1;
   cursor: pointer;
 }
-.workflow-stock-dialog-close:hover { background: var(--color-surface-soft); }
+.workflow-stock-dialog-close:hover {
+  background: var(--color-surface-soft);
+}
 .workflow-stock-dialog-close:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
@@ -646,13 +663,15 @@
   flex: 0 0 56px;
   border-radius: 12px;
 }
-.workflow-stock-dialog-product .workflow-stock-name { min-width: 0; }
+.workflow-stock-dialog-product .workflow-stock-name {
+  min-width: 0;
+}
 .workflow-stock-dialog-product .workflow-stock-name h3 {
-  font-size: .94rem;
+  font-size: 0.94rem;
   overflow-wrap: anywhere;
 }
 .workflow-stock-dialog-product .workflow-stock-name p {
-  font-size: .8rem;
+  font-size: 0.8rem;
   margin-top: 5px;
   color: var(--color-text-secondary);
 }
@@ -664,7 +683,7 @@
 }
 .workflow-stock-dialog-current small {
   color: var(--color-text-secondary);
-  font-size: .73rem;
+  font-size: 0.73rem;
 }
 .workflow-stock-dialog-current strong {
   color: var(--color-link);
@@ -697,7 +716,7 @@
   min-width: 0;
   line-height: 1.45;
   border-radius: 11px;
-  font-size: .84rem;
+  font-size: 0.84rem;
   background: var(--color-surface);
 }
 .workflow-stock-dialog .workflow-stock-editor-mode label:has(input:checked) {
@@ -714,7 +733,7 @@
 }
 .workflow-stock-dialog .workflow-stock-editor-explanation {
   margin-top: -3px;
-  font-size: .76rem;
+  font-size: 0.76rem;
 }
 .workflow-stock-dialog .workflow-stock-calc {
   gap: 11px;
@@ -754,7 +773,7 @@
 }
 .workflow-stock-dialog .workflow-stock-recovery p {
   color: var(--color-warning-text);
-  font-size: .83rem;
+  font-size: 0.83rem;
   line-height: 1.5;
 }
 @media (max-width: 520px) {
@@ -764,20 +783,34 @@
     max-height: 94dvh;
     border-radius: 15px;
   }
-  .workflow-stock-dialog-header { padding: 14px 16px; }
+  .workflow-stock-dialog-header {
+    padding: 14px 16px;
+  }
   .workflow-stock-dialog-product {
     padding: 13px 16px;
   }
-  .workflow-stock-dialog-body { padding: 16px; }
-  .workflow-stock-dialog .workflow-stock-package-editor { gap: 14px; }
-  .workflow-stock-dialog .workflow-stock-editor-mode { gap: 9px; }
+  .workflow-stock-dialog-body {
+    padding: 16px;
+  }
+  .workflow-stock-dialog .workflow-stock-package-editor {
+    gap: 14px;
+  }
+  .workflow-stock-dialog .workflow-stock-editor-mode {
+    gap: 9px;
+  }
   .workflow-stock-dialog .workflow-stock-editor-mode label {
     padding: 10px;
-    font-size: .77rem;
+    font-size: 0.77rem;
   }
-  .workflow-stock-dialog .workflow-stock-quantity-grid { gap: 11px; }
-  .workflow-stock-dialog .workflow-stock-calc { padding: 13px; }
-  .workflow-stock-dialog .workflow-stock-calc-rows > div { font-size: .76rem; }
+  .workflow-stock-dialog .workflow-stock-quantity-grid {
+    gap: 11px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc {
+    padding: 13px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc-rows > div {
+    font-size: 0.76rem;
+  }
 }
 @media (max-width: 350px) {
   .workflow-stock-dialog .workflow-stock-editor-mode {
@@ -788,11 +821,11 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .workflow-stock-dialog, .workflow-stock-dialog::backdrop {
+  .workflow-stock-dialog,
+  .workflow-stock-dialog::backdrop {
     scroll-behavior: auto;
   }
 }
-
 
 /* Compact modal revision: desktop should fit without an internal scroll rail.
    On genuinely short screens scrolling remains accessible rather than hiding actions. */
@@ -803,7 +836,9 @@
     max-height: 95dvh;
     box-shadow: 0 16px 48px #061a3e3d;
   }
-  .workflow-stock-dialog-header { padding: 11px 20px; }
+  .workflow-stock-dialog-header {
+    padding: 11px 20px;
+  }
   .workflow-stock-dialog-product {
     min-height: 70px;
     padding: 10px 20px;
@@ -814,32 +849,61 @@
     height: 44px;
     flex-basis: 44px;
   }
-  .workflow-stock-dialog-body { padding: 15px 20px 17px; }
-  .workflow-stock-dialog .workflow-stock-package-editor { gap: 10px; }
-  .workflow-stock-dialog .workflow-stock-editor-mode { gap: 7px 12px; }
-  .workflow-stock-dialog .workflow-stock-editor-mode legend { padding-bottom: 6px; }
+  .workflow-stock-dialog-body {
+    padding: 15px 20px 17px;
+  }
+  .workflow-stock-dialog .workflow-stock-package-editor {
+    gap: 10px;
+  }
+  .workflow-stock-dialog .workflow-stock-editor-mode {
+    gap: 7px 12px;
+  }
+  .workflow-stock-dialog .workflow-stock-editor-mode legend {
+    padding-bottom: 6px;
+  }
   .workflow-stock-dialog .workflow-stock-editor-mode label {
     min-height: 41px;
     padding: 7px 12px;
   }
-  .workflow-stock-dialog .workflow-stock-quantity-grid { gap: 9px 14px; }
+  .workflow-stock-dialog .workflow-stock-quantity-grid {
+    gap: 9px 14px;
+  }
   .workflow-stock-dialog .workflow-stock-quantity {
     gap: 4px;
   }
-  .workflow-stock-dialog .workflow-stock-quantity input { height: 40px; }
-  .workflow-stock-dialog .workflow-stock-quantity small { font-size: .72rem; }
-  .workflow-stock-dialog .workflow-stock-quantity-heading { gap: 4px 10px; }
-  .workflow-stock-dialog .workflow-stock-quantity-heading small { font-size: .72rem; }
+  .workflow-stock-dialog .workflow-stock-quantity input {
+    height: 40px;
+  }
+  .workflow-stock-dialog .workflow-stock-quantity small {
+    font-size: 0.72rem;
+  }
+  .workflow-stock-dialog .workflow-stock-quantity-heading {
+    gap: 4px 10px;
+  }
+  .workflow-stock-dialog .workflow-stock-quantity-heading small {
+    font-size: 0.72rem;
+  }
   .workflow-stock-dialog .workflow-stock-editor-explanation,
   .workflow-stock-dialog .workflow-stock-editor-note {
-    font-size: .74rem;
+    font-size: 0.74rem;
     line-height: 1.4;
   }
-  .workflow-stock-dialog .workflow-stock-calc { padding: 10px 14px; gap: 6px; }
-  .workflow-stock-dialog .workflow-stock-calc-rows { gap: 4px; }
-  .workflow-stock-dialog .workflow-stock-calc-total { padding-top: 7px; }
-  .workflow-stock-dialog .workflow-stock-calc-total output { font-size: 1.2rem; }
-  .workflow-stock-dialog .workflow-stock-edit-actions button { min-height: 40px; }
+  .workflow-stock-dialog .workflow-stock-calc {
+    padding: 10px 14px;
+    gap: 6px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc-rows {
+    gap: 4px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc-total {
+    padding-top: 7px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc-total output {
+    font-size: 1.2rem;
+  }
+  .workflow-stock-dialog .workflow-stock-edit-actions button {
+    min-height: 40px;
+  }
 }
 .workflow-stock-dialog {
   overflow-x: hidden;
@@ -849,7 +913,7 @@
 }
 /* Blurring the entire stock table behind the modal causes extra GPU repaint work. */
 .workflow-stock-dialog::backdrop {
-  background: rgba(12, 27, 54, .48);
+  background: rgba(12, 27, 54, 0.48);
   backdrop-filter: none;
 }
 @media (max-width: 520px) {
@@ -857,7 +921,13 @@
     max-height: 96dvh;
     overflow-y: auto;
   }
-  .workflow-stock-dialog-body { padding: 12px 14px 15px; }
-  .workflow-stock-dialog .workflow-stock-package-editor { gap: 11px; }
-  .workflow-stock-dialog .workflow-stock-calc { padding: 11px 12px; }
+  .workflow-stock-dialog-body {
+    padding: 12px 14px 15px;
+  }
+  .workflow-stock-dialog .workflow-stock-package-editor {
+    gap: 11px;
+  }
+  .workflow-stock-dialog .workflow-stock-calc {
+    padding: 11px 12px;
+  }
 }

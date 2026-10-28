@@ -13,8 +13,7 @@ export function validateAuth(values, mode) {
   }
   const loginText = typeof values.email === 'string' ? values.email.trim() : '';
   const isPhoneLogin = !isRegister && Boolean(normalizeWhatsApp(loginText));
-  if (!isPhoneLogin &&
-      (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginText) || loginText.length > 254))
+  if (!isPhoneLogin && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginText) || loginText.length > 254))
     errors.email = isRegister
       ? 'Masukkan alamat email yang valid.'
       : 'Masukkan email atau nomor HP Indonesia yang valid.';

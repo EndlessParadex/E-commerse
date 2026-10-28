@@ -14,9 +14,11 @@ export const nextStoreDelivery = (schedule, fromDate) => {
 
 /** A store's fixed day is immutable from the cart; unscheduled stores can use any valid date. */
 export const isStoreDeliveryDate = (schedule, date) => {
-  if (!/^20\d{2}-\d{2}-\d{2}$/.test(date) ||
-      !Number.isFinite(Date.parse(date + 'T00:00:00Z')) ||
-      new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date)
+  if (
+    !/^20\d{2}-\d{2}-\d{2}$/.test(date) ||
+    !Number.isFinite(Date.parse(date + 'T00:00:00Z')) ||
+    new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date
+  )
     return false;
   return !schedule || nextStoreDelivery(schedule, date) === date;
 };

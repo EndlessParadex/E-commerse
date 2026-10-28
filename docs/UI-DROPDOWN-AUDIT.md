@@ -15,21 +15,21 @@ Branch: `feature/b2b-store-sales-shared-cart`
 
 Audit menunjukkan **30 native `<select>` dalam 13 file JSX** di luar halaman katalog. Formulir ini tetap dipertahankan sebagai native untuk meminimalkan risiko regresi validasi, checkout, dan aksesibilitas; kontrol tertutup dan, pada browser yang mendukung `appearance: base-select`, panel pilihan yang dibuka mengikuti token visual BAM. Pada browser lain, popup masih bisa mengikuti Windows/browser:
 
-| Komponen | Jumlah | Konteks |
-| --- | ---: | --- |
-| `AppearanceSettings.jsx` | 2 | pilihan font dan kepadatan UI |
-| `AdminCartProcessing.jsx` | 2 | pemrosesan pesanan |
-| `CancelOrderDialog.jsx` | 1 | pembatalan pesanan |
-| `SharedCartPage.jsx` | 6 | toko, SKU, kategori, metode bayar |
-| `AdminAccountsPage.jsx` | 3 | pengaturan akun |
-| `AdminApprovalsPage.jsx` | 1 | persetujuan |
-| `AdminB2BStoresPage.jsx` | 4 | jadwal dan Sales |
-| `AdminMasterPage.jsx` | 2 | master data |
-| `AdminOrdersPage.jsx` | 1 | pesanan |
-| `AdminPage.jsx` | 2 | manajemen Admin |
-| `AdminProductForm.jsx` | 3 | formulir katalog |
-| `AdminStockPage.jsx` | 1 | filter stok |
-| `CustomerDirectoryPage.jsx` | 2 | filter pelanggan |
+| Komponen                    | Jumlah | Konteks                           |
+| --------------------------- | -----: | --------------------------------- |
+| `AppearanceSettings.jsx`    |      2 | pilihan font dan kepadatan UI     |
+| `AdminCartProcessing.jsx`   |      2 | pemrosesan pesanan                |
+| `CancelOrderDialog.jsx`     |      1 | pembatalan pesanan                |
+| `SharedCartPage.jsx`        |      6 | toko, SKU, kategori, metode bayar |
+| `AdminAccountsPage.jsx`     |      3 | pengaturan akun                   |
+| `AdminApprovalsPage.jsx`    |      1 | persetujuan                       |
+| `AdminB2BStoresPage.jsx`    |      4 | jadwal dan Sales                  |
+| `AdminMasterPage.jsx`       |      2 | master data                       |
+| `AdminOrdersPage.jsx`       |      1 | pesanan                           |
+| `AdminPage.jsx`             |      2 | manajemen Admin                   |
+| `AdminProductForm.jsx`      |      3 | formulir katalog                  |
+| `AdminStockPage.jsx`        |      1 | filter stok                       |
+| `CustomerDirectoryPage.jsx` |      2 | filter pelanggan                  |
 
 ## Batasan dan tindak lanjut
 
@@ -38,6 +38,7 @@ CSS dengan `appearance: base-select` meningkatkan konsistensi pada browser yang 
 Referensi: https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select
 
 Setelah `git pull`:
+
 ```powershell
 node --test src/pages/catalogSearchDropdownUi.test.js
 npm test

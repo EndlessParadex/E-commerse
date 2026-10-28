@@ -21,14 +21,14 @@ Dokumen versi di direktori ini tetap dipertahankan untuk riwayat keputusan tekni
 
 ## Mode keranjang
 
-| Kemampuan | Pembeli B2B | Sales B2B | Admin BAM |
-| --- | --- | --- | --- |
-| Melihat toko terhubung/ditugaskan | Ya | Ya | Ya |
-| Mengubah keranjang toko terbuka sesuai hak akses | Ya | Ya | Ya |
-| Membuat pesanan toko final | Tidak | Tidak | Ya |
-| Memakai keranjang pribadi terpisah | Ya | Ya | Melalui alur pribadi reguler |
-| Checkout pribadi | Ya, setelah verifikasi email | Ya, setelah verifikasi email | Sesuai aturan pesanan reguler |
-| Memilih/mengganti penanggung jawab | Tidak | Tidak | Hanya Pemilik BAM |
+| Kemampuan                                        | Pembeli B2B                  | Sales B2B                    | Admin BAM                     |
+| ------------------------------------------------ | ---------------------------- | ---------------------------- | ----------------------------- |
+| Melihat toko terhubung/ditugaskan                | Ya                           | Ya                           | Ya                            |
+| Mengubah keranjang toko terbuka sesuai hak akses | Ya                           | Ya                           | Ya                            |
+| Membuat pesanan toko final                       | Tidak                        | Tidak                        | Ya                            |
+| Memakai keranjang pribadi terpisah               | Ya                           | Ya                           | Melalui alur pribadi reguler  |
+| Checkout pribadi                                 | Ya, setelah verifikasi email | Ya, setelah verifikasi email | Sesuai aturan pesanan reguler |
+| Memilih/mengganti penanggung jawab               | Tidak                        | Tidak                        | Hanya Pemilik BAM             |
 
 Beranda Sales menampilkan dua tujuan: **List Toko** (keranjang bersama) dan
 **Belanja biasa** (katalog dalam mode pribadi). Beranda pembeli B2B juga memisahkan

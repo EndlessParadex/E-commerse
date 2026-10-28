@@ -51,7 +51,12 @@ export class SharedCartRepository {
     );
     CREATE INDEX IF NOT EXISTS b2b_cycle_lifecycle_cart
       ON b2b_cycle_lifecycle_events(cart_id,created_at DESC);`);
-    if (!db.prepare('PRAGMA table_info(cart_cycles)').all().some((column) => column.name === 'payment_id'))
+    if (
+      !db
+        .prepare('PRAGMA table_info(cart_cycles)')
+        .all()
+        .some((column) => column.name === 'payment_id')
+    )
       db.exec("ALTER TABLE cart_cycles ADD COLUMN payment_id TEXT NOT NULL DEFAULT 'cod'");
   }
   actor(actor) {
@@ -111,18 +116,26 @@ export class SharedCartRepository {
   }
   /** SAVEPOINT is valid inside Admin transactions and on independent reads. */
   enforceCutoff(storeId, date, cycle = this.cycle(storeId, date)) {
-    if (!cycle || cycle.status !== 'open' ||
-        !isPastCutoff(date, this.cutoff, this.now())) return cycle;
+    if (!cycle || cycle.status !== 'open' || !isPastCutoff(date, this.cutoff, this.now()))
+      return cycle;
     this.db.exec('SAVEPOINT b2b_auto_cutoff');
     try {
-      const changed = this.db.prepare(
-        "UPDATE cart_cycles SET status='locked',revision=revision+1,updated_at=? WHERE id=? AND status='open'",
-      ).run(this.now(), cycle.id);
+      const changed = this.db
+        .prepare(
+          "UPDATE cart_cycles SET status='locked',revision=revision+1,updated_at=? WHERE id=? AND status='open'",
+        )
+        .run(this.now(), cycle.id);
       if (changed.changes) {
-        this.db.prepare(
-          'INSERT INTO b2b_cycle_lifecycle_events VALUES(?,?,?,?,?,?)',
-        ).run(randomUUID(), cycle.id, 'auto_lock', null,
-          JSON.stringify({ date, cutoffAt: new Date(this.now()).toISOString() }), this.now());
+        this.db
+          .prepare('INSERT INTO b2b_cycle_lifecycle_events VALUES(?,?,?,?,?,?)')
+          .run(
+            randomUUID(),
+            cycle.id,
+            'auto_lock',
+            null,
+            JSON.stringify({ date, cutoffAt: new Date(this.now()).toISOString() }),
+            this.now(),
+          );
       }
       this.db.exec('RELEASE SAVEPOINT b2b_auto_cutoff');
     } catch (error) {
@@ -135,7 +148,11 @@ export class SharedCartRepository {
   enforceAllCutoffs(storeId = null) {
     if (!this.cutoff) return;
     const rows = storeId
-      ? this.db.prepare("SELECT store_id,delivery_date FROM cart_cycles WHERE status='open' AND store_id=?").all(storeId)
+      ? this.db
+          .prepare(
+            "SELECT store_id,delivery_date FROM cart_cycles WHERE status='open' AND store_id=?",
+          )
+          .all(storeId)
       : this.db.prepare("SELECT store_id,delivery_date FROM cart_cycles WHERE status='open'").all();
     for (const row of rows) this.enforceCutoff(row.store_id, row.delivery_date);
   }
@@ -251,7 +268,16 @@ export class SharedCartRepository {
     if (quantity !== null && (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99))
       fail('Jumlah harus antara 1 dan 99 kemasan per SKU.');
     const hash = createHash('sha256')
-      .update(JSON.stringify({ date, action, productId, quantity, paymentId: selectedPayment?.id || null, revision: body.revision }))
+      .update(
+        JSON.stringify({
+          date,
+          action,
+          productId,
+          quantity,
+          paymentId: selectedPayment?.id || null,
+          revision: body.revision,
+        }),
+      )
       .digest('hex');
     return this.stores.transaction(() => {
       const { user } = this.access(actor, storeId);
@@ -278,8 +304,11 @@ export class SharedCartRepository {
           409,
           'cart_conflict',
         );
-      if (!cycle && this.stores.schedule(storeId) &&
-          this.stores.deliveryDate(storeId, date) !== date)
+      if (
+        !cycle &&
+        this.stores.schedule(storeId) &&
+        this.stores.deliveryDate(storeId, date) !== date
+      )
         fail(
           'Tanggal bukan jadwal pengiriman tetap toko. Pilih periode pengiriman yang berlaku.',
           422,
@@ -310,7 +339,9 @@ export class SharedCartRepository {
         action === 'add' ? (previous?.quantity || 0) + quantity : action === 'set' ? quantity : 0;
       if (after > 99) fail('Maksimal 99 kemasan per SKU.');
       if (action === 'payment') {
-        this.db.prepare('UPDATE cart_cycles SET payment_id=? WHERE id=?').run(selectedPayment.id, cycle.id);
+        this.db
+          .prepare('UPDATE cart_cycles SET payment_id=? WHERE id=?')
+          .run(selectedPayment.id, cycle.id);
       } else if (['add', 'set'].includes(action)) {
         if (!current && (!previous || after > previous.quantity))
           fail(
@@ -352,12 +383,12 @@ export class SharedCartRepository {
         action === 'payment'
           ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
           : action === 'clear'
-          ? { clearedItems, before: clearedItems.length, after: 0 }
-          : {
-              name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
-              before: previous?.quantity || 0,
-              after,
-            };
+            ? { clearedItems, before: clearedItems.length, after: 0 }
+            : {
+                name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
+                before: previous?.quantity || 0,
+                after,
+              };
       this.db
         .prepare('INSERT INTO cart_events VALUES(?,?,?,?,?,?,?,?,?,?,?)')
         .run(

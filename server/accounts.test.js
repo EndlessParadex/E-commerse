@@ -345,7 +345,10 @@ test('self registration appears in the buyer directory without role selection or
     assert.equal(listed.body.total, 1);
     assert.equal(listed.body.users[0].emailVerified, false);
     assert.equal(listed.body.users[0].active, false);
-    assert.equal(app.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(buyer.id).status, 'pending');
+    assert.equal(
+      app.db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(buyer.id).status,
+      'pending',
+    );
     assert.equal(
       (await request(app, 'GET', '/api/company')).body.commerce.verificationRequired,
       true,

@@ -30,29 +30,33 @@
 }
 .bam-role-home-kicker {
   display: block;
-  font-size: .69rem;
+  font-size: 0.69rem;
   font-weight: 850;
-  letter-spacing: .11em;
+  letter-spacing: 0.11em;
   margin-bottom: 12px;
   color: #c6e5ff;
 }
-.bam-role-home--buyer .bam-role-home-kicker { color: #af6142; }
+.bam-role-home--buyer .bam-role-home-kicker {
+  color: #af6142;
+}
 .bam-role-home-copy h1 {
   color: inherit;
   max-width: 480px;
   line-height: 1.15;
   font-size: clamp(1.65rem, 2.7vw, 2.7rem);
   font-weight: 850;
-  letter-spacing: -.043em;
+  letter-spacing: -0.043em;
 }
 .bam-role-home-copy > p {
   margin: 16px 0 23px;
   max-width: 355px;
-  font-size: .85rem;
+  font-size: 0.85rem;
   line-height: 1.7;
   color: #eef8ff;
 }
-.bam-role-home--buyer .bam-role-home-copy > p { color: #74483e; }
+.bam-role-home--buyer .bam-role-home-copy > p {
+  color: #74483e;
+}
 .bam-role-home-primary {
   display: inline-flex;
   justify-content: center;
@@ -63,7 +67,7 @@
   border-radius: 12px;
   background: #fff;
   color: #08489b;
-  font-size: .79rem;
+  font-size: 0.79rem;
   font-weight: 800;
   text-decoration: none;
   box-shadow: 0 7px 14px #113d872e;
@@ -73,7 +77,9 @@
   color: #fff;
   box-shadow: 0 6px 12px #85334a23;
 }
-.bam-role-home-primary:hover { filter: brightness(.95); }
+.bam-role-home-primary:hover {
+  filter: brightness(0.95);
+}
 .bam-role-home-art {
   position: absolute;
   z-index: 1;
@@ -92,13 +98,18 @@
   height: 100%;
   border-radius: 50%;
   background: #ffffff27;
-  box-shadow: 0 0 0 22px #ffffff12, 0 0 0 48px #ffffff08;
+  box-shadow:
+    0 0 0 22px #ffffff12,
+    0 0 0 48px #ffffff08;
 }
 .bam-role-home--buyer .bam-role-home-art-halo {
   background: #f7aa753e;
-  box-shadow: 0 0 0 22px #b46f4520, 0 0 0 48px #bb783710;
+  box-shadow:
+    0 0 0 22px #b46f4520,
+    0 0 0 48px #bb783710;
 }
-.bam-role-home-art-shop, .bam-role-home-art-cart {
+.bam-role-home-art-shop,
+.bam-role-home-art-cart {
   position: absolute;
   display: grid;
   place-items: center;
@@ -109,11 +120,29 @@
   box-shadow: 0 18px 36px #00337c42;
   transform: rotate(-7deg);
 }
-.bam-role-home-art-shop { width: 56%; height: 56%; top: 14%; left: 13%; }
-.bam-role-home-art-cart { width: 37%; height: 37%; right: 9%; bottom: 8%; transform: rotate(12deg); }
-.bam-role-home-art-shop svg { width: 57%; height: 57%; }
-.bam-role-home-art-cart svg { width: 52%; height: 52%; }
-.bam-role-home--buyer .bam-role-home-art-shop, .bam-role-home--buyer .bam-role-home-art-cart {
+.bam-role-home-art-shop {
+  width: 56%;
+  height: 56%;
+  top: 14%;
+  left: 13%;
+}
+.bam-role-home-art-cart {
+  width: 37%;
+  height: 37%;
+  right: 9%;
+  bottom: 8%;
+  transform: rotate(12deg);
+}
+.bam-role-home-art-shop svg {
+  width: 57%;
+  height: 57%;
+}
+.bam-role-home-art-cart svg {
+  width: 52%;
+  height: 52%;
+}
+.bam-role-home--buyer .bam-role-home-art-shop,
+.bam-role-home--buyer .bam-role-home-art-cart {
   color: #bc633a;
   box-shadow: 0 14px 35px #a160503c;
 }
@@ -126,7 +155,12 @@
   gap: 7px;
   transform: rotate(20deg);
 }
-.bam-role-home-art-grid span { width: 12px; height: 12px; background: #ffffff72; border-radius: 4px; }
+.bam-role-home-art-grid span {
+  width: 12px;
+  height: 12px;
+  background: #ffffff72;
+  border-radius: 4px;
+}
 .bam-role-home-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -155,7 +189,8 @@
   border-color: #9ec8f5;
   box-shadow: 0 12px 28px #194a8920;
 }
-.bam-role-home-card:focus-visible, .bam-role-home-primary:focus-visible {
+.bam-role-home-card:focus-visible,
+.bam-role-home-primary:focus-visible {
   outline: 3px solid var(--color-focus, #0a68d8);
   outline-offset: 3px;
 }
@@ -184,55 +219,111 @@
   width: 100%;
 }
 .bam-role-home-card strong {
-  font-size: .85rem;
+  font-size: 0.85rem;
   line-height: 1.4;
   color: var(--color-text, #153251);
 }
 .bam-role-home-card small {
-  font-size: .71rem;
+  font-size: 0.71rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
   color: var(--color-text-secondary, #5f799b);
 }
-.bam-role-home-next-date { font-weight: 750; color: #1470c5 !important; }
+.bam-role-home-next-date {
+  font-weight: 750;
+  color: #1470c5 !important;
+}
 .bam-role-home-card-cta {
   padding-top: 5px;
   color: var(--color-link, #096cd9);
-  font-size: .73rem;
+  font-size: 0.73rem;
   font-weight: 800;
 }
 .bam-role-home-footnote {
   margin: 0 1px;
-  font-size: .73rem;
+  font-size: 0.73rem;
   color: var(--color-text-secondary, #5d7290);
   line-height: 1.5;
 }
 @media (max-width: 1200px) {
-  .bam-role-home-art { opacity: .63; right: -4%; }
-  .bam-role-home-copy { width: 80%; }
-  .bam-role-home-card { padding: 12px; }
+  .bam-role-home-art {
+    opacity: 0.63;
+    right: -4%;
+  }
+  .bam-role-home-copy {
+    width: 80%;
+  }
+  .bam-role-home-card {
+    padding: 12px;
+  }
 }
 @media (max-width: 960px) {
-  .bam-role-home-hero { min-height: 285px; }
-  .bam-role-home-art { right: 9%; opacity: 1; }
-  .bam-role-home-card { min-height: 136px; flex-direction: row; gap: 11px; }
-  .bam-role-home-card-icon { flex: 0 0 39px; }
+  .bam-role-home-hero {
+    min-height: 285px;
+  }
+  .bam-role-home-art {
+    right: 9%;
+    opacity: 1;
+  }
+  .bam-role-home-card {
+    min-height: 136px;
+    flex-direction: row;
+    gap: 11px;
+  }
+  .bam-role-home-card-icon {
+    flex: 0 0 39px;
+  }
 }
 @media (max-width: 700px) {
-  .bam-role-home-hero { min-height: 252px; border-radius: 20px; padding: 24px; }
-  .bam-role-home-copy { width: 76%; }
-  .bam-role-home-copy h1 { font-size: clamp(1.5rem, 5vw, 2rem); }
-  .bam-role-home-art { width: 30%; right: 4%; top: 30%; }
-  .bam-role-home-actions, .bam-role-home--sales .bam-role-home-actions { grid-template-columns: 1fr; }
-  .bam-role-home-card { min-height: 90px; flex-direction: row; align-items: center; }
+  .bam-role-home-hero {
+    min-height: 252px;
+    border-radius: 20px;
+    padding: 24px;
+  }
+  .bam-role-home-copy {
+    width: 76%;
+  }
+  .bam-role-home-copy h1 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+  .bam-role-home-art {
+    width: 30%;
+    right: 4%;
+    top: 30%;
+  }
+  .bam-role-home-actions,
+  .bam-role-home--sales .bam-role-home-actions {
+    grid-template-columns: 1fr;
+  }
+  .bam-role-home-card {
+    min-height: 90px;
+    flex-direction: row;
+    align-items: center;
+  }
 }
 @media (max-width: 480px) {
-  .bam-role-home-hero { padding: 21px; min-height: 265px; }
-  .bam-role-home-copy { width: 95%; }
-  .bam-role-home-art { opacity: .12; width: 50%; right: -10%; top: 25%; }
-  .bam-role-home-copy > p { margin: 12px 0 17px; }
+  .bam-role-home-hero {
+    padding: 21px;
+    min-height: 265px;
+  }
+  .bam-role-home-copy {
+    width: 95%;
+  }
+  .bam-role-home-art {
+    opacity: 0.12;
+    width: 50%;
+    right: -10%;
+    top: 25%;
+  }
+  .bam-role-home-copy > p {
+    margin: 12px 0 17px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bam-role-home-card { transition: none; }
-  .bam-role-home-card:hover { transform: none; }
+  .bam-role-home-card {
+    transition: none;
+  }
+  .bam-role-home-card:hover {
+    transform: none;
+  }
 }

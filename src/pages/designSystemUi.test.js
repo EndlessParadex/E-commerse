@@ -47,10 +47,12 @@ test('storefront featured rail follows light/dark appearance even for guests', (
   assert.match(rail, /\.bam-vertical-promo-detail h3 a\s*\{\s*color: var\(--color-text\)/);
   assert.match(rail, /\.bam-promo-footer\s*\{\s*background: var\(--feature-footer-bg\)/);
   assert.match(rail, /\.bam-promo-arrow\s*\{\s*background: var\(--feature-arrow-bg\)/);
-  assert.match(rail, /\.bam-vertical-promo-item:nth-child\(4n\s*\+\s*1\)[^{]*\{[^}]*var\(--catalog-tint-sky\)/s);
+  assert.match(
+    rail,
+    /\.bam-vertical-promo-item:nth-child\(4n\s*\+\s*1\)[^{]*\{[^}]*var\(--catalog-tint-sky\)/s,
+  );
   assert.doesNotMatch(storefront, /Promotional graphics stay decorative/);
 });
-
 
 test('account icons and calendar use semantic theme colors', () => {
   const account = read('../components/account/AccountMenu.css');
@@ -64,13 +66,20 @@ test('account icons and calendar use semantic theme colors', () => {
 test('cart and checkout share the same product color palette', () => {
   const cart = read('../components/shop/ShopActions.css');
   const checkout = read('./CheckoutPage.css');
-  for (const token of ['--catalog-tint-coral','--catalog-tint-lilac','--catalog-tint-amber',
-    '--catalog-tint-rose','--catalog-tint-brown','--catalog-tint-mint','--catalog-tint-red','--catalog-tint-sand']) {
+  for (const token of [
+    '--catalog-tint-coral',
+    '--catalog-tint-lilac',
+    '--catalog-tint-amber',
+    '--catalog-tint-rose',
+    '--catalog-tint-brown',
+    '--catalog-tint-mint',
+    '--catalog-tint-red',
+    '--catalog-tint-sand',
+  ]) {
     assert.ok(cart.includes('var(' + token + ')'));
     assert.ok(checkout.includes('var(' + token + ')'));
   }
 });
-
 
 test('admin approval toolbar and global search share theme-aware controls', () => {
   const approval = read('./AdminApprovalsPage.jsx');
@@ -85,7 +94,6 @@ test('admin approval toolbar and global search share theme-aware controls', () =
   assert.match(accounts, /@media \(max-width: 600px\)/);
   assert.match(admin, /\.admin-topbar-search \{[\s\S]*?background: var\(--color-surface\)/);
 });
-
 
 test('B2B account ownership selection is visible in creation and edit flows', () => {
   const ui = read('./AdminB2BStoresPage.jsx');

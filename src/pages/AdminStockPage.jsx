@@ -397,7 +397,9 @@ export default function AdminStockPage() {
         <AdminSectionIcon name="stock" />
         <div>
           <h2>Stok per ukuran</h2>
-          <p>Satuan, Pack, Box, Dus, dan Renceng dengan ukuran yang sama menggunakan stok bersama.</p>
+          <p>
+            Satuan, Pack, Box, Dus, dan Renceng dengan ukuran yang sama menggunakan stok bersama.
+          </p>
         </div>
         <span className="admin-result-pill">{rows.length} ukuran</span>
       </div>
@@ -471,7 +473,9 @@ export default function AdminStockPage() {
         </div>
         <div className="workflow-stock-controls">
           <p role="status">
-            {stockFailed ? 'Memeriksa stok' : `${stockPagination.items.length} dari ${visible.length} hasil (${rows.length} ukuran)`}
+            {stockFailed
+              ? 'Memeriksa stok'
+              : `${stockPagination.items.length} dari ${visible.length} hasil (${rows.length} ukuran)`}
           </p>
           <fieldset className="workflow-stock-layout">
             <legend>Tampilan</legend>

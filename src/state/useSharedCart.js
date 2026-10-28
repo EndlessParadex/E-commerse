@@ -175,7 +175,8 @@ export default function useSharedCart(user, authLoading) {
         const scheduledDate = nextStoreDelivery(chosenStore?.deliverySchedule, result.today);
         const target = {
           storeId: chosenStoreId,
-          date: scheduledDate ||
+          date:
+            scheduledDate ||
             (/^20\d{2}-\d{2}-\d{2}$/.test(saved?.date || '') ? saved.date : result.today),
         };
         selected.current = target;
@@ -240,7 +241,9 @@ export default function useSharedCart(user, authLoading) {
         const target = { storeId: operation.target.storeId, date: payload.cart.date };
         selected.current = target;
         setSelection(target);
-        try { localStorage.setItem(keyFor(userId), JSON.stringify(target)); } catch {
+        try {
+          localStorage.setItem(keyFor(userId), JSON.stringify(target));
+        } catch {
           /* Cart remains usable when browser storage is unavailable. */
         }
       }

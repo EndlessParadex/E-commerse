@@ -33,7 +33,9 @@ export default function AdminColorPicker({ value, onChange, error }) {
 
   return (
     <div className="admin-field admin-color-field">
-      <span id="product-color-label" className="admin-color-label">Warna kartu *</span>
+      <span id="product-color-label" className="admin-color-label">
+        Warna kartu *
+      </span>
       <details ref={picker} className="admin-color-picker" onKeyDown={onKeyDown}>
         <summary
           id="product-color"
@@ -47,7 +49,9 @@ export default function AdminColorPicker({ value, onChange, error }) {
             aria-hidden="true"
           />
           <span id="product-color-value">{selected.name}</span>
-          <span className="admin-color-chevron" aria-hidden="true">▾</span>
+          <span className="admin-color-chevron" aria-hidden="true">
+            ▾
+          </span>
         </summary>
         <div className="admin-color-options" role="group" aria-label="Pilihan warna kartu">
           {catalogColors.map((color) => (
@@ -59,16 +63,26 @@ export default function AdminColorPicker({ value, onChange, error }) {
               aria-pressed={value === color.id}
               onClick={() => choose(color.id)}
             >
-              <span className="admin-color-swatch" style={productColorStyle(color.id)} aria-hidden="true" />
+              <span
+                className="admin-color-swatch"
+                style={productColorStyle(color.id)}
+                aria-hidden="true"
+              />
               <span className="admin-color-option-name">{color.name}</span>
               {value === color.id && (
-                <span className="admin-color-selected" aria-hidden="true">✓</span>
+                <span className="admin-color-selected" aria-hidden="true">
+                  ✓
+                </span>
               )}
             </button>
           ))}
         </div>
       </details>
-      {error && <small id="error-color" className="admin-error">{error}</small>}
+      {error && (
+        <small id="error-color" className="admin-error">
+          {error}
+        </small>
+      )}
     </div>
   );
 }

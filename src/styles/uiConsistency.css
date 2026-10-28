@@ -19,37 +19,74 @@
   --bam-ui-radius-card: var(--bam-custom-radius);
   --bam-ui-radius-popover: var(--bam-custom-radius);
 }
-:where(button, input, select, textarea) { font-family: inherit; }
-:where(.page-main) :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']), select, textarea) {
+:where(button, input, select, textarea) {
+  font-family: inherit;
+}
+:where(.page-main)
+  :where(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not(
+        [type='file']
+      ),
+    select,
+    textarea
+  ) {
   min-width: 0;
   border-radius: var(--bam-ui-radius-control);
   color: var(--color-text);
 }
-:where(.page-main) :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']), select, textarea):not(:disabled) {
+:where(.page-main)
+  :where(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not(
+        [type='file']
+      ),
+    select,
+    textarea
+  ):not(:disabled) {
   accent-color: var(--color-action);
 }
-:where(.page-main) :where(input, select, textarea, button, a, summary, [role='button']):focus-visible {
+:where(.page-main)
+  :where(input, select, textarea, button, a, summary, [role='button']):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
 }
 :where(.page-main) :where(input, textarea, select):disabled {
-  opacity: .65;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 :where(.page-main) :where(button):disabled {
   cursor: not-allowed;
 }
-:where(.page-main) :where(.product-card, .bam-product-card, .checkout-card, .admin-panel,
-  .admin-metric, .admin-form-section, .b2b-panel, .workflow-order-card, .workflow-stock-card,
-  .account-menu, .shared-cart-selection, .shared-admin-work-card, .shop-preview) {
+:where(.page-main)
+  :where(
+    .product-card,
+    .bam-product-card,
+    .checkout-card,
+    .admin-panel,
+    .admin-metric,
+    .admin-form-section,
+    .b2b-panel,
+    .workflow-order-card,
+    .workflow-stock-card,
+    .account-menu,
+    .shared-cart-selection,
+    .shared-admin-work-card,
+    .shop-preview
+  ) {
   border-radius: var(--bam-ui-radius-card);
 }
 :where(.page-main) :where(dialog, .bam-confirm-dialog) {
   border-radius: var(--bam-ui-radius-popover);
   color: var(--color-text);
 }
-:where(.page-main) :where(.shop-primary, .admin-primary, .bam-button-secondary, .admin-secondary,
-  .add-product-button, .catalog-search-trigger) {
+:where(.page-main)
+  :where(
+    .shop-primary,
+    .admin-primary,
+    .bam-button-secondary,
+    .admin-secondary,
+    .add-product-button,
+    .catalog-search-trigger
+  ) {
   border-radius: var(--bam-ui-radius-control);
 }
 :where(.page-main) :where(input, textarea)::placeholder {
@@ -72,7 +109,7 @@
   outline-offset: 2px;
 }
 :where(.page-main) :where(.shop-primary, .admin-primary, .add-product-button):disabled {
-  opacity: .6;
+  opacity: 0.6;
   box-shadow: none;
 }
 :where(.page-main) :where(.checkout-card, .admin-panel, .admin-form-section, .product-card) {

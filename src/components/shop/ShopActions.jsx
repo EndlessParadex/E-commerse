@@ -148,7 +148,9 @@ export default function ShopActions({ onOpen }) {
                   {!isAccount && (
                     <header className="shop-preview-header">
                       <h2>{title}</h2>
-                      <span>{count} {isCart ? 'barang' : 'belum dibaca'}</span>
+                      <span>
+                        {count} {isCart ? 'barang' : 'belum dibaca'}
+                      </span>
                     </header>
                   )}
                   {!isCart && !isAccount && shop.notifications.length > 0 && (
@@ -190,8 +192,10 @@ export default function ShopActions({ onOpen }) {
                         </>
                       )}
                       <div className="account-preview-menu">
-                        <AccountMenu onNavigate={close}
-                          profileActive={window.location.hash === '#/akun'} />
+                        <AccountMenu
+                          onNavigate={close}
+                          profileActive={window.location.hash === '#/akun'}
+                        />
                       </div>
                     </div>
                   ) : isCart ? (

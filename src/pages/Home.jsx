@@ -26,26 +26,34 @@ import './StorefrontFeatureRail.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
-  const b2bHome = !catalog && shared?.status === 'ready' &&
-    ['sales', 'buyer'].includes(shared.role);
+  const b2bHome =
+    !catalog && shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
   if (!catalog && shared?.enabled && shared.status === 'loading')
-    return <div className="home-container" role="status">Memuat pilihan belanja akun…</div>;
+    return (
+      <div className="home-container" role="status">
+        Memuat pilihan belanja akun…
+      </div>
+    );
   if (!catalog && shared?.enabled && shared.status === 'error')
     return (
       <div className="home-container" role="alert">
         <h1>Data toko belum dapat dimuat</h1>
         <p>{shared.error || 'Periksa koneksi server dan coba lagi.'}</p>
-        <button type="button" className="shop-primary" onClick={shared.retry}>Coba lagi</button>
+        <button type="button" className="shop-primary" onClick={shared.retry}>
+          Coba lagi
+        </button>
       </div>
     );
   if (!catalog)
     return (
       <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
-          {b2bHome
-            ? <B2BHomeExperience shared={shared} onCartMode={setCartMode} />
-            : <PromoCarousel />}
+          {b2bHome ? (
+            <B2BHomeExperience shared={shared} onCartMode={setCartMode} />
+          ) : (
+            <PromoCarousel />
+          )}
           <VerticalPromoPanel />
         </div>
         <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
@@ -127,14 +135,20 @@ export default function Home({ catalog = null }) {
         </div>
         {category && category.children.length > 0 && (
           <nav className="store-subcategory-nav" aria-label={'Subkategori ' + category.name}>
-            <a className={!sub ? 'is-current' : ''}
+            <a
+              className={!sub ? 'is-current' : ''}
               aria-current={!sub ? 'page' : undefined}
-              href={href({ subcategoryId: '' })}>Semua {category.name}</a>
+              href={href({ subcategoryId: '' })}
+            >
+              Semua {category.name}
+            </a>
             {category.children.map((item) => (
-              <a key={item.id}
+              <a
+                key={item.id}
                 className={sub?.id === item.id ? 'is-current' : ''}
                 aria-current={sub?.id === item.id ? 'page' : undefined}
-                href={href({ subcategoryId: item.id })}>
+                href={href({ subcategoryId: item.id })}
+              >
                 {item.name}
               </a>
             ))}
@@ -172,10 +186,16 @@ export default function Home({ catalog = null }) {
                 value={category?.id || ''}
                 placeholder="Cari kategori..."
                 options={[
-                  { id: '', name: 'Semua kategori', icon: '▦',
-                    count: count({ categoryId: '', subcategoryId: '' }) },
+                  {
+                    id: '',
+                    name: 'Semua kategori',
+                    icon: '▦',
+                    count: count({ categoryId: '', subcategoryId: '' }),
+                  },
                   ...categories.map((item) => ({
-                    id: item.id, name: item.name, icon: item.icon,
+                    id: item.id,
+                    name: item.name,
+                    icon: item.icon,
                     count: count({ categoryId: item.id, subcategoryId: '' }),
                   })),
                 ]}
@@ -187,10 +207,16 @@ export default function Home({ catalog = null }) {
                   value={sub?.id || ''}
                   placeholder="Cari subkategori..."
                   options={[
-                    { id: '', name: 'Semua subkategori', icon: '▦',
-                      count: count({ subcategoryId: '' }) },
+                    {
+                      id: '',
+                      name: 'Semua subkategori',
+                      icon: '▦',
+                      count: count({ subcategoryId: '' }),
+                    },
                     ...category.children.map((item) => ({
-                      id: item.id, name: item.name, icon: category.icon,
+                      id: item.id,
+                      name: item.name,
+                      icon: category.icon,
                       count: count({ subcategoryId: item.id }),
                     })),
                   ]}
@@ -202,10 +228,16 @@ export default function Home({ catalog = null }) {
                 value={supplier?.id || ''}
                 placeholder="Cari pemasok..."
                 options={[
-                  { id: '', name: 'Semua pemasok', icon: '▦',
-                    count: count({ supplierId: '', brandId: '' }) },
+                  {
+                    id: '',
+                    name: 'Semua pemasok',
+                    icon: '▦',
+                    count: count({ supplierId: '', brandId: '' }),
+                  },
                   ...suppliers.map((item) => ({
-                    id: item.id, name: item.name, icon: '▣',
+                    id: item.id,
+                    name: item.name,
+                    icon: '▣',
                     count: count({ supplierId: item.id, brandId: '' }),
                   })),
                 ]}
@@ -224,10 +256,11 @@ export default function Home({ catalog = null }) {
                 value={brand?.id || ''}
                 placeholder="Cari merek..."
                 options={[
-                  { id: '', name: 'Semua merek', icon: '✦',
-                    count: count({ brandId: '' }) },
+                  { id: '', name: 'Semua merek', icon: '✦', count: count({ brandId: '' }) },
                   ...brands.map((item) => ({
-                    id: item.id, name: item.name, icon: item.name.slice(0, 2).toUpperCase(),
+                    id: item.id,
+                    name: item.name,
+                    icon: item.name.slice(0, 2).toUpperCase(),
                     count: count({ brandId: item.id }),
                   })),
                 ]}

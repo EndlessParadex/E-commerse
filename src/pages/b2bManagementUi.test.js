@@ -177,30 +177,46 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await signIn('owner');
     await wait(() => account('buyer'));
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"][aria-current=page]'));
-    assert.ok(container.querySelector('.admin-header .admin-page-title-icon'),
-      'B2B store page title uses the existing Admin icon set');
+    assert.ok(
+      container.querySelector('.admin-header .admin-page-title-icon'),
+      'B2B store page title uses the existing Admin icon set',
+    );
     const guide = container.querySelector('.b2b-guide');
-    assert.equal(guide?.querySelectorAll('.b2b-guide-step').length, 5,
-      'five explanatory steps guide new admins without becoming a compulsory wizard');
+    assert.equal(
+      guide?.querySelectorAll('.b2b-guide-step').length,
+      5,
+      'five explanatory steps guide new admins without becoming a compulsory wizard',
+    );
     assert.match(guide.textContent, /Kelola Sales/);
     assert.ok(container.querySelector('.b2b-create-summary .admin-icon'));
     assert.ok(container.querySelector('#b2b-list-heading'));
-    assert.match(container.querySelector('.b2b-workspace .b2b-section-copy p').textContent,
-      /Cari dan pilih toko/);
+    assert.match(
+      container.querySelector('.b2b-workspace .b2b-section-copy p').textContent,
+      /Cari dan pilih toko/,
+    );
     await click(container.querySelector('.b2b-create summary'));
     await fill('#b2b-store-name', 'Toko Pertama');
     await fill('#b2b-store-phone', '081234567890');
     await fill('#b2b-store-address', 'Jalan Nusantara Nomor 15');
-    assert.equal(container.querySelector('.b2b-create .b2b-owner-trigger').getAttribute('aria-expanded'), 'false');
+    assert.equal(
+      container.querySelector('.b2b-create .b2b-owner-trigger').getAttribute('aria-expanded'),
+      'false',
+    );
     await click(container.querySelector('.b2b-create .b2b-owner-trigger'));
-    await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .some(button => button.textContent.includes('buyer@fixture.test')));
-    await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .find(button => button.textContent.includes('buyer@fixture.test')));
+    await wait(() =>
+      [...container.querySelectorAll('.b2b-create .b2b-owner-option')].some((button) =>
+        button.textContent.includes('buyer@fixture.test'),
+      ),
+    );
+    await click(
+      [...container.querySelectorAll('.b2b-create .b2b-owner-option')].find((button) =>
+        button.textContent.includes('buyer@fixture.test'),
+      ),
+    );
     await fill('#b2b-create-delivery-anchor', '2026-10-26');
-    await wait(() => container.querySelector(
-      '.b2b-create [data-calendar-date="2026-10-26"][aria-pressed="true"]',
-    ));
+    await wait(() =>
+      container.querySelector('.b2b-create [data-calendar-date="2026-10-26"][aria-pressed="true"]'),
+    );
     assert.equal(
       container.querySelector('.b2b-create [data-calendar-date="2026-10-27"]').disabled,
       true,
@@ -210,15 +226,20 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.equal(container.querySelector('#b2b-create-delivery-anchor').value, '2026-10-19');
     await click(container.querySelector('.b2b-create [data-calendar-date="2026-10-26"]'));
     assert.equal(container.querySelector('#b2b-create-delivery-anchor').value, '2026-10-26');
-    assert.match(container.querySelector('.b2b-create .b2b-calendar-preview').textContent,
-      /9 November 2026|2 November 2026/);
-    await click(container.querySelector(
-      '.b2b-create [aria-label="Bulan berikutnya - b2b-create-delivery"]',
-    ));
-    assert.match(container.querySelector('.b2b-create .b2b-calendar-top strong').textContent, /November 2026/);
-    await click(container.querySelector(
-      '.b2b-create [aria-label="Bulan sebelumnya - b2b-create-delivery"]',
-    ));
+    assert.match(
+      container.querySelector('.b2b-create .b2b-calendar-preview').textContent,
+      /9 November 2026|2 November 2026/,
+    );
+    await click(
+      container.querySelector('.b2b-create [aria-label="Bulan berikutnya - b2b-create-delivery"]'),
+    );
+    assert.match(
+      container.querySelector('.b2b-create .b2b-calendar-top strong').textContent,
+      /November 2026/,
+    );
+    await click(
+      container.querySelector('.b2b-create [aria-label="Bulan sebelumnya - b2b-create-delivery"]'),
+    );
     failCreate = true;
     await submit('#b2b-create-form');
     await wait(() => container.textContent.includes('Koneksi pengujian terputus.'));
@@ -243,73 +264,119 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
       .prepare('SELECT id FROM b2b_stores WHERE store_name=?')
       .get('Toko Pertama');
     assert.deepEqual(api.b2bStores.schedule(first.id), {
-      weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
+      weekday: 1,
+      intervalWeeks: 1,
+      anchorDate: '2026-10-26',
     });
-    await wait(() => container.querySelector(
-      '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
-    ));
+    await wait(() =>
+      container.querySelector('[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar'),
+    );
     const accessPanel = container.querySelector('.b2b-assignments-disclosure');
     assert.ok(accessPanel, 'buyer and Sales management are grouped in a compact panel');
     assert.equal(accessPanel.open, false, 'assignment management starts collapsed');
     assert.match(accessPanel.querySelector('summary').textContent, /1 pembeli/);
-    assert.ok(container.querySelector('.b2b-detail-top .b2b-edit-store'),
-      'edit action remains available in the compact header');
-    assert.ok(container.querySelector('.b2b-detail-grid'),
-      'the schedule and store owner share a responsive detail grid');
-    assert.equal(container.querySelectorAll(
-      '[aria-label="Detail dan penugasan toko"] .b2b-section-heading',
-    ).length, 3, 'store detail, schedule and owner each have a labeled icon header');
-    assert.equal(container.querySelector('.b2b-status-tag')?.textContent, 'Aktif',
-      'active status is only rendered from the stored active flag');
+    assert.ok(
+      container.querySelector('.b2b-detail-top .b2b-edit-store'),
+      'edit action remains available in the compact header',
+    );
+    assert.ok(
+      container.querySelector('.b2b-detail-grid'),
+      'the schedule and store owner share a responsive detail grid',
+    );
+    assert.equal(
+      container.querySelectorAll('[aria-label="Detail dan penugasan toko"] .b2b-section-heading')
+        .length,
+      3,
+      'store detail, schedule and owner each have a labeled icon header',
+    );
+    assert.equal(
+      container.querySelector('.b2b-status-tag')?.textContent,
+      'Aktif',
+      'active status is only rendered from the stored active flag',
+    );
     await click(accessPanel.querySelector('summary'));
     assert.equal(accessPanel.open, true, 'Owner can expand account management');
     const savedCalendarDetails = container.querySelector(
       '[aria-label="Detail dan penugasan toko"] .b2b-saved-calendar',
     );
-    assert.equal(savedCalendarDetails.open, false,
-      'saved calendar defaults to compact mode to preserve space');
-    assert.match(savedCalendarDetails.querySelector('summary').textContent,
-      /Pengiriman berikutnya/);
-    const upcomingDates = [...savedCalendarDetails.querySelectorAll(
-      '.b2b-saved-calendar-dates > span',
-    )].map((item) => item.textContent);
-    assert.match(upcomingDates[0], /^\d{1,2} \p{L}{3,4} \d{4}$/u,
-      'the date chips use short Indonesian months to stay on one compact row');
+    assert.equal(
+      savedCalendarDetails.open,
+      false,
+      'saved calendar defaults to compact mode to preserve space',
+    );
+    assert.match(
+      savedCalendarDetails.querySelector('summary').textContent,
+      /Pengiriman berikutnya/,
+    );
+    const upcomingDates = [
+      ...savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span'),
+    ].map((item) => item.textContent);
+    assert.match(
+      upcomingDates[0],
+      /^\d{1,2} \p{L}{3,4} \d{4}$/u,
+      'the date chips use short Indonesian months to stay on one compact row',
+    );
     const dateGrid = savedCalendarDetails.querySelector('.b2b-saved-calendar-dates');
-    assert.equal(dateGrid.parentElement.tagName, 'SUMMARY',
-      'the three dates have the full summary width without sharing space with the toggle');
-    assert.ok(savedCalendarDetails.querySelector('.b2b-saved-calendar-topline .b2b-saved-calendar-toggle'),
-      'the calendar toggle has its own headline row');
-    assert.match(dateGrid.firstElementChild.getAttribute('title'),
-      /^\d{1,2} \p{L}+ \d{4}$/u,
-      'the exact full-length delivery date remains available as a tooltip');
-    assert.equal(dateGrid.firstElementChild.getAttribute('aria-label'),
+    assert.equal(
+      dateGrid.parentElement.tagName,
+      'SUMMARY',
+      'the three dates have the full summary width without sharing space with the toggle',
+    );
+    assert.ok(
+      savedCalendarDetails.querySelector('.b2b-saved-calendar-topline .b2b-saved-calendar-toggle'),
+      'the calendar toggle has its own headline row',
+    );
+    assert.match(
       dateGrid.firstElementChild.getAttribute('title'),
-      'the full date remains accessible when the month is abbreviated');
-    assert.equal(new Set(upcomingDates).size, 3,
-      'the next three scheduled dates do not repeat');
-    assert.equal(savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span').length, 3,
-      'the next three delivery dates stay visible even when the month grid is closed');
+      /^\d{1,2} \p{L}+ \d{4}$/u,
+      'the exact full-length delivery date remains available as a tooltip',
+    );
+    assert.equal(
+      dateGrid.firstElementChild.getAttribute('aria-label'),
+      dateGrid.firstElementChild.getAttribute('title'),
+      'the full date remains accessible when the month is abbreviated',
+    );
+    assert.equal(new Set(upcomingDates).size, 3, 'the next three scheduled dates do not repeat');
+    assert.equal(
+      savedCalendarDetails.querySelectorAll('.b2b-saved-calendar-dates > span').length,
+      3,
+      'the next three delivery dates stay visible even when the month grid is closed',
+    );
     await click(savedCalendarDetails.querySelector('summary'));
     assert.equal(savedCalendarDetails.open, true, 'Owner may expand the complete monthly view');
     const savedCalendar = savedCalendarDetails.querySelector('.b2b-calendar-panel');
-    assert.ok(savedCalendar.querySelectorAll('.b2b-calendar-date').length >= 28,
-      'expanded view retains the complete read-only month grid');
-    assert.equal(savedCalendar.querySelectorAll('button[data-calendar-date]').length, 0,
-      'a fixed store schedule is read-only');
+    assert.ok(
+      savedCalendar.querySelectorAll('.b2b-calendar-date').length >= 28,
+      'expanded view retains the complete read-only month grid',
+    );
+    assert.equal(
+      savedCalendar.querySelectorAll('button[data-calendar-date]').length,
+      0,
+      'a fixed store schedule is read-only',
+    );
     await click(savedCalendarDetails.querySelector('summary'));
     assert.equal(savedCalendarDetails.open, false, 'Owner can collapse the calendar again');
     await fill('#b2b-store-name', 'Toko Kedua');
     await fill('#b2b-store-phone', '081298765432');
     await fill('#b2b-store-address', 'Jalan Kedua Nomor 25');
     await click(container.querySelector('.b2b-create .b2b-owner-trigger'));
-    await wait(() => [...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .some(button => button.textContent.includes('buyer-two@fixture.test')));
-    assert.equal([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .some(button => button.textContent.includes('buyer@fixture.test')), false,
-      'an account already linked to another store is not selectable as a new owner');
-    await click([...container.querySelectorAll('.b2b-create .b2b-owner-option')]
-      .find(button => button.textContent.includes('buyer-two@fixture.test')));
+    await wait(() =>
+      [...container.querySelectorAll('.b2b-create .b2b-owner-option')].some((button) =>
+        button.textContent.includes('buyer-two@fixture.test'),
+      ),
+    );
+    assert.equal(
+      [...container.querySelectorAll('.b2b-create .b2b-owner-option')].some((button) =>
+        button.textContent.includes('buyer@fixture.test'),
+      ),
+      false,
+      'an account already linked to another store is not selectable as a new owner',
+    );
+    await click(
+      [...container.querySelectorAll('.b2b-create .b2b-owner-option')].find((button) =>
+        button.textContent.includes('buyer-two@fixture.test'),
+      ),
+    );
     await fill('#b2b-create-delivery-anchor', '2026-11-02');
     await submit('#b2b-create-form');
     await wait(
@@ -323,7 +390,8 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await click(account('buyer').querySelector('button'));
     await wait(() => account('buyer')?.querySelector('button')?.textContent === 'Sudah terhubung');
     assert.equal(
-      api.db.prepare('SELECT store_id FROM b2b_store_members WHERE user_id=? AND store_id=?')
+      api.db
+        .prepare('SELECT store_id FROM b2b_store_members WHERE user_id=? AND store_id=?')
         .get('buyer', second.id).store_id,
       second.id,
     );
@@ -426,24 +494,28 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     await click(buttonText('Cabut penugasan'));
     assert.match(container.querySelector('dialog').textContent, /Perubahan perangkat lain/);
     assert.match(container.querySelector('dialog').textContent, /other@fixture.test/);
-    assert.doesNotMatch(container.querySelector('dialog').textContent,
+    assert.doesNotMatch(
+      container.querySelector('dialog').textContent,
       /juga terhubung sebagai pembeli/,
-      'promoted Sales no longer has a second buyer access path');
+      'promoted Sales no longer has a second buyer access path',
+    );
     await click(container.querySelector('dialog .bam-dialog-actions button:last-child'));
     await wait(
       () =>
         !container.querySelector('dialog') &&
         container.textContent.includes('Penugasan Sales berhasil dicabut'),
     );
-    const detailAfterRevocation = api.b2bStores.details(
-      { id: 'owner', role: 'admin' }, second.id,
-    );
+    const detailAfterRevocation = api.b2bStores.details({ id: 'owner', role: 'admin' }, second.id);
     assert.equal(detailAfterRevocation.sales.length, 0);
-    assert.equal(detailAfterRevocation.members.some((row) => row.id === 'other'), false,
-      'removing Sales assignment leaves no buyer membership to grant hidden access');
-    assert.throws(() => api.sharedCarts.read(
-      { id: 'other', role: 'user' }, second.id, '2026-10-21',
-    ), { code: 'store_not_found' });
+    assert.equal(
+      detailAfterRevocation.members.some((row) => row.id === 'other'),
+      false,
+      'removing Sales assignment leaves no buyer membership to grant hidden access',
+    );
+    assert.throws(
+      () => api.sharedCarts.read({ id: 'other', role: 'user' }, second.id, '2026-10-21'),
+      { code: 'store_not_found' },
+    );
     const accountReads = requests.filter((item) =>
       item.path.startsWith('/api/b2b/accounts'),
     ).length;
@@ -454,8 +526,11 @@ test('B2B website: owner saves stores, links buyers and assigns Sales; failures 
     assert.equal(container.querySelector('#b2b-create-form'), null);
     assert.equal(container.querySelector('#b2b-account-search'), null);
     assert.equal(container.querySelector('#b2b-assign-form'), null);
-    assert.equal(container.querySelectorAll('.b2b-guide-step').length, 5,
-      'read-only admin sees the same explanatory sections');
+    assert.equal(
+      container.querySelectorAll('.b2b-guide-step').length,
+      5,
+      'read-only admin sees the same explanatory sections',
+    );
     assert.ok(container.querySelector('.b2b-sales-section .b2b-section-heading'));
     assert.equal(container.querySelector('.b2b-detail-top .b2b-edit-store'), null);
     assert.equal(buttonText('Ubah data toko'), undefined);

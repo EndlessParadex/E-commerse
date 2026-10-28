@@ -405,7 +405,6 @@ test('B2B management keeps stores, members and sales after the database is reope
   }
 });
 
-
 test('B2B account ownership API: create, protect, transfer and show account-store links', async () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
   seed(app);
@@ -419,14 +418,32 @@ test('B2B account ownership API: create, protect, transfer and show account-stor
     const store = created.body.store;
     assert.equal(store.owner.id, 'buyer');
     const target = '/api/b2b/stores/' + store.id;
-    assert.equal((await request(app, 'POST', target + '/members/remove', 'owner',
-      { userId: 'buyer', revision: store.revision })).status, 409);
-    assert.equal((await request(app, 'PUT', target + '/owner', 'operator',
-      { userId: 'other', revision: store.revision })).status, 403);
-    assert.equal((await request(app, 'PUT', target + '/owner', 'owner',
-      { userId: 'other', revision: -1 })).status, 409);
+    assert.equal(
+      (
+        await request(app, 'POST', target + '/members/remove', 'owner', {
+          userId: 'buyer',
+          revision: store.revision,
+        })
+      ).status,
+      409,
+    );
+    assert.equal(
+      (
+        await request(app, 'PUT', target + '/owner', 'operator', {
+          userId: 'other',
+          revision: store.revision,
+        })
+      ).status,
+      403,
+    );
+    assert.equal(
+      (await request(app, 'PUT', target + '/owner', 'owner', { userId: 'other', revision: -1 }))
+        .status,
+      409,
+    );
     const changed = await request(app, 'PUT', target + '/owner', 'owner', {
-      userId: 'other', revision: store.revision,
+      userId: 'other',
+      revision: store.revision,
     });
     assert.equal(changed.status, 200);
     assert.equal(changed.body.store.owner.id, 'other');
@@ -434,12 +451,14 @@ test('B2B account ownership API: create, protect, transfer and show account-stor
     assert.equal((await request(app, 'GET', '/api/b2b/stores?page=1', 'other')).body.total, 1);
     const accounts = await request(app, 'GET', '/api/admin/accounts?q=other', 'owner');
     assert.equal(accounts.status, 200);
-    const account = accounts.body.users.find(row => row.id === 'other');
+    const account = accounts.body.users.find((row) => row.id === 'other');
     assert.equal(account.linkedStoreCount, 1);
     assert.equal(account.linkedStores[0].storeRole, 'owner');
     assert.equal(account.linkedStores[0].storeCode, store.storeCode);
     assert.equal(account.canDelete, false);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });
 
 test('B2B delivery schedule route is reachable for Owner and rejects unauthorized updates', async () => {
@@ -449,16 +468,29 @@ test('B2B delivery schedule route is reachable for Owner and rejects unauthorize
     const owner = { id: 'owner', role: 'admin' };
     const store = app.b2bStores.create(owner, newStore('Jadwal Fixture'));
     const path = '/api/b2b/stores/' + store.id + '/schedule';
-    const schedule = { weekday: 1, intervalWeeks: 1, anchorDate: '2026-10-26',
-      revision: store.revision };
+    const schedule = {
+      weekday: 1,
+      intervalWeeks: 1,
+      anchorDate: '2026-10-26',
+      revision: store.revision,
+    };
     assert.equal((await request(app, 'POST', path, 'buyer', schedule)).status, 403);
     assert.equal((await request(app, 'POST', path, 'operator', schedule)).status, 403);
     const result = await request(app, 'POST', path, 'owner', schedule);
     assert.equal(result.status, 200, JSON.stringify(result.body));
     assert.equal(result.body.store.deliverySchedule.weekday, 1);
     assert.equal(result.body.store.deliverySchedule.intervalWeeks, 1);
-    assert.equal((await request(app, 'POST', path, 'owner',
-      { ...schedule, revision: result.body.store.revision })).status, 409,
-      'fixed schedule cannot be silently changed later');
-  } finally { app.db.close(); }
+    assert.equal(
+      (
+        await request(app, 'POST', path, 'owner', {
+          ...schedule,
+          revision: result.body.store.revision,
+        })
+      ).status,
+      409,
+      'fixed schedule cannot be silently changed later',
+    );
+  } finally {
+    app.db.close();
+  }
 });

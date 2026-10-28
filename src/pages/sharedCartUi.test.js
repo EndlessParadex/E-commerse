@@ -126,34 +126,51 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     };
 
     await mount('buyer');
-    assert.ok(container.querySelector('.shared-selection-panel'),
-      'the store picker is available before and after choosing a cart');
-    assert.ok(container.querySelector('.shared-store-search-details'),
-      'optional store search remains available');
+    assert.ok(
+      container.querySelector('.shared-selection-panel'),
+      'the store picker is available before and after choosing a cart',
+    );
+    assert.ok(
+      container.querySelector('.shared-store-search-details'),
+      'optional store search remains available',
+    );
     await openDate();
     await wait(() => container.querySelector('.shared-selection-panel')?.open === false);
-    assert.ok(container.querySelector('.shared-delivery-calendar'),
-      'calendar replaces the full-width store selection after opening a cart');
-    assert.ok(container.querySelector('.shared-cart-summary .shared-selection-panel'),
-      'store selection is inside the cart summary');
-    assert.ok(container.querySelector('.shared-cart-summary .shared-cart-payment-compact'),
-      'store payment method is inside the cart summary');
-    assert.ok(container.querySelector('.shared-delivery-calendar-grid'),
-      'monthly calendar supports accessible period navigation');
+    assert.ok(
+      container.querySelector('.shared-delivery-calendar'),
+      'calendar replaces the full-width store selection after opening a cart',
+    );
+    assert.ok(
+      container.querySelector('.shared-cart-summary .shared-selection-panel'),
+      'store selection is inside the cart summary',
+    );
+    assert.ok(
+      container.querySelector('.shared-cart-summary .shared-cart-payment-compact'),
+      'store payment method is inside the cart summary',
+    );
+    assert.ok(
+      container.querySelector('.shared-delivery-calendar-grid'),
+      'monthly calendar supports accessible period navigation',
+    );
     const monthDates = container.querySelectorAll(
       '.shared-delivery-calendar-grid .shared-calendar-date:not(.is-outside)',
     );
     assert.equal(monthDates.length, 31, 'all October dates must be visible, not marked outside');
     const chosenDate = container.querySelector('.shared-calendar-date.is-selected');
-    assert.equal(chosenDate?.textContent.trim(), '21',
-      'the active delivery period remains visible in the calendar');
-    assert.ok(container.querySelector('.shared-summary-help'),
-      'full price and stock explanation remains available');
+    assert.equal(
+      chosenDate?.textContent.trim(),
+      '21',
+      'the active delivery period remains visible in the calendar',
+    );
+    assert.ok(
+      container.querySelector('.shared-summary-help'),
+      'full price and stock explanation remains available',
+    );
     assert.equal(container.querySelector('#shared-store').value, first.id);
     assert.equal(container.querySelectorAll('#shared-store option').length, 2);
     await fill('#shared-cart-payment', 'transfer-bca');
-    await wait(() =>
-      api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').paymentId === 'transfer-bca',
+    await wait(
+      () => api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').paymentId === 'transfer-bca',
     );
     assert.equal(
       api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').events[0].actorRole,
@@ -187,8 +204,9 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await openDate();
     assert.equal(container.querySelector('#shared-cart-payment').value, 'transfer-bca');
     await fill('#shared-cart-payment', 'transfer-mandiri');
-    await wait(() =>
-      api.sharedCarts.read(actors.sales, first.id, '2026-10-21').paymentId === 'transfer-mandiri',
+    await wait(
+      () =>
+        api.sharedCarts.read(actors.sales, first.id, '2026-10-21').paymentId === 'transfer-mandiri',
     );
     assert.equal(
       api.sharedCarts.read(actors.sales, first.id, '2026-10-21').events[0].actorRole,
@@ -305,8 +323,10 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.ok(container.querySelector('.shared-admin-add'));
     assert.ok(container.querySelector('#shared-admin-category'));
     assert.equal(container.querySelector('#shared-cart-payment'), null);
-    assert.match(container.querySelector('.shared-admin-payment-card').textContent,
-      /Admin hanya memeriksa pilihan pembayaran/);
+    assert.match(
+      container.querySelector('.shared-admin-payment-card').textContent,
+      /Admin hanya memeriksa pilihan pembayaran/,
+    );
     assert.match(container.textContent, /Transfer bank Mandiri/);
     await fill('#shared-admin-search', 'snack-pedas-62g');
     await fill('#shared-admin-sku', 'snack-pedas-62g');
@@ -323,7 +343,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.ok(lastStepper, 'Admin has quick +/- quantity controls');
     await click(lastStepper.querySelector('button:last-child'));
     await wait(() =>
-      api.sharedCarts.read(actors.operator, first.id, '2026-10-21')
+      api.sharedCarts
+        .read(actors.operator, first.id, '2026-10-21')
         .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 4),
     );
     const adminCart = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');

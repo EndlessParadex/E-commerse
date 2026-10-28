@@ -24,9 +24,29 @@ const validPassword = (value) =>
 export class IdentityRepository {
   constructor(
     db,
-    { now, mailer, config = {}, queue, limiter, passwordCheck, hashPassword, logger, phoneDirectory },
+    {
+      now,
+      mailer,
+      config = {},
+      queue,
+      limiter,
+      passwordCheck,
+      hashPassword,
+      logger,
+      phoneDirectory,
+    },
   ) {
-    Object.assign(this, { db, now, mailer, queue, limiter, passwordCheck, hashPassword, logger, phoneDirectory });
+    Object.assign(this, {
+      db,
+      now,
+      mailer,
+      queue,
+      limiter,
+      passwordCheck,
+      hashPassword,
+      logger,
+      phoneDirectory,
+    });
     this.configureMail(mailer, config);
     db.exec(approvalSchema);
     db.exec(`CREATE TABLE IF NOT EXISTS auth_account_state(user_id TEXT PRIMARY KEY REFERENCES users(id),verified_at INTEGER,credential_revision INTEGER NOT NULL DEFAULT 0);
@@ -151,29 +171,31 @@ export class IdentityRepository {
     const encoded = await this.queue.run(ip, () => this.hashPassword(fields.password));
     try {
       this.transaction(() => {
-      this.cleanup();
-      let user = this.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
-      if (!user) {
-        user = { id: randomUUID() };
-        this.db
-          .prepare("INSERT INTO users VALUES(?,?,?,?,?,?,'user')")
-          .run(
-            user.id,
-            fields.name,
-            fields.email,
-            fields.address,
-            encoded,
-            new Date(this.now()).toISOString(),
-          );
-        this.db.prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')").run(user.id);
-        if (fields.phone && this.phoneDirectory) {
-          this.phoneDirectory.claim(user.id, fields.phone);
-          this.db.prepare(
-            'INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)',
-          ).run(user.id, fields.phone, randomUUID());
-        }
-        if (this.ready) this.issue('verify', fields.email, user);
-      } else if (this.ready) this.issue('reset', fields.email, user);
+        this.cleanup();
+        let user = this.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
+        if (!user) {
+          user = { id: randomUUID() };
+          this.db
+            .prepare("INSERT INTO users VALUES(?,?,?,?,?,?,'user')")
+            .run(
+              user.id,
+              fields.name,
+              fields.email,
+              fields.address,
+              encoded,
+              new Date(this.now()).toISOString(),
+            );
+          this.db
+            .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
+            .run(user.id);
+          if (fields.phone && this.phoneDirectory) {
+            this.phoneDirectory.claim(user.id, fields.phone);
+            this.db
+              .prepare('INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)')
+              .run(user.id, fields.phone, randomUUID());
+          }
+          if (this.ready) this.issue('verify', fields.email, user);
+        } else if (this.ready) this.issue('reset', fields.email, user);
       });
     } catch (error) {
       // Registration has always been generic, including already-registered email.
@@ -283,14 +305,18 @@ export class IdentityRepository {
         .prepare("DELETE FROM auth_tokens WHERE email=? AND purpose IN ('register','verify')")
         .run(current.email);
     });
-    const approval = accountApprovalStatus(this.db, row.user_id || this.db.prepare('SELECT id FROM users WHERE email=?').get(row.email)?.id);
+    const approval = accountApprovalStatus(
+      this.db,
+      row.user_id || this.db.prepare('SELECT id FROM users WHERE email=?').get(row.email)?.id,
+    );
     return {
       ok: true,
-      message: approval === 'pending'
-        ? 'Email dikonfirmasi. Sekarang tunggu persetujuan Admin atau Pemilik sebelum masuk.'
-        : approval === 'rejected'
-          ? 'Email dikonfirmasi, tetapi pendaftaran belum disetujui. Hubungi pengelola toko.'
-          : 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.',
+      message:
+        approval === 'pending'
+          ? 'Email dikonfirmasi. Sekarang tunggu persetujuan Admin atau Pemilik sebelum masuk.'
+          : approval === 'rejected'
+            ? 'Email dikonfirmasi, tetapi pendaftaran belum disetujui. Hubungi pengelola toko.'
+            : 'Email dikonfirmasi. Silakan masuk menggunakan kata sandi akun.',
     };
   }
   async reset(token, password, ip) {

@@ -16,7 +16,9 @@ export default function FeaturedProducts() {
             Pilih produk dan kemasan yang sesuai kebutuhan belanjamu.
           </p>
         </div>
-        <a className="view-all-link" href="#/cari?q=">Lihat seluruh produk →</a>
+        <a className="view-all-link" href="#/cari?q=">
+          Lihat seluruh produk →
+        </a>
       </header>
       {featured.length ? (
         <div className="product-grid">

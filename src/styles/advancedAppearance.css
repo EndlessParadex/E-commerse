@@ -38,13 +38,14 @@
   transition-duration: 0.01ms !important;
 }
 @media (prefers-reduced-motion: reduce) {
-  :root *, :root *::before, :root *::after {
+  :root *,
+  :root *::before,
+  :root *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 }
-
 
 /* Radius override only when a user explicitly changes it from default. */
 :root[data-appearance-corners='custom'] .workflow-stock-card,

@@ -46,7 +46,10 @@ export default function CategoryShortcuts() {
                   <span>{count ? `${count} produk` : 'Produk belum tersedia'}</span>
                   {category.children?.length > 0 && (
                     <small className="home-category-subcategories">
-                      {category.children.slice(0, 2).map((child) => child.name).join(' · ')}
+                      {category.children
+                        .slice(0, 2)
+                        .map((child) => child.name)
+                        .join(' · ')}
                     </small>
                   )}
                 </span>

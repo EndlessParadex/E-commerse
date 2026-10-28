@@ -10,9 +10,13 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   const themeStyle = dom.document.createElement('style');
   themeStyle.textContent = (
     await Promise.all(
-      ['../styles/themes.css', '../styles/global.css', './AdminPage.css', './AdminDesign2.css', './AdminUnifiedUI.css'].map((path) =>
-        readFile(new URL(path, import.meta.url), 'utf8'),
-      ),
+      [
+        '../styles/themes.css',
+        '../styles/global.css',
+        './AdminPage.css',
+        './AdminDesign2.css',
+        './AdminUnifiedUI.css',
+      ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
     )
   ).join('\n');
   dom.document.head.append(themeStyle);
@@ -77,31 +81,64 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   };
   try {
     await render('overview');
-    assert.ok(container.querySelector('.admin-home-hero'), 'Design 2 hero is rendered on the Admin dashboard');
+    assert.ok(
+      container.querySelector('.admin-home-hero'),
+      'Design 2 hero is rendered on the Admin dashboard',
+    );
     assert.ok(container.querySelector('.admin-ops-orders'), 'live order activity panel is present');
-    assert.ok(container.querySelector('.admin-ops-inventory'), 'real inventory summary panel is present');
-    assert.ok(container.querySelector('.admin-navigation a[aria-current="page"]'), 'current route remains accessible');
-    assert.ok(container.querySelector('.admin-header .admin-page-title-icon .admin-icon'),
-      'all Admin routes use the same icon style as Toko & Sales');
-    assert.equal(container.querySelectorAll('.admin-page-guide-step').length, 4,
-      'dashboard shows a concise four-step Admin guide');
-    assert.ok(container.querySelector('.admin-ops-orders .admin-unified-section-icon'),
-      'order overview has its own clear section icon and separator');
-    assert.ok(container.querySelector('.admin-ops-inventory .admin-unified-section-icon'),
-      'inventory overview has its own clear section icon');
+    assert.ok(
+      container.querySelector('.admin-ops-inventory'),
+      'real inventory summary panel is present',
+    );
+    assert.ok(
+      container.querySelector('.admin-navigation a[aria-current="page"]'),
+      'current route remains accessible',
+    );
+    assert.ok(
+      container.querySelector('.admin-header .admin-page-title-icon .admin-icon'),
+      'all Admin routes use the same icon style as Toko & Sales',
+    );
+    assert.equal(
+      container.querySelectorAll('.admin-page-guide-step').length,
+      4,
+      'dashboard shows a concise four-step Admin guide',
+    );
+    assert.ok(
+      container.querySelector('.admin-ops-orders .admin-unified-section-icon'),
+      'order overview has its own clear section icon and separator',
+    );
+    assert.ok(
+      container.querySelector('.admin-ops-inventory .admin-unified-section-icon'),
+      'inventory overview has its own clear section icon',
+    );
     assert.equal(container.querySelectorAll('.admin-metric').length, 4);
-    assert.ok(container.querySelector('.admin-overview-table'), 'dashboard uses the real catalog table');
-    assert.ok(container.querySelector('.admin-topbar-search'), 'catalog search is available in the Admin toolbar');
+    assert.ok(
+      container.querySelector('.admin-overview-table'),
+      'dashboard uses the real catalog table',
+    );
+    assert.ok(
+      container.querySelector('.admin-topbar-search'),
+      'catalog search is available in the Admin toolbar',
+    );
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/keranjang"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/produk"]'));
-    assert.equal(dom.getComputedStyle(container.querySelector('.admin-page-guide')).marginBottom, '20px',
-      'shared guide has a consistent gap to the following panel');
-    assert.equal(dom.getComputedStyle(container.querySelector('.admin-metric')).minHeight, '160px',
-      'metric cards have a consistent baseline height');
+    assert.equal(
+      dom.getComputedStyle(container.querySelector('.admin-page-guide')).marginBottom,
+      '20px',
+      'shared guide has a consistent gap to the following panel',
+    );
+    assert.equal(
+      dom.getComputedStyle(container.querySelector('.admin-metric')).minHeight,
+      '160px',
+      'metric cards have a consistent baseline height',
+    );
     await render('products');
-    assert.equal(dom.getComputedStyle(container.querySelector('.admin-table td')).verticalAlign, 'middle',
-      'product rows and actions use the same vertical alignment');
+    assert.equal(
+      dom.getComputedStyle(container.querySelector('.admin-table td')).verticalAlign,
+      'middle',
+      'product rows and actions use the same vertical alignment',
+    );
     await render('overview');
     const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
     assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);
@@ -110,32 +147,61 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
     assert.match(adminTheme, /@media\s*\(\s*max-width:\s*950px\s*\)/);
     await click(button('+ Tambah produk'));
-    assert.ok(container.querySelector('aside.admin-form-preview .admin-preview-image'),
-      'product photo remains visible in the right-side preview');
-    assert.ok(container.querySelector('.admin-editor-grid .admin-editor-sections + aside.admin-form-preview'),
-      'preview follows the compact editing sections in the desktop grid');
-    assert.equal(container.querySelector('#product-description')?.getAttribute('rows'), '3',
-      'description begins at three lines and can be resized');
-    assert.ok(container.querySelector('.admin-variant-cards .admin-variant-card'),
-      'SKU variants appear as editable cards');
-    assert.ok(container.querySelector('details.admin-info-card'),
-      'product information can expand on demand');
-    assert.ok(container.querySelector('details.admin-photo-card'),
-      'photo controls can expand on demand');
+    assert.ok(
+      container.querySelector('aside.admin-form-preview .admin-preview-image'),
+      'product photo remains visible in the right-side preview',
+    );
+    assert.ok(
+      container.querySelector(
+        '.admin-editor-grid .admin-editor-sections + aside.admin-form-preview',
+      ),
+      'preview follows the compact editing sections in the desktop grid',
+    );
+    assert.equal(
+      container.querySelector('#product-description')?.getAttribute('rows'),
+      '3',
+      'description begins at three lines and can be resized',
+    );
+    assert.ok(
+      container.querySelector('.admin-variant-cards .admin-variant-card'),
+      'SKU variants appear as editable cards',
+    );
+    assert.ok(
+      container.querySelector('details.admin-info-card'),
+      'product information can expand on demand',
+    );
+    assert.ok(
+      container.querySelector('details.admin-photo-card'),
+      'photo controls can expand on demand',
+    );
     const colorPicker = container.querySelector('.admin-color-picker');
     assert.ok(colorPicker, 'card color has a swatch picker');
-    assert.equal(colorPicker.querySelectorAll('.admin-color-option').length, 10,
-      'each catalog color is visible with a color swatch');
-    assert.equal(colorPicker.querySelectorAll('.admin-color-options .admin-color-swatch').length, 10);
+    assert.equal(
+      colorPicker.querySelectorAll('.admin-color-option').length,
+      10,
+      'each catalog color is visible with a color swatch',
+    );
+    assert.equal(
+      colorPicker.querySelectorAll('.admin-color-options .admin-color-swatch').length,
+      10,
+    );
     await click(colorPicker.querySelector('summary'));
     await click(colorPicker.querySelector('button[data-color-id="rose"]'));
     assert.equal(colorPicker.hasAttribute('open'), false, 'picker closes after selection');
     assert.match(colorPicker.querySelector('summary').textContent, /Merah muda/);
-    assert.equal(colorPicker.querySelector('button[data-color-id="rose"]').getAttribute('aria-pressed'), 'true');
-    assert.match(container.querySelector('.admin-form-preview .admin-preview-image').getAttribute('style'),
-      /linear-gradient/, 'the selected swatch updates the live card preview');
-    assert.ok(container.querySelector('.admin-editor .admin-product-photos .admin-photo-controls'),
-      'photo upload remains accessible in the compact photo section');
+    assert.equal(
+      colorPicker.querySelector('button[data-color-id="rose"]').getAttribute('aria-pressed'),
+      'true',
+    );
+    assert.match(
+      container.querySelector('.admin-form-preview .admin-preview-image').getAttribute('style'),
+      /linear-gradient/,
+      'the selected swatch updates the live card preview',
+    );
+    assert.ok(
+      container.querySelector('.admin-editor .admin-product-photos .admin-photo-controls'),
+      'photo upload remains accessible in the compact photo section',
+    );
     await fill('#product-baseName', 'Isian belum disimpan');
     await click(container.querySelector('nav a[href="#/admin"]'));
     assert.equal(container.querySelector('#product-baseName').value, 'Isian belum disimpan');
@@ -148,10 +214,15 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(container.querySelector('nav a[href="#/admin/produk"]'));
     assert.equal(container.querySelector('.admin-editor'), null);
     await render('suppliers');
-    assert.equal(container.querySelectorAll('.admin-page-guide-step').length, 3,
-      'supplier page has short practical steps');
-    assert.ok(container.querySelector('.admin-panel-heading .admin-unified-section-icon'),
-      'supplier heading uses the shared icon system');
+    assert.equal(
+      container.querySelectorAll('.admin-page-guide-step').length,
+      3,
+      'supplier page has short practical steps',
+    );
+    assert.ok(
+      container.querySelector('.admin-panel-heading .admin-unified-section-icon'),
+      'supplier heading uses the shared icon system',
+    );
     await click(button('+ Tambah PT pemasok'));
     await fill('#master-name', 'Isian PT sementara');
     accepted = false;
@@ -238,10 +309,14 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(button('Simpan kategori'));
     assert.match(container.textContent, /Aksesori UI Uji/);
     await render('products');
-    assert.ok(container.querySelector('.admin-page-guide'),
-      'product catalog exposes its quick-start guide');
-    assert.ok(container.querySelector('.admin-products-panel .admin-unified-section-icon'),
-      'products use the unified section header');
+    assert.ok(
+      container.querySelector('.admin-page-guide'),
+      'product catalog exposes its quick-start guide',
+    );
+    assert.ok(
+      container.querySelector('.admin-products-panel .admin-unified-section-icon'),
+      'products use the unified section header',
+    );
     const filterPanel = container.querySelector('.admin-products-panel');
     assert.ok(filterPanel, 'product catalog has its own sticky filter container');
     assert.ok(filterPanel.querySelector('.admin-filters #admin-search'));
@@ -278,15 +353,25 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       container.querySelector('button[aria-label="Edit Keripik Singkong Balado ukuran 180g"]'),
     );
     await click(button('+ Tambah varian'));
-    assert.equal(container.querySelectorAll('.admin-variant-card').length, 5,
-      'new variant creates an additional grid card');
-    assert.ok(container.querySelector('#admin-variant-editor'),
-      'new variant immediately opens its edit dialog');
-    assert.match(themeStyle.textContent,
+    assert.equal(
+      container.querySelectorAll('.admin-variant-card').length,
+      5,
+      'new variant creates an additional grid card',
+    );
+    assert.ok(
+      container.querySelector('#admin-variant-editor'),
+      'new variant immediately opens its edit dialog',
+    );
+    assert.match(
+      themeStyle.textContent,
       /\.admin-shell \.admin-editor \.admin-variant-dialog\[open\]\s*\{[^}]*position:\s*fixed;[^}]*inset:\s*0;[^}]*margin:\s*auto;/,
-      'native dialog must be centered despite the global margin reset');
-    assert.match(themeStyle.textContent, /@media \(max-width: 1180px\)/,
-      'narrow desktop layouts stack preview instead of squeezing inputs');
+      'native dialog must be centered despite the global margin reset',
+    );
+    assert.match(
+      themeStyle.textContent,
+      /@media \(max-width: 1180px\)/,
+      'narrow desktop layouts stack preview instead of squeezing inputs',
+    );
     await fill('#variant-4-id', 'snack-pedas');
     assert.equal(container.querySelector('#variant-4-id').readOnly, false);
     await fill('#variant-4-id', 'SKU-UI-BARU');

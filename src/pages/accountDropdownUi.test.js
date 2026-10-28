@@ -32,14 +32,28 @@ test('dropdown akun: menu premium tetap terbaca, terpisah per izin dan logout te
   let navigations = 0;
   const render = async (user, hideProfile = false) => {
     await act(async () => {
-      root.render(createElement(DeliveryContext.Provider, {
-        value: {
-          user, loggingOut: false, logoutError: '',
-          logout: async () => { logouts += 1; return true; },
-        },
-      }, createElement(AccountMenu, {
-        hideProfile, onNavigate: () => { navigations += 1; },
-      })));
+      root.render(
+        createElement(
+          DeliveryContext.Provider,
+          {
+            value: {
+              user,
+              loggingOut: false,
+              logoutError: '',
+              logout: async () => {
+                logouts += 1;
+                return true;
+              },
+            },
+          },
+          createElement(AccountMenu, {
+            hideProfile,
+            onNavigate: () => {
+              navigations += 1;
+            },
+          }),
+        ),
+      );
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
   };
@@ -79,11 +93,14 @@ test('dropdown akun: menu premium tetap terbaca, terpisah per izin dan logout te
 
     await render({ id: 'admin', role: 'admin', canViewCustomers: true }, true);
     assert.equal(container.querySelector('a[href="#/akun"]'), null);
-    assert.ok(container.querySelector('a[href="#/admin"]'),
-      'saat dipakai di sidebar profil menu penting tidak hilang');
+    assert.ok(
+      container.querySelector('a[href="#/admin"]'),
+      'saat dipakai di sidebar profil menu penting tidak hilang',
+    );
 
     const css = await readFile(
-      new URL('../components/account/AccountMenu.css', import.meta.url), 'utf8',
+      new URL('../components/account/AccountMenu.css', import.meta.url),
+      'utf8',
     );
     assert.match(css, /grid-template-columns:\s*42px minmax\(0, 1fr\) 17px/);
     assert.match(css, /account-menu-copy small/);

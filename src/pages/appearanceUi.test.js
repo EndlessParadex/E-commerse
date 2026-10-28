@@ -344,13 +344,16 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     assert.equal(container.querySelectorAll('.appearance-preset').length, 6);
     await act(async () => {
       [...container.querySelectorAll('.appearance-preset')]
-        .find((button) => button.textContent.includes('Forest Green')).click();
+        .find((button) => button.textContent.includes('Forest Green'))
+        .click();
       await settle();
     });
     assert.equal(current().mode, 'light');
-    assert.match(container.querySelector('.appearance-notice').textContent,
+    assert.match(
+      container.querySelector('.appearance-notice').textContent,
       /Tema dan pengaturan lanjutan tersimpan/,
-      'preset confirms both updates, not the previous blocked-storage failure');
+      'preset confirms both updates, not the previous blocked-storage failure',
+    );
     assert.equal(page.getAttribute('data-appearance-font'), 'modern');
     assert.ok(page.style.getPropertyValue('--color-action'));
     assert.ok(container.querySelector('.appearance-demo-products'));
@@ -360,9 +363,11 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     });
     assert.equal(container.querySelector('.appearance-studio-advanced').hidden, false);
     await choose('appearance-mode', 'system');
-    assert.match(container.querySelector('.appearance-notice').textContent,
+    assert.match(
+      container.querySelector('.appearance-notice').textContent,
       /Pilihan tampilan tersimpan/,
-      'a basic preference update replaces any stale advanced success notice');
+      'a basic preference update replaces any stale advanced success notice',
+    );
     await choose('appearance-mode', 'light');
     const radius = container.querySelector('input[aria-label="Sudut kartu"]');
     await act(async () => {

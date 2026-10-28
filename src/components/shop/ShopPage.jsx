@@ -50,14 +50,29 @@ export default function ShopPage({ type }) {
 
   const modeSwitcher = isCart && shop.shared?.canChooseCart && (
     <nav className="bam-cart-mode-switch" aria-label="Jenis keranjang belanja">
-      <button type="button" aria-pressed={shop.cartMode === 'store'}
-        onClick={() => shop.setCartMode('store')}>Keranjang toko</button>
-      <button type="button" aria-pressed={shop.cartMode === 'personal'}
-        onClick={() => shop.setCartMode('personal')}>Belanja pribadi</button>
+      <button
+        type="button"
+        aria-pressed={shop.cartMode === 'store'}
+        onClick={() => shop.setCartMode('store')}
+      >
+        Keranjang toko
+      </button>
+      <button
+        type="button"
+        aria-pressed={shop.cartMode === 'personal'}
+        onClick={() => shop.setCartMode('personal')}
+      >
+        Belanja pribadi
+      </button>
     </nav>
   );
   if (isCart && shop.shared?.enabled && shop.cartMode === 'store')
-    return <div className="bam-cart-mode-page">{modeSwitcher}<SharedCartPage /></div>;
+    return (
+      <div className="bam-cart-mode-page">
+        {modeSwitcher}
+        <SharedCartPage />
+      </div>
+    );
   return (
     <div className={'shop-page' + (isCart ? ' cart-page' : ' notifications-page')}>
       {modeSwitcher}

@@ -238,7 +238,8 @@ test('banner: harga panjang, foto, SKU termurah, navigasi, jeda keyboard, geraka
       'a custom category never gets unrelated food artwork',
     );
     assert.equal(
-      container.querySelector('.bam-promo-product.is-spotlight .bam-promo-product-monogram')
+      container
+        .querySelector('.bam-promo-product.is-spotlight .bam-promo-product-monogram')
         .getAttribute('aria-label'),
       'Foto Kategori baru belum tersedia',
       'custom categories without photos use a product-specific fallback',

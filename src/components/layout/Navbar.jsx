@@ -57,9 +57,14 @@ const Navbar = () => {
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
   const { shared, setCartMode } = useShop();
-  const b2bNavLabel = shared?.status === 'ready'
-    ? shared.role === 'sales' ? 'List Toko' : shared.role === 'buyer' ? 'Toko Saya' : ''
-    : '';
+  const b2bNavLabel =
+    shared?.status === 'ready'
+      ? shared.role === 'sales'
+        ? 'List Toko'
+        : shared.role === 'buyer'
+          ? 'Toko Saya'
+          : ''
+      : '';
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
@@ -441,13 +446,18 @@ const Navbar = () => {
           <div className="secondary-nav-left">
             <CatalogMenu />
             {b2bNavLabel && (
-              <a className="navbar-b2b-link" href="#/keranjang"
+              <a
+                className="navbar-b2b-link"
+                href="#/keranjang"
                 onClick={() => setCartMode('store')}
-                aria-label={b2bNavLabel + ' dan keranjang bersama'}>
+                aria-label={b2bNavLabel + ' dan keranjang bersama'}
+              >
                 {b2bNavLabel}
               </a>
             )}
-            <a className="navbar-catalog-link" href="#/cari?q=">Jelajahi produk</a>
+            <a className="navbar-catalog-link" href="#/cari?q=">
+              Jelajahi produk
+            </a>
           </div>
 
           <div className="secondary-nav-right">

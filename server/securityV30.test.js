@@ -14,7 +14,14 @@ const tokenFor = (user) => createHash('sha256').update(user.id).digest('base64ur
 async function fixture(options = {}) {
   const sent = [];
   const mailer = { enabled: true, send: async (message) => sent.push(message) };
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer, mailConfig, logger: () => {}, ...options });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    mailer,
+    mailConfig,
+    logger: () => {},
+    ...options,
+  });
   const encoded = await hashPassword(password);
   for (const user of [alice, bob, admin]) {
     app.db
@@ -292,7 +299,12 @@ test('public inventory has no internal metrics; admin inventory is protected and
 });
 
 test('unconfigured email stores an unverified account without pretending delivery', async () => {
-  const app = createApp({ legacyCommerceFixture: true, dbPath: ':memory:', mailer: { enabled: false }, logger: () => {} });
+  const app = createApp({
+    legacyCommerceFixture: true,
+    dbPath: ':memory:',
+    mailer: { enabled: false },
+    logger: () => {},
+  });
   try {
     assert.equal((await request(app, 'GET', '/api/auth/features')).body.emailReady, false);
     const response = await request(app, 'POST', '/api/auth/register', {
@@ -448,8 +460,13 @@ test('independent customers behind a trusted proxy have independent registration
             app,
             'POST',
             '/api/auth/register',
-            { ...fields, email,
-              phone: '0812' + String([...email].reduce((n, ch) => n + ch.charCodeAt(0), 0)).padStart(8, '0') },
+            {
+              ...fields,
+              email,
+              phone:
+                '0812' +
+                String([...email].reduce((n, ch) => n + ch.charCodeAt(0), 0)).padStart(8, '0'),
+            },
             null,
             '127.0.0.1',
             { 'x-forwarded-for': ip },
@@ -853,7 +870,8 @@ test('mail queue encrypts account links, retries after restart and redacts trans
     assert.doesNotMatch(JSON.stringify(logs), /SMTP secret|recipient and token/);
     assert.equal(app.db.prepare('SELECT attempts FROM auth_mail_outbox').get().attempts, 1);
     app.db.close();
-    app = createApp({ legacyCommerceFixture: true,
+    app = createApp({
+      legacyCommerceFixture: true,
       dbPath,
       now: () => time,
       mailConfig,

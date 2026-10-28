@@ -117,7 +117,9 @@ test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembat
     assert.equal(dom.location.hash, '#' + start);
     // Sort is now a theme-aware custom dropdown rather than a native <select>.
     assert.equal(
-      container.querySelector('.catalog-toolbar .catalog-search-trigger .catalog-search-current-name')?.textContent,
+      container.querySelector(
+        '.catalog-toolbar .catalog-search-trigger .catalog-search-current-name',
+      )?.textContent,
       'Harga terendah',
     );
     assert.equal(container.querySelectorAll('.catalog-filter-chips a').length, 4);

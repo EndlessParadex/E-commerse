@@ -164,12 +164,34 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                             loading="eager"
                           />
                         ) : (
-                          <div className="bam-promo-product-monogram"
-                            role="img" aria-label={'Foto ' + name + ' belum tersedia'}>
+                          <div
+                            className="bam-promo-product-monogram"
+                            role="img"
+                            aria-label={'Foto ' + name + ' belum tersedia'}
+                          >
                             <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
-                              <rect x="24" y="31" width="48" height="44" rx="12" fill="currentColor" opacity=".10" />
-                              <path d="M30 39h36v30H30zM38 39v-8a10 10 0 0 1 20 0v8M30 51h36" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M40 59h16" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+                              <rect
+                                x="24"
+                                y="31"
+                                width="48"
+                                height="44"
+                                rx="12"
+                                fill="currentColor"
+                                opacity=".10"
+                              />
+                              <path
+                                d="M30 39h36v30H30zM38 39v-8a10 10 0 0 1 20 0v8M30 51h36"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M40 59h16"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                strokeLinecap="round"
+                              />
                             </svg>
                             <span>{product.brand || slide.category}</span>
                           </div>
@@ -210,7 +232,6 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                   );
                 })}
               </div>
-
             </>
           ) : (
             <div className="bam-promo-empty">

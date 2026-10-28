@@ -70,42 +70,79 @@ export class B2BFinalizationRepository {
     const configured = this.db
       .prepare('SELECT bank,account,holder,revision FROM b2b_bank_accounts ORDER BY bank')
       .all();
-    return { banks: ['BCA', 'BRI', 'Mandiri'].map((bank) =>
-      configured.find((entry) => entry.bank === bank) || {
-        bank, account: '', holder: '', revision: 0,
-      },
-    ) };
+    return {
+      banks: ['BCA', 'BRI', 'Mandiri'].map(
+        (bank) =>
+          configured.find((entry) => entry.bank === bank) || {
+            bank,
+            account: '',
+            holder: '',
+            revision: 0,
+          },
+      ),
+    };
   }
   saveBank(actor, body) {
     this.admin(actor);
     this.carts.stores.requireOwner(actor);
     if (
       !['BCA', 'BRI', 'Mandiri'].includes(body?.bank) ||
-      !Number.isSafeInteger(body.revision) || body.revision < 0 ||
-      typeof body.account !== 'string' || !/^\d{8,25}$/.test(body.account) ||
+      !Number.isSafeInteger(body.revision) ||
+      body.revision < 0 ||
+      typeof body.account !== 'string' ||
+      !/^\d{8,25}$/.test(body.account) ||
       typeof body.holder !== 'string' ||
-      body.holder.trim().length < 3 || body.holder.trim().length > 100
-    ) fail('Rekening bank, nomor rekening, atau nama pemilik tidak valid.');
+      body.holder.trim().length < 3 ||
+      body.holder.trim().length > 100
+    )
+      fail('Rekening bank, nomor rekening, atau nama pemilik tidak valid.');
     const change = () => {
-      const previous = this.db.prepare('SELECT revision FROM b2b_bank_accounts WHERE bank=?')
+      const previous = this.db
+        .prepare('SELECT revision FROM b2b_bank_accounts WHERE bank=?')
         .get(body.bank);
       if ((previous?.revision || 0) !== body.revision)
-        fail('Rekening telah diperbarui pengguna lain. Muat ulang data bank.', 409, 'bank_conflict');
-      this.db.prepare(`INSERT INTO b2b_bank_accounts(bank,account,holder,revision,updated_by,updated_at)
+        fail(
+          'Rekening telah diperbarui pengguna lain. Muat ulang data bank.',
+          409,
+          'bank_conflict',
+        );
+      this.db
+        .prepare(
+          `INSERT INTO b2b_bank_accounts(bank,account,holder,revision,updated_by,updated_at)
         VALUES(?,?,?,?,?,?) ON CONFLICT(bank) DO UPDATE SET
         account=excluded.account, holder=excluded.holder, revision=excluded.revision,
-        updated_by=excluded.updated_by, updated_at=excluded.updated_at`)
-        .run(body.bank, body.account, body.holder.trim(), body.revision + 1, actor.id, this.carts.now());
-      this.db.prepare('INSERT INTO b2b_bank_events VALUES(?,?,?,?,?,?)')
-        .run(randomUUID(), body.bank, actor.id, body.revision + 1, body.account.slice(-4), this.carts.now());
+        updated_by=excluded.updated_by, updated_at=excluded.updated_at`,
+        )
+        .run(
+          body.bank,
+          body.account,
+          body.holder.trim(),
+          body.revision + 1,
+          actor.id,
+          this.carts.now(),
+        );
+      this.db
+        .prepare('INSERT INTO b2b_bank_events VALUES(?,?,?,?,?,?)')
+        .run(
+          randomUUID(),
+          body.bank,
+          actor.id,
+          body.revision + 1,
+          body.account.slice(-4),
+          this.carts.now(),
+        );
       return this.banks(actor);
     };
     return this.carts.stores.transaction(change);
   }
   destination(paymentId) {
-    const bank = { 'transfer-bca': 'BCA', 'transfer-bri': 'BRI', 'transfer-mandiri': 'Mandiri' }[paymentId];
+    const bank = { 'transfer-bca': 'BCA', 'transfer-bri': 'BRI', 'transfer-mandiri': 'Mandiri' }[
+      paymentId
+    ];
     if (!bank) return null;
-    const row = this.db.prepare('SELECT bank,account,holder FROM b2b_bank_accounts WHERE bank=?').get(bank);
+    const row = this.db
+      .prepare('SELECT bank,account,holder FROM b2b_bank_accounts WHERE bank=?')
+      .get(bank);
     return row ? { bank: row.bank, account: row.account, holder: row.holder } : null;
   }
   event(cycle, user, body, hash, details) {
@@ -146,8 +183,11 @@ export class B2BFinalizationRepository {
       fail('Isi alasan membuka kembali keranjang, minimal 5 dan maksimal 200 karakter.');
     if (body.action === 'reschedule') {
       cartDate(body.targetDate);
-      if (typeof body.reason !== 'string' || body.reason.trim().length < 5 ||
-          body.reason.length > 200)
+      if (
+        typeof body.reason !== 'string' ||
+        body.reason.trim().length < 5 ||
+        body.reason.length > 200
+      )
         fail('Isi alasan penjadwalan ulang, minimal 5 dan maksimal 200 karakter.');
     }
     if (
@@ -225,7 +265,8 @@ export class B2BFinalizationRepository {
         items.length > 0 &&
         !items.some((item) => item.unavailable) &&
         stock.every((row) => row.sufficient) &&
-        Boolean(payment) && (payment.groupId === 'cod' || Boolean(destination)),
+        Boolean(payment) &&
+        (payment.groupId === 'cod' || Boolean(destination)),
     };
     return {
       ...review,
@@ -250,7 +291,8 @@ export class B2BFinalizationRepository {
       revision: body.revision,
       ...(body.action === 'unlock' ? { reason: body.reason.trim() } : {}),
       ...(body.action === 'reschedule'
-        ? { reason: body.reason.trim(), targetDate: body.targetDate } : {}),
+        ? { reason: body.reason.trim(), targetDate: body.targetDate }
+        : {}),
       ...(body.action === 'finalize' ? { reviewToken: body.reviewToken, accepted: true } : {}),
     });
     return this.workflow.transaction(() => {
@@ -258,11 +300,13 @@ export class B2BFinalizationRepository {
       this.carts.access(user, storeId);
       const cycle = this.carts.enforceCutoff(storeId, body.date);
       if (!cycle && body.action === 'reschedule') {
-        const previous = this.db.prepare(
-          `SELECT e.request_hash, c.delivery_date AS currentDate
+        const previous = this.db
+          .prepare(
+            `SELECT e.request_hash, c.delivery_date AS currentDate
            FROM cart_events e JOIN cart_cycles c ON c.id=e.cart_id
            WHERE c.store_id=? AND e.request_id=? AND e.action='reschedule'`,
-        ).get(storeId, body.requestId);
+          )
+          .get(storeId, body.requestId);
         if (previous) {
           if (previous.request_hash !== hash)
             fail('Kode permintaan sudah digunakan untuk perubahan berbeda.', 409, 'request_reused');
@@ -300,33 +344,51 @@ export class B2BFinalizationRepository {
         this.event(cycle, user, body, hash, {});
       } else if (body.action === 'unlock') {
         if (isPastCutoff(body.date, this.carts.cutoff, this.carts.now()))
-          fail('Batas waktu pemesanan terlewati. Jadwalkan ulang melalui Admin.',
-            409, 'cart_cutoff_passed');
+          fail(
+            'Batas waktu pemesanan terlewati. Jadwalkan ulang melalui Admin.',
+            409,
+            'cart_cutoff_passed',
+          );
         if (cycle.status !== 'locked')
           fail('Keranjang tidak sedang dikunci.', 409, 'cart_not_locked');
         this.db.prepare("UPDATE cart_cycles SET status='open' WHERE id=?").run(cycle.id);
         this.event(cycle, user, body, hash, { reason: body.reason.trim() });
       } else if (body.action === 'reschedule') {
         if (!isPastDeliveryDate(body.date, this.carts.now()))
-          fail('Hanya keranjang yang sudah melewati jadwal dapat dijadwalkan ulang.', 409, 'not_overdue');
+          fail(
+            'Hanya keranjang yang sudah melewati jadwal dapat dijadwalkan ulang.',
+            409,
+            'not_overdue',
+          );
         const nextDate = body.targetDate;
-        if (Date.parse(nextDate + 'T00:00:00+07:00') <= this.carts.now() ||
-            nextDate <= body.date)
+        if (Date.parse(nextDate + 'T00:00:00+07:00') <= this.carts.now() || nextDate <= body.date)
           fail('Pilih tanggal pengiriman baru yang masih akan datang.', 422, 'invalid_target_date');
         const schedule = this.carts.stores.schedule(storeId);
         if (schedule && this.carts.stores.deliveryDate(storeId, nextDate) !== nextDate)
           fail('Tanggal baru harus sesuai jadwal tetap toko.', 422, 'invalid_delivery_schedule');
         if (this.carts.cycle(storeId, nextDate))
-          fail('Periode tujuan sudah memiliki keranjang. Tidak boleh digabung atau digandakan.', 409, 'period_conflict');
+          fail(
+            'Periode tujuan sudah memiliki keranjang. Tidak boleh digabung atau digandakan.',
+            409,
+            'period_conflict',
+          );
         if (!this.db.prepare('SELECT 1 FROM cart_items WHERE cart_id=?').get(cycle.id))
           fail('Keranjang kosong tidak perlu dijadwalkan ulang.', 409, 'empty_cart');
-        this.db.prepare("UPDATE cart_cycles SET delivery_date=?,status='locked' WHERE id=?")
+        this.db
+          .prepare("UPDATE cart_cycles SET delivery_date=?,status='locked' WHERE id=?")
           .run(nextDate, cycle.id);
         const details = { from: body.date, to: nextDate, reason: body.reason.trim() };
         this.event(cycle, user, body, hash, details);
-        this.db.prepare('INSERT INTO b2b_cycle_lifecycle_events VALUES(?,?,?,?,?,?)')
-          .run(randomUUID(), cycle.id, 'reschedule', user.id,
-            JSON.stringify(details), this.carts.now());
+        this.db
+          .prepare('INSERT INTO b2b_cycle_lifecycle_events VALUES(?,?,?,?,?,?)')
+          .run(
+            randomUUID(),
+            cycle.id,
+            'reschedule',
+            user.id,
+            JSON.stringify(details),
+            this.carts.now(),
+          );
       } else {
         // Review and reservation share the same SQLite write transaction.
         this.workflow.ensureInventory();
@@ -449,8 +511,7 @@ export class B2BFinalizationRepository {
         });
         this.messages.enqueue(order, 'orderCreated', time);
       }
-      return this.result(user, storeId,
-        body.action === 'reschedule' ? body.targetDate : body.date);
+      return this.result(user, storeId, body.action === 'reschedule' ? body.targetDate : body.date);
     });
   }
   result(actor, storeId, date) {

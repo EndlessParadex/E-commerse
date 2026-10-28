@@ -21,7 +21,9 @@ export const approvalSchema = `CREATE TABLE IF NOT EXISTS account_approvals (
   decided_by TEXT,decided_at INTEGER
 );`;
 export function accountApprovalStatus(db, id) {
-  return db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(id)?.status || 'approved';
+  return (
+    db.prepare('SELECT status FROM account_approvals WHERE user_id=?').get(id)?.status || 'approved'
+  );
 }
 export function accountIsApproved(db, id) {
   return accountApprovalStatus(db, id) === 'approved';

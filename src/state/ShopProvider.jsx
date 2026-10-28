@@ -70,8 +70,13 @@ export default function ShopProvider({ children }) {
     STORAGE_KEY + (workflowUsesServer ? '.account.' + (delivery?.user?.id || 'guest') : ''),
   );
   return (
-    <AccountScopedShop key={storageKey} shared={shared} storageKey={storageKey}
-      cartMode={canChooseCart ? cartMode : 'personal'} setCartMode={setCartMode}>
+    <AccountScopedShop
+      key={storageKey}
+      shared={shared}
+      storageKey={storageKey}
+      cartMode={canChooseCart ? cartMode : 'personal'}
+      setCartMode={setCartMode}
+    >
       {children}
     </AccountScopedShop>
   );

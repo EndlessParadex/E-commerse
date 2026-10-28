@@ -14,7 +14,10 @@ export default function OrderInvoice({ order }) {
   const cod = payment.groupId === 'cod';
   const paid = payment.status === 'paid';
   const paymentLabel = cod ? 'Bayar di Tempat (COD)' : payment.label || 'Pembayaran toko';
-  const totalSavings = order.items.reduce((sum, item) => sum + (invoiceDiscount(item)?.savings || 0), 0);
+  const totalSavings = order.items.reduce(
+    (sum, item) => sum + (invoiceDiscount(item)?.savings || 0),
+    0,
+  );
   const paymentStatus = paid
     ? 'Sudah dibayar'
     : cod
@@ -25,7 +28,9 @@ export default function OrderInvoice({ order }) {
     <article className="order-invoice" aria-label="Faktur pesanan BAM">
       <header className="invoice-header">
         <div className="invoice-seller">
-          <div className="invoice-brand">BAM<span>.</span></div>
+          <div className="invoice-brand">
+            BAM<span>.</span>
+          </div>
           <strong>{seller.legalName || seller.shortName || 'BAM'}</strong>
           {seller.address && <p>{seller.address}</p>}
           {(seller.phone || seller.email) && (
@@ -33,7 +38,9 @@ export default function OrderInvoice({ order }) {
           )}
         </div>
         <div className="invoice-heading">
-          <span className="invoice-eyebrow">{finalized ? 'RINCIAN PESANAN' : 'RINGKASAN PESANAN'}</span>
+          <span className="invoice-eyebrow">
+            {finalized ? 'RINCIAN PESANAN' : 'RINGKASAN PESANAN'}
+          </span>
           <h2>{finalized ? 'Faktur pesanan' : 'Permintaan pesanan'}</h2>
           <span className="invoice-heading-date">{dateLabel(order.createdAt)}</span>
           <strong className="invoice-payment-tag">{cod ? 'COD' : paymentLabel}</strong>
@@ -71,12 +78,22 @@ export default function OrderInvoice({ order }) {
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" className="invoice-number">No.</th>
+              <th scope="col" className="invoice-number">
+                No.
+              </th>
               <th scope="col">Produk</th>
-              <th scope="col" className="invoice-quantity">Qty</th>
-              <th scope="col" className="invoice-money">Harga satuan</th>
-              <th scope="col" className="invoice-discount">Diskon</th>
-              <th scope="col" className="invoice-money">Subtotal</th>
+              <th scope="col" className="invoice-quantity">
+                Qty
+              </th>
+              <th scope="col" className="invoice-money">
+                Harga satuan
+              </th>
+              <th scope="col" className="invoice-discount">
+                Diskon
+              </th>
+              <th scope="col" className="invoice-money">
+                Subtotal
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -87,14 +104,18 @@ export default function OrderInvoice({ order }) {
                   <strong>{item.name}</strong>
                 </td>
                 <td className="invoice-quantity">{item.quantity}</td>
-                <td className="invoice-money">{rupiah(invoiceDiscount(item)?.oldPrice || item.price)}</td>
+                <td className="invoice-money">
+                  {rupiah(invoiceDiscount(item)?.oldPrice || item.price)}
+                </td>
                 <td className="invoice-discount">
                   {invoiceDiscount(item) ? (
                     <span className="invoice-discount-details">
                       <strong>−{invoiceDiscount(item).percentage}%</strong>
                       <span>{rupiah(item.price)}</span>
                     </span>
-                  ) : <span className="invoice-no-discount">—</span>}
+                  ) : (
+                    <span className="invoice-no-discount">—</span>
+                  )}
                 </td>
                 <td className="invoice-money">{rupiah(item.price * item.quantity)}</td>
               </tr>
@@ -115,7 +136,9 @@ export default function OrderInvoice({ order }) {
           </div>
         )}
         <div className="invoice-grand-total">
-          <span>{finalized ? (cod ? 'Total pembayaran COD' : 'Total pembayaran') : 'Subtotal sementara'}</span>
+          <span>
+            {finalized ? (cod ? 'Total pembayaran COD' : 'Total pembayaran') : 'Subtotal sementara'}
+          </span>
           <strong>{rupiah(order.total)}</strong>
         </div>
       </section>

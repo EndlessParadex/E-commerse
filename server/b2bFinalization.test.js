@@ -38,31 +38,74 @@ test('B2B buyer/Sales select payment; Owner configures banks; Admin verifies man
   const { first, second, actors } = seedSharedCart(app);
   const cartUrl = '/api/b2b/stores/' + first.id + '/cart';
   const bankUrl = '/api/admin/b2b/banks';
-  const bank = { bank: 'BCA', account: '1234567890', holder: 'BAM Distribusi', revision: 0, currentPassword: 'fixture-password' };
-  const image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
+  const bank = {
+    bank: 'BCA',
+    account: '1234567890',
+    holder: 'BAM Distribusi',
+    revision: 0,
+    currentPassword: 'fixture-password',
+  };
+  const image =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
   try {
     assert.equal((await sharedRequest(app, 'GET', bankUrl, 'buyer')).status, 403);
     assert.equal((await sharedRequest(app, 'PUT', bankUrl, 'operator', bank)).status, 403);
-    assert.equal((await sharedRequest(app, 'PUT', bankUrl, 'owner', { ...bank, account: 'abc' })).status, 422);
+    assert.equal(
+      (await sharedRequest(app, 'PUT', bankUrl, 'owner', { ...bank, account: 'abc' })).status,
+      422,
+    );
     const configured = await sharedRequest(app, 'PUT', bankUrl, 'owner', bank);
     assert.equal(configured.status, 200, JSON.stringify(configured.body));
     assert.equal(configured.body.banks.find((row) => row.bank === 'BCA').revision, 1);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_bank_events').get().n, 1);
-    assert.equal(app.db.prepare('SELECT account_tail FROM b2b_bank_events').get().account_tail, '7890');
+    assert.equal(
+      app.db.prepare('SELECT account_tail FROM b2b_bank_events').get().account_tail,
+      '7890',
+    );
     assert.equal((await sharedRequest(app, 'PUT', bankUrl, 'owner', bank)).status, 409);
 
     add(app, actors.buyer, first);
-    const buyerChoice = await sharedRequest(app, 'POST', cartUrl, 'buyer',
-      body('payment', 1, { paymentId: 'transfer-bri' }));
+    const buyerChoice = await sharedRequest(
+      app,
+      'POST',
+      cartUrl,
+      'buyer',
+      body('payment', 1, { paymentId: 'transfer-bri' }),
+    );
     assert.equal(buyerChoice.status, 200);
     assert.equal(buyerChoice.body.cart.paymentId, 'transfer-bri');
     assert.equal(buyerChoice.body.cart.events[0].actorRole, 'buyer');
-    assert.equal((await sharedRequest(app, 'POST', cartUrl, 'operator',
-      body('payment', 2, { paymentId: 'cod' }))).status, 403);
-    assert.equal((await sharedRequest(app, 'POST', '/api/b2b/stores/' + second.id + '/cart',
-      'sales', body('payment', 0, { paymentId: 'cod' }))).status, 404);
-    const salesChoice = await sharedRequest(app, 'POST', cartUrl, 'sales',
-      body('payment', 2, { paymentId: 'transfer-bca' }));
+    assert.equal(
+      (
+        await sharedRequest(
+          app,
+          'POST',
+          cartUrl,
+          'operator',
+          body('payment', 2, { paymentId: 'cod' }),
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await sharedRequest(
+          app,
+          'POST',
+          '/api/b2b/stores/' + second.id + '/cart',
+          'sales',
+          body('payment', 0, { paymentId: 'cod' }),
+        )
+      ).status,
+      404,
+    );
+    const salesChoice = await sharedRequest(
+      app,
+      'POST',
+      cartUrl,
+      'sales',
+      body('payment', 2, { paymentId: 'transfer-bca' }),
+    );
     assert.equal(salesChoice.status, 200);
     assert.equal(salesChoice.body.cart.events[0].actorRole, 'sales');
     assert.equal(salesChoice.body.cart.events[0].details.before, 'transfer-bri');
@@ -70,61 +113,113 @@ test('B2B buyer/Sales select payment; Owner configures banks; Admin verifies man
 
     const locked = lock(app, actors.operator, first);
     assert.equal(locked.cart.paymentId, 'transfer-bca');
-    assert.equal((await sharedRequest(app, 'POST', cartUrl, 'sales',
-      body('payment', locked.cart.revision, { paymentId: 'cod' }))).status, 409);
+    assert.equal(
+      (
+        await sharedRequest(
+          app,
+          'POST',
+          cartUrl,
+          'sales',
+          body('payment', locked.cart.revision, { paymentId: 'cod' }),
+        )
+      ).status,
+      409,
+    );
     const checked = app.b2bFinalization.review(actors.owner, first.id, date);
     assert.equal(checked.ready, true);
     assert.equal(checked.payment.id, 'transfer-bca');
     assert.equal(checked.destination.account, bank.account);
 
-    const changeAccount = await sharedRequest(app, 'PUT', bankUrl, 'owner',
-      { ...bank, account: '9876543210', revision: 1 });
+    const changeAccount = await sharedRequest(app, 'PUT', bankUrl, 'owner', {
+      ...bank,
+      account: '9876543210',
+      revision: 1,
+    });
     assert.equal(changeAccount.status, 200);
     assert.throws(
-      () => app.b2bFinalization.change(actors.owner, first.id,
-        body('finalize', checked.revision, { reviewToken: checked.token, accepted: true })),
+      () =>
+        app.b2bFinalization.change(
+          actors.owner,
+          first.id,
+          body('finalize', checked.revision, { reviewToken: checked.token, accepted: true }),
+        ),
       { code: 'review_changed' },
       'bank edits invalidate a previous review token',
     );
     const refreshed = app.b2bFinalization.review(actors.owner, first.id, date);
-    const completed = app.b2bFinalization.change(actors.owner, first.id,
-      body('finalize', refreshed.revision, { reviewToken: refreshed.token, accepted: true }));
+    const completed = app.b2bFinalization.change(
+      actors.owner,
+      first.id,
+      body('finalize', refreshed.revision, { reviewToken: refreshed.token, accepted: true }),
+    );
     let order = completed.order;
     assert.equal(order.payment.id, 'transfer-bca');
     assert.equal(order.payment.status, 'pending');
     assert.equal(order.payment.destination.account, '9876543210');
     assert.equal(order.status, 'processing');
-    assert.throws(() => app.workflow.update(actors.owner, order.id, {
-      action: 'paid', revision: order.revision, reference: 'TRANSFER-TANPA-BUKTI',
-    }), { code: 'invalid_status' });
-    assert.throws(() => app.workflow.update(actors.sales, order.id, {
-      action: 'cancel', revision: order.revision,
-    }), { code: 'admin_required' });
-    assert.throws(() => app.workflow.update(actors.other, order.id, {
-      action: 'submit_proof', revision: order.revision, image,
-    }), { code: 'not_found' });
+    assert.throws(
+      () =>
+        app.workflow.update(actors.owner, order.id, {
+          action: 'paid',
+          revision: order.revision,
+          reference: 'TRANSFER-TANPA-BUKTI',
+        }),
+      { code: 'invalid_status' },
+    );
+    assert.throws(
+      () =>
+        app.workflow.update(actors.sales, order.id, {
+          action: 'cancel',
+          revision: order.revision,
+        }),
+      { code: 'admin_required' },
+    );
+    assert.throws(
+      () =>
+        app.workflow.update(actors.other, order.id, {
+          action: 'submit_proof',
+          revision: order.revision,
+          image,
+        }),
+      { code: 'not_found' },
+    );
 
-    const uploaded = await sharedRequest(app, 'POST', '/api/orders/' + order.id + '/proof',
-      'sales', { revision: order.revision, image });
+    const uploaded = await sharedRequest(
+      app,
+      'POST',
+      '/api/orders/' + order.id + '/proof',
+      'sales',
+      { revision: order.revision, image },
+    );
     assert.equal(uploaded.status, 200, JSON.stringify(uploaded.body));
     order = uploaded.body.order;
     assert.equal(order.payment.status, 'proof_submitted');
     assert.equal(order.status, 'processing');
     assert.equal(order.payment.proof.status, 'pending');
-    assert.equal(app.workflow.proof(actors.buyer, order.id, order.payment.proof.id).mime, 'image/png');
-    assert.throws(() => app.workflow.proof(actors.other, order.id, order.payment.proof.id),
-      { code: 'not_found' });
+    assert.equal(
+      app.workflow.proof(actors.buyer, order.id, order.payment.proof.id).mime,
+      'image/png',
+    );
+    assert.throws(() => app.workflow.proof(actors.other, order.id, order.payment.proof.id), {
+      code: 'not_found',
+    });
     order = app.workflow.update(actors.operator, order.id, {
-      action: 'reject_proof', revision: order.revision, reason: 'Nominal tidak sesuai',
+      action: 'reject_proof',
+      revision: order.revision,
+      reason: 'Nominal tidak sesuai',
     });
     assert.equal(order.payment.status, 'pending');
     assert.equal(order.payment.proof.status, 'rejected');
     assert.equal(order.payment.proof.reviewedBy, 'operator');
     order = app.workflow.update(actors.buyer, order.id, {
-      action: 'submit_proof', revision: order.revision, image,
+      action: 'submit_proof',
+      revision: order.revision,
+      image,
     });
     order = app.workflow.update(actors.operator, order.id, {
-      action: 'paid', revision: order.revision, reference: 'BCA-RECEIVED-001',
+      action: 'paid',
+      revision: order.revision,
+      reference: 'BCA-RECEIVED-001',
     });
     assert.equal(order.payment.status, 'paid');
     assert.equal(order.payment.proof.status, 'accepted');
@@ -141,15 +236,24 @@ test('selected transfer cannot be finalized until the matching B2B bank is confi
   const { first, actors } = seedSharedCart(app);
   try {
     add(app, actors.buyer, first);
-    app.sharedCarts.mutate(actors.buyer, first.id,
-      body('payment', 1, { paymentId: 'transfer-mandiri' }));
+    app.sharedCarts.mutate(
+      actors.buyer,
+      first.id,
+      body('payment', 1, { paymentId: 'transfer-mandiri' }),
+    );
     lock(app, actors.owner, first);
     const review = app.b2bFinalization.review(actors.owner, first.id, date);
     assert.equal(review.ready, false);
     assert.equal(review.destination, null);
-    assert.throws(() => app.b2bFinalization.change(actors.owner, first.id,
-      body('finalize', review.revision, { reviewToken: review.token, accepted: true })),
-    { code: 'review_not_ready' });
+    assert.throws(
+      () =>
+        app.b2bFinalization.change(
+          actors.owner,
+          first.id,
+          body('finalize', review.revision, { reviewToken: review.token, accepted: true }),
+        ),
+      { code: 'review_not_ready' },
+    );
     assert.equal(count(app, 'orders'), 0);
   } finally {
     app.db.close();
@@ -224,7 +328,11 @@ test('finalization API only allows active Admin; locked carts reject edits; fina
         403,
       );
       const personalOrder = await sharedRequest(app, 'POST', '/api/orders', actor, {});
-      assert.equal(personalOrder.status, 422, 'private checkout still validates the submitted cart');
+      assert.equal(
+        personalOrder.status,
+        422,
+        'private checkout still validates the submitted cart',
+      );
       assert.notEqual(personalOrder.body.error, 'shared_cart_required');
     }
     assert.equal(
@@ -691,10 +799,12 @@ test('overdue cart reschedule by Admin preserves items, audit and request idempo
     const oldCart = app.sharedCarts.read(actors.buyer, first.id, date);
     assert.equal(oldCart.overdue, true);
     const action = body('reschedule', oldCart.revision, {
-      targetDate: '2026-11-02', reason: 'Armada pengiriman tidak tersedia',
+      targetDate: '2026-11-02',
+      reason: 'Armada pengiriman tidak tersedia',
     });
-    assert.throws(() => app.b2bFinalization.change(actors.buyer, first.id, action),
-      { code: 'admin_required' });
+    assert.throws(() => app.b2bFinalization.change(actors.buyer, first.id, action), {
+      code: 'admin_required',
+    });
     const updated = app.b2bFinalization.change(actors.owner, first.id, action).cart;
     assert.equal(updated.date, '2026-11-02');
     assert.equal(updated.id, oldCart.id, 'move the same cart, not copy items');
@@ -704,23 +814,46 @@ test('overdue cart reschedule by Admin preserves items, audit and request idempo
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_cycles').get().n, 1);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_items').get().n, 1);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
-    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get().n, 1);
-    const audit = app.db.prepare("SELECT details FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get();
+    assert.equal(
+      app.db
+        .prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'")
+        .get().n,
+      1,
+    );
+    const audit = app.db
+      .prepare("SELECT details FROM b2b_cycle_lifecycle_events WHERE action='reschedule'")
+      .get();
     assert.deepEqual(JSON.parse(audit.details), {
-      from: date, to: '2026-11-02', reason: 'Armada pengiriman tidak tersedia',
+      from: date,
+      to: '2026-11-02',
+      reason: 'Armada pengiriman tidak tersedia',
     });
     const repeated = app.b2bFinalization.change(actors.owner, first.id, action);
     assert.equal(repeated.cart.id, updated.id);
     assert.equal(repeated.cart.revision, updated.revision);
-    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'").get().n, 1);
-    assert.throws(() => app.b2bFinalization.change(actors.owner, first.id,
-      body('reschedule', updated.revision, {
-        date: '2026-11-02', targetDate: '2026-11-09',
-        reason: 'Coba ulang yang bukan lewat',
-      })),
-      { code: 'not_overdue' });
+    assert.equal(
+      app.db
+        .prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='reschedule'")
+        .get().n,
+      1,
+    );
+    assert.throws(
+      () =>
+        app.b2bFinalization.change(
+          actors.owner,
+          first.id,
+          body('reschedule', updated.revision, {
+            date: '2026-11-02',
+            targetDate: '2026-11-09',
+            reason: 'Coba ulang yang bukan lewat',
+          }),
+        ),
+      { code: 'not_overdue' },
+    );
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });
 
 test('Admin reschedule rejects destination collisions, invalid dates, and finalization remains Admin-only', () => {
@@ -729,21 +862,44 @@ test('Admin reschedule rejects destination collisions, invalid dates, and finali
   const { first, actors } = seedSharedCart(app);
   try {
     add(app, actors.buyer, first);
-    app.sharedCarts.mutate(actors.buyer, first.id, body('add', 0, {
-      date: '2026-11-02', productId: 'snack-pedas-23g', quantity: 1,
-    }));
+    app.sharedCarts.mutate(
+      actors.buyer,
+      first.id,
+      body('add', 0, {
+        date: '2026-11-02',
+        productId: 'snack-pedas-23g',
+        quantity: 1,
+      }),
+    );
     const base = body('reschedule', 1, {
-      targetDate: '2026-11-02', reason: 'Jadwal distribusi terlambat',
+      targetDate: '2026-11-02',
+      reason: 'Jadwal distribusi terlambat',
     });
-    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id, base),
-      { code: 'period_conflict' });
-    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id,
-      { ...base, requestId: randomUUID(), targetDate: '2026-10-29' }),
-      { code: 'invalid_target_date' });
-    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id,
-      { ...base, requestId: randomUUID(), targetDate: '2026-11-03', reason: 'x' }),
-      /alasan/i);
+    assert.throws(() => app.b2bFinalization.change(actors.operator, first.id, base), {
+      code: 'period_conflict',
+    });
+    assert.throws(
+      () =>
+        app.b2bFinalization.change(actors.operator, first.id, {
+          ...base,
+          requestId: randomUUID(),
+          targetDate: '2026-10-29',
+        }),
+      { code: 'invalid_target_date' },
+    );
+    assert.throws(
+      () =>
+        app.b2bFinalization.change(actors.operator, first.id, {
+          ...base,
+          requestId: randomUUID(),
+          targetDate: '2026-11-03',
+          reason: 'x',
+        }),
+      /alasan/i,
+    );
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_cycles').get().n, 2);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });

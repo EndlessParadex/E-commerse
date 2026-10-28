@@ -131,9 +131,12 @@ test('account contact phones are private, persist, validate, and never grant aut
       200,
     );
     assert.equal(
-      (await request('POST', '/api/auth/login', {
-        email: '+6281234567890', password: 'incorrect',
-      })).status,
+      (
+        await request('POST', '/api/auth/login', {
+          email: '+6281234567890',
+          password: 'incorrect',
+        })
+      ).status,
       401,
     );
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM b2b_store_members').get().n, 0);

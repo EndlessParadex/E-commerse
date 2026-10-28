@@ -128,8 +128,11 @@ export default function AdminPage({ view = 'overview' }) {
   const delivery = useContext(DeliveryContext);
   const { profile: companyProfile } = useCompany();
   const [query, setQuery] = useState(() => {
-    try { return window.sessionStorage.getItem('bam.admin.catalog-search') || ''; }
-    catch { return ''; }
+    try {
+      return window.sessionStorage.getItem('bam.admin.catalog-search') || '';
+    } catch {
+      return '';
+    }
   });
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
@@ -182,8 +185,11 @@ export default function AdminPage({ view = 'overview' }) {
   const reset = () => {
     setProductPage(1);
     setQuery('');
-    try { window.sessionStorage.removeItem('bam.admin.catalog-search'); }
-    catch { /* Private browsing may prevent storage. */ }
+    try {
+      window.sessionStorage.removeItem('bam.admin.catalog-search');
+    } catch {
+      /* Private browsing may prevent storage. */
+    }
     setSupplierId('');
     setBrandId('');
   };
@@ -346,18 +352,32 @@ export default function AdminPage({ view = 'overview' }) {
       </aside>
       <div className="admin-content">
         <div className="admin-topbar">
-          <form className="admin-topbar-search" role="search" onSubmit={(event) => {
-            event.preventDefault();
-            try { window.sessionStorage.setItem('bam.admin.catalog-search', query); }
-            catch { /* Search still works in the current page. */ }
-            if (window.location.hash !== '#/admin/produk')
-              window.location.hash = '#/admin/produk';
-          }}>
+          <form
+            className="admin-topbar-search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              try {
+                window.sessionStorage.setItem('bam.admin.catalog-search', query);
+              } catch {
+                /* Search still works in the current page. */
+              }
+              if (window.location.hash !== '#/admin/produk')
+                window.location.hash = '#/admin/produk';
+            }}
+          >
             <AdminIcon name="products" />
-            <label htmlFor="admin-global-search" className="admin-visually-hidden">Cari produk di katalog</label>
-            <input id="admin-global-search" type="search" maxLength={200}
+            <label htmlFor="admin-global-search" className="admin-visually-hidden">
+              Cari produk di katalog
+            </label>
+            <input
+              id="admin-global-search"
+              type="search"
+              maxLength={200}
               placeholder="Cari nama produk, merek, atau SKU..."
-              value={query} onChange={(event) => setQuery(event.target.value)} />
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
             <button type="submit">Cari katalog</button>
           </form>
           <div className="admin-topbar-profile">
@@ -373,13 +393,18 @@ export default function AdminPage({ view = 'overview' }) {
         <header className="admin-header">
           <div>
             <span className="admin-eyebrow">
-              {companyProfile.shortName} ·{' '}
-              {areaLabel}
+              {companyProfile.shortName} · {areaLabel}
             </span>
-            <h1><span className="admin-page-title-icon">
-              <AdminIcon name={view === 'approvals' ? 'accounts'
-                : view === 'sharedCarts' ? 'orders' : view} />
-            </span><span className="admin-page-title-text">{pageTitle}</span></h1>
+            <h1>
+              <span className="admin-page-title-icon">
+                <AdminIcon
+                  name={
+                    view === 'approvals' ? 'accounts' : view === 'sharedCarts' ? 'orders' : view
+                  }
+                />
+              </span>
+              <span className="admin-page-title-text">{pageTitle}</span>
+            </h1>
             <p>
               {b2bView
                 ? view === 'sharedCarts'
@@ -414,17 +439,17 @@ export default function AdminPage({ view = 'overview' }) {
               ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
               : view === 'approvals'
                 ? 'Tinjau pendaftaran yang menunggu persetujuan. Persetujuan akun tidak menggantikan verifikasi email.'
-              : view === 'company'
-                ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
-              : view === 'email'
-                ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
-                : workflowView
-                  ? workflowUsesServer
-                    ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
-                    : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
-                  : catalogUsesServer
-                    ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
-                    : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
+                : view === 'company'
+                  ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
+                  : view === 'email'
+                    ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
+                    : workflowView
+                      ? workflowUsesServer
+                        ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
+                        : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
+                      : catalogUsesServer
+                        ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
+                        : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
         </p>
         {!editor && view !== 'b2bStores' && <AdminPageGuide view={view} />}
         {pendingLocalImport && view === 'overview' && !editor && (
@@ -526,12 +551,20 @@ export default function AdminPage({ view = 'overview' }) {
             <section className="admin-home-hero" aria-labelledby="admin-hero-title">
               <div className="admin-home-hero-copy">
                 <span className="admin-home-hero-eyebrow">Dashboard BAM · Katalog &amp; B2B</span>
-                <h2 id="admin-hero-title">Kelola katalog, stok, dan kemitraan B2B dengan lebih mudah</h2>
-                <p>Pusat kerja untuk memantau produk dan mengakses pengelolaan pesanan, stok,
-                  toko, serta Sales dalam satu tempat.</p>
+                <h2 id="admin-hero-title">
+                  Kelola katalog, stok, dan kemitraan B2B dengan lebih mudah
+                </h2>
+                <p>
+                  Pusat kerja untuk memantau produk dan mengakses pengelolaan pesanan, stok, toko,
+                  serta Sales dalam satu tempat.
+                </p>
                 <div className="admin-home-hero-actions">
-                  <a href="#/admin/pesanan" className="admin-primary">Lihat pesanan <span aria-hidden="true">→</span></a>
-                  <a href="#/admin/toko-sales" className="admin-secondary">Kelola toko &amp; Sales</a>
+                  <a href="#/admin/pesanan" className="admin-primary">
+                    Lihat pesanan <span aria-hidden="true">→</span>
+                  </a>
+                  <a href="#/admin/toko-sales" className="admin-secondary">
+                    Kelola toko &amp; Sales
+                  </a>
                 </div>
               </div>
               <div className="admin-home-hero-visual" aria-hidden="true">
@@ -559,9 +592,15 @@ export default function AdminPage({ view = 'overview' }) {
               ))}
             </section>
             <AdminOpsOverview />
-            <section className="admin-overview-grid" aria-label="Pengelolaan katalog dan akses cepat">
+            <section
+              className="admin-overview-grid"
+              aria-label="Pengelolaan katalog dan akses cepat"
+            >
               <div className="admin-overview-main">
-                <section className="admin-panel admin-overview-products" aria-labelledby="admin-overview-products-title">
+                <section
+                  className="admin-panel admin-overview-products"
+                  aria-labelledby="admin-overview-products-title"
+                >
                   <div className="admin-panel-heading">
                     <AdminSectionIcon name="products" />
                     <div>
@@ -569,107 +608,151 @@ export default function AdminPage({ view = 'overview' }) {
                       <p>Ringkasan SKU yang tersimpan dalam katalog BAM.</p>
                     </div>
                     <div className="admin-heading-actions">
-                      <a className="admin-secondary" href="#/admin/produk">Lihat semua produk →</a>
-                      <button type="button" className="admin-primary"
+                      <a className="admin-secondary" href="#/admin/produk">
+                        Lihat semua produk →
+                      </a>
+                      <button
+                        type="button"
+                        className="admin-primary"
                         disabled={Boolean(deleting || importing)}
-                        onClick={() => startEdit()}>+ Tambah produk</button>
+                        onClick={() => startEdit()}
+                      >
+                        + Tambah produk
+                      </button>
                     </div>
                   </div>
                   <div className="admin-overview-product-search">
                     <label htmlFor="admin-overview-search">Cari produk atau SKU</label>
-                    <input id="admin-overview-search" type="search" maxLength={200}
-                      value={query} onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Nama, merek, ukuran, atau SKU" />
+                    <input
+                      id="admin-overview-search"
+                      type="search"
+                      maxLength={200}
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Nama, merek, ukuran, atau SKU"
+                    />
                   </div>
                   <div className="admin-overview-table-wrap">
                     <table className="admin-overview-table">
-                      <thead><tr><th scope="col">Produk</th><th scope="col">Merek</th>
-                        <th scope="col">Pemasok</th><th scope="col">Harga</th><th scope="col">Tindakan</th>
-                      </tr></thead>
+                      <thead>
+                        <tr>
+                          <th scope="col">Produk</th>
+                          <th scope="col">Merek</th>
+                          <th scope="col">Pemasok</th>
+                          <th scope="col">Harga</th>
+                          <th scope="col">Tindakan</th>
+                        </tr>
+                      </thead>
                       <tbody>
-                        {filterAdminProducts({ query }).slice(0, 6).map((product) => (
-                          <tr key={product.id}>
-                            <td><ProductIdentity product={product} /></td>
-                            <td>{product.brand || '—'}</td>
-                            <td>{product.supplier?.name || '—'}</td>
-                            <td>{rupiah(product.price)}</td>
-                            <td><button type="button" className="admin-secondary"
-                              onClick={() => startEdit(product.groupId)}>Kelola</button></td>
-                          </tr>
-                        ))}
+                        {filterAdminProducts({ query })
+                          .slice(0, 6)
+                          .map((product) => (
+                            <tr key={product.id}>
+                              <td>
+                                <ProductIdentity product={product} />
+                              </td>
+                              <td>{product.brand || '—'}</td>
+                              <td>{product.supplier?.name || '—'}</td>
+                              <td>{rupiah(product.price)}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  className="admin-secondary"
+                                  onClick={() => startEdit(product.groupId)}
+                                >
+                                  Kelola
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                     {filterAdminProducts({ query }).length === 0 && (
                       <p className="admin-overview-empty">Produk tidak ditemukan.</p>
                     )}
                   </div>
-                  <p className="admin-overview-footer">Menampilkan hingga 6 dari {filterAdminProducts({ query }).length} SKU sesuai pencarian.</p>
+                  <p className="admin-overview-footer">
+                    Menampilkan hingga 6 dari {filterAdminProducts({ query }).length} SKU sesuai
+                    pencarian.
+                  </p>
                 </section>
-            <section className="admin-panel">
-              <div className="admin-panel-heading">
-                <AdminSectionIcon name="suppliers" />
-                <div>
-                  <h2>PT pemasok</h2>
-                  <p>Sebaran produk utama dan varian pada setiap pemasok.</p>
-                </div>
-                <a className="admin-primary" href="#/admin/pemasok">
-                  Kelola PT pemasok →
-                </a>
-              </div>
-              <div className="admin-suppliers">
-                {suppliers.map((supplier) => {
-                  const items = adminProducts.filter(
-                    (product) => product.supplier?.id === supplier.id,
-                  );
-                  return (
-                    <article
-                      className="admin-supplier"
-                      key={supplier.id}
-                      style={supplierColorStyle(supplier.color)}
-                    >
-                      <span
-                        className="admin-supplier-avatar"
-                        style={avatarColorStyle(supplier.color)}
-                        aria-hidden="true"
-                      >
-                        {supplier.initials}
-                      </span>
-                      <div>
-                        <h3>{supplier.name}</h3>
-                        <p>
-                          {new Set(items.map((product) => product.groupId)).size} produk utama ·{' '}
-                          {items.length} varian produk
-                        </p>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </section>
+                <section className="admin-panel">
+                  <div className="admin-panel-heading">
+                    <AdminSectionIcon name="suppliers" />
+                    <div>
+                      <h2>PT pemasok</h2>
+                      <p>Sebaran produk utama dan varian pada setiap pemasok.</p>
+                    </div>
+                    <a className="admin-primary" href="#/admin/pemasok">
+                      Kelola PT pemasok →
+                    </a>
+                  </div>
+                  <div className="admin-suppliers">
+                    {suppliers.map((supplier) => {
+                      const items = adminProducts.filter(
+                        (product) => product.supplier?.id === supplier.id,
+                      );
+                      return (
+                        <article
+                          className="admin-supplier"
+                          key={supplier.id}
+                          style={supplierColorStyle(supplier.color)}
+                        >
+                          <span
+                            className="admin-supplier-avatar"
+                            style={avatarColorStyle(supplier.color)}
+                            aria-hidden="true"
+                          >
+                            {supplier.initials}
+                          </span>
+                          <div>
+                            <h3>{supplier.name}</h3>
+                            <p>
+                              {new Set(items.map((product) => product.groupId)).size} produk utama ·{' '}
+                              {items.length} varian produk
+                            </p>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
               </div>
               <aside className="admin-overview-side" aria-label="Akses cepat Admin">
                 <section className="admin-panel admin-overview-quick">
                   <h2>Aksi cepat</h2>
                   <div className="admin-overview-quick-links">
-                    <a href="#/admin/pesanan"><AdminIcon name="orders" /> Periksa pesanan</a>
-                    <a href="#/admin/stok"><AdminIcon name="stock" /> Kelola stok</a>
-                    <a href="#/admin/toko-sales"><AdminIcon name="b2bStores" /> Toko &amp; Sales</a>
-                    <a href="#/admin/keranjang"><AdminIcon name="sharedCarts" /> Keranjang bersama</a>
-                    <a href="#/admin/pemasok"><AdminIcon name="suppliers" /> Kelola pemasok</a>
+                    <a href="#/admin/pesanan">
+                      <AdminIcon name="orders" /> Periksa pesanan
+                    </a>
+                    <a href="#/admin/stok">
+                      <AdminIcon name="stock" /> Kelola stok
+                    </a>
+                    <a href="#/admin/toko-sales">
+                      <AdminIcon name="b2bStores" /> Toko &amp; Sales
+                    </a>
+                    <a href="#/admin/keranjang">
+                      <AdminIcon name="sharedCarts" /> Keranjang bersama
+                    </a>
+                    <a href="#/admin/pemasok">
+                      <AdminIcon name="suppliers" /> Kelola pemasok
+                    </a>
                   </div>
                 </section>
-            <section className="admin-next">
-              <h2>Kelola katalog produk</h2>
-              <p>Tambahkan produk baru atau perbarui foto, informasi, dan harga setiap ukuran.</p>
-              <button
-                type="button"
-                className="admin-primary"
-                disabled={Boolean(deleting || importing)}
-                onClick={() => startEdit()}
-              >
-                + Tambah produk
-              </button>
-            </section>
+                <section className="admin-next">
+                  <h2>Kelola katalog produk</h2>
+                  <p>
+                    Tambahkan produk baru atau perbarui foto, informasi, dan harga setiap ukuran.
+                  </p>
+                  <button
+                    type="button"
+                    className="admin-primary"
+                    disabled={Boolean(deleting || importing)}
+                    onClick={() => startEdit()}
+                  >
+                    + Tambah produk
+                  </button>
+                </section>
               </aside>
             </section>
           </>
@@ -753,8 +836,8 @@ export default function AdminPage({ view = 'overview' }) {
             </AdminProductFilters>
             <div className="admin-results">
               <p role="status">
-                Menampilkan <strong>{productPagination.items.length}</strong> dari {filtered.length} hasil
-                ({adminProducts.length} SKU tersedia)
+                Menampilkan <strong>{productPagination.items.length}</strong> dari {filtered.length}{' '}
+                hasil ({adminProducts.length} SKU tersedia)
               </p>
               {hasFilters && (
                 <button type="button" className="admin-text-button" onClick={reset}>

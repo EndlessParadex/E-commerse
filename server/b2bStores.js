@@ -41,17 +41,25 @@ const pageFilter = (params) => {
   return { query, page, pageSize: 25 };
 };
 
-
 const validSchedule = (value) => {
   const day = value?.weekday;
   const weeks = value?.intervalWeeks;
   const anchor = value?.anchorDate;
-  if (!Number.isInteger(day) || day < 0 || day > 6 || ![1, 2].includes(weeks) ||
-      typeof anchor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(anchor))
+  if (
+    !Number.isInteger(day) ||
+    day < 0 ||
+    day > 6 ||
+    ![1, 2].includes(weeks) ||
+    typeof anchor !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(anchor)
+  )
     fail('Isi hari (Minggu=0 s.d. Sabtu=6), frekuensi 1/2 minggu, dan tanggal acuan.');
   const parsed = new Date(anchor + 'T00:00:00Z');
-  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== anchor ||
-      parsed.getUTCDay() !== day)
+  if (
+    !Number.isFinite(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== anchor ||
+    parsed.getUTCDay() !== day
+  )
     fail('Tanggal acuan harus tanggal valid dan sesuai hari pengiriman.');
   return { weekday: day, intervalWeeks: weeks, anchorDate: anchor };
 };
@@ -178,13 +186,19 @@ export class B2BStoreRepository {
     this.db.prepare('UPDATE b2b_stores SET revision=revision+1 WHERE id=?').run(storeId);
   }
   storeOwner(storeId) {
-    return this.db.prepare(`SELECT u.id,u.name,u.email,
+    return (
+      this.db
+        .prepare(
+          `SELECT u.id,u.name,u.email,
       CASE WHEN access.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'
       THEN 1 ELSE 0 END AS active
       FROM b2b_store_owners link JOIN users u ON u.id=link.user_id
       LEFT JOIN account_access access ON access.user_id=u.id
       LEFT JOIN account_approvals approval ON approval.user_id=u.id
-      WHERE link.store_id=?`).get(storeId) || null;
+      WHERE link.store_id=?`,
+        )
+        .get(storeId) || null
+    );
   }
   validateBuyer(userId) {
     const user = validUser(this.db, userId);
@@ -196,23 +210,30 @@ export class B2BStoreRepository {
     const user = this.validateBuyer(userId);
     // Owning a store is a one-account/one-store responsibility; ordinary
     // membership and Sales relationships remain independent.
-    const linked = this.db.prepare(
-      `SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1`,
-    ).get(user.id);
-    const owns = this.db.prepare(
-      `SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1`,
-    ).get(user.id);
+    const linked = this.db
+      .prepare(`SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1`)
+      .get(user.id);
+    const owns = this.db
+      .prepare(`SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1`)
+      .get(user.id);
     if (linked || owns)
-      fail('Akun ini sudah terhubung ke toko lain. Pilih akun pembeli yang belum memiliki toko.',
-        409, 'buyer_already_linked');
+      fail(
+        'Akun ini sudah terhubung ke toko lain. Pilih akun pembeli yang belum memiliki toko.',
+        409,
+        'buyer_already_linked',
+      );
     return user;
   }
   linkStoreOwner(actor, storeId, userId) {
-    this.db.prepare('INSERT OR IGNORE INTO b2b_store_members VALUES(?,?,?,?)')
+    this.db
+      .prepare('INSERT OR IGNORE INTO b2b_store_members VALUES(?,?,?,?)')
       .run(storeId, userId, actor.id, this.now());
-    this.db.prepare(`INSERT INTO b2b_store_owners(store_id,user_id,assigned_by,assigned_at)
+    this.db
+      .prepare(
+        `INSERT INTO b2b_store_owners(store_id,user_id,assigned_by,assigned_at)
       VALUES(?,?,?,?) ON CONFLICT(store_id) DO UPDATE SET
-      user_id=excluded.user_id,assigned_by=excluded.assigned_by,assigned_at=excluded.assigned_at`)
+      user_id=excluded.user_id,assigned_by=excluded.assigned_by,assigned_at=excluded.assigned_at`,
+      )
       .run(storeId, userId, actor.id, this.now());
   }
   setOwner(actor, storeId, body) {
@@ -227,19 +248,27 @@ export class B2BStoreRepository {
       const user = this.validateUnlinkedOwner(userId);
       this.linkStoreOwner(actor, store.id, user.id);
       if (previous && !body.keepPreviousMember) {
-        this.db.prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
+        this.db
+          .prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
           .run(store.id, previous.id);
         this.record(actor, 'previous_owner_unlinked', store.id, previous.id);
       }
       this.bump(store.id);
-      this.record(actor, previous ? 'store_owner_transferred' : 'store_owner_assigned', store.id, user.id);
+      this.record(
+        actor,
+        previous ? 'store_owner_transferred' : 'store_owner_assigned',
+        store.id,
+        user.id,
+      );
       return this.store(store.id);
     });
   }
   schedule(storeId) {
-    const row = this.db.prepare(
-      'SELECT weekday,interval_weeks AS intervalWeeks,anchor_date AS anchorDate FROM b2b_delivery_schedules WHERE store_id=?',
-    ).get(storeId);
+    const row = this.db
+      .prepare(
+        'SELECT weekday,interval_weeks AS intervalWeeks,anchor_date AS anchorDate FROM b2b_delivery_schedules WHERE store_id=?',
+      )
+      .get(storeId);
     return row ? { ...row } : null;
   }
   deliveryDate(storeId, fromDate) {
@@ -260,9 +289,18 @@ export class B2BStoreRepository {
       this.checkRevision(storeId, body.revision, true);
       if (this.schedule(storeId))
         fail('Jadwal toko sudah ditetapkan dan tidak dapat diubah.', 409, 'schedule_locked');
-      this.db.prepare(
-        'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
-      ).run(storeId, schedule.weekday, schedule.intervalWeeks, schedule.anchorDate, actor.id, this.now());
+      this.db
+        .prepare(
+          'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
+        )
+        .run(
+          storeId,
+          schedule.weekday,
+          schedule.intervalWeeks,
+          schedule.anchorDate,
+          actor.id,
+          this.now(),
+        );
       this.bump(storeId);
       this.record(actor, 'schedule_assigned', storeId);
       return this.store(storeId);
@@ -283,7 +321,12 @@ export class B2BStoreRepository {
         .prepare(
           'SELECT id,store_code AS storeCode,store_name AS storeName,phone,address,active,created_at AS createdAt FROM b2b_stores WHERE active=1 ORDER BY store_name,store_code LIMIT 500',
         )
-        .all().map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) }));
+        .all()
+        .map((row) => ({
+          ...row,
+          deliverySchedule: this.schedule(row.id),
+          owner: this.storeOwner(row.id),
+        }));
     return this.db
       .prepare(
         `SELECT s.id,s.store_code AS storeCode,s.store_name AS storeName,
@@ -294,7 +337,11 @@ export class B2BStoreRepository {
       ORDER BY s.store_name,s.store_code LIMIT 500`,
       )
       .all(Number(this.isSales(actor.id)), actor.id, actor.id)
-      .map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) }));
+      .map((row) => ({
+        ...row,
+        deliverySchedule: this.schedule(row.id),
+        owner: this.storeOwner(row.id),
+      }));
   }
   page(actor, params) {
     const { query, page: requestedPage, pageSize } = pageFilter(params);
@@ -321,7 +368,11 @@ export class B2BStoreRepository {
       )
       .all(...args, pageSize, (page - 1) * pageSize);
     return {
-      stores: stores.map((row) => ({ ...row, deliverySchedule: this.schedule(row.id), owner: this.storeOwner(row.id) })),
+      stores: stores.map((row) => ({
+        ...row,
+        deliverySchedule: this.schedule(row.id),
+        owner: this.storeOwner(row.id),
+      })),
       total,
       page,
       pageSize,
@@ -351,19 +402,25 @@ export class B2BStoreRepository {
       WHERE link.store_id=? ORDER BY u.name,u.id`,
       )
       .all(store.id);
-    return { store, members: members.map((member) =>
-      ({ ...member, isStoreOwner: store.owner?.id === member.id })), sales };
+    return {
+      store,
+      members: members.map((member) => ({
+        ...member,
+        isStoreOwner: store.owner?.id === member.id,
+      })),
+      sales,
+    };
   }
   candidates(actor, params) {
     this.requireOwner(actor);
     const { query, page: requestedPage, pageSize } = pageFilter(params);
     const purpose = params.get('purpose') || 'member';
-    if (!['member', 'owner'].includes(purpose))
-      fail('Tujuan pencarian akun tidak valid.');
-    const ownerFilter = purpose === 'owner'
-      ? `AND NOT EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.user_id=u.id)
+    if (!['member', 'owner'].includes(purpose)) fail('Tujuan pencarian akun tidak valid.');
+    const ownerFilter =
+      purpose === 'owner'
+        ? `AND NOT EXISTS(SELECT 1 FROM b2b_store_members m WHERE m.user_id=u.id)
       AND NOT EXISTS(SELECT 1 FROM b2b_store_owners o WHERE o.user_id=u.id)`
-      : '';
+        : '';
     const from = `FROM users u
       LEFT JOIN account_access access ON access.user_id=u.id
       LEFT JOIN account_approvals approval ON approval.user_id=u.id
@@ -410,9 +467,18 @@ export class B2BStoreRepository {
         .run(id, storeCode, name, phone, address, actor.id, this.now());
       if (body?.deliverySchedule) {
         const schedule = validSchedule(body.deliverySchedule);
-        this.db.prepare(
-          'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
-        ).run(id, schedule.weekday, schedule.intervalWeeks, schedule.anchorDate, actor.id, this.now());
+        this.db
+          .prepare(
+            'INSERT INTO b2b_delivery_schedules(store_id,weekday,interval_weeks,anchor_date,created_by,created_at) VALUES(?,?,?,?,?,?)',
+          )
+          .run(
+            id,
+            schedule.weekday,
+            schedule.intervalWeeks,
+            schedule.anchorDate,
+            actor.id,
+            this.now(),
+          );
         this.record(actor, 'schedule_assigned', id);
       }
       this.record(actor, 'store_created', id);
@@ -432,17 +498,21 @@ export class B2BStoreRepository {
     // Promoting a buyer to Sales revokes buyer links; explicit Sales assignments
     // become the only source of storefront access for that user.
     if (this.db.prepare('SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1').get(user.id))
-      fail('Pindahkan kepemilikan toko terlebih dahulu sebelum akun ini menjadi Sales.',
-        409, 'store_owner_sales_conflict');
+      fail(
+        'Pindahkan kepemilikan toko terlebih dahulu sebelum akun ini menjadi Sales.',
+        409,
+        'store_owner_sales_conflict',
+      );
     return this.transaction(() => {
       this.db
         .prepare('INSERT OR IGNORE INTO b2b_sales_agents VALUES(?,?,?)')
         .run(user.id, actor.id, this.now());
-      const buyerStores = this.db.prepare(
-        'SELECT store_id FROM b2b_store_members WHERE user_id=? ORDER BY store_id',
-      ).all(user.id);
+      const buyerStores = this.db
+        .prepare('SELECT store_id FROM b2b_store_members WHERE user_id=? ORDER BY store_id')
+        .all(user.id);
       for (const row of buyerStores) {
-        this.db.prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
+        this.db
+          .prepare('DELETE FROM b2b_store_members WHERE store_id=? AND user_id=?')
           .run(row.store_id, user.id);
         this.bump(row.store_id);
         this.record(actor, 'buyer_unlinked', row.store_id, user.id);
@@ -498,8 +568,11 @@ export class B2BStoreRepository {
     return this.transaction(() => {
       this.checkRevision(storeId, body.revision, true);
       if (kind === 'members' && this.storeOwner(storeId)?.id === userId)
-        fail('Pindahkan pemilik toko terlebih dahulu sebelum melepas akunnya.',
-          409, 'store_owner_required');
+        fail(
+          'Pindahkan pemilik toko terlebih dahulu sebelum melepas akunnya.',
+          409,
+          'store_owner_required',
+        );
       const removed = this.db
         .prepare(
           kind === 'sales'

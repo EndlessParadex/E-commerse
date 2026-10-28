@@ -92,7 +92,10 @@ test('akses admin dan form server: selama menyimpan terkunci; kegagalan memperta
     await click(color.querySelector('summary'));
     await click(color.querySelector('button[data-color-id="mint"]'));
     assert.match(color.querySelector('summary').textContent, /Hijau/);
-    assert.equal(color.querySelector('button[data-color-id="mint"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(
+      color.querySelector('button[data-color-id="mint"]').getAttribute('aria-pressed'),
+      'true',
+    );
     assert.match(
       container.querySelector('.admin-preview-image').style.background,
       /linear-gradient/,

@@ -22,9 +22,9 @@ export class PhoneLoginDirectory {
     }
   }
   find(phone) {
-    const rows = this.db.prepare(
-      'SELECT user_id FROM phone_login_numbers WHERE phone=? LIMIT 2',
-    ).all(phone);
+    const rows = this.db
+      .prepare('SELECT user_id FROM phone_login_numbers WHERE phone=? LIMIT 2')
+      .all(phone);
     return rows.length === 1 ? rows[0].user_id : null;
   }
   claim(userId, phone) {
@@ -34,16 +34,19 @@ export class PhoneLoginDirectory {
     }
     if (normalizeWhatsApp(phone) !== phone)
       throw new CatalogError('Nomor HP Indonesia tidak valid.', 422, 'validation_error');
-    const conflict = this.db.prepare(
-      'SELECT 1 FROM phone_login_numbers WHERE phone=? AND user_id<>? LIMIT 1',
-    ).get(phone, userId);
+    const conflict = this.db
+      .prepare('SELECT 1 FROM phone_login_numbers WHERE phone=? AND user_id<>? LIMIT 1')
+      .get(phone, userId);
     if (conflict)
       throw new CatalogError(
         'Nomor HP tidak dapat digunakan. Periksa nomor atau hubungi Admin BAM.',
-        409, 'phone_unavailable',
+        409,
+        'phone_unavailable',
       );
-    this.db.prepare(
-      'INSERT INTO phone_login_numbers(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone',
-    ).run(userId, phone);
+    this.db
+      .prepare(
+        'INSERT INTO phone_login_numbers(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone',
+      )
+      .run(userId, phone);
   }
 }

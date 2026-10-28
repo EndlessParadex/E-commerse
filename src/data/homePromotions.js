@@ -11,18 +11,20 @@ export function homePromotions(catalog, limit = 4) {
     const key = item.groupId || item.id;
     const oldPrice = item.oldPrice;
     const discounted = Number.isFinite(oldPrice) && oldPrice > item.price;
-    const discount = discounted ? Math.floor((oldPrice - item.price) * 100 / oldPrice) : 0;
+    const discount = discounted ? Math.floor(((oldPrice - item.price) * 100) / oldPrice) : 0;
     const entry = { product: item, discounted, discount };
     const previous = groups.get(key);
-    if (!previous ||
-        (discounted && !previous.discounted) ||
-        (discounted === previous.discounted &&
-         (discount > previous.discount || (discount === previous.discount && item.price < previous.product.price))))
+    if (
+      !previous ||
+      (discounted && !previous.discounted) ||
+      (discounted === previous.discounted &&
+        (discount > previous.discount ||
+          (discount === previous.discount && item.price < previous.product.price)))
+    )
       groups.set(key, entry);
   }
-  const rows = [...groups.values()].sort((a, b) =>
-    Number(b.discounted) - Number(a.discounted) ||
-    b.discount - a.discount,
+  const rows = [...groups.values()].sort(
+    (a, b) => Number(b.discounted) - Number(a.discounted) || b.discount - a.discount,
   );
   return {
     items: rows.slice(0, limit),

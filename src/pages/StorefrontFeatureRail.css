@@ -54,7 +54,9 @@
 .home-landing .home-feature-rail .bam-promo::before {
   background: radial-gradient(circle at 86% 18%, var(--feature-hero-glow), transparent 58%);
 }
-.home-landing .home-feature-rail .bam-promo::after { border-color: var(--feature-orbit-border); }
+.home-landing .home-feature-rail .bam-promo::after {
+  border-color: var(--feature-orbit-border);
+}
 .home-landing .home-feature-rail .bam-promo-brand .company-brand,
 .home-landing .home-feature-rail .bam-promo-brand .company-brand-text {
   color: var(--feature-hero-ink);
@@ -139,7 +141,7 @@
   color: var(--color-info-text);
 }
 .home-landing .home-feature-rail .bam-promo-product.is-secondary {
-  grid-template-columns: 62px minmax(0,1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   padding: 9px;
 }
 .home-landing .home-feature-rail .bam-promo-discount {
@@ -162,7 +164,9 @@
   background: var(--color-action);
   color: var(--color-on-action);
 }
-.home-landing .home-feature-rail .bam-promo-dots span { background: var(--feature-dot-ink); }
+.home-landing .home-feature-rail .bam-promo-dots span {
+  background: var(--feature-dot-ink);
+}
 .home-landing .home-feature-rail .bam-promo-dots [aria-current] span {
   background: var(--feature-hero-accent);
 }
@@ -174,7 +178,7 @@
   color: var(--feature-hero-accent);
 }
 .home-landing .home-feature-rail .bam-promo :is(a, button):focus-visible,
-.home-landing .home-feature-rail .bam-vertical-promos :is(a,button):focus-visible {
+.home-landing .home-feature-rail .bam-vertical-promos :is(a, button):focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
   box-shadow: none;
@@ -209,16 +213,28 @@
 .home-landing .home-feature-rail .bam-vertical-promo-photo {
   border-radius: var(--bam-ui-radius-control, 12px);
 }
-.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+1) .bam-vertical-promo-photo {
+.home-landing
+  .home-feature-rail
+  .bam-vertical-promo-item:nth-child(4n + 1)
+  .bam-vertical-promo-photo {
   background: var(--catalog-tint-sky);
 }
-.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+2) .bam-vertical-promo-photo {
+.home-landing
+  .home-feature-rail
+  .bam-vertical-promo-item:nth-child(4n + 2)
+  .bam-vertical-promo-photo {
   background: var(--catalog-tint-sand);
 }
-.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+3) .bam-vertical-promo-photo {
+.home-landing
+  .home-feature-rail
+  .bam-vertical-promo-item:nth-child(4n + 3)
+  .bam-vertical-promo-photo {
   background: var(--catalog-tint-mint);
 }
-.home-landing .home-feature-rail .bam-vertical-promo-item:nth-child(4n+4) .bam-vertical-promo-photo {
+.home-landing
+  .home-feature-rail
+  .bam-vertical-promo-item:nth-child(4n + 4)
+  .bam-vertical-promo-photo {
   background: var(--catalog-tint-violet);
 }
 .home-landing .home-feature-rail .bam-vertical-promo-monogram {
@@ -257,7 +273,7 @@
 }
 .home-landing .home-feature-rail .bam-vertical-promos-disclaimer {
   color: var(--color-text-secondary);
-  font-size: .72rem;
+  font-size: 0.72rem;
 }
 .home-landing .home-feature-rail .bam-vertical-promos-empty {
   border-color: var(--color-border);

@@ -21,7 +21,9 @@ export async function finishRegistration(app, request, fields) {
     200,
   );
   const account = app.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
-  app.db.prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?").run(account.id);
+  app.db
+    .prepare("UPDATE account_approvals SET status='approved',revision=revision+1 WHERE user_id=?")
+    .run(account.id);
   return request(app, 'POST', '/api/auth/login', {
     email: fields.email,
     password: fields.password,

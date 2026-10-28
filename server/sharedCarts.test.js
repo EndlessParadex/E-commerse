@@ -133,7 +133,6 @@ test('shared cart API shares server-authoritative SKU snapshots, dates, actors a
   }
 });
 
-
 test('Admin and Owner edit open carts, audit actors, cannot change locked carts, and Owner can finalize own edits', async () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
   const { first, second } = seedSharedCart(app);
@@ -219,12 +218,7 @@ test('Admin and Owner edit open carts, audit actors, cannot change locked carts,
       adminChange('lock', ownerSet.body.cart.revision),
     );
     assert.equal(relocked.status, 200);
-    const checked = await sharedRequest(
-      app,
-      'GET',
-      adminPath + '/review?date=' + date,
-      'owner',
-    );
+    const checked = await sharedRequest(app, 'GET', adminPath + '/review?date=' + date, 'owner');
     assert.equal(checked.status, 200);
     assert.equal(checked.body.review.ready, true, JSON.stringify(checked.body.review));
     const finalized = await sharedRequest(
@@ -514,16 +508,16 @@ test('simultaneous buyer/Sales writes from separate backend workers cannot both 
   }
 });
 
-
 test('B2B buyer and Sales can place private orders without changing shared-store cart', async () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
   try {
     const { first } = seedSharedCart(app);
-    const variant = app.catalog.snapshot().edits
-      .flatMap((draft) => draft.variants)
+    const variant = app.catalog
+      .snapshot()
+      .edits.flatMap((draft) => draft.variants)
       .find((item) => item.id === 'snack-pedas');
     assert.ok(variant, 'fixture product should be available');
-    const cartBefore = app.sharedCarts.read({id:'buyer',role:'user'}, first.id, date);
+    const cartBefore = app.sharedCarts.read({ id: 'buyer', role: 'user' }, first.id, date);
     for (const actor of ['buyer', 'sales']) {
       const response = await sharedRequest(app, 'POST', '/api/orders', actor, {
         requestKey: randomUUID(),
@@ -531,24 +525,34 @@ test('B2B buyer and Sales can place private orders without changing shared-store
         address: 'Jalan Test Private Nomor 20',
         shippingId: 'regular',
         paymentId: 'cod',
-        items: [{
-          id: variant.id, quantity: 1, expectedPrice: Number(variant.price),
-        }],
+        items: [
+          {
+            id: variant.id,
+            quantity: 1,
+            expectedPrice: Number(variant.price),
+          },
+        ],
       });
       assert.equal(response.status, 201, JSON.stringify(response.body));
       assert.equal(response.body.order.userId, actor);
       assert.equal(response.body.order.b2b ?? null, null);
     }
-    const cartAfter = app.sharedCarts.read({id:'buyer',role:'user'}, first.id, date);
+    const cartAfter = app.sharedCarts.read({ id: 'buyer', role: 'user' }, first.id, date);
     assert.deepEqual(cartAfter.items, cartBefore.items);
     assert.equal(cartAfter.revision, cartBefore.revision);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });
 
 test('configured B2B cut-off locks carts once and rejects late writes without finalizing', () => {
   let now = Date.parse('2026-10-19T17:00:00+07:00');
-  const app = createApp({ dbPath: ':memory:', logger: () => {},
-    now: () => now, b2bCutoff: { daysBefore: 1, time: '18:00' } });
+  const app = createApp({
+    dbPath: ':memory:',
+    logger: () => {},
+    now: () => now,
+    b2bCutoff: { daysBefore: 1, time: '18:00' },
+  });
   const { first, actors } = seedSharedCart(app);
   try {
     const before = app.sharedCarts.mutate(actors.buyer, first.id, change());
@@ -560,34 +564,60 @@ test('configured B2B cut-off locks carts once and rejects late writes without fi
     assert.equal(locked.canEdit, false);
     assert.equal(locked.revision, 2);
     assert.equal(locked.items.length, 1);
-    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'").get().n, 1);
+    assert.equal(
+      app.db
+        .prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'")
+        .get().n,
+      1,
+    );
     app.sharedCarts.read(actors.sales, first.id, date);
-    assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'").get().n, 1);
-    assert.throws(() => app.sharedCarts.mutate(actors.buyer, first.id, change({ revision: 2 })),
-      { code: 'cart_cutoff_passed' });
-    assert.throws(() => app.b2bFinalization.change(actors.owner, first.id, {
-      action: 'unlock', date, revision: locked.revision,
-      requestId: randomUUID(), reason: 'Perlu ubah isi keranjang',
-    }), { code: 'cart_cutoff_passed' }, 'Admin must reschedule instead of reopening a past-cutoff cart');
+    assert.equal(
+      app.db
+        .prepare("SELECT COUNT(*) AS n FROM b2b_cycle_lifecycle_events WHERE action='auto_lock'")
+        .get().n,
+      1,
+    );
+    assert.throws(() => app.sharedCarts.mutate(actors.buyer, first.id, change({ revision: 2 })), {
+      code: 'cart_cutoff_passed',
+    });
+    assert.throws(
+      () =>
+        app.b2bFinalization.change(actors.owner, first.id, {
+          action: 'unlock',
+          date,
+          revision: locked.revision,
+          requestId: randomUUID(),
+          reason: 'Perlu ubah isi keranjang',
+        }),
+      { code: 'cart_cutoff_passed' },
+      'Admin must reschedule instead of reopening a past-cutoff cart',
+    );
     now = Date.parse('2026-10-22T00:00:00+07:00');
     assert.equal(app.sharedCarts.read(actors.buyer, first.id, date).overdue, true);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0);
-  } finally { app.db.close(); }
+  } finally {
+    app.db.close();
+  }
 });
 
 test('cut-off configuration and WIB date boundaries are validated', async () => {
   const { b2bCutoffFromEnv, cutoffTime, isPastDeliveryDate } = await import('./b2bCutoff.js');
   assert.equal(b2bCutoffFromEnv({}), null);
-  assert.deepEqual(b2bCutoffFromEnv({ BAM_B2B_CUTOFF_DAYS_BEFORE: '1', BAM_B2B_CUTOFF_TIME: '18:00' }),
-    { daysBefore: 1, time: '18:00' });
+  assert.deepEqual(
+    b2bCutoffFromEnv({ BAM_B2B_CUTOFF_DAYS_BEFORE: '1', BAM_B2B_CUTOFF_TIME: '18:00' }),
+    { daysBefore: 1, time: '18:00' },
+  );
   for (const bad of [
     { BAM_B2B_CUTOFF_DAYS_BEFORE: '1' },
     { BAM_B2B_CUTOFF_TIME: '18:00' },
     { BAM_B2B_CUTOFF_DAYS_BEFORE: '-1', BAM_B2B_CUTOFF_TIME: '18:00' },
     { BAM_B2B_CUTOFF_DAYS_BEFORE: '1', BAM_B2B_CUTOFF_TIME: '26:00' },
-  ]) assert.throws(() => b2bCutoffFromEnv(bad));
-  assert.equal(cutoffTime('2026-10-26', { daysBefore: 1, time: '18:00' }),
-    Date.parse('2026-10-25T18:00:00+07:00'));
+  ])
+    assert.throws(() => b2bCutoffFromEnv(bad));
+  assert.equal(
+    cutoffTime('2026-10-26', { daysBefore: 1, time: '18:00' }),
+    Date.parse('2026-10-25T18:00:00+07:00'),
+  );
   assert.equal(isPastDeliveryDate('2026-10-26', Date.parse('2026-10-26T22:00:00+07:00')), false);
   assert.equal(isPastDeliveryDate('2026-10-26', Date.parse('2026-10-27T00:00:00+07:00')), true);
 });

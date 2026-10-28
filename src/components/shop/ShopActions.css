@@ -708,7 +708,6 @@
   }
 }
 
-
 /* Premium Modern account dropdown: never change cart / notifications previews. */
 .shop-preview--account {
   width: min(394px, calc(100vw - 24px));
@@ -757,7 +756,7 @@
   min-width: 0;
 }
 .shop-preview--account .account-preview-info h3 {
-  font-size: .92rem;
+  font-size: 0.92rem;
   line-height: 1.35;
   font-weight: 800;
   color: var(--color-text);
@@ -765,7 +764,7 @@
 }
 .shop-preview--account .account-preview-info p {
   margin: 0;
-  font-size: .75rem;
+  font-size: 0.75rem;
   line-height: 1.35;
   color: var(--color-text-muted);
   overflow-wrap: anywhere;
@@ -781,7 +780,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border-info);
   color: var(--color-link);
-  font-size: .67rem;
+  font-size: 0.67rem;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -800,15 +799,24 @@
     width: min(390px, calc(100vw - 20px));
     border-radius: 16px;
   }
-  .shop-preview--account .account-preview-body.is-signed-in { padding: 10px; }
-  .shop-preview--account .account-preview-identity { padding: 12px; gap: 10px; }
+  .shop-preview--account .account-preview-body.is-signed-in {
+    padding: 10px;
+  }
+  .shop-preview--account .account-preview-identity {
+    padding: 12px;
+    gap: 10px;
+  }
   .shop-preview--account .account-preview-identity .account-preview-avatar {
     width: 51px;
     height: 51px;
     flex-basis: 51px;
   }
-  .shop-preview--account .account-menu .account-menu-link { min-height: 58px; }
+  .shop-preview--account .account-menu .account-menu-link {
+    min-height: 58px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .shop-preview--account .account-preview-identity { animation: none; }
+  .shop-preview--account .account-preview-identity {
+    animation: none;
+  }
 }

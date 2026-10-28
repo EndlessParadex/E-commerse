@@ -19,7 +19,8 @@ const copy = {
   },
   rumah: {
     title: 'Kebutuhan rumah,\ntersedia di BAM.',
-    description: 'Temukan perlengkapan rumah serta kebutuhan harian dalam berbagai pilihan kemasan.',
+    description:
+      'Temukan perlengkapan rumah serta kebutuhan harian dalam berbagai pilihan kemasan.',
   },
 };
 export function promoSlides(catalog = products, categoryList = categories) {

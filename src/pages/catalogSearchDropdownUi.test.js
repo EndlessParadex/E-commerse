@@ -38,16 +38,24 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
   const selected = [];
   const render = async (props = {}) => {
     await act(async () => {
-      root.render(createElement(CatalogSearchDropdown, {
-        label: 'Kategori', value: '', options, onChange: (id) => selected.push(id),
-        ...props,
-      }));
+      root.render(
+        createElement(CatalogSearchDropdown, {
+          label: 'Kategori',
+          value: '',
+          options,
+          onChange: (id) => selected.push(id),
+          ...props,
+        }),
+      );
       await settle();
     });
   };
   const click = async (element) => {
     assert.ok(element);
-    await act(async () => { element.click(); await settle(); });
+    await act(async () => {
+      element.click();
+      await settle();
+    });
   };
   const type = async (input, value) => {
     await act(async () => {
@@ -75,16 +83,23 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
       search.dispatchEvent(new dom.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
       await settle();
     });
-    assert.equal(document.activeElement, container.querySelector('.catalog-search-option'),
-      'ArrowDown moves focus from search to the first matching choice');
+    assert.equal(
+      document.activeElement,
+      container.querySelector('.catalog-search-option'),
+      'ArrowDown moves focus from search to the first matching choice',
+    );
     await click(container.querySelector('.catalog-search-option'));
     assert.deepEqual(selected, ['cookies']);
     assert.equal(trigger.getAttribute('aria-expanded'), 'false');
 
     await render({ label: 'Merek', value: 'potato' });
     await click(container.querySelector('.catalog-search-trigger'));
-    assert.equal(container.querySelector('.catalog-search-option[aria-pressed="true"]')
-      .textContent.includes('Snack Kentang'), true);
+    assert.equal(
+      container
+        .querySelector('.catalog-search-option[aria-pressed="true"]')
+        .textContent.includes('Snack Kentang'),
+      true,
+    );
     const input = container.querySelector('input[type="search"]');
     await type(input, 'tidak ada');
     assert.match(container.querySelector('.catalog-search-empty').textContent, /Tidak ada pilihan/);
@@ -93,15 +108,22 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
       await settle();
     });
     assert.equal(container.querySelector('.catalog-search-panel'), null);
-    assert.equal(document.activeElement, container.querySelector('.catalog-search-trigger'),
-      'Escape mengembalikan fokus ke tombol');
+    assert.equal(
+      document.activeElement,
+      container.querySelector('.catalog-search-trigger'),
+      'Escape mengembalikan fokus ke tombol',
+    );
 
     await click(container.querySelector('.catalog-search-trigger'));
     await act(async () => {
       document.body.dispatchEvent(new dom.Event('pointerdown', { bubbles: true }));
       await settle();
     });
-    assert.equal(container.querySelector('.catalog-search-panel'), null, 'klik luar menutup dropdown');
+    assert.equal(
+      container.querySelector('.catalog-search-panel'),
+      null,
+      'klik luar menutup dropdown',
+    );
 
     await render({
       label: 'Urutkan',
@@ -116,23 +138,37 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
       compact: true,
     });
     await click(container.querySelector('.catalog-search-trigger'));
-    assert.equal(container.querySelector('input[type="search"]'), null,
-      'sort has only three options, so no redundant search');
-    assert.equal(container.querySelector('.catalog-search-dropdown').classList.contains('is-compact'), true);
+    assert.equal(
+      container.querySelector('input[type="search"]'),
+      null,
+      'sort has only three options, so no redundant search',
+    );
+    assert.equal(
+      container.querySelector('.catalog-search-dropdown').classList.contains('is-compact'),
+      true,
+    );
     assert.equal(container.querySelectorAll('.catalog-search-option').length, 3);
     assert.ok(container.querySelector('.catalog-search-option[aria-pressed="true"]'));
-    assert.equal(document.activeElement,
+    assert.equal(
+      document.activeElement,
       container.querySelector('.catalog-search-option[aria-pressed="true"]'),
-      'selected sort option receives keyboard focus');
-    assert.ok(!container.querySelector('.catalog-search-option small'),
-      'sort labels do not invent product counts');
-    const high = Array.from(container.querySelectorAll('.catalog-search-option'))
-      .find((option) => option.textContent.includes('Harga tertinggi'));
+      'selected sort option receives keyboard focus',
+    );
+    assert.ok(
+      !container.querySelector('.catalog-search-option small'),
+      'sort labels do not invent product counts',
+    );
+    const high = Array.from(container.querySelectorAll('.catalog-search-option')).find((option) =>
+      option.textContent.includes('Harga tertinggi'),
+    );
     await click(high);
     assert.equal(selected.at(-1), 'high');
     assert.equal(container.querySelector('.catalog-search-panel'), null);
 
-    const css = await readFile(new URL('../components/shop/CatalogSearchDropdown.css', import.meta.url), 'utf8');
+    const css = await readFile(
+      new URL('../components/shop/CatalogSearchDropdown.css', import.meta.url),
+      'utf8',
+    );
     assert.match(css, /--color-surface/);
     assert.match(css, /@media \(max-width: 520px\)/);
     assert.match(css, /prefers-reduced-motion/);
@@ -147,9 +183,15 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     assert.match(themes, /::picker\(select\)/);
     assert.match(themes, /option:checked/);
     assert.match(themes, /:root\[data-theme='dark'\]\s*\{\s*color-scheme:\s*dark;\s*\}/);
-    const audit = await readFile(new URL('../../docs/UI-DROPDOWN-AUDIT.md', import.meta.url), 'utf8');
+    const audit = await readFile(
+      new URL('../../docs/UI-DROPDOWN-AUDIT.md', import.meta.url),
+      'utf8',
+    );
     assert.match(audit, /30 native/);
-    assert.match(home, /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/);
+    assert.match(
+      home,
+      /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/,
+    );
     assert.match(home, /onChange=\{\(brandId\) => setFilter\(\{ brandId \}\)\}/);
   } finally {
     await act(async () => root.unmount());

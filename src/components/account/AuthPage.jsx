@@ -107,11 +107,7 @@ export default function AuthPage({ mode }) {
       }
       setUser(payload.user);
       // Login must not overwrite the optional store name or recipient profile.
-      setNotice(
-        isRegister
-          ? 'Akun berhasil dibuat.'
-          : 'Berhasil masuk.',
-      );
+      setNotice(isRegister ? 'Akun berhasil dibuat.' : 'Berhasil masuk.');
       window.location.hash =
         payload.user.role === 'admin'
           ? '/admin'
@@ -139,9 +135,11 @@ export default function AuthPage({ mode }) {
         body: JSON.stringify({ email: values.email }),
       });
       const payload = await response.json();
-      setResendNotice(response.ok
-        ? 'Permintaan diterima. Jika email masih perlu diverifikasi, periksa kotak masuk dan spam. Tunggu beberapa menit.'
-        : payload.errors?.form || 'Belum berhasil meminta tautan. Coba kembali nanti.');
+      setResendNotice(
+        response.ok
+          ? 'Permintaan diterima. Jika email masih perlu diverifikasi, periksa kotak masuk dan spam. Tunggu beberapa menit.'
+          : payload.errors?.form || 'Belum berhasil meminta tautan. Coba kembali nanti.',
+      );
     } catch {
       setResendNotice('Koneksi ke layanan email belum tersedia. Coba kembali nanti.');
     } finally {
@@ -247,16 +245,32 @@ export default function AuthPage({ mode }) {
                 {notice}
               </p>
               <ol>
-                <li>{registrationEmailReady
-                  ? 'Periksa kotak masuk atau spam. Tautan verifikasi dikirim otomatis jika akun baru berhasil dibuat.'
-                  : 'Pengiriman email belum tersedia. Hubungi pengelola toko untuk bantuan verifikasi.'}</li>
-                <li>Admin atau Pemilik akan memeriksa pendaftaran Anda. Verifikasi email dapat dilakukan sambil menunggu.</li>
-                <li>Setelah disetujui, masuk memakai kata sandi pendaftaran. Email harus terverifikasi sebelum memesan.</li>
+                <li>
+                  {registrationEmailReady
+                    ? 'Periksa kotak masuk atau spam. Tautan verifikasi dikirim otomatis jika akun baru berhasil dibuat.'
+                    : 'Pengiriman email belum tersedia. Hubungi pengelola toko untuk bantuan verifikasi.'}
+                </li>
+                <li>
+                  Admin atau Pemilik akan memeriksa pendaftaran Anda. Verifikasi email dapat
+                  dilakukan sambil menunggu.
+                </li>
+                <li>
+                  Setelah disetujui, masuk memakai kata sandi pendaftaran. Email harus terverifikasi
+                  sebelum memesan.
+                </li>
               </ol>
               {registrationEmailReady && (
                 <div className="auth-registration-help">
-                  <p>Belum ada email? Tunggu beberapa menit, periksa spam, lalu gunakan tombol berikut bila diperlukan.</p>
-                  <button className="auth-register-again" type="button" onClick={resend} disabled={resending}>
+                  <p>
+                    Belum ada email? Tunggu beberapa menit, periksa spam, lalu gunakan tombol
+                    berikut bila diperlukan.
+                  </p>
+                  <button
+                    className="auth-register-again"
+                    type="button"
+                    onClick={resend}
+                    disabled={resending}
+                  >
                     {resending ? 'Mengirim permintaan…' : 'Kirim ulang tautan verifikasi'}
                   </button>
                   {resendNotice && <p role="status">{resendNotice}</p>}
@@ -282,7 +296,6 @@ export default function AuthPage({ mode }) {
               {isRegister && field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
               {isRegister && field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890')}
               {isRegister && (
-
                 <div className="auth-field">
                   <label htmlFor="auth-address">Alamat lengkap</label>
                   <div className={`auth-input-wrap${errors.address ? ' has-error' : ''}`}>

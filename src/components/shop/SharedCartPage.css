@@ -1199,3 +1199,180 @@
   color: var(--color-danger-text);
   font-weight: 750;
 }
+
+/* Fast field entry in the shared Sales/buyer cart. */
+.shared-cart-page .shared-cart-overview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shared-cart-page .shared-cart-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-border-info);
+  color: var(--color-info-text);
+  padding: 4px 9px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.shared-cart-page .shared-cart-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.shared-cart-page .shared-cart-heading > button {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 7px;
+}
+.shared-cart-page .shared-quantity-submit-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.shared-cart-page .shared-packaging-pill {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  padding: 5px 10px;
+  width: fit-content;
+  max-width: 100%;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  border-radius: 9px;
+  font-size: 0.78rem;
+}
+.shared-cart-page .shared-packaging-pill strong,
+.shared-cart-page .shared-packaging-pill .purchase-packaging {
+  font-size: inherit;
+}
+.shared-cart-page .shared-item {
+  position: relative;
+}
+.shared-cart-page .shared-quantity {
+  margin-top: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 46px;
+}
+.shared-cart-page .shared-quantity label {
+  max-width: none;
+  gap: 5px;
+  font-size: 0.8rem;
+}
+.shared-cart-page .shared-quantity-controls {
+  display: inline-grid;
+  grid-template-columns: 42px 64px 42px;
+  gap: 0;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.shared-cart-page .shared-quantity .shared-quantity-controls input {
+  min-height: 42px;
+  width: 64px;
+  padding: 6px 3px;
+  border: 0;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-radius: 0;
+  text-align: center;
+  appearance: textfield;
+}
+.shared-cart-page .shared-quantity-controls input::-webkit-inner-spin-button,
+.shared-cart-page .shared-quantity-controls input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.shared-cart-page .shared-quantity-controls .shared-quantity-step {
+  min-width: 42px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 1.2rem;
+  font-weight: 800;
+  padding: 0;
+}
+.shared-cart-page .shared-quantity-controls .shared-quantity-step:hover:not(:disabled) {
+  background: var(--color-border-info);
+}
+.shared-cart-page .shared-quantity-remove {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 1px solid var(--color-danger-border);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  border-radius: 10px;
+}
+.shared-cart-page .shared-item-identity {
+  padding-right: 48px;
+}
+.shared-cart-page .shared-cart-actions {
+  display: grid;
+  gap: 10px;
+  padding: 12px 0;
+}
+.shared-cart-page .shared-cart-actions .shared-request-review,
+.shared-cart-page .shared-cart-actions .shared-whatsapp-link {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 10px 12px;
+  text-align: center;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.shared-cart-page .shared-whatsapp-link {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-link);
+}
+.shared-cart-page .shared-cart-actions small {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.shared-cart-page .shared-review-message {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+@media (max-width: 620px) {
+  .shared-cart-page .shared-item {
+    padding: 12px;
+  }
+  .shared-cart-page .shared-item-identity {
+    padding-right: 44px;
+  }
+  .shared-cart-page .shared-quantity-remove {
+    top: 10px;
+    right: 10px;
+  }
+}

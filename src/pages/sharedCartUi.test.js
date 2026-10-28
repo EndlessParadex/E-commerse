@@ -194,6 +194,11 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(activityPanel.open, true, 'buyer can expand the history');
     assert.ok(activityPanel.querySelectorAll('.shared-activity-item').length > 0);
     assert.match(activityPanel.textContent, /Versi/);
+    assert.doesNotMatch(container.querySelector('.shared-cart-heading').textContent, /Versi \\d+/);
+    assert.match(container.querySelector('.shared-cart-heading').textContent, /Draft terbuka/);
+    assert.ok(container.querySelector('.shared-quantity-controls'));
+    assert.ok(container.querySelector('.shared-packaging-pill'));
+    assert.ok(button('Ajukan keranjang ke Admin →'));
     await fill('.shared-quantity input', '4');
     await submit('.shared-quantity');
     await wait(
@@ -239,7 +244,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await wait(() =>
       container
         .querySelector('.shared-cart-heading')
-        .textContent.includes('Versi ' + (current.revision + 1)),
+        .getAttribute('data-revision') === String(current.revision + 1),
     );
     assert.equal(
       container.querySelector('.shared-quantity input').value,

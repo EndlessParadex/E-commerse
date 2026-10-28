@@ -1,0 +1,44 @@
+name: One-time mobile UI Prettier normalization
+
+on:
+  push:
+    branches:
+      - feature/b2b-store-sales-shared-cart
+    paths:
+      - .github/workflows/format-mobile-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Normalize only changed mobile files
+        run: |
+          npx prettier --write .github/workflows/format-mobile-once.yml src/components/layout/Navbar.jsx src/pages/AccountPage.jsx src/pages/navbarUi.test.js
+          npm run format:check
+          git diff --check
+      - name: Verify before committing
+        run: |
+          npm run lint
+          npm run build
+          npm test
+      - name: Commit verified formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/layout/Navbar.jsx src/pages/AccountPage.jsx src/pages/navbarUi.test.js
+          if ! git diff --cached --quiet; then
+            git commit -m "style(mobile): apply Prettier to responsive navigation"
+            git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          fi

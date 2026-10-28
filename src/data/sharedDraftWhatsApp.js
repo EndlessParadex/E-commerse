@@ -11,8 +11,17 @@ export function sharedDraftWhatsAppUrl(cart) {
     ...cart.items.slice(0, 30).map((item, index) => {
       const kind = item.packaging?.packagingType || 'satuan';
       const units = Number(item.packaging?.unitsPerPackage || 1);
-      return (index + 1) + '. ' + item.name + ' — ' + item.quantity + ' ' +
-        kind + (units > 1 ? ' (isi ' + units + ' satuan)' : '');
+      return (
+        index +
+        1 +
+        '. ' +
+        item.name +
+        ' — ' +
+        item.quantity +
+        ' ' +
+        kind +
+        (units > 1 ? ' (isi ' + units + ' satuan)' : '')
+      );
     }),
     ...(cart.items.length > 30 ? ['Dan ' + (cart.items.length - 30) + ' SKU lainnya.'] : []),
     '',

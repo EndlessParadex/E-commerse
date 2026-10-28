@@ -7,10 +7,13 @@ test('WhatsApp recap is explicitly a draft, uses true packaging, and never sends
     store: { phone: '+6281234567890', storeName: 'Toko Contoh' },
     date: '2026-11-02',
     status: 'open',
-    items: [{
-      name: 'Keripik Singkong Balado 180g', quantity: 2,
-      packaging: { packagingType: 'dus', unitsPerPackage: 24 },
-    }],
+    items: [
+      {
+        name: 'Keripik Singkong Balado 180g',
+        quantity: 2,
+        packaging: { packagingType: 'dus', unitsPerPackage: 24 },
+      },
+    ],
   };
   const url = sharedDraftWhatsAppUrl(cart);
   assert.ok(url.startsWith('https://wa.me/6281234567890?text='));

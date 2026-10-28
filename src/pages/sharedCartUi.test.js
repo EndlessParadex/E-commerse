@@ -241,10 +241,10 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       dom.dispatchEvent(new dom.Event('focus'));
       await settle();
     });
-    await wait(() =>
-      container
-        .querySelector('.shared-cart-heading')
-        .getAttribute('data-revision') === String(current.revision + 1),
+    await wait(
+      () =>
+        container.querySelector('.shared-cart-heading').getAttribute('data-revision') ===
+        String(current.revision + 1),
     );
     assert.equal(
       container.querySelector('.shared-quantity input').value,
@@ -344,8 +344,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     await wait(() => container.querySelectorAll('.shared-item').length === 2);
     assert.equal(container.querySelectorAll('.shared-admin-summary-stats > div').length, 4);
-    await wait(() =>
-      [...container.querySelectorAll('.shared-quantity input')].at(-1)?.value === '3',
+    await wait(
+      () => [...container.querySelectorAll('.shared-quantity input')].at(-1)?.value === '3',
     );
     const lastStepper = [...container.querySelectorAll('.shared-admin-quantity-stepper')].at(-1);
     assert.ok(lastStepper, 'Admin has quick +/- quantity controls');
@@ -354,14 +354,24 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     assert.ok(increment && !increment.disabled, 'new SKU must have an enabled increment control');
     const beforeStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
-    assert.equal([...container.querySelectorAll('.shared-item')].at(-1).querySelector('input')?.value, '3',
-      'visible stepper should show the current quantity before increment');
+    assert.equal(
+      [...container.querySelectorAll('.shared-item')].at(-1).querySelector('input')?.value,
+      '3',
+      'visible stepper should show the current quantity before increment',
+    );
     assert.equal(beforeStep.items.find((row) => row.id === 'snack-pedas-62g').quantity, 3);
     await click(increment);
     const afterStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
-    assert.equal(afterStep.items.find((row) => row.id === 'snack-pedas-62g').quantity, 4,
-      JSON.stringify({ input: [...container.querySelectorAll('.shared-item')].at(-1).querySelector('input')?.value,
-        before: beforeStep.items, after: afterStep.items, event: afterStep.events[0] }));
+    assert.equal(
+      afterStep.items.find((row) => row.id === 'snack-pedas-62g').quantity,
+      4,
+      JSON.stringify({
+        input: [...container.querySelectorAll('.shared-item')].at(-1).querySelector('input')?.value,
+        before: beforeStep.items,
+        after: afterStep.items,
+        event: afterStep.events[0],
+      }),
+    );
     await wait(() =>
       api.sharedCarts
         .read(actors.operator, first.id, '2026-10-21')

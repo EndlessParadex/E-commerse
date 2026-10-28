@@ -110,7 +110,8 @@ export function AdminCartQueue({ shared, onOpenCart }) {
                     {cart.storeCode} · {dateLabel(cart.date)}
                   </span>
                   <span>
-                    {cart.itemCount} SKU · {cart.reviewRequested ? 'Menunggu pemeriksaan Admin' : statusLabel[cart.status]}
+                    {cart.itemCount} SKU ·{' '}
+                    {cart.reviewRequested ? 'Menunggu pemeriksaan Admin' : statusLabel[cart.status]}
                   </span>
                 </div>
                 <button

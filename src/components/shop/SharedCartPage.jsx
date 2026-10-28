@@ -201,7 +201,7 @@ function CartQuantity({ item, shared }) {
       return;
     }
     await shared.mutate('set', item.id, next, candidate.revision);
-    setDraft((current) => current === candidate ? null : current);
+    setDraft((current) => (current === candidate ? null : current));
   };
   const step = (difference) => {
     if (!shared.canEdit || !valid) return;
@@ -247,8 +247,12 @@ function CartQuantity({ item, shared }) {
               };
               window.clearTimeout(debounce.current);
               setDraft(next);
-              if (/^\d+$/.test(next.value) && Number(next.value) >= 1 &&
-                  Number(next.value) <= 99 && Number(next.value) !== item.quantity) {
+              if (
+                /^\d+$/.test(next.value) &&
+                Number(next.value) >= 1 &&
+                Number(next.value) <= 99 &&
+                Number(next.value) !== item.quantity
+              ) {
                 debounce.current = window.setTimeout(() => void save(next), 700);
               }
             }}
@@ -268,7 +272,9 @@ function CartQuantity({ item, shared }) {
           </button>
         </span>
       </div>
-      <button type="submit" className="shared-quantity-submit-sr">Simpan jumlah</button>
+      <button type="submit" className="shared-quantity-submit-sr">
+        Simpan jumlah
+      </button>
       <button
         type="button"
         className="shared-quantity-remove"
@@ -277,9 +283,17 @@ function CartQuantity({ item, shared }) {
         title="Hapus barang"
         onClick={() => void shared.mutate('remove', item.id)}
       >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-          aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
           <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
         </svg>
       </button>
@@ -591,7 +605,10 @@ function AdminCartWorkspace({
           )}
           {cart ? (
             <>
-              <section className="shared-cart-heading shared-admin-active-store" data-revision={cart.revision}>
+              <section
+                className="shared-cart-heading shared-admin-active-store"
+                data-revision={cart.revision}
+              >
                 <div>
                   <h2>{cart.store.storeName}</h2>
                   <p>
@@ -621,9 +638,17 @@ function AdminCartWorkspace({
                   aria-label="Muat terbaru"
                   title="Muat terbaru"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                    strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
                   </svg>
                   <span className="shared-quantity-submit-sr">Muat terbaru</span>
@@ -1245,9 +1270,17 @@ export default function SharedCartPage({ adminView = false }) {
                   aria-label="Muat terbaru"
                   title="Muat terbaru"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                    strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
                   </svg>
                   <span className="shared-quantity-submit-sr">Muat terbaru</span>
@@ -1329,8 +1362,13 @@ export default function SharedCartPage({ adminView = false }) {
                                     <p className="shared-sku">SKU: {item.id}</p>
                                     <p>{display.sizeLabel}</p>
                                     <div className="shared-packaging-pill">
-                                      <strong>Kemasan: {packagingLabel(item.packaging || {})}</strong>
-                                      <PackagingSummary packaging={item.packaging} quantity={item.quantity} />
+                                      <strong>
+                                        Kemasan: {packagingLabel(item.packaging || {})}
+                                      </strong>
+                                      <PackagingSummary
+                                        packaging={item.packaging}
+                                        quantity={item.quantity}
+                                      />
                                     </div>
                                     <p>
                                       {rupiah(item.price)} /{' '}
@@ -1456,13 +1494,13 @@ export default function SharedCartPage({ adminView = false }) {
                           )}
                           {shared.role === 'sales' && (
                             <small>
-                              Rekap WhatsApp belum final. Periksa nomor penerima dan pastikan
-                              toko setuju menerima pesan. Pengiriman dilakukan di WhatsApp.
+                              Rekap WhatsApp belum final. Periksa nomor penerima dan pastikan toko
+                              setuju menerima pesan. Pengiriman dilakukan di WhatsApp.
                             </small>
                           )}
                         </div>
                       )}
-                                            <details className="shared-summary-help">
+                      <details className="shared-summary-help">
                         <summary>Catatan harga dan stok</summary>
                         <p>
                           {cart.status === 'finalized'

@@ -978,3 +978,11 @@
     padding: 0;
   }
 }
+
+/* Keep the account breadcrumb visually separate from the category navbar.
+   Mobile Account Hub uses a focused back header and remains unchanged. */
+@media (min-width: 761px) {
+  .account-page > .shop-breadcrumb {
+    margin-top: 18px;
+  }
+}

@@ -1689,3 +1689,35 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+/* Desktop/tablet: more breathing room between the brand, search, category
+   navigation and the page below. Phone navigation keeps its compact layout. */
+@media (min-width: 961px) {
+  .store-navigation .navbar {
+    padding-block: 18px 16px;
+  }
+
+  .store-navigation .navbar-container {
+    column-gap: clamp(28px, 2.4vw, 36px);
+  }
+
+  .store-navigation .navbar-left {
+    flex-shrink: 0;
+    margin-right: 5px;
+  }
+
+  .store-navigation .secondary-navbar-container {
+    min-height: 64px;
+    padding-block: 9px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 960px) {
+  .store-navigation .navbar {
+    padding-top: 16px;
+  }
+
+  .store-navigation .secondary-navbar-container {
+    padding-block: 8px;
+  }
+}

@@ -1768,10 +1768,21 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.store-navigation .b2b-active-store-copy strong { font-size: .82rem; }
-.store-navigation .b2b-active-store-copy small { color: var(--color-text-secondary); font-size: .7rem; }
-.store-navigation.is-b2b-context .navbar-search { flex: 1 1 200px; max-width: none; }
-.store-navigation.is-b2b-context .navbar-actions { flex: 0 0 auto; gap: 9px; }
+.store-navigation .b2b-active-store-copy strong {
+  font-size: 0.82rem;
+}
+.store-navigation .b2b-active-store-copy small {
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+}
+.store-navigation.is-b2b-context .navbar-search {
+  flex: 1 1 200px;
+  max-width: none;
+}
+.store-navigation.is-b2b-context .navbar-actions {
+  flex: 0 0 auto;
+  gap: 9px;
+}
 .store-navigation .b2b-header-cart,
 .store-navigation .b2b-header-account {
   flex-shrink: 0;
@@ -1782,23 +1793,36 @@
   border-radius: 10px;
   background: var(--color-surface-soft);
   color: var(--color-text);
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 750;
   text-decoration: none;
 }
-.store-navigation .b2b-header-cart { color: var(--color-link); }
-.store-navigation .b2b-header-search { display: none; }
+.store-navigation .b2b-header-cart {
+  color: var(--color-link);
+}
+.store-navigation .b2b-header-search {
+  display: none;
+}
 .store-navigation.is-b2b-context .shop-actions [data-kind='cart'],
 .store-navigation.is-b2b-context .shop-actions [data-kind='account'] {
   display: none;
 }
 @media (max-width: 1160px) and (min-width: 601px) {
-  .store-navigation.is-b2b-context .navbar-container { flex-wrap: wrap; }
-  .store-navigation.is-b2b-context .navbar-search { order: 3; flex-basis: 100%; }
-  .store-navigation .b2b-header-account { display: none; }
+  .store-navigation.is-b2b-context .navbar-container {
+    flex-wrap: wrap;
+  }
+  .store-navigation.is-b2b-context .navbar-search {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .store-navigation .b2b-header-account {
+    display: none;
+  }
 }
 @media (max-width: 600px) {
-  .store-navigation.is-b2b-context .navbar { padding-block: 4px; }
+  .store-navigation.is-b2b-context .navbar {
+    padding-block: 4px;
+  }
   .store-navigation.is-b2b-context .navbar-container {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1818,7 +1842,9 @@
     max-width: none;
     width: 100%;
   }
-  .store-navigation .b2b-active-store-copy small { font-size: .64rem; }
+  .store-navigation .b2b-active-store-copy small {
+    font-size: 0.64rem;
+  }
   .store-navigation.is-b2b-context .navbar-actions {
     grid-row: 1;
     grid-column: 3;

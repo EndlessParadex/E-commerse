@@ -73,34 +73,42 @@ const Navbar = () => {
   const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
   const activeB2BDate = shared?.cart?.date || '';
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
-  const b2bSubtotal = shared?.cart?.items?.reduce((total, item) => total + item.quantity * item.price, 0) || 0;
-  const bottomLinks = b2bCart ? [
-    { label: 'Toko', href: '#/', icon: 'home', active: mobileRoute === '/' },
-    { label: 'Order Cepat', href: '#/order-cepat', icon: 'products', active: mobileRoute === '/order-cepat' || mobileRoute === '/keranjang' },
-    { label: 'Akun', href: '#/akun', icon: 'account', active: isAccountRoute },
-  ] : [
-    { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
-    {
-      label: 'Katalog',
-      href: '#/cari?q=',
-      icon: 'products',
-      active: ['/cari', '/kategori', '/produk'].some(
-        (route) => mobileRoute === route || mobileRoute.startsWith(route + '/'),
-      ),
-    },
-    {
-      label: 'Keranjang',
-      href: '#/keranjang',
-      icon: 'cart',
-      active: mobileRoute === '/keranjang' || mobileRoute === '/checkout',
-    },
-    {
-      label: 'Akun',
-      href: user ? '#/akun' : '#/login',
-      icon: 'account',
-      active: isAccountRoute || ['/login', '/daftar'].includes(mobileRoute),
-    },
-  ];
+  const b2bSubtotal =
+    shared?.cart?.items?.reduce((total, item) => total + item.quantity * item.price, 0) || 0;
+  const bottomLinks = b2bCart
+    ? [
+        { label: 'Toko', href: '#/', icon: 'home', active: mobileRoute === '/' },
+        {
+          label: 'Order Cepat',
+          href: '#/order-cepat',
+          icon: 'products',
+          active: mobileRoute === '/order-cepat' || mobileRoute === '/keranjang',
+        },
+        { label: 'Akun', href: '#/akun', icon: 'account', active: isAccountRoute },
+      ]
+    : [
+        { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
+        {
+          label: 'Katalog',
+          href: '#/cari?q=',
+          icon: 'products',
+          active: ['/cari', '/kategori', '/produk'].some(
+            (route) => mobileRoute === route || mobileRoute.startsWith(route + '/'),
+          ),
+        },
+        {
+          label: 'Keranjang',
+          href: '#/keranjang',
+          icon: 'cart',
+          active: mobileRoute === '/keranjang' || mobileRoute === '/checkout',
+        },
+        {
+          label: 'Akun',
+          href: user ? '#/akun' : '#/login',
+          icon: 'account',
+          active: isAccountRoute || ['/login', '/daftar'].includes(mobileRoute),
+        },
+      ];
   const b2bNavLabel =
     shared?.status === 'ready'
       ? shared.role === 'sales'
@@ -262,10 +270,14 @@ const Navbar = () => {
               onClick={() => setCartMode('store')}
               title="Buka keranjang untuk mengganti toko dan periode"
             >
-              <span className="b2b-active-store-icon" aria-hidden="true">▣</span>
+              <span className="b2b-active-store-icon" aria-hidden="true">
+                ▣
+              </span>
               <span className="b2b-active-store-copy">
                 <strong>{activeB2BStore}</strong>
-                <small>{activeB2BDate ? 'Kirim: ' + activeB2BDate : 'Pilih toko dan periode'}</small>
+                <small>
+                  {activeB2BDate ? 'Kirim: ' + activeB2BDate : 'Pilih toko dan periode'}
+                </small>
               </span>
               <span aria-hidden="true">⌄</span>
             </a>
@@ -278,7 +290,9 @@ const Navbar = () => {
             onSubmit={(event) => {
               event.preventDefault();
               setShowSearchSuggestions(false);
-              window.location.hash = b2bCart ? '/order-cepat?q=' + encodeURIComponent(searchQuery) : searchHref(searchQuery);
+              window.location.hash = b2bCart
+                ? '/order-cepat?q=' + encodeURIComponent(searchQuery)
+                : searchHref(searchQuery);
             }}
           >
             <div className="search-icon-left">
@@ -371,15 +385,31 @@ const Navbar = () => {
           <div className="navbar-actions">
             {b2bCart && (
               <>
-                <a className="b2b-header-search" href="#/order-cepat" aria-label="Cari barang di Order Cepat">
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                    strokeLinejoin="round" aria-hidden="true">
+                <a
+                  className="b2b-header-search"
+                  href="#/order-cepat"
+                  aria-label="Cari barang di Order Cepat"
+                >
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <circle cx="11" cy="11" r="7" />
                     <path d="m20 20-4-4" />
                   </svg>
                 </a>
-                <a className="b2b-header-cart" href="#/keranjang" onClick={() => setCartMode('store')}>
+                <a
+                  className="b2b-header-cart"
+                  href="#/keranjang"
+                  onClick={() => setCartMode('store')}
+                >
                   {b2bPackages} kemasan · {rupiah(b2bSubtotal)}
                 </a>
                 <a className="b2b-header-account" href="#/akun">
@@ -565,7 +595,8 @@ const Navbar = () => {
             href={link.href}
             aria-current={link.active ? 'page' : undefined}
             onClick={() => {
-              if ((link.label === 'Keranjang' || link.label === 'Order Cepat') && b2bCart) setCartMode?.('store');
+              if ((link.label === 'Keranjang' || link.label === 'Order Cepat') && b2bCart)
+                setCartMode?.('store');
               setShowDeliverPopup(false);
             }}
           >

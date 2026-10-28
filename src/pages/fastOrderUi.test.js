@@ -29,7 +29,7 @@ test('Sales fast order retains the right store, SKU and package-specific control
   let root;
   try {
     const [{ default: FastOrderPage }, { ShopContext }] = await Promise.all(
-      ['/src/pages/FastOrderPage.jsx', '/src/state/useShop.js'].map(path =>
+      ['/src/pages/FastOrderPage.jsx', '/src/state/useShop.js'].map((path) =>
         vite.ssrLoadModule(path),
       ),
     );
@@ -42,26 +42,36 @@ test('Sales fast order retains the right store, SKU and package-specific control
       status: 'open',
       store: { id: 's1', storeName: 'Toko Nusantara', phone: '+6281234567890' },
       date: '2026-10-29',
-      items: [{
-        id: 'snack-pedas-23g',
-        name: 'Keripik Singkong Balado 23g',
-        price: 3500,
-        quantity: 2,
-        packaging: { packagingType: 'satuan', unitsPerPackage: 1 },
-      }],
+      items: [
+        {
+          id: 'snack-pedas-23g',
+          name: 'Keripik Singkong Balado 23g',
+          price: 3500,
+          quantity: 2,
+          packaging: { packagingType: 'satuan', unitsPerPackage: 1 },
+        },
+      ],
     };
     const shared = {
-      status: 'ready', role: 'sales', canEdit: true, cart,
+      status: 'ready',
+      role: 'sales',
+      canEdit: true,
+      cart,
       mutate: async (action, id, quantity) => {
         mutations.push({ action, id, quantity });
         return true;
       },
     };
     const render = async (value) =>
-      act(async () => root.render(
-        createElement(ShopContext.Provider, { value: { shared: value, setCartMode: () => {} } },
-          createElement(FastOrderPage)),
-      ));
+      act(async () =>
+        root.render(
+          createElement(
+            ShopContext.Provider,
+            { value: { shared: value, setCartMode: () => {} } },
+            createElement(FastOrderPage),
+          ),
+        ),
+      );
     await render(shared);
     assert.match(host.textContent, /Toko Nusantara/);
     assert.ok(host.querySelector('a[href^="https://wa.me/"]'));
@@ -75,7 +85,10 @@ test('Sales fast order retains the right store, SKU and package-specific control
     await act(async () => addOther.click());
     assert.deepEqual(mutations[1], { action: 'add', id: 'bumbu-rendang', quantity: 1 });
     await render({ ...shared, canEdit: false });
-    assert.equal(host.querySelector('button[aria-label="Tambah Keripik Singkong Balado 23g"]').disabled, true);
+    assert.equal(
+      host.querySelector('button[aria-label="Tambah Keripik Singkong Balado 23g"]').disabled,
+      true,
+    );
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

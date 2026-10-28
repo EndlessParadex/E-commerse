@@ -9,7 +9,8 @@ import './FastOrderPage.css';
 
 export default function FastOrderPage() {
   const { shared, setCartMode } = useShop();
-  const queryFromRoute = () => new URLSearchParams(window.location.hash.split('?')[1] || '').get('q') || '';
+  const queryFromRoute = () =>
+    new URLSearchParams(window.location.hash.split('?')[1] || '').get('q') || '';
   const [query, setQuery] = useState(queryFromRoute);
   useEffect(() => {
     const syncQuery = () => setQuery(queryFromRoute());
@@ -72,7 +73,11 @@ export default function FastOrderPage() {
             {' · Kirim: ' + cart.date}
           </p>
         </div>
-        <a href="#/keranjang" className="bam-fast-change-store" onClick={() => setCartMode('store')}>
+        <a
+          href="#/keranjang"
+          className="bam-fast-change-store"
+          onClick={() => setCartMode('store')}
+        >
           Ganti toko
         </a>
       </div>
@@ -88,8 +93,8 @@ export default function FastOrderPage() {
         />
       </label>
       <p className="bam-fast-intro">
-        SKU yang sudah ada di keranjang tampil lebih dulu. Setiap Dus, Pack, Box, Renceng,
-        dan Satuan memiliki jumlah serta harga sendiri.
+        SKU yang sudah ada di keranjang tampil lebih dulu. Setiap Dus, Pack, Box, Renceng, dan
+        Satuan memiliki jumlah serta harga sendiri.
       </p>
 
       {shared.error && (
@@ -104,7 +109,11 @@ export default function FastOrderPage() {
           </button>
         </div>
       )}
-      {isBusy && <p role="status" className="bam-fast-sync">Menyimpan atau menyinkronkan…</p>}
+      {isBusy && (
+        <p role="status" className="bam-fast-sync">
+          Menyimpan atau menyinkronkan…
+        </p>
+      )}
       {!editable && (
         <p className="shop-warning" role="status">
           Keranjang tidak dapat diedit saat dikunci, difinalisasi, atau melewati batas waktu.
@@ -161,7 +170,9 @@ export default function FastOrderPage() {
             </div>
           </article>
         ))}
-        {rows.length === 0 && <p className="bam-fast-empty">Produk tidak ditemukan. Coba kata kunci lain.</p>}
+        {rows.length === 0 && (
+          <p className="bam-fast-empty">Produk tidak ditemukan. Coba kata kunci lain.</p>
+        )}
       </section>
 
       <footer className="bam-fast-actionbar" aria-label="Aksi order cepat">
@@ -170,16 +181,11 @@ export default function FastOrderPage() {
             Rekap draft WA
           </a>
         )}
-        <a
-          href="#/keranjang"
-          className="bam-fast-cart-link"
-          onClick={() => setCartMode('store')}
-        >
+        <a href="#/keranjang" className="bam-fast-cart-link" onClick={() => setCartMode('store')}>
           Keranjang · {rupiah(totals.amount)} <span aria-hidden="true">→</span>
         </a>
         <small>
-          {totals.sku} SKU · {totals.packages} kemasan ·
-          {' '}Harga sementara, pesanan final oleh Admin
+          {totals.sku} SKU · {totals.packages} kemasan · Harga sementara, pesanan final oleh Admin
         </small>
       </footer>
     </div>

@@ -35,8 +35,7 @@ export function fastOrderGroups(catalog, items = [], query = '') {
       variants: group.variants.sort((a, b) => {
         const ranks = { dus: 0, box: 1, pack: 2, renceng: 3, satuan: 4 };
         return (
-          (ranks[a.packagingType || 'satuan'] ?? 5) -
-          (ranks[b.packagingType || 'satuan'] ?? 5)
+          (ranks[a.packagingType || 'satuan'] ?? 5) - (ranks[b.packagingType || 'satuan'] ?? 5)
         );
       }),
       inCart: group.variants.some((variant) => inCart.has(variant.id)),

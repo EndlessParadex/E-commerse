@@ -23,11 +23,10 @@ test('fast order groups only matching sizes and retains distinct package SKUs', 
   assert.equal(groups.length, 2);
   assert.equal(groups[0].size, '180g');
   assert.equal(groups[0].inCart, true);
-  assert.deepEqual(groups[0].variants.map((v) => v.id), [
-    'snack-dus',
-    'snack-pack',
-    'snack-pcs',
-  ]);
+  assert.deepEqual(
+    groups[0].variants.map((v) => v.id),
+    ['snack-dus', 'snack-pack', 'snack-pcs'],
+  );
   assert.equal(fastOrderGroups(rows, [], 'snack-dus')[0].variants.length, 1);
   assert.equal(fastOrderGroups(rows, [], 'tidak-ada').length, 0);
   assert.deepEqual(fastOrderPackaging(rows[1]), { label: 'Dus', units: 12 });

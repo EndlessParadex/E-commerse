@@ -22,7 +22,7 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
-  const [pendingInvalidFocus, setPendingInvalidFocus] = useState(false);
+  const pendingInvalidFocus = useRef(false);
   const savePending = useRef(false);
   const heading = useRef(null);
   const form = useRef(null);
@@ -55,12 +55,13 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     };
   }, [editingVariant]);
   useEffect(() => {
-    if (!pendingInvalidFocus) return;
+    if (!pendingInvalidFocus.current) return;
     const invalid = form.current?.querySelector('[aria-invalid="true"]');
-    invalid?.closest('details.admin-section-card')?.setAttribute('open', '');
-    invalid?.focus();
-    setPendingInvalidFocus(false);
-  }, [pendingInvalidFocus, editingVariant, errors]);
+    if (!invalid) return;
+    invalid.closest('details.admin-section-card')?.setAttribute('open', '');
+    invalid.focus();
+    pendingInvalidFocus.current = false;
+  }, [editingVariant, errors]);
   useEffect(() => {
     if (photoError || errors.gallery || errors.image)
       form.current?.querySelector('details.admin-photo-card')?.setAttribute('open', '');
@@ -68,9 +69,11 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
   const closeVariantEditor = () => {
     const index = editingVariant;
     setEditingVariant(null);
-    requestAnimationFrame(() => {
+    const restoreFocus = () => {
       form.current?.querySelector(`[data-variant-index="${index}"]`)?.focus();
-    });
+    };
+    if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(restoreFocus);
+    else queueMicrotask(restoreFocus);
   };
   const update = (name, value) => {
     setDraft((current) => ({ ...current, [name]: value }));
@@ -215,7 +218,7 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       const firstVariantError = Object.keys(result.errors)
         .find((key) => /^variants\.\d+\./.test(key));
       if (firstVariantError) setEditingVariant(Number(firstVariantError.split('.')[1]));
-      setPendingInvalidFocus(true);
+      pendingInvalidFocus.current = true;
     } else if (result.storageError) setStorageError(result.storageError);
     else onSaved(result.groupId);
   };

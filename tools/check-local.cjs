@@ -11,12 +11,19 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
   )
     throw new Error('Gunakan alamat Local dari terminal, misalnya http://localhost:5173.');
   const checks = [];
+  let serverOffline = false;
   const get = async (path, label, validate) => {
     try {
-      const response = await request(new URL(path, url), {
-        cache: 'no-store',
-        signal: AbortSignal.timeout(5000),
-      });
+      let response;
+      try {
+        response = await request(new URL(path, url), {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000),
+        });
+      } catch (error) {
+        if (path === '/') serverOffline = true;
+        throw error;
+      }
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const value = await response.text();
       if (!validate(value)) throw new Error('Kode atau kemampuan server belum sesuai pembaruan.');
@@ -26,6 +33,7 @@ async function checkLocal(baseUrl = 'http://localhost:5173', request = globalThi
     }
   };
   await get('/', 'Halaman dari server pengembangan', (text) => text.includes('/@vite/client'));
+  if (serverOffline) return { url: url.origin, checks, ok: false, serverOffline: true };
   await get('/src/components/layout/Navbar.jsx', 'Header: bayangan hanya saat scroll', (text) =>
     text.includes('is-scrolled'),
   );
@@ -142,7 +150,9 @@ if (require.main === module) {
       );
     if (!result.ok) {
       console.log(
-        'Hentikan server lama, jalankan npm run dev:full dari folder ini, lalu buka alamat Local yang ditampilkan dan periksa kembali.',
+        result.serverOffline
+          ? 'Server lokal tidak aktif atau tidak dapat dihubungi. Jalankan npm run dev:full, lalu ulangi npm run check:local.'
+          : 'Hentikan server lama, jalankan npm run dev:full dari folder ini, lalu buka alamat Local yang ditampilkan dan periksa kembali.',
       );
       process.exitCode = 1;
     } else

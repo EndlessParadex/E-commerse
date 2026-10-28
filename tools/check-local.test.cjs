@@ -43,6 +43,9 @@ test('local checks identify a stale frontend and backend instead of reporting an
     throw new Error('Connection refused');
   });
   assert.equal(offline.ok, false);
+  assert.equal(offline.serverOffline, true);
+  assert.equal(offline.checks.length, 1, 'offline preflight stops after one failed request');
+  assert.match(offline.checks[0].error, /Connection refused/);
   assert.ok(offline.checks.every((entry) => !entry.ok));
   await assert.rejects(checkLocal('https://example.com', request), /Gunakan alamat Local/);
 });

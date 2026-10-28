@@ -15,8 +15,10 @@ test('every BAM Admin route has a concise accessible guide except Toko & Sales',
     ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] },
   });
   try {
-    const { default: AdminPageGuide, adminGuideByView } =
+    const { default: AdminPageGuide } =
       await vite.ssrLoadModule('/src/components/admin/AdminPageGuide.jsx');
+    const { adminGuideByView } =
+      await vite.ssrLoadModule('/src/data/adminGuideData.js');
     const routes = [
       'overview', 'products', 'suppliers', 'brands', 'categories',
       'orders', 'stock', 'sharedCarts', 'accounts', 'approvals', 'company', 'email',

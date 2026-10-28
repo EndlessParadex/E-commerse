@@ -15,6 +15,7 @@ import DeliveryProvider from './state/DeliveryProvider';
 import AppearanceProvider from './state/AppearanceProvider';
 import ProductDetailPage from './components/shop/ProductDetailPage';
 const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
+const FastOrderPage = lazy(() => import('./pages/FastOrderPage'));
 import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 const AccountPage = lazy(() => import('./pages/AccountPage'));
@@ -140,6 +141,7 @@ function App() {
                   '/notifikasi': 'Notifikasi',
                   '/favorit': 'Favorit Saya',
                   '/akun': 'Akun Saya',
+                  '/order-cepat': 'Order Cepat',
                   '/akun/profil': 'Profil',
                   '/akun/alamat': 'Alamat Pengiriman',
                   '/akun/keamanan': 'Keamanan Akun',
@@ -228,6 +230,8 @@ function App() {
                   <OrdersPage />
                 ) : route === '/keranjang' ? (
                   <ShopPage type="cart" />
+                ) : route === '/order-cepat' ? (
+                  <FastOrderPage />
                 ) : route === '/checkout' ? (
                   <CheckoutPage />
                 ) : route === '/notifikasi' ? (

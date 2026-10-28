@@ -47,7 +47,7 @@ test('storefront featured rail follows light/dark appearance even for guests', (
   assert.match(rail, /\.bam-vertical-promo-detail h3 a\s*\{\s*color: var\(--color-text\)/);
   assert.match(rail, /\.bam-promo-footer\s*\{\s*background: var\(--feature-footer-bg\)/);
   assert.match(rail, /\.bam-promo-arrow\s*\{\s*background: var\(--feature-arrow-bg\)/);
-  assert.match(rail, /\.bam-vertical-promo-item:nth-child\(4n\+1\).*var\(--catalog-tint-sky\)/s);
+  assert.match(rail, /\.bam-vertical-promo-item:nth-child\(4n\s*\+\s*1\)[^{]*\{[^}]*var\(--catalog-tint-sky\)/s);
   assert.doesNotMatch(storefront, /Promotional graphics stay decorative/);
 });
 

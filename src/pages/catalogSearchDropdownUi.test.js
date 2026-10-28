@@ -146,7 +146,7 @@ test('katalog: kategori dan merek dapat dicari, dipilih dan dioperasikan dengan 
     assert.match(themes, /@supports \(appearance: base-select\)/);
     assert.match(themes, /::picker\(select\)/);
     assert.match(themes, /option:checked/);
-    assert.match(themes, /:root\[data-theme='dark'\] \{ color-scheme: dark; \}/);
+    assert.match(themes, /:root\[data-theme='dark'\]\s*\{\s*color-scheme:\s*dark;\s*\}/);
     const audit = await readFile(new URL('../../docs/UI-DROPDOWN-AUDIT.md', import.meta.url), 'utf8');
     assert.match(audit, /30 native/);
     assert.match(home, /onChange=\{\(categoryId\) => setFilter\(\{ categoryId, subcategoryId: '' \}\)\}/);

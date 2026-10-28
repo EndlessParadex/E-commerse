@@ -47,3 +47,5 @@ jobs:
           else
             echo "Source already formatted; no commit needed."
           fi
+
+# Second pass: acceptance tests tolerate Prettier CSS whitespace normalization.

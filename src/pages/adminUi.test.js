@@ -108,7 +108,7 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.match(adminTheme, /\.admin-shell \.admin-home-hero\s*\{/);
     assert.match(adminTheme, /\.admin-shell \.workflow-order-card/);
     assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
-    assert.match(adminTheme, /@media\(max-width:950px\)/);
+    assert.match(adminTheme, /@media\s*\(\s*max-width:\s*950px\s*\)/);
     await click(button('+ Tambah produk'));
     assert.ok(container.querySelector('aside.admin-form-preview .admin-preview-image'),
       'product photo remains visible in the right-side preview');

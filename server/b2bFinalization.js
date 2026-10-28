@@ -554,8 +554,10 @@ export class B2BFinalizationRepository {
       .prepare(
         `SELECT c.store_id AS storeId,s.store_name AS storeName,s.store_code AS storeCode,
       c.delivery_date AS date,c.status,c.revision,c.updated_at AS updatedAt,
-      (SELECT COUNT(*) FROM cart_items i WHERE i.cart_id=c.id) AS itemCount ${from}
-      ORDER BY CASE c.status WHEN 'locked' THEN 0 ELSE 1 END,c.updated_at DESC,c.id DESC LIMIT 25 OFFSET ?`,
+      (SELECT COUNT(*) FROM cart_items i WHERE i.cart_id=c.id) AS itemCount,
+      EXISTS(SELECT 1 FROM cart_events e WHERE e.cart_id=c.id
+        AND e.action='request_review' AND e.revision=c.revision) AS reviewRequested ${from}
+      ORDER BY CASE WHEN c.status='locked' THEN 0 WHEN EXISTS(SELECT 1 FROM cart_events e WHERE e.cart_id=c.id AND e.action='request_review' AND e.revision=c.revision) THEN 1 ELSE 2 END,c.updated_at DESC,c.id DESC LIMIT 25 OFFSET ?`,
       )
       .all(...args, (actual - 1) * 25);
     return { carts, total, page: actual, pages };

@@ -212,6 +212,9 @@ export class SharedCartRepository {
             .map((row) => ({ ...JSON.parse(row.snapshot), id: row.id, quantity: row.quantity }))
         : [],
       ...this.eventsFor(cycle),
+      reviewRequested: cycle?.status === 'open' && Boolean(this.db.prepare(
+        "SELECT 1 FROM cart_events WHERE cart_id=? AND action='request_review' AND revision=?",
+      ).get(cycle.id, cycle.revision)),
     };
   }
   events(actor, storeId, params) {
@@ -247,7 +250,7 @@ export class SharedCartRepository {
       body.revision < 0 ||
       typeof body.requestId !== 'string' ||
       !/^[a-zA-Z0-9_-]{16,100}$/.test(body.requestId) ||
-      !['add', 'set', 'remove', 'clear', 'refresh', 'payment'].includes(body.action)
+      !['add', 'set', 'remove', 'clear', 'refresh', 'payment', 'request_review'].includes(body.action)
     )
       fail('Perubahan keranjang tidak valid. Muat ulang keranjang.');
     const { action } = body;
@@ -283,6 +286,8 @@ export class SharedCartRepository {
       const { user } = this.access(actor, storeId);
       if (action === 'payment' && user.role === 'admin')
         fail('Metode pembayaran dipilih pembeli toko atau Sales.', 403, 'payment_read_only');
+      if (action === 'request_review' && (user.role === 'admin' || !this.participates(user)))
+        fail('Hanya pembeli toko atau Sales yang dapat mengajukan pemeriksaan.', 403, 'request_review_forbidden');
       let cycle = this.enforceCutoff(storeId, date);
       const prior =
         cycle &&
@@ -314,6 +319,14 @@ export class SharedCartRepository {
           422,
           'invalid_delivery_schedule',
         );
+      if (action === 'request_review') {
+        if (!cycle || !this.db.prepare('SELECT 1 FROM cart_items WHERE cart_id=? LIMIT 1').get(cycle.id))
+          fail('Tambahkan barang sebelum meminta pemeriksaan Admin.', 409, 'empty_cart');
+        const last = this.db.prepare(
+          'SELECT action FROM cart_events WHERE cart_id=? ORDER BY revision DESC LIMIT 1',
+        ).get(cycle.id);
+        if (last?.action === 'request_review') return this.read(user, storeId, date);
+      }
       if (!cycle) {
         this.db
           .prepare(
@@ -338,7 +351,9 @@ export class SharedCartRepository {
       const after =
         action === 'add' ? (previous?.quantity || 0) + quantity : action === 'set' ? quantity : 0;
       if (after > 99) fail('Maksimal 99 kemasan per SKU.');
-      if (action === 'payment') {
+      if (action === 'request_review') {
+        // Keep the cart open. Admin sees this event in the shared pending queue.
+      } else if (action === 'payment') {
         this.db
           .prepare('UPDATE cart_cycles SET payment_id=? WHERE id=?')
           .run(selectedPayment.id, cycle.id);
@@ -380,8 +395,10 @@ export class SharedCartRepository {
         .prepare('UPDATE cart_cycles SET revision=?,updated_at=? WHERE id=?')
         .run(revision, this.now(), cycle.id);
       const details =
-        action === 'payment'
-          ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
+        action === 'request_review'
+          ? { requestedAt: this.now() }
+          : action === 'payment'
+            ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
           : action === 'clear'
             ? { clearedItems, before: clearedItems.length, after: 0 }
             : {

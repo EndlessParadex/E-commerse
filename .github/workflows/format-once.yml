@@ -1,0 +1,49 @@
+name: One-time Prettier normalization
+
+on:
+  push:
+    branches:
+      - feature/b2b-store-sales-shared-cart
+    paths:
+      - .github/workflows/format-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    # This temporary workflow is removed once formatting and verification succeed.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Apply Prettier and check output
+        run: |
+          npm run format
+          npm run format:check
+          git diff --check
+          echo "Tracked files changed by Prettier:"
+          git diff --name-only | wc -l
+      - name: Verify formatted source before committing
+        run: |
+          npm run lint
+          npm run build
+          npm test
+      - name: Commit exactly the formatted tracked files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u
+          if ! git diff --cached --quiet; then
+            git commit -m "style: apply Prettier to tracked project files"
+            git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          else
+            echo "Source already formatted; no commit needed."
+          fi

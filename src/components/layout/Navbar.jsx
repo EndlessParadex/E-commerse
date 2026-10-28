@@ -58,7 +58,9 @@ const Navbar = () => {
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
   const { shared, setCartMode } = useShop();
-  const [mobileRoute, setMobileRoute] = useState(() => window.location.hash.slice(1).split('?')[0] || '/');
+  const [mobileRoute, setMobileRoute] = useState(
+    () => window.location.hash.slice(1).split('?')[0] || '/',
+  );
   useEffect(() => {
     const updateRoute = () => setMobileRoute(window.location.hash.slice(1).split('?')[0] || '/');
     window.addEventListener('hashchange', updateRoute);
@@ -67,9 +69,26 @@ const Navbar = () => {
   const b2bCart = shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
   const bottomLinks = [
     { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
-    { label: 'Katalog', href: '#/cari?q=', icon: 'products', active: ['/cari', '/kategori', '/produk'].some((route) => mobileRoute === route || mobileRoute.startsWith(route + '/')) },
-    { label: 'Keranjang', href: '#/keranjang', icon: 'cart', active: mobileRoute === '/keranjang' || mobileRoute === '/checkout' },
-    { label: 'Akun', href: user ? '#/akun' : '#/login', icon: 'account', active: ['/akun', '/login', '/daftar'].includes(mobileRoute) },
+    {
+      label: 'Katalog',
+      href: '#/cari?q=',
+      icon: 'products',
+      active: ['/cari', '/kategori', '/produk'].some(
+        (route) => mobileRoute === route || mobileRoute.startsWith(route + '/'),
+      ),
+    },
+    {
+      label: 'Keranjang',
+      href: '#/keranjang',
+      icon: 'cart',
+      active: mobileRoute === '/keranjang' || mobileRoute === '/checkout',
+    },
+    {
+      label: 'Akun',
+      href: user ? '#/akun' : '#/login',
+      icon: 'account',
+      active: ['/akun', '/login', '/daftar'].includes(mobileRoute),
+    },
   ];
   const b2bNavLabel =
     shared?.status === 'ready'

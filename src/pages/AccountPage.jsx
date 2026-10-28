@@ -180,7 +180,9 @@ export default function AccountPage() {
                 onChange={(event) => selectTab(event.target.value)}
               >
                 {tabs.map((tab) => (
-                  <option key={tab.id} value={tab.id}>{tab.label}</option>
+                  <option key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </option>
                 ))}
               </select>
               <details className="account-mobile-more">

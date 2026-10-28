@@ -85,8 +85,10 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     assert.ok(navigation.querySelector('.secondary-navbar[aria-label="Navigasi belanja"]'));
     const bottom = navigation.querySelector('.mobile-bottom-navigation');
     assert.ok(bottom, 'mobile navigation is present for responsive CSS');
-    assert.deepEqual([...bottom.querySelectorAll('a')].map((link) => link.textContent),
-      ['Beranda', 'Katalog', 'Keranjang', 'Akun']);
+    assert.deepEqual(
+      [...bottom.querySelectorAll('a')].map((link) => link.textContent),
+      ['Beranda', 'Katalog', 'Keranjang', 'Akun'],
+    );
     assert.equal(bottom.querySelectorAll('[aria-current="page"]').length, 1);
     assert.equal(bottom.querySelector('[aria-current="page"]').textContent, 'Beranda');
     await act(async () => {

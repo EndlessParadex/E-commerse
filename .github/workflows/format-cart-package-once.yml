@@ -25,7 +25,7 @@ jobs:
       - run: npm ci
       - name: Format changed B2B cart item files
         run: |
-          npx prettier --write .github/workflows/format-cart-package-once.yml server/cartPackageSwitch.test.js server/sharedCarts.js src/components/shop/SharedCartPage.css src/components/shop/SharedCartPage.jsx
+          npx prettier --write .github/workflows/format-cart-package-once.yml server/cartPackageSwitch.test.js server/sharedCarts.js src/components/shop/SharedCartPage.css src/components/shop/SharedCartPage.jsx src/pages/sharedCartUi.test.js
           npm run format:check
           git diff --check
       - name: Validate code before formatting commit
@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add server/cartPackageSwitch.test.js server/sharedCarts.js src/components/shop/SharedCartPage.css src/components/shop/SharedCartPage.jsx
+          git add server/cartPackageSwitch.test.js server/sharedCarts.js src/components/shop/SharedCartPage.css src/components/shop/SharedCartPage.jsx src/pages/sharedCartUi.test.js
           if ! git diff --cached --quiet; then
             git commit -m "style(b2b): format compact cart and atomic package switching"
             git push origin "HEAD:refs/heads/${GITHUB_REF_NAME}"

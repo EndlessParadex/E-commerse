@@ -68,7 +68,7 @@ test('switch_package atomically changes matching SKU, price, quantity and audit 
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_events').get().n, 2);
     assert.equal(
       (await sharedRequest(app, 'POST', `/api/b2b/stores/${first.id}/cart`, 'other',
-        itemRequest(2, 'switch_package', { targetProductId: sourceSku }))).status,
+        request(2, 'switch_package', { productId: destSku, targetProductId: sourceSku }))).status,
       404,
     );
   } finally {

@@ -56,6 +56,8 @@ function eventLabel(event) {
       event.details.reason
     );
   if (event.action === 'remove') return `Menghapus ${name} (${before} kemasan)`;
+  if (event.action === 'switch_package')
+    return `Mengubah kemasan ${event.details.fromSku} → ${event.details.toSku} (${event.details.quantity} kemasan)`;
   return `${name}: ${before} → ${after} kemasan`;
 }
 function AdminCartAdd({ shared }) {
@@ -218,7 +220,6 @@ function CartQuantity({ item, shared }) {
       }}
     >
       <div className="shared-quantity-label">
-        <label htmlFor={'shared-quantity-' + item.id}>Jumlah kemasan</label>
         <span className="shared-quantity-controls shared-admin-quantity-stepper">
           <button
             type="button"
@@ -1343,55 +1344,79 @@ export default function SharedCartPage({ adminView = false }) {
                             const display = cartItemPresentation(item);
                             const current = products.find((product) => product.id === item.id);
                             return (
-                              <li key={item.id} className="shared-item">
+                              <li key={item.id} className="shared-item shared-item-compact">
                                 <div className="shared-item-identity">
                                   <div
                                     className={'shared-item-photo ' + (display.product.color || '')}
                                   >
                                     <ProductImage product={display.product} variant="thumbnail" />
                                   </div>
-                                  <div>
+                                  <div className="shared-item-copy">
                                     <h3>
                                       {display.detailHref ? (
-                                        <a href={display.detailHref}>{display.name}</a>
+                                        <a href={display.detailHref}>
+                                          {display.name} {display.sizeLabel}
+                                        </a>
                                       ) : (
-                                        display.name
+                                        [display.name, display.sizeLabel].filter(Boolean).join(' ')
                                       )}
                                     </h3>
-                                    <p className="shared-sku">SKU: {item.id}</p>
-                                    <p>{display.sizeLabel}</p>
-                                    <div className="shared-packaging-pill">
-                                      <strong>
-                                        Kemasan: {packagingLabel(item.packaging || {})}
-                                      </strong>
-                                      <PackagingSummary
-                                        packaging={item.packaging}
-                                        quantity={item.quantity}
-                                      />
+                                    <div className="shared-item-meta">
+                                      <span className="shared-sku">SKU: {item.id}</span>
+                                      {item.packageOptions?.length > 1 && cart.canEdit ? (
+                                        <select
+                                          className="shared-item-pkg-select"
+                                          aria-label={'Jenis kemasan ' + display.name}
+                                          value={item.id}
+                                          disabled={!shared.canEdit}
+                                          onChange={async (event) => {
+                                            const input = event.currentTarget;
+                                            const targetProductId = input.value;
+                                            if (targetProductId === item.id) return;
+                                            const saved = await shared.mutate(
+                                              'switch_package',
+                                              item.id,
+                                              undefined,
+                                              cart.revision,
+                                              { targetProductId },
+                                            );
+                                            if (!saved) input.value = item.id;
+                                          }}
+                                        >
+                                          {item.packageOptions.map((option) => (
+                                            <option value={option.id} key={option.id}>
+                                              {option.label} · {rupiah(option.price)}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <span className="shared-item-pkg-label">
+                                          {packagingLabel(item.packaging || {})}
+                                        </span>
+                                      )}
                                     </div>
-                                    <p>
-                                      {rupiah(item.price)} /{' '}
-                                      {item.packaging?.packagingType || 'kemasan'}
-                                    </p>
                                   </div>
                                 </div>
-                                {cart.canEdit ? (
-                                  <CartQuantity item={item} shared={shared} />
-                                ) : (
-                                  <p>
-                                    <strong>
-                                      {item.quantity} {item.packaging?.packagingType || 'kemasan'}
-                                    </strong>
-                                  </p>
-                                )}
-                                {!current && (
+                                <div className="shared-item-controls">
+                                  <span className="shared-item-price">
+                                    {rupiah(item.price)} / {item.packaging?.packagingType || 'kemasan'}
+                                  </span>
+                                  {cart.canEdit ? (
+                                    <CartQuantity item={item} shared={shared} />
+                                  ) : (
+                                    <span className="shared-item-readonly-quantity">
+                                      {item.quantity} kemasan
+                                    </span>
+                                  )}
+                                  <span className="shared-line-total">
+                                    Subtotal: <strong>{rupiah(item.price * item.quantity)}</strong>
+                                  </span>
+                                </div>
+                                {!current && !item.packageOptions?.length && (
                                   <p className="shop-warning">
                                     SKU ini sudah tidak tersedia di katalog.
                                   </p>
                                 )}
-                                <p className="shared-line-total">
-                                  Subtotal: <strong>{rupiah(item.price * item.quantity)}</strong>
-                                </p>
                               </li>
                             );
                           })}

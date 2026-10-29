@@ -407,25 +407,27 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     }
     // End-to-end selector: the actual catalog supplies packaging options and the
     // browser requests one atomic switch instead of remove-then-add.
-    const catalogSource = api.db.prepare('SELECT * FROM catalog_variants WHERE id=?').get(
-      'snack-pedas-23g',
-    );
-    api.db.prepare(
-      `INSERT INTO catalog_variants
+    const catalogSource = api.db
+      .prepare('SELECT * FROM catalog_variants WHERE id=?')
+      .get('snack-pedas-23g');
+    api.db
+      .prepare(
+        `INSERT INTO catalog_variants
        (id,product_id,size_value,size_unit,price,old_price,position,packaging_type,units_per_package,packs_per_box)
        VALUES(?,?,?,?,?,?,?,?,?,?)`,
-    ).run(
-      'snack-pedas-23g-DUS-12',
-      catalogSource.product_id,
-      catalogSource.size_value,
-      catalogSource.size_unit,
-      36000,
-      0,
-      200,
-      'dus',
-      12,
-      0,
-    );
+      )
+      .run(
+        'snack-pedas-23g-DUS-12',
+        catalogSource.product_id,
+        catalogSource.size_value,
+        catalogSource.size_unit,
+        36000,
+        0,
+        200,
+        'dus',
+        12,
+        0,
+      );
     await mount('buyer');
     await openDate();
     await wait(() => container.querySelector('.shared-item-pkg-select'));
@@ -436,11 +438,13 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await fill('.shared-item-pkg-select', 'snack-pedas-23g-DUS-12');
     await wait(() => {
       const items = api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').items;
-      return items.some((item) => item.id === 'snack-pedas-23g-DUS-12') &&
-        !items.some((item) => item.id === 'snack-pedas-23g');
+      return (
+        items.some((item) => item.id === 'snack-pedas-23g-DUS-12') &&
+        !items.some((item) => item.id === 'snack-pedas-23g')
+      );
     });
-    await wait(() =>
-      container.querySelector('.shared-item-pkg-select')?.value === 'snack-pedas-23g-DUS-12',
+    await wait(
+      () => container.querySelector('.shared-item-pkg-select')?.value === 'snack-pedas-23g-DUS-12',
     );
     const switchedCard = [...container.querySelectorAll('.shared-item-compact')].find((card) =>
       card.textContent.includes('snack-pedas-23g-DUS-12'),
@@ -453,7 +457,6 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     assert.equal(mutations.at(-1).action, 'switch_package');
     assert.equal(mutations.at(-1).targetProductId, 'snack-pedas-23g-DUS-12');
-
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

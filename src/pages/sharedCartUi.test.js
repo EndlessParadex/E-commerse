@@ -442,9 +442,14 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await wait(() =>
       container.querySelector('.shared-item-pkg-select')?.value === 'snack-pedas-23g-DUS-12',
     );
-    assert.ok(
-      container.querySelector('.shared-item-compact').textContent.includes('Rp 36.000'),
-      'new package price follows the chosen catalog SKU',
+    const switchedCard = [...container.querySelectorAll('.shared-item-compact')].find((card) =>
+      card.textContent.includes('snack-pedas-23g-DUS-12'),
+    );
+    assert.ok(switchedCard, 'the destination SKU is rendered');
+    assert.match(
+      switchedCard.querySelector('.shared-item-price').textContent,
+      /36\\.000/,
+      'the destination SKU uses its catalog price',
     );
     assert.equal(mutations.at(-1).action, 'switch_package');
     assert.equal(mutations.at(-1).targetProductId, 'snack-pedas-23g-DUS-12');

@@ -200,7 +200,11 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.doesNotMatch(container.querySelector('.shared-cart-heading').textContent, /Versi \\d+/);
     assert.match(container.querySelector('.shared-cart-heading').textContent, /Draft terbuka/);
     assert.ok(container.querySelector('.shared-quantity-controls'));
-    assert.ok(container.querySelector('.shared-packaging-pill'));
+    assert.ok(container.querySelector('.shared-item-pkg-label'));
+    assert.equal(container.querySelector('.shared-item-pkg-select'), null);
+    assert.equal(container.querySelector('.shared-quantity-label label'), null);
+    assert.match(container.querySelector('.shared-item-compact h3').textContent, /23g/);
+    assert.equal(container.querySelector('.shared-item-compact .shared-line-total') !== null, true);
     assert.ok(button('Ajukan keranjang ke Admin →'));
     const summary = container.querySelector('.shared-cart-summary');
     assert.ok(summary.querySelector('.shared-cart-actions'));

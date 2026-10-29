@@ -1399,7 +1399,8 @@ export default function SharedCartPage({ adminView = false }) {
                                 </div>
                                 <div className="shared-item-controls">
                                   <span className="shared-item-price">
-                                    {rupiah(item.price)} / {item.packaging?.packagingType || 'kemasan'}
+                                    {rupiah(item.price)} /{' '}
+                                    {item.packaging?.packagingType || 'kemasan'}
                                   </span>
                                   {cart.canEdit ? (
                                     <CartQuantity item={item} shared={shared} />

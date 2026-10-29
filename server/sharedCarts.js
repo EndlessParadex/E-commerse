@@ -291,9 +291,16 @@ export class SharedCartRepository {
       body.revision < 0 ||
       typeof body.requestId !== 'string' ||
       !/^[a-zA-Z0-9_-]{16,100}$/.test(body.requestId) ||
-      !['add', 'set', 'remove', 'clear', 'refresh', 'payment', 'request_review', 'switch_package'].includes(
-        body.action,
-      )
+      ![
+        'add',
+        'set',
+        'remove',
+        'clear',
+        'refresh',
+        'payment',
+        'request_review',
+        'switch_package',
+      ].includes(body.action)
     )
       fail('Perubahan keranjang tidak valid. Muat ulang keranjang.');
     const { action } = body;
@@ -452,18 +459,25 @@ export class SharedCartRepository {
           source.sizeValue !== destination.sizeValue ||
           source.sizeUnit !== destination.sizeUnit
         )
-          fail('Kemasan pengganti tidak tersedia untuk produk dan ukuran yang sama.', 409, 'invalid_package_switch');
+          fail(
+            'Kemasan pengganti tidak tersedia untuk produk dan ukuran yang sama.',
+            409,
+            'invalid_package_switch',
+          );
         const existingDestination = this.db
           .prepare('SELECT quantity,snapshot FROM cart_items WHERE cart_id=? AND product_id=?')
           .get(cycle.id, targetProductId);
         const newQuantity = previous.quantity + (existingDestination?.quantity || 0);
         if (newQuantity > 99)
           fail('Gabungan kemasan melebihi batas 99 per SKU.', 422, 'quantity_limit');
-        this.db.prepare('DELETE FROM cart_items WHERE cart_id=? AND product_id=?')
+        this.db
+          .prepare('DELETE FROM cart_items WHERE cart_id=? AND product_id=?')
           .run(cycle.id, productId);
         this.db
-          .prepare(`INSERT INTO cart_items VALUES(?,?,?,?)
-            ON CONFLICT(cart_id,product_id) DO UPDATE SET quantity=excluded.quantity`)
+          .prepare(
+            `INSERT INTO cart_items VALUES(?,?,?,?)
+            ON CONFLICT(cart_id,product_id) DO UPDATE SET quantity=excluded.quantity`,
+          )
           .run(
             cycle.id,
             targetProductId,
@@ -499,16 +513,16 @@ export class SharedCartRepository {
               after: previous.quantity,
             }
           : action === 'request_review'
-          ? { requestedAt: this.now() }
-          : action === 'payment'
-            ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
-            : action === 'clear'
-              ? { clearedItems, before: clearedItems.length, after: 0 }
-              : {
-                  name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
-                  before: previous?.quantity || 0,
-                  after,
-                };
+            ? { requestedAt: this.now() }
+            : action === 'payment'
+              ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }
+              : action === 'clear'
+                ? { clearedItems, before: clearedItems.length, after: 0 }
+                : {
+                    name: current?.name || (previous ? JSON.parse(previous.snapshot).name : ''),
+                    before: previous?.quantity || 0,
+                    after,
+                  };
       this.db
         .prepare('INSERT INTO cart_events VALUES(?,?,?,?,?,?,?,?,?,?,?)')
         .run(

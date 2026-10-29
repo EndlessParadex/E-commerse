@@ -295,7 +295,7 @@ export default function useSharedCart(user, authLoading) {
       }
     }
   };
-  const mutate = (action, productId, quantity, expectedRevision) => {
+  const mutate = (action, productId, quantity, expectedRevision, options = {}) => {
     if (!snapshot.current?.canEdit || changing.current || pending.current || reading)
       return Promise.resolve(false);
     const operation = {
@@ -310,6 +310,7 @@ export default function useSharedCart(user, authLoading) {
         action,
         ...(action === 'payment' ? { paymentId: productId } : productId ? { productId } : {}),
         ...(quantity !== undefined ? { quantity } : {}),
+        ...(action === 'switch_package' ? { targetProductId: options.targetProductId } : {}),
       },
     };
     return send(operation);

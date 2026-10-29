@@ -162,12 +162,44 @@ export class SharedCartRepository {
         const sizeLabel = `${Number(variant.sizeValue)}${variant.sizeUnit}`;
         return {
           id: variant.id,
+          groupId: draft.groupId,
+          sizeValue: Number(variant.sizeValue),
+          sizeUnit: variant.sizeUnit,
           name: `${draft.baseName} ${sizeLabel}${variant.packagingType === 'satuan' ? '' : ' · ' + packagingLabel(variant)}`,
           price: Number(variant.price),
           packaging: packagingSnapshot({ ...variant, sizeLabel }),
         };
       }),
     );
+  }
+  packageOptionsFor(items) {
+    if (!items.length) return new Map();
+    const needed = new Set(items.map((item) => item.id));
+    const result = new Map();
+    for (const draft of this.catalog.snapshot().edits) {
+      const selected = draft.variants.filter((variant) => needed.has(variant.id));
+      for (const source of selected) {
+        result.set(
+          source.id,
+          draft.variants
+            .filter(
+              (variant) =>
+                Number(variant.sizeValue) === Number(source.sizeValue) &&
+                variant.sizeUnit === source.sizeUnit,
+            )
+            .map((variant) => ({
+              id: variant.id,
+              label: packagingLabel(variant),
+              price: Number(variant.price),
+              packaging: packagingSnapshot({
+                ...variant,
+                sizeLabel: `${Number(variant.sizeValue)}${variant.sizeUnit}`,
+              }),
+            })),
+        );
+      }
+    }
+    return result;
   }
   eventsFor(cycle, before = Number.MAX_SAFE_INTEGER) {
     if (!cycle) return { events: [], hasMore: false };
@@ -203,14 +235,17 @@ export class SharedCartRepository {
       orderId: cycle ? this.orderFor?.(cycle.id) || null : null,
       canEdit: (!cycle || cycle.status === 'open') && !isPastCutoff(date, this.cutoff, this.now()),
       updatedAt: cycle?.updated_at || null,
-      items: cycle
-        ? this.db
-            .prepare(
-              'SELECT product_id AS id,quantity,snapshot FROM cart_items WHERE cart_id=? ORDER BY rowid',
-            )
-            .all(cycle.id)
-            .map((row) => ({ ...JSON.parse(row.snapshot), id: row.id, quantity: row.quantity }))
-        : [],
+      items: (() => {
+        if (!cycle) return [];
+        const items = this.db
+          .prepare(
+            'SELECT product_id AS id,quantity,snapshot FROM cart_items WHERE cart_id=? ORDER BY rowid',
+          )
+          .all(cycle.id)
+          .map((row) => ({ ...JSON.parse(row.snapshot), id: row.id, quantity: row.quantity }));
+        const choices = this.packageOptionsFor(items);
+        return items.map((item) => ({ ...item, packageOptions: choices.get(item.id) || [] }));
+      })(),
       ...this.eventsFor(cycle),
       reviewRequested:
         cycle?.status === 'open' &&
@@ -256,7 +291,7 @@ export class SharedCartRepository {
       body.revision < 0 ||
       typeof body.requestId !== 'string' ||
       !/^[a-zA-Z0-9_-]{16,100}$/.test(body.requestId) ||
-      !['add', 'set', 'remove', 'clear', 'refresh', 'payment', 'request_review'].includes(
+      !['add', 'set', 'remove', 'clear', 'refresh', 'payment', 'request_review', 'switch_package'].includes(
         body.action,
       )
     )
@@ -269,7 +304,17 @@ export class SharedCartRepository {
         : null;
     if (action === 'payment' && !selectedPayment)
       fail('Pilih COD atau transfer BCA, BRI, atau Mandiri.', 422, 'invalid_payment');
-    const productId = ['add', 'set', 'remove'].includes(action) ? body.productId : null;
+    const productId = ['add', 'set', 'remove', 'switch_package'].includes(action)
+      ? body.productId
+      : null;
+    const targetProductId = action === 'switch_package' ? body.targetProductId : null;
+    if (
+      action === 'switch_package' &&
+      (typeof targetProductId !== 'string' ||
+        !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(targetProductId) ||
+        targetProductId === productId)
+    )
+      fail('Pilihan kemasan tidak valid.', 422, 'invalid_package_switch');
     if (
       productId !== null &&
       (typeof productId !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(productId))
@@ -284,6 +329,7 @@ export class SharedCartRepository {
           date,
           action,
           productId,
+          targetProductId,
           quantity,
           paymentId: selectedPayment?.id || null,
           revision: body.revision,
@@ -361,7 +407,9 @@ export class SharedCartRepository {
               .prepare('SELECT product_id AS productId,quantity FROM cart_items WHERE cart_id=?')
               .all(cycle.id)
           : [];
-      const products = ['add', 'set', 'refresh'].includes(action) ? this.products() : [];
+      const products = ['add', 'set', 'refresh', 'switch_package'].includes(action)
+        ? this.products()
+        : [];
       const current = products.find((product) => product.id === productId);
       const after =
         action === 'add' ? (previous?.quantity || 0) + quantity : action === 'set' ? quantity : 0;
@@ -393,6 +441,35 @@ export class SharedCartRepository {
           DO UPDATE SET quantity=excluded.quantity`,
           )
           .run(cycle.id, productId, after, previous?.snapshot || JSON.stringify(current));
+      } else if (action === 'switch_package') {
+        if (!previous) fail('Kemasan asal tidak lagi ada di keranjang.', 409, 'cart_conflict');
+        const source = products.find((product) => product.id === productId);
+        const destination = products.find((product) => product.id === targetProductId);
+        if (
+          !source ||
+          !destination ||
+          source.groupId !== destination.groupId ||
+          source.sizeValue !== destination.sizeValue ||
+          source.sizeUnit !== destination.sizeUnit
+        )
+          fail('Kemasan pengganti tidak tersedia untuk produk dan ukuran yang sama.', 409, 'invalid_package_switch');
+        const existingDestination = this.db
+          .prepare('SELECT quantity,snapshot FROM cart_items WHERE cart_id=? AND product_id=?')
+          .get(cycle.id, targetProductId);
+        const newQuantity = previous.quantity + (existingDestination?.quantity || 0);
+        if (newQuantity > 99)
+          fail('Gabungan kemasan melebihi batas 99 per SKU.', 422, 'quantity_limit');
+        this.db.prepare('DELETE FROM cart_items WHERE cart_id=? AND product_id=?')
+          .run(cycle.id, productId);
+        this.db
+          .prepare(`INSERT INTO cart_items VALUES(?,?,?,?)
+            ON CONFLICT(cart_id,product_id) DO UPDATE SET quantity=excluded.quantity`)
+          .run(
+            cycle.id,
+            targetProductId,
+            newQuantity,
+            existingDestination?.snapshot || JSON.stringify(destination),
+          );
       } else if (action === 'remove') {
         this.db
           .prepare('DELETE FROM cart_items WHERE cart_id=? AND product_id=?')
@@ -410,7 +487,18 @@ export class SharedCartRepository {
         .prepare('UPDATE cart_cycles SET revision=?,updated_at=? WHERE id=?')
         .run(revision, this.now(), cycle.id);
       const details =
-        action === 'request_review'
+        action === 'switch_package'
+          ? {
+              name: current?.name || JSON.parse(previous.snapshot).name,
+              fromSku: productId,
+              toSku: targetProductId,
+              quantity: previous.quantity,
+              fromPackaging: products.find((product) => product.id === productId)?.packaging,
+              toPackaging: products.find((product) => product.id === targetProductId)?.packaging,
+              before: previous.quantity,
+              after: previous.quantity,
+            }
+          : action === 'request_review'
           ? { requestedAt: this.now() }
           : action === 'payment'
             ? { before: cycle.payment_id || 'cod', after: selectedPayment.id }

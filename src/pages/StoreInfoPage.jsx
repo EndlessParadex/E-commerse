@@ -242,7 +242,7 @@ export default function StoreInfoPage({ page }) {
       'Pengiriman pesanan toko dijadwalkan BAM setelah finalisasi Admin.';
     configured.pengiriman.sections[1] = {
       title: 'Gratis ongkos kirim',
-      text: 'Pesanan toko menggunakan pengiriman gratis dan pembayaran COD saat barang diterima. Harga final diperiksa Admin sebelum pesanan dibuat.',
+      text: 'Pesanan toko menggunakan pengiriman gratis. Pembeli toko atau Sales memilih COD atau transfer BCA, BRI, atau Mandiri melalui keranjang bersama. Harga final diperiksa Admin sebelum pesanan dibuat.',
     };
     configured.pengiriman.sections[2] = {
       title: 'Rencana dan status pengiriman',
@@ -250,11 +250,11 @@ export default function StoreInfoPage({ page }) {
     };
     configured.bantuan.sections[3] = {
       title: 'Keranjang bersama',
-      text: 'Pembeli yang terhubung dan Sales yang ditugaskan mengisi keranjang toko yang sama. Saat keranjang dikunci Admin, barang tidak dapat diubah sampai dibuka kembali atau difinalisasi.',
+      text: 'Pembeli toko dan Sales yang ditugaskan mengisi keranjang yang sama serta memilih COD atau transfer BCA, BRI, atau Mandiri. Saat Admin mengunci keranjang, barang dan metode pembayaran tidak dapat diubah sampai dibuka kembali atau difinalisasi.',
     };
     configured.bantuan.sections[4] = {
       title: 'Setelah diperiksa Admin',
-      text: 'Pesanan baru dibuat setelah Admin memeriksa barang, harga dan stok lalu memfinalisasi. Pesanan muncul pada Pesanan saya bagi akun yang mempunyai akses ke toko. Bayar COD ketika barang diterima.',
+      text: 'Pesanan dibuat setelah Admin memeriksa barang, harga, stok, dan metode pembayaran lalu memfinalisasi. Pesanan muncul di Pesanan saya. Untuk COD, bayar saat barang diterima; untuk transfer, periksa rekening tujuan dan unggah bukti pada Detail Pesanan setelah finalisasi, lalu tunggu verifikasi Admin.',
     };
     configured.pembatalan.sections[1] = {
       title: 'Perubahan pesanan toko',

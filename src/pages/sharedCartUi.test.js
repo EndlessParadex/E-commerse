@@ -116,12 +116,16 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       await wait(() =>
         route === '/admin/keranjang'
           ? container.querySelector('[role="tab"][aria-selected="true"]')
-          : container.querySelector('#shared-store'),
+          : container.querySelector('#shared-store') || container.querySelector('.shared-cart-heading'),
       );
     };
     const openDate = async () => {
-      await fill('#shared-date', '2026-10-21');
-      await submit('.shared-open-form');
+      if (container.querySelector('#shared-date')) {
+        await fill('#shared-date', '2026-10-21');
+        await submit('.shared-open-form');
+      } else if (!container.querySelector('.shared-calendar-date.is-selected[aria-label="Tanggal 21/10/2026"]')) {
+        await click(container.querySelector('.shared-calendar-date[aria-label="Tanggal 21/10/2026"]'));
+      }
       await wait(() => container.querySelector('.shared-cart-heading'));
     };
 
@@ -135,7 +139,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       'optional store search remains available',
     );
     await openDate();
-    await wait(() => container.querySelector('.shared-selection-panel')?.open === false);
+    await wait(() => !container.querySelector('.shared-selection-panel'));
+    assert.ok(button('Ganti Toko'), 'pilihan toko tersedia dalam pop-up kartu');
     assert.ok(
       container.querySelector('.shared-cart-heading .shared-delivery-calendar.is-inline'),
       'calendar is a compact control next to the active delivery period',
@@ -144,8 +149,8 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(container.querySelector('.shared-cart-bar'), null, 'redundant banner removed');
     assert.equal(container.querySelector('.shared-cart-explanation'), null);
     assert.ok(
-      container.querySelector('.shared-cart-summary .shared-selection-panel'),
-      'store selection is inside the cart summary',
+      container.querySelector('.shared-cart-summary .shared-summary-store-compact'),
+      'active store appears in the compact cart summary',
     );
     assert.ok(
       container.querySelector('.shared-cart-summary .shared-cart-payment-compact'),
@@ -169,8 +174,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       container.querySelector('.shared-summary-help'),
       'full price and stock explanation remains available',
     );
-    assert.equal(container.querySelector('#shared-store').value, first.id);
-    assert.equal(container.querySelectorAll('#shared-store option').length, 2);
+    assert.match(container.querySelector('.shared-cart-heading h2').textContent, /Toko Bersama/);
     await fill('#shared-cart-payment', 'transfer-bca');
     await wait(
       () => api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').paymentId === 'transfer-bca',
@@ -275,7 +279,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await fill('.shared-quantity input', '8');
     await submit('.shared-quantity');
     await wait(() => button('Pastikan penyimpanan'));
-    assert.equal(container.querySelector('#shared-store').disabled, true);
+    assert.equal(button('Ganti Toko').disabled, true);
     const requestId = mutations.at(-1).requestId;
     await click(button('Pastikan penyimpanan'));
     await wait(() => container.querySelector('.shared-quantity input')?.value === '8');
@@ -320,7 +324,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(container.querySelector('#checkout-form'), null);
 
     await mount('other');
-    assert.equal(container.querySelector('#shared-store').value, second.id);
+    assert.match(container.querySelector('.shared-cart-heading').textContent, /TKB-000002/);
     assert.equal(container.textContent.includes('Toko Bersama'), false);
     assert.equal(container.querySelector('.shared-item'), null);
     await mount('operator', '/admin/keranjang');

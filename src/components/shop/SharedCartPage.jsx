@@ -1270,75 +1270,75 @@ export default function SharedCartPage({ adminView = false }) {
           {cart && (
             <>
               {isAdmin ? (
-              <section className="shared-cart-heading" data-revision={cart.revision}>
-                <div>
-                  <h2>{cart.store.storeName}</h2>
-                  {!isAdmin && (
-                    <button
-                      type="button"
-                      className="bam-button-secondary shared-switch-store"
-                      disabled={frozen || selectingStore}
-                      onClick={() => setStoreModalOpen(true)}
-                    >
-                      Ganti Toko
-                    </button>
-                  )}
-                  <div className="shared-cart-dateline">
-                    <span>
-                      {cart.store.storeCode} · {dateLabel(cart.date)}
-                      {cart.overdue && (
-                        <strong className="shared-overdue-label"> · Lewat jadwal</strong>
-                      )}
-                    </span>
+                <section className="shared-cart-heading" data-revision={cart.revision}>
+                  <div>
+                    <h2>{cart.store.storeName}</h2>
                     {!isAdmin && (
-                      <SharedDeliveryCalendar
-                        compact
-                        date={cart.date}
-                        schedule={cart.store.deliverySchedule}
-                        disabled={frozen}
-                        onChoose={(selected) =>
-                          void shared.choose({ storeId: cart.store.id, date: selected })
-                        }
-                      />
+                      <button
+                        type="button"
+                        className="bam-button-secondary shared-switch-store"
+                        disabled={frozen || selectingStore}
+                        onClick={() => setStoreModalOpen(true)}
+                      >
+                        Ganti Toko
+                      </button>
                     )}
+                    <div className="shared-cart-dateline">
+                      <span>
+                        {cart.store.storeCode} · {dateLabel(cart.date)}
+                        {cart.overdue && (
+                          <strong className="shared-overdue-label"> · Lewat jadwal</strong>
+                        )}
+                      </span>
+                      {!isAdmin && (
+                        <SharedDeliveryCalendar
+                          compact
+                          date={cart.date}
+                          schedule={cart.store.deliverySchedule}
+                          disabled={frozen}
+                          onChoose={(selected) =>
+                            void shared.choose({ storeId: cart.store.id, date: selected })
+                          }
+                        />
+                      )}
+                    </div>
+                    <p className="shared-cart-overview">
+                      {cart.items.length} SKU · {shop.quantity} kemasan
+                      <span className={'shared-cart-status status-' + cart.status}>
+                        {cart.status === 'open'
+                          ? cart.reviewRequested
+                            ? 'Menunggu pemeriksaan Admin'
+                            : 'Draft terbuka'
+                          : cart.status === 'locked'
+                            ? 'Diperiksa Admin'
+                            : 'Pesanan final'}
+                      </span>
+                    </p>
                   </div>
-                  <p className="shared-cart-overview">
-                    {cart.items.length} SKU · {shop.quantity} kemasan
-                    <span className={'shared-cart-status status-' + cart.status}>
-                      {cart.status === 'open'
-                        ? cart.reviewRequested
-                          ? 'Menunggu pemeriksaan Admin'
-                          : 'Draft terbuka'
-                        : cart.status === 'locked'
-                          ? 'Diperiksa Admin'
-                          : 'Pesanan final'}
-                    </span>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="bam-button-secondary"
-                  disabled={frozen}
-                  onClick={shared.refresh}
-                  aria-label="Muat terbaru"
-                  title="Muat terbaru"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
+                  <button
+                    type="button"
+                    className="bam-button-secondary"
+                    disabled={frozen}
+                    onClick={shared.refresh}
+                    aria-label="Muat terbaru"
+                    title="Muat terbaru"
                   >
-                    <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
-                  </svg>
-                  <span className="shared-quantity-submit-sr">Muat terbaru</span>
-                </button>
-              </section>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+                    </svg>
+                    <span className="shared-quantity-submit-sr">Muat terbaru</span>
+                  </button>
+                </section>
               ) : (
                 <SharedStoreCartHeader
                   cart={cart}

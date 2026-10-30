@@ -168,7 +168,10 @@ function App() {
     }
   }, [route, title, restoreY, companyProfile.shortName]);
 
-  if (catalogState !== 'ready')
+  // Account recovery and help must remain reachable when catalog loading fails.
+  const catalogIndependentRoute =
+    Boolean(recoveryMatch || infoPage) || route === '/login' || route === '/daftar';
+  if (catalogState !== 'ready' && !catalogIndependentRoute)
     return (
       <CatalogStatus
         error={catalogState === 'error'}

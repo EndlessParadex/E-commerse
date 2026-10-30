@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { catalogNavigationKey, isFastOrderRoute, shouldResetRouteScroll } from './catalogNavigation.js';
+import {
+  catalogNavigationKey,
+  isFastOrderRoute,
+  shouldResetRouteScroll,
+} from './catalogNavigation.js';
 
 test('route Order Cepat mendukung pencarian melalui URL tanpa merender 404', () => {
   for (const route of ['/order-cepat', '/order-cepat?q=balado', '/order-cepat?q=180g%20dus']) {

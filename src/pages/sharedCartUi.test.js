@@ -116,15 +116,22 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       await wait(() =>
         route === '/admin/keranjang'
           ? container.querySelector('[role="tab"][aria-selected="true"]')
-          : container.querySelector('#shared-store') || container.querySelector('.shared-cart-heading'),
+          : container.querySelector('#shared-store') ||
+            container.querySelector('.shared-cart-heading'),
       );
     };
     const openDate = async () => {
       if (container.querySelector('#shared-date')) {
         await fill('#shared-date', '2026-10-21');
         await submit('.shared-open-form');
-      } else if (!container.querySelector('.shared-calendar-date.is-selected[aria-label="Tanggal 21/10/2026"]')) {
-        await click(container.querySelector('.shared-calendar-date[aria-label="Tanggal 21/10/2026"]'));
+      } else if (
+        !container.querySelector(
+          '.shared-calendar-date.is-selected[aria-label="Tanggal 21/10/2026"]',
+        )
+      ) {
+        await click(
+          container.querySelector('.shared-calendar-date[aria-label="Tanggal 21/10/2026"]'),
+        );
       }
       await wait(() => container.querySelector('.shared-cart-heading'));
     };
@@ -234,12 +241,24 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await openDate();
     await click(button('Ganti Toko'));
     await wait(() => container.querySelectorAll('.bam-store-modal .bam-store-card').length === 2);
-    await click(container.querySelector('.bam-store-modal .bam-store-card[aria-label*="' + second.storeName + '"]'));
-    await wait(() => container.querySelector('.shared-cart-heading')?.textContent.includes(second.storeCode));
+    await click(
+      container.querySelector(
+        '.bam-store-modal .bam-store-card[aria-label*="' + second.storeName + '"]',
+      ),
+    );
+    await wait(() =>
+      container.querySelector('.shared-cart-heading')?.textContent.includes(second.storeCode),
+    );
     assert.equal(container.querySelector('.shared-item'), null, 'toko lain tidak mewarisi barang');
     await click(button('Ganti Toko'));
-    await click(container.querySelector('.bam-store-modal .bam-store-card[aria-label*="' + first.storeName + '"]'));
-    await wait(() => container.querySelector('.shared-cart-heading')?.textContent.includes(first.storeCode));
+    await click(
+      container.querySelector(
+        '.bam-store-modal .bam-store-card[aria-label*="' + first.storeName + '"]',
+      ),
+    );
+    await wait(() =>
+      container.querySelector('.shared-cart-heading')?.textContent.includes(first.storeCode),
+    );
     assert.equal(container.querySelector('#shared-cart-payment').value, 'transfer-bca');
     await fill('#shared-cart-payment', 'transfer-mandiri');
     await wait(

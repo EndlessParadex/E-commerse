@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { catalogNavigationKey, shouldResetRouteScroll } from './catalogNavigation.js';
+import { catalogNavigationKey, isFastOrderRoute, shouldResetRouteScroll } from './catalogNavigation.js';
+
+test('route Order Cepat mendukung pencarian melalui URL tanpa merender 404', () => {
+  for (const route of ['/order-cepat', '/order-cepat?q=balado', '/order-cepat?q=180g%20dus']) {
+    assert.equal(isFastOrderRoute(route), true, route);
+  }
+  for (const route of ['/order-cepat/extra', '/order-cepat-other?q=test', '/cari?q=test']) {
+    assert.equal(isFastOrderRoute(route), false, route);
+  }
+});
 
 test('filter produk dan merek mempertahankan posisi pada pencarian yang sama', () => {
   for (const [previous, next] of [

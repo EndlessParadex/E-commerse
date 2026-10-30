@@ -52,7 +52,7 @@ export default function Home({ catalog = null }) {
         className={
           'home-container home-landing' +
           (b2bHome ? ' home-landing--role' : '') +
-          (storeDirectory && b2bHome ? ' is-store-directory' : '')
+          (storeDirectory && b2bHome && shared?.role === 'sales' ? ' is-store-directory' : '')
         }
       >
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">

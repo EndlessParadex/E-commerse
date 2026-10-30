@@ -5,7 +5,7 @@ import useCompany from './state/useCompany';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import { parseCatalogRoute } from './data/catalog';
-import { catalogNavigationKey, shouldResetRouteScroll } from './data/catalogNavigation';
+import { catalogNavigationKey, isFastOrderRoute, shouldResetRouteScroll } from './data/catalogNavigation';
 import ShopProvider from './state/ShopProvider';
 import WorkflowProvider from './state/WorkflowProvider';
 import ShopPage from './components/shop/ShopPage';
@@ -82,6 +82,7 @@ function App() {
     '/admin/keranjang': 'sharedCarts',
   }[route];
   const isAdmin = Boolean(adminView);
+  const fastOrderRoute = isFastOrderRoute(route);
   const accountRoute = /^\/akun(?:\/(profil|alamat|keamanan|kalender|tampilan))?$/.exec(route);
   const isAccountRoute = Boolean(accountRoute);
   const accountSection =
@@ -154,7 +155,7 @@ function App() {
                   '/pengiriman': 'Pengiriman',
                   '/pembatalan': 'Pembatalan dan Retur',
                   '/bantuan': 'Pusat Bantuan',
-                }[route] || 'Halaman tidak ditemukan';
+                }[fastOrderRoute ? '/order-cepat' : route] || 'Halaman tidak ditemukan';
 
   useEffect(() => {
     document.title = `${title} | ${companyProfile.shortName}`;
@@ -183,7 +184,7 @@ function App() {
         <ShopProvider>
           <AppearanceProvider>
             {!isAdmin && <Navbar />}
-            {!isAdmin && !isAccountRoute && !['/order-cepat', '/keranjang'].includes(route) && (
+            {!isAdmin && !isAccountRoute && !fastOrderRoute && route !== '/keranjang' && (
               <SharedCartBar />
             )}
             <a
@@ -232,7 +233,7 @@ function App() {
                   <OrdersPage />
                 ) : route === '/keranjang' ? (
                   <ShopPage type="cart" />
-                ) : route === '/order-cepat' ? (
+                ) : fastOrderRoute ? (
                   <FastOrderPage />
                 ) : route === '/checkout' ? (
                   <CheckoutPage />

@@ -71,7 +71,7 @@ test('render failure displays a recovery screen; public product path opens the m
     await act(async () => root.render(createElement(Invoice, { order })));
     assert.match(dom.document.querySelector('.invoice-print-root').textContent, /BAM-INVOICE-TEST/);
     assert.match(dom.document.querySelector('.invoice-print-root').textContent, /Sudah dibayar/);
-    const paperSelect = container.querySelector('select[aria-label="Format faktur"]');
+    const paperSelect = container.querySelector('#invoice-paper-format');
     assert.ok(paperSelect, 'format faktur dapat dipilih');
     assert.equal(paperSelect.options.length, 2);
     assert.equal(paperSelect.value, 'a4');

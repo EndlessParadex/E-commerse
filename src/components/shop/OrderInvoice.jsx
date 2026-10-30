@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import useCompany from '../../state/useCompany';
 import { rupiah, dateLabel } from './shopPresentation';
@@ -6,6 +7,11 @@ import './Commerce.css';
 
 export default function OrderInvoice({ order }) {
   const company = useCompany();
+  const [paperFormat, setPaperFormat] = useState('a4');
+  const dotMatrix = paperFormat === 'dotMatrix';
+  const paper = dotMatrix
+    ? { size: '241.3mm 279.4mm', margin: '8mm 12.7mm' }
+    : { size: '210mm 297mm', margin: '16mm' };
   // Use the seller snapshot saved with this order, not editable current store settings.
   const seller = order.seller || company.profile;
   const payment = order.payment || {};
@@ -25,7 +31,10 @@ export default function OrderInvoice({ order }) {
       : 'Belum dikonfirmasi dibayar';
 
   const invoice = (
-    <article className="order-invoice" aria-label="Faktur pesanan BAM">
+    <article
+      className={'order-invoice' + (dotMatrix ? ' is-dot-matrix' : '')}
+      aria-label="Faktur pesanan BAM"
+    >
       <header className="invoice-header">
         <div className="invoice-seller">
           <div className="invoice-brand">
@@ -176,17 +185,43 @@ export default function OrderInvoice({ order }) {
     <>
       <details className="confirmation-card commerce-invoice-disclosure">
         <summary>Faktur / ringkasan pesanan</summary>
-        <button
-          className="shop-primary commerce-print-button"
-          type="button"
-          onClick={() => window.print()}
-        >
-          Cetak / simpan PDF
-        </button>
-        {invoice}
+        <div className="commerce-invoice-controls">
+          <label htmlFor="invoice-paper-format">
+            Format faktur
+            <select
+              id="invoice-paper-format"
+              value={paperFormat}
+              onChange={(event) => setPaperFormat(event.target.value)}
+            >
+              <option value="a4">A4 (210 × 297 mm)</option>
+              <option value="dotMatrix">Invoice Dot Matrix (9,5 × 11 inci)</option>
+            </select>
+          </label>
+          <button
+            className="shop-primary commerce-print-button"
+            type="button"
+            onClick={() => window.print()}
+          >
+            Cetak / simpan PDF
+          </button>
+        </div>
+        <p className="commerce-invoice-paper-hint">
+          {dotMatrix
+            ? 'Gunakan kertas continuous form 9,5 × 11 inci. Samakan ukuran di pengaturan printer, pilih skala 100%, dan nonaktifkan header/footer browser.'
+            : 'Gunakan kertas A4. Periksa pratinjau cetak sebelum mencetak atau menyimpan PDF.'}
+        </p>
+        <div className={'commerce-invoice-preview' + (dotMatrix ? ' is-dot-matrix' : '')}>
+          {invoice}
+        </div>
       </details>
       {typeof document !== 'undefined' &&
-        createPortal(<div className="invoice-print-root">{invoice}</div>, document.body)}
+        createPortal(
+          <div className={'invoice-print-root invoice-print-root--' + paperFormat}>
+            <style>{`@media print { @page { size: ${paper.size}; margin: ${paper.margin}; } }`}</style>
+            {invoice}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

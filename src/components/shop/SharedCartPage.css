@@ -1579,3 +1579,183 @@
   color: var(--color-text-secondary);
   font-size: 0.74rem;
 }
+
+/* Buyer / Sales: compact identity card. Admin's existing workspace remains unchanged. */
+.shared-cart-page .shared-store-header-card {
+  display: block;
+  position: relative;
+  min-width: 0;
+  margin: 14px 0 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.shared-cart-page .shared-store-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.shared-cart-page .shared-store-header-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+.shared-cart-page .shared-store-header-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  color: var(--color-link);
+  background: var(--color-info-soft);
+  border-radius: 12px;
+}
+.shared-cart-page .shared-store-header-title {
+  min-width: 0;
+}
+.shared-cart-page .shared-store-header-eyebrow,
+.shared-cart-page .shared-store-header-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.73rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.shared-cart-page .shared-store-header-card h2 {
+  margin: 3px 0 0;
+  color: var(--color-text);
+  font-size: clamp(1.13rem, 1.65vw, 1.38rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.shared-cart-page .shared-store-header-card .shared-switch-store {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border-info);
+  border-radius: 10px;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+  font-size: 0.83rem;
+  font-weight: 750;
+}
+.shared-cart-page .shared-store-header-facts {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.85fr) minmax(245px, 1.55fr) minmax(145px, 1.1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--color-border);
+}
+.shared-cart-page .shared-store-header-fact {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.shared-cart-page .shared-store-header-fact-icon {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  border-radius: 9px;
+  background: var(--color-surface-soft);
+}
+.shared-cart-page .shared-store-header-fact > div {
+  min-width: 0;
+}
+.shared-cart-page .shared-store-header-fact strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.shared-cart-page .shared-store-header-period {
+  gap: 8px;
+}
+.shared-cart-page .shared-store-header-period-copy {
+  flex: 1 1 auto;
+}
+.shared-cart-page .shared-store-header-period .shared-delivery-calendar.is-inline {
+  flex: 0 0 auto;
+}
+.shared-cart-page .shared-store-header-period .shared-delivery-calendar-summary {
+  min-height: 36px;
+  padding: 5px 9px;
+}
+.shared-cart-page .shared-store-header-status-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+.shared-cart-page .shared-store-header-status-group .shared-cart-status {
+  white-space: normal;
+  line-height: 1.35;
+  text-align: center;
+}
+.shared-cart-page .shared-store-header-refresh {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  min-width: 36px;
+  width: 36px;
+  min-height: 36px;
+  height: 36px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-link);
+  background: var(--color-surface);
+}
+.shared-cart-page .shared-store-header-card :is(button, summary):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 1080px) {
+  .shared-cart-page .shared-store-header-facts {
+    grid-template-columns: minmax(0, 1fr) minmax(245px, 1.5fr);
+  }
+  .shared-cart-page .shared-store-header-status-group {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 620px) {
+  .shared-cart-page .shared-store-header-card {
+    padding: 14px;
+  }
+  .shared-cart-page .shared-store-header-top {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .shared-cart-page .shared-store-header-card .shared-switch-store {
+    margin-left: 54px;
+  }
+  .shared-cart-page .shared-store-header-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .shared-cart-page .shared-store-header-period .shared-delivery-calendar.is-inline {
+    margin-left: auto;
+  }
+  .shared-cart-page .shared-store-header-status-group {
+    justify-content: space-between;
+  }
+}

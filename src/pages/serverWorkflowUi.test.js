@@ -297,7 +297,11 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.ok(container.querySelector('.orders-filter-primary'));
     assert.equal(container.querySelectorAll('.orders-filter-primary button').length, 5);
     assert.ok(container.querySelector('.orders-card-preview'));
-    assert.equal(container.querySelector('.orders-card-progress'), null, 'cancelled orders do not show misleading progress');
+    assert.equal(
+      container.querySelector('.orders-card-progress'),
+      null,
+      'cancelled orders do not show misleading progress',
+    );
     assert.match(container.textContent, /Dibatalkan/);
     await mountAs('bob', '/pesanan');
     assert.equal(container.querySelectorAll('.orders-card').length, 0);

@@ -59,9 +59,8 @@ export default function StoreCardsSelector({
       }
       if (event.key !== 'Tab') return;
       const elements = Array.from(
-        rootRef.current?.querySelectorAll(
-          'input:not(:disabled), button:not(:disabled), a[href]',
-        ) || [],
+        rootRef.current?.querySelectorAll('input:not(:disabled), button:not(:disabled), a[href]') ||
+          [],
       );
       const first = elements[0];
       const last = elements.at(-1);
@@ -92,7 +91,10 @@ export default function StoreCardsSelector({
     }
   };
   const content = (
-    <section className={'bam-store-selector is-' + variant} aria-labelledby="bam-store-selector-title">
+    <section
+      className={'bam-store-selector is-' + variant}
+      aria-labelledby="bam-store-selector-title"
+    >
       <header className="bam-store-selector-heading">
         <div>
           <p className="bam-store-selector-kicker">KERANJANG BERSAMA BAM</p>
@@ -145,13 +147,17 @@ export default function StoreCardsSelector({
               disabled={busy}
               onClick={() => void onChoose(store)}
             >
-              <span className="bam-store-card-icon" aria-hidden="true">▣</span>
+              <span className="bam-store-card-icon" aria-hidden="true">
+                ▣
+              </span>
               <span className="bam-store-card-copy">
                 <strong>{store.storeName}</strong>
                 <small>{store.storeCode}</small>
                 <span>
                   {schedule
-                    ? weekdays[schedule.weekday] + ' · ' + (schedule.intervalWeeks === 2 ? 'Dua mingguan' : 'Mingguan')
+                    ? weekdays[schedule.weekday] +
+                      ' · ' +
+                      (schedule.intervalWeeks === 2 ? 'Dua mingguan' : 'Mingguan')
                     : 'Jadwal belum ditetapkan'}
                 </span>
                 {next && <small>Pengiriman berikutnya: {formatted(next)}</small>}
@@ -176,13 +182,23 @@ export default function StoreCardsSelector({
           <button type="button" disabled={busy || page <= 1} onClick={() => void search(page - 1)}>
             Sebelumnya
           </button>
-          <span>Halaman {page}/{pages}</span>
-          <button type="button" disabled={busy || page >= pages} onClick={() => void search(page + 1)}>
+          <span>
+            Halaman {page}/{pages}
+          </span>
+          <button
+            type="button"
+            disabled={busy || page >= pages}
+            onClick={() => void search(page + 1)}
+          >
             Berikutnya
           </button>
         </div>
       )}
-      {shared.error && <p className="shop-warning" role="alert">{shared.error}</p>}
+      {shared.error && (
+        <p className="shop-warning" role="alert">
+          {shared.error}
+        </p>
+      )}
     </section>
   );
   if (variant !== 'modal') return content;

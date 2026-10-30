@@ -76,7 +76,9 @@ test('Sales fast order retains the right store, SKU and package-specific control
     assert.match(host.textContent, /Toko Nusantara/);
     assert.ok(host.querySelector('a[href^="https://wa.me/"]'));
     assert.match(host.querySelector('.bam-fast-cart-link').textContent, /Rp/);
-    const quantityInput = host.querySelector('input[aria-label="Jumlah Keripik Singkong Balado 23g"]');
+    const quantityInput = host.querySelector(
+      'input[aria-label="Jumlah Keripik Singkong Balado 23g"]',
+    );
     assert.ok(quantityInput, 'jumlah dapat diisi langsung');
     assert.equal(quantityInput.min, '0');
     assert.equal(quantityInput.max, '99');

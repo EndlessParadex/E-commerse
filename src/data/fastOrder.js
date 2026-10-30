@@ -1,7 +1,7 @@
 import { packagingValues } from './productPackaging.js';
 
 /** Group size-matched SKUs so each package type keeps its own price and stock. */
-export function fastOrderGroups(catalog, items = [], query = '') {
+export function fastOrderGroups(catalog, items = [], query = '', limit = 40) {
   const term = String(query).trim().toLocaleLowerCase('id-ID');
   const inCart = new Set(items.map((item) => item.id));
   const groups = new Map();
@@ -41,7 +41,7 @@ export function fastOrderGroups(catalog, items = [], query = '') {
       inCart: group.variants.some((variant) => inCart.has(variant.id)),
     }))
     .sort((a, b) => Number(b.inCart) - Number(a.inCart) || a.name.localeCompare(b.name, 'id'))
-    .slice(0, 40);
+    .slice(0, limit);
 }
 
 export function fastOrderPackaging(product) {

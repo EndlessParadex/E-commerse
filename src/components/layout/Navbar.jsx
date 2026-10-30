@@ -75,7 +75,7 @@ const Navbar = () => {
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
   const navRole = b2bCart ? shared.role : user?.role === 'admin' ? 'admin' : user ? 'personal' : 'guest';
   const navigationLinks = roleNavigation(navRole);
-  const bottomLinks = navigationLinks.map((link) => ({
+  const bottomLinks = navigationLinks.filter((link) => link.mobile !== false).map((link) => ({
     ...link,
     active: roleNavigationActive(link, mobileRoute),
   }));
@@ -553,7 +553,11 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      <nav className="mobile-bottom-navigation" aria-label="Navigasi utama mobile">
+      <nav
+        className="mobile-bottom-navigation"
+        aria-label="Navigasi utama mobile"
+        style={{ '--nav-items': bottomLinks.length }}
+      >
         {bottomLinks.map((link) => (
           <a
             key={link.label}

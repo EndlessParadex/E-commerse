@@ -29,6 +29,7 @@ export default function Home({ catalog = null }) {
   const b2bHome =
     !catalog && shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [storeDirectory, setStoreDirectory] = useState(false);
   if (!catalog && shared?.enabled && shared.status === 'loading')
     return (
       <div className="home-container" role="status">
@@ -47,10 +48,20 @@ export default function Home({ catalog = null }) {
     );
   if (!catalog)
     return (
-      <div className={'home-container home-landing' + (b2bHome ? ' home-landing--role' : '')}>
+      <div
+        className={
+          'home-container home-landing' +
+          (b2bHome ? ' home-landing--role' : '') +
+          (storeDirectory && b2bHome ? ' is-store-directory' : '')
+        }
+      >
         <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
           {b2bHome ? (
-            <B2BHomeExperience shared={shared} onCartMode={setCartMode} />
+            <B2BHomeExperience
+              shared={shared}
+              onCartMode={setCartMode}
+              onDirectoryChange={setStoreDirectory}
+            />
           ) : (
             <PromoCarousel />
           )}

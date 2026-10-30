@@ -155,6 +155,16 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
                 : 'Jelajahi Produk'}
             <span aria-hidden="true">→</span>
           </a>
+          {shared.cart?.store && shared.canEdit && shared.cart.status === 'open' && (
+            <a
+              className="bam-role-home-quick"
+              href="#/order-cepat"
+              onClick={() => onCartMode?.('store')}
+            >
+              Order Cepat · {shared.cart.store.storeName}
+              <span aria-hidden="true">→</span>
+            </a>
+          )}
         </div>
         <div className="bam-role-home-art" aria-hidden="true">
           <div className="bam-role-home-art-halo" />

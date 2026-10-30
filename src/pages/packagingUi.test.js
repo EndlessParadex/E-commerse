@@ -309,7 +309,7 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     api.catalog.save(changed);
     await navigate('/pesanan');
     assert.deepEqual(
-      [...container.querySelectorAll('.orders-products .purchase-packaging')].map(
+      [...container.querySelectorAll('.orders-preview-packaging .purchase-packaging')].map(
         (entry) => entry.textContent,
       ),
       ['2 pack', '1 dus'],

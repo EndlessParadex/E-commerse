@@ -16,14 +16,17 @@ export async function resetPcDemoPasswords({
 } = {}) {
   if (process.env.NODE_ENV === 'production')
     throw new Error('Reset password demo dilarang di lingkungan production.');
-  if (typeof rootDir !== 'string' || !rootDir.trim())
-    throw new Error('Folder proyek tidak valid.');
+  if (typeof rootDir !== 'string' || !rootDir.trim()) throw new Error('Folder proyek tidak valid.');
   if (typeof password !== 'string' || password.length < 8 || password.length > 128)
     throw new Error('Password demo harus memiliki 8–128 karakter.');
 
   // Always target the special PC demo filename, never the regular BAM database.
   const filename = resolve(rootDir, defaultPcDemoPath);
-  if (!existsSync(filename) || !lstatSync(filename).isFile() || lstatSync(filename).isSymbolicLink())
+  if (
+    !existsSync(filename) ||
+    !lstatSync(filename).isFile() ||
+    lstatSync(filename).isSymbolicLink()
+  )
     throw new Error('Database dummy PC tidak ditemukan: ' + filename);
 
   const db = new DatabaseSync(filename);
@@ -36,11 +39,7 @@ export async function resetPcDemoPasswords({
       const row = find.get(spec.email);
       if (!row || row.name !== spec.name || row.role !== spec.role)
         throw new Error('Identitas dummy tidak sesuai. Reset dibatalkan: ' + spec.email);
-      if (
-        !db
-          .prepare('SELECT user_id FROM auth_account_state WHERE user_id=?')
-          .get(row.id)
-      )
+      if (!db.prepare('SELECT user_id FROM auth_account_state WHERE user_id=?').get(row.id))
         throw new Error('Status autentikasi akun demo tidak lengkap: ' + spec.email);
       return row;
     });

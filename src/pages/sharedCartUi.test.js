@@ -241,7 +241,30 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(container.querySelector('.shared-item-pkg-select'), null);
     assert.equal(container.querySelector('.shared-quantity-label label'), null);
     assert.match(container.querySelector('.shared-item-compact h3').textContent, /23g/);
-    assert.equal(container.querySelector('.shared-item-compact .shared-line-total') !== null, true);
+    const productCard = container.querySelector('.shared-product-card');
+    assert.ok(productCard, 'kartu produk memakai layout khusus Sales dan Pembeli Toko');
+    assert.match(
+      productCard.querySelector('.shared-item-price').textContent,
+      /Rp/,
+      'harga satuan tetap berada di area identitas produk',
+    );
+    assert.match(
+      productCard.querySelector('.shared-product-quantity-panel').textContent,
+      /Jumlah kemasan/,
+    );
+    assert.ok(productCard.querySelector('.shared-product-quantity-panel .shared-quantity input'));
+    assert.match(
+      productCard.querySelector('.shared-product-subtotal-panel').textContent,
+      /Subtotal/,
+    );
+    assert.ok(
+      productCard.querySelector('.shared-product-subtotal-panel .shared-line-total strong'),
+      'subtotal tetap dihitung dari harga dikali kuantitas',
+    );
+    assert.ok(
+      productCard.querySelector(':scope > .shared-quantity-remove'),
+      'tombol hapus berada di luar form quantity agar tidak salah terpicu',
+    );
     assert.ok(button('Ajukan keranjang ke Admin →'));
     const summary = container.querySelector('.shared-cart-summary');
     assert.ok(summary.querySelector('.shared-cart-actions'));

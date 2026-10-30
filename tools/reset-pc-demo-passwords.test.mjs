@@ -73,7 +73,11 @@ test('reset refuses missing database and mismatched demo identities without part
   const dbPath = join(rootDir, 'data', 'bam-pc-demo.sqlite');
   try {
     await assert.rejects(resetPcDemoPasswords({ rootDir }), /tidak ditemukan/);
-    await seedPcDemo({ dbPath, password: 'OldTestDemoPassword!2', now: new Date('2026-10-30T03:00:00Z') });
+    await seedPcDemo({
+      dbPath,
+      password: 'OldTestDemoPassword!2',
+      now: new Date('2026-10-30T03:00:00Z'),
+    });
     const db = new DatabaseSync(dbPath);
     db.prepare('UPDATE users SET name=? WHERE email=?').run('Akun diganti', accountSpecs[2].email);
     const prior = db

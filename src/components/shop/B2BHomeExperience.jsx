@@ -65,7 +65,7 @@ function RoleIcon({ name }) {
 }
 
 /** All store names and assigned shops below come from server-filtered shared cart context. */
-export default function B2BHomeExperience({ shared, onCartMode }) {
+export default function B2BHomeExperience({ shared, onCartMode, onDirectoryChange }) {
   const sales = shared.role === 'sales';
   const [showStores, setShowStores] = useState(false);
   const [selecting, setSelecting] = useState(false);
@@ -151,7 +151,10 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
           variant="page"
           disabled={selecting}
           onChoose={selectStore}
-          onClose={() => setShowStores(false)}
+          onClose={() => {
+            setShowStores(false);
+            onDirectoryChange?.(false);
+          }}
         />
       </div>
     );
@@ -177,6 +180,8 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
               if (sales && count) {
                 event.preventDefault();
                 setShowStores(true);
+                onDirectoryChange?.(true);
+                onDirectoryChange?.(true);
               } else onCartMode?.(count ? 'store' : 'personal');
             }}
           >

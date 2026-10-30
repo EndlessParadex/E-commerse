@@ -38,11 +38,12 @@ export default function StoreCardsSelector({
   onChoose,
   onClose,
   activeId = shared.selection?.storeId,
+  disabled = false,
 }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const rootRef = useRef(null);
-  const busy = loading || shared.busy || shared.reading || shared.uncertain;
+  const busy = disabled || loading || shared.busy || shared.reading || shared.uncertain;
   const { stores = [], page = 1, pages = 1, total = 0 } = shared.stores || {};
   useEffect(() => {
     if (variant !== 'modal') return;

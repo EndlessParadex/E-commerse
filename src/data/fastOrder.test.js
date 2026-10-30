@@ -33,6 +33,17 @@ test('fast order groups only matching sizes and retains distinct package SKUs', 
   assert.deepEqual(fastOrderPackaging(rows[0]), { label: 'Satuan', units: 1 });
 });
 
+test('order cepat exposes subsequent groups without silently losing results', () => {
+  const many = Array.from({ length: 57 }, (_, index) => ({
+    ...product('sku-' + index, 'satuan'),
+    groupId: 'group-' + index,
+    baseName: 'Produk ' + String(index).padStart(2, '0'),
+  }));
+  assert.equal(fastOrderGroups(many).length, 40);
+  assert.equal(fastOrderGroups(many, [], '', Infinity).length, 57);
+  assert.equal(fastOrderGroups(many, [], 'sku-56', Infinity).length, 1);
+});
+
 test('fast order totals only count the authoritative cart snapshot', () => {
   assert.deepEqual(fastOrderTotals(null), { sku: 0, packages: 0, amount: 0 });
   assert.deepEqual(

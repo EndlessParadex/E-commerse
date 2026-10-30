@@ -103,6 +103,20 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
     assert.doesNotMatch(container.textContent, /List Toko/);
 
+    await render({
+      ...shared('sales', [store], { storeId: store.id, date: '2026-10-26' }),
+      canEdit: true,
+      cart: { status: 'open', store, date: '2026-10-26' },
+    });
+    const quickOrder = container.querySelector('.bam-role-home-quick');
+    assert.equal(quickOrder.getAttribute('href'), '#/order-cepat');
+    assert.match(quickOrder.textContent, /Toko Makmur/);
+    await act(async () => {
+      quickOrder.click();
+      await flush();
+    });
+    assert.equal(modes.at(-1), 'store');
+
     await render(shared('buyer', []));
     assert.match(container.textContent, /Akun belum terhubung ke toko/);
     assert.match(container.textContent, /Belanja pribadi/);

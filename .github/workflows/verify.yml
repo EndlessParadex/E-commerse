@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Diagnostic unsaved quantity formatting
-        run: |
-          npx prettier --write src/components/shop/SharedCartPage.jsx
-          git diff -- src/components/shop/SharedCartPage.jsx
       - run: npm run format:check

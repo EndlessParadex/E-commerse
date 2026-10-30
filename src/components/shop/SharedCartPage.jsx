@@ -937,9 +937,7 @@ export default function SharedCartPage({ adminView = false }) {
         (row, index) => {
           const input = row.querySelector('.shared-quantity input');
           return (
-            input &&
-            cart.items[index] &&
-            input.value.trim() !== String(cart.items[index].quantity)
+            input && cart.items[index] && input.value.trim() !== String(cart.items[index].quantity)
           );
         },
       );

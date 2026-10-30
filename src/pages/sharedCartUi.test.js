@@ -231,7 +231,9 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       'tombol Ganti Toko berada satu baris dengan identitas toko',
     );
     assert.ok(
-      container.querySelector('.shared-store-header-card .shared-store-header-refresh[aria-label="Muat terbaru"]'),
+      container.querySelector(
+        '.shared-store-header-card .shared-store-header-refresh[aria-label="Muat terbaru"]',
+      ),
       'kontrol Muat Terbaru tetap tersedia',
     );
     assert.ok(container.querySelector('.shared-quantity-controls'));

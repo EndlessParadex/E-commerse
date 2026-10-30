@@ -141,6 +141,16 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await openDate();
     await wait(() => !container.querySelector('.shared-selection-panel'));
     assert.ok(button('Ganti Toko'), 'pilihan toko tersedia dalam pop-up kartu');
+    await click(button('Ganti Toko'));
+    await wait(() => container.querySelector('[role="dialog"].bam-store-modal'));
+    assert.equal(
+      container.querySelectorAll('.bam-store-modal .bam-store-card').length,
+      1,
+      'pembeli hanya melihat toko yang terhubung',
+    );
+    await click(container.querySelector('.bam-store-modal .bam-store-selector-close'));
+    assert.equal(container.querySelector('.bam-store-modal'), null);
+    assert.equal(dom.document.body.style.overflow, '');
     assert.ok(
       container.querySelector('.shared-cart-heading .shared-delivery-calendar.is-inline'),
       'calendar is a compact control next to the active delivery period',
@@ -225,6 +235,14 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
 
     await mount('sales');
     await openDate();
+    await click(button('Ganti Toko'));
+    await wait(() => container.querySelectorAll('.bam-store-modal .bam-store-card').length === 2);
+    await click(container.querySelector('.bam-store-modal .bam-store-card[aria-label*="' + second.storeName + '"]'));
+    await wait(() => container.querySelector('.shared-cart-heading')?.textContent.includes(second.storeCode));
+    assert.equal(container.querySelector('.shared-item'), null, 'toko lain tidak mewarisi barang');
+    await click(button('Ganti Toko'));
+    await click(container.querySelector('.bam-store-modal .bam-store-card[aria-label*="' + first.storeName + '"]'));
+    await wait(() => container.querySelector('.shared-cart-heading')?.textContent.includes(first.storeCode));
     assert.equal(container.querySelector('#shared-cart-payment').value, 'transfer-bca');
     await fill('#shared-cart-payment', 'transfer-mandiri');
     await wait(

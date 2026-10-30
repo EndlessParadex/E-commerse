@@ -936,10 +936,19 @@ export default function SharedCartPage({ adminView = false }) {
       const unsaved = Array.from(document.querySelectorAll('.shared-item-compact')).some(
         (row, index) => {
           const input = row.querySelector('.shared-quantity input');
-          return input && cart.items[index] && input.value.trim() !== String(cart.items[index].quantity);
+          return (
+            input &&
+            cart.items[index] &&
+            input.value.trim() !== String(cart.items[index].quantity)
+          );
         },
       );
-      if (unsaved && !window.confirm('Ada jumlah barang yang belum disimpan. Ganti toko dan batalkan isian tersebut?'))
+      if (
+        unsaved &&
+        !window.confirm(
+          'Ada jumlah barang yang belum disimpan. Ganti toko dan batalkan isian tersebut?',
+        )
+      )
         return;
     }
     setSelectingStore(true);

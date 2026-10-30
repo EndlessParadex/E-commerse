@@ -70,4 +70,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - name: Identify Navbar Prettier differences
+        run: |
+          npx prettier --write src/components/layout/Navbar.jsx src/components/layout/Navbar.css src/data/roleNavigation.js src/data/roleNavigation.test.js src/pages/navbarUi.test.js
+          git diff -- src/components/layout/Navbar.jsx src/components/layout/Navbar.css src/data/roleNavigation.js src/data/roleNavigation.test.js src/pages/navbarUi.test.js
       - run: npm run format:check

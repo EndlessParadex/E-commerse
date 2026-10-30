@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
+import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
 import './B2BHomeExperience.css';
 
 const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -65,6 +67,8 @@ function RoleIcon({ name }) {
 /** All store names and assigned shops below come from server-filtered shared cart context. */
 export default function B2BHomeExperience({ shared, onCartMode }) {
   const sales = shared.role === 'sales';
+  const [showStores, setShowStores] = useState(false);
+  const [selecting, setSelecting] = useState(false);
   const stores = Array.isArray(shared.stores?.stores) ? shared.stores.stores : [];
   const count = shared.stores?.total ?? stores.length;
   const selected =
@@ -126,6 +130,31 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
           mode: 'personal',
         },
       ];
+  const selectStore = async (store) => {
+    if (selecting || shared.busy || shared.uncertain || shared.reading) return;
+    setSelecting(true);
+    try {
+      const target = storeCartTarget(store, shared.selection?.date);
+      const chosen = await shared.choose(target);
+      if (!chosen) return;
+      onCartMode?.('store');
+      window.location.hash = '/keranjang';
+    } finally {
+      setSelecting(false);
+    }
+  };
+  if (sales && showStores)
+    return (
+      <div className="bam-role-store-list">
+        <StoreCardsSelector
+          shared={shared}
+          variant="page"
+          disabled={selecting}
+          onChoose={selectStore}
+          onClose={() => setShowStores(false)}
+        />
+      </div>
+    );
   return (
     <div className={'bam-role-home bam-role-home--' + (sales ? 'sales' : 'buyer')}>
       <section className="bam-role-home-hero" aria-labelledby="bam-role-home-title">
@@ -143,8 +172,13 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
           </p>
           <a
             className="bam-role-home-primary"
-            href={count ? '#/keranjang' : '#/cari?q='}
-            onClick={() => onCartMode?.(count ? 'store' : 'personal')}
+            href={sales && count ? '#/' : count ? '#/keranjang' : '#/cari?q='}
+            onClick={(event) => {
+              if (sales && count) {
+                event.preventDefault();
+                setShowStores(true);
+              } else onCartMode?.(count ? 'store' : 'personal');
+            }}
           >
             {sales
               ? count
@@ -189,8 +223,13 @@ export default function B2BHomeExperience({ shared, onCartMode }) {
           <a
             key={card.id}
             className={'bam-role-home-card is-' + card.id}
-            href={card.href}
-            onClick={() => onCartMode?.(card.mode)}
+            href={card.id === 'stores' ? '#/' : card.href}
+            onClick={(event) => {
+              if (card.id === 'stores') {
+                event.preventDefault();
+                setShowStores(true);
+              } else onCartMode?.(card.mode);
+            }}
           >
             <span className="bam-role-home-card-icon">
               <RoleIcon name={card.icon} />

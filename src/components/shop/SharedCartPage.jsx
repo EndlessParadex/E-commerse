@@ -188,6 +188,33 @@ function AdminCartAdd({ shared }) {
   );
 }
 
+function CartRemove({ item, shared }) {
+  return (
+        <button
+          type="button"
+          className="shared-quantity-remove"
+          disabled={!shared.canEdit}
+          aria-label={'Hapus ' + item.name + ' dari keranjang'}
+          title="Hapus barang"
+          onClick={() => void shared.mutate('remove', item.id)}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
+          </svg>
+        </button>
+  );
+}
+
 function CartQuantity({ item, shared }) {
   const [draft, setDraft] = useState(null);
   const debounce = useRef(null);
@@ -277,28 +304,6 @@ function CartQuantity({ item, shared }) {
       </div>
       <button type="submit" className="shared-quantity-submit-sr">
         Simpan jumlah
-      </button>
-      <button
-        type="button"
-        className="shared-quantity-remove"
-        disabled={!shared.canEdit}
-        aria-label={'Hapus ' + item.name + ' dari keranjang'}
-        title="Hapus barang"
-        onClick={() => void shared.mutate('remove', item.id)}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="18"
-          height="18"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
-        </svg>
       </button>
       {!valid && <small role="alert">Masukkan 1–99 kemasan.</small>}
       {draft && draft.revision !== shared.cart.revision && (
@@ -1411,7 +1416,13 @@ export default function SharedCartPage({ adminView = false }) {
                             const display = cartItemPresentation(item);
                             const current = products.find((product) => product.id === item.id);
                             return (
-                              <li key={item.id} className="shared-item shared-item-compact">
+                              <li
+                                key={item.id}
+                                className={
+                                  'shared-item shared-item-compact shared-product-card' +
+                                  (!cart.canEdit ? ' is-readonly' : '')
+                                }
+                              >
                                 <div className="shared-item-identity">
                                   <div
                                     className={'shared-item-photo ' + (display.product.color || '')}
@@ -1462,24 +1473,33 @@ export default function SharedCartPage({ adminView = false }) {
                                         </span>
                                       )}
                                     </div>
+                                    <span className="shared-item-price">
+                                      <strong>{rupiah(item.price)}</strong> /{' '}
+                                      {item.packaging?.packagingType || 'kemasan'}
+                                    </span>
                                   </div>
                                 </div>
                                 <div className="shared-item-controls">
-                                  <span className="shared-item-price">
-                                    {rupiah(item.price)} /{' '}
-                                    {item.packaging?.packagingType || 'kemasan'}
-                                  </span>
-                                  {cart.canEdit ? (
-                                    <CartQuantity item={item} shared={shared} />
-                                  ) : (
-                                    <span className="shared-item-readonly-quantity">
-                                      {item.quantity} kemasan
+                                  <div className="shared-product-quantity-panel">
+                                    <span className="shared-product-panel-label">
+                                      Jumlah kemasan
                                     </span>
-                                  )}
-                                  <span className="shared-line-total">
-                                    Subtotal: <strong>{rupiah(item.price * item.quantity)}</strong>
-                                  </span>
+                                    {cart.canEdit ? (
+                                      <CartQuantity item={item} shared={shared} />
+                                    ) : (
+                                      <span className="shared-item-readonly-quantity">
+                                        {item.quantity} kemasan
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="shared-product-subtotal-panel">
+                                    <span className="shared-product-panel-label">Subtotal</span>
+                                    <span className="shared-line-total">
+                                      <strong>{rupiah(item.price * item.quantity)}</strong>
+                                    </span>
+                                  </div>
                                 </div>
+                                {cart.canEdit && <CartRemove item={item} shared={shared} />}
                                 {!current && !item.packageOptions?.length && (
                                   <p className="shop-warning">
                                     SKU ini sudah tidak tersedia di katalog.

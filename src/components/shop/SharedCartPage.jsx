@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import ProductImage from './ProductImage';
 import { products } from '../../data/products';
@@ -12,6 +12,7 @@ import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import { packagingLabel } from '../../data/productPackaging';
 import { sharedDraftWhatsAppUrl } from '../../data/sharedDraftWhatsApp';
 import SharedDeliveryCalendar from './SharedDeliveryCalendar';
+import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
 
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
@@ -612,6 +613,16 @@ function AdminCartWorkspace({
               >
                 <div>
                   <h2>{cart.store.storeName}</h2>
+                  {!isAdmin && (
+                    <button
+                      type="button"
+                      className="bam-button-secondary shared-switch-store"
+                      disabled={frozen || selectingStore}
+                      onClick={() => setStoreModalOpen(true)}
+                    >
+                      Ganti Toko
+                    </button>
+                  )}
                   <p>
                     {cart.store.storeCode} · {dateLabel(cart.date)}
                     {cart.overdue && (
@@ -926,6 +937,19 @@ export default function SharedCartPage({ adminView = false }) {
   const [date, setDate] = useState(shared.selection.date);
   const [clearRevision, setClearRevision] = useState(null);
   const [adminSection, setAdminSection] = useState('queue');
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [selectingStore, setSelectingStore] = useState(false);
+  const closeStoreModal = useCallback(() => setStoreModalOpen(false), []);
+  const chooseStoreCard = async (store) => {
+    if (frozen || selectingStore) return;
+    setSelectingStore(true);
+    try {
+      const selected = await shared.choose(storeCartTarget(store, shared.selection.date));
+      if (selected) closeStoreModal();
+    } finally {
+      setSelectingStore(false);
+    }
+  };
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect
     setStoreId(shared.selection.storeId);
@@ -1130,6 +1154,16 @@ export default function SharedCartPage({ adminView = false }) {
             <p>Atur jumlah kemasan; Admin memeriksa dan memfinalisasi pesanan.</p>
           </header>
         </>
+      )}
+      {!isAdmin && storeModalOpen && shared.status === 'ready' && (
+        <StoreCardsSelector
+          variant="modal"
+          shared={shared}
+          activeId={cart?.store.id}
+          disabled={frozen || selectingStore}
+          onChoose={chooseStoreCard}
+          onClose={closeStoreModal}
+        />
       )}
       {shared.status === 'loading' && <p role="status">Memuat toko dan keranjang…</p>}
       {shared.status === 'ready' && isAdmin && (
@@ -1439,7 +1473,13 @@ export default function SharedCartPage({ adminView = false }) {
                     </div>
                     <aside className="shared-cart-summary">
                       <h2>Ringkasan keranjang</h2>
-                      {!isAdmin && <div className="shared-summary-store">{storePicker}</div>}
+                      {!isAdmin && (
+                        <div className="shared-summary-store shared-summary-store-compact">
+                          <strong>Toko aktif</strong>
+                          <span>{cart.store.storeName}</span>
+                          <small>{cart.store.storeCode} · {dateLabel(cart.date)}</small>
+                        </div>
+                      )}
                       <p>
                         {cart.items.length} SKU · {shop.quantity} kemasan
                       </p>

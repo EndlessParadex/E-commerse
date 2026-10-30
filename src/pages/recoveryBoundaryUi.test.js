@@ -71,8 +71,35 @@ test('render failure displays a recovery screen; public product path opens the m
     await act(async () => root.render(createElement(Invoice, { order })));
     assert.match(dom.document.querySelector('.invoice-print-root').textContent, /BAM-INVOICE-TEST/);
     assert.match(dom.document.querySelector('.invoice-print-root').textContent, /Sudah dibayar/);
+    const paperSelect = container.querySelector('select[aria-label="Format faktur"]');
+    assert.ok(paperSelect, 'format faktur dapat dipilih');
+    assert.equal(paperSelect.options.length, 2);
+    assert.equal(paperSelect.value, 'a4');
+    assert.match(dom.document.querySelector('.invoice-print-root style').textContent, /210mm 297mm/);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.HTMLSelectElement.prototype, 'value').set.call(
+        paperSelect,
+        'dotMatrix',
+      );
+      paperSelect.dispatchEvent(new dom.Event('change', { bubbles: true }));
+    });
+    const dotMatrixPrint = dom.document.querySelector('.invoice-print-root--dotMatrix');
+    assert.ok(dotMatrixPrint, 'invoice Dot Matrix terpisah dari pilihan A4');
+    assert.ok(dotMatrixPrint.querySelector('.order-invoice.is-dot-matrix'));
+    assert.match(dotMatrixPrint.querySelector('style').textContent, /241.3mm 279.4mm/);
+    assert.match(dotMatrixPrint.textContent, /BAM-INVOICE-TEST/);
+    assert.match(dotMatrixPrint.textContent, /Sudah dibayar/);
     await act(async () => container.querySelector('button').click());
     assert.equal(printed, 1);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.HTMLSelectElement.prototype, 'value').set.call(
+        paperSelect,
+        'a4',
+      );
+      paperSelect.dispatchEvent(new dom.Event('change', { bubbles: true }));
+    });
+    assert.ok(dom.document.querySelector('.invoice-print-root--a4'));
+    assert.match(dom.document.querySelector('.invoice-print-root style').textContent, /210mm 297mm/);
     await act(async () => root.render(createElement('p', null, 'Selesai')));
     assert.equal(dom.document.querySelector('.invoice-print-root'), null);
   } finally {

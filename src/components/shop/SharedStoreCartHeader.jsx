@@ -134,6 +134,7 @@ export default function SharedStoreCartHeader({
             title="Muat terbaru"
           >
             <HeaderIcon name="refresh" />
+            <span className="shared-quantity-submit-sr">Muat terbaru</span>
           </button>
         </div>
       </div>

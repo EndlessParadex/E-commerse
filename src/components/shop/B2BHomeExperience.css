@@ -1,4 +1,18 @@
 /* BAM Role-aware Home: one storefront, different Sales / shop-buyer entry points. */
+.home-landing.is-store-directory .home-feature-rail {
+  display: block;
+}
+.home-landing.is-store-directory .home-feature-rail > :not(:has(.bam-role-store-list)),
+.home-landing.is-store-directory > :not(.home-feature-rail) {
+  display: none;
+}
+.bam-role-store-list {
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface);
+}
+
 .home-landing .bam-role-home {
   display: flex;
   flex-direction: column;

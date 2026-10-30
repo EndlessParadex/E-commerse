@@ -1871,3 +1871,109 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+/* Role-aware desktop navigation: B2B keeps its compact store/search header,
+   and gets one discoverable navigation row instead of duplicate account chips. */
+.store-navigation .navbar-role-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.store-navigation .navbar-role-link .navigation-icon {
+  width: 17px;
+  height: 17px;
+}
+.store-navigation .navbar-role-link:hover,
+.store-navigation .navbar-role-link[aria-current='page'] {
+  background: var(--color-info-soft);
+  color: var(--color-link);
+}
+.store-navigation .navbar-role-link:focus-visible,
+.store-navigation .b2b-active-store:focus-visible,
+.store-navigation .b2b-header-cart:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+@media (min-width: 601px) {
+  .store-navigation.is-b2b-context .secondary-navbar {
+    display: block;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 0;
+  }
+  .store-navigation.is-b2b-context .secondary-navbar-container {
+    min-height: 44px;
+    padding-block: 0;
+    gap: 14px;
+  }
+  .store-navigation.is-b2b-context .secondary-nav-left {
+    gap: clamp(2px, 1vw, 15px);
+  }
+  .store-navigation.is-b2b-context .shop-actions [data-kind='account'] {
+    display: flex;
+  }
+  .store-navigation.is-b2b-context .account-trigger-name {
+    display: none;
+  }
+  .store-navigation.is-b2b-context .b2b-header-cart {
+    gap: 7px;
+  }
+  .store-navigation .b2b-header-cart .navigation-icon {
+    width: 17px;
+    height: 17px;
+  }
+}
+@media (min-width: 601px) and (max-width: 760px) {
+  .store-navigation.is-b2b-context .secondary-nav-left {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    gap: 2px;
+  }
+  .store-navigation.is-b2b-context .navbar-role-link {
+    font-size: 0.75rem;
+    padding-inline: 8px;
+  }
+}
+@media (max-width: 600px) {
+  .store-navigation .mobile-bottom-navigation,
+  .store-navigation.is-b2b-context .mobile-bottom-navigation {
+    grid-template-columns: repeat(var(--nav-items, 4), minmax(0, 1fr));
+  }
+  .store-navigation.is-b2b-context .navbar-actions .shop-actions {
+    display: flex;
+  }
+  .store-navigation.is-b2b-context .navbar-actions .shop-actions [data-kind='cart'],
+  .store-navigation.is-b2b-context .navbar-actions .shop-actions [data-kind='account'] {
+    display: none;
+  }
+  .store-navigation.is-b2b-context .navbar-actions .shop-actions [data-kind='notifications'] {
+    display: flex;
+  }
+  .store-navigation .mobile-bottom-navigation a {
+    font-size: clamp(0.62rem, 2.7vw, 0.7rem);
+    overflow: hidden;
+  }
+  .store-navigation .mobile-bottom-navigation a span {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+  }
+}
+@media (max-width: 390px) {
+  .store-navigation.is-b2b-context .b2b-active-store-icon {
+    display: none;
+  }
+  .store-navigation .mobile-bottom-navigation .navigation-icon {
+    width: 21px;
+    height: 21px;
+  }
+}

@@ -1872,7 +1872,6 @@
   }
 }
 
-
 /* Role-aware desktop navigation: B2B keeps its compact store/search header,
    and gets one discoverable navigation row instead of duplicate account chips. */
 .store-navigation .navbar-role-link {

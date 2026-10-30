@@ -466,6 +466,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await navigate('/pesanan');
     await click(button('Aktif'));
     assert.match(container.querySelector('.orders-card').textContent, /Menunggu konfirmasi COD/);
+    await click(container.querySelector('.orders-more-filters-toggle'));
     await click(button('Menunggu konfirmasi COD'));
     assert.equal(container.querySelectorAll('.orders-card').length, 1);
     await mountAs('admin', '/admin/pesanan');

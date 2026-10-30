@@ -162,9 +162,17 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.equal(container.querySelector('.shared-cart-page > .shared-delivery-calendar'), null);
     assert.equal(container.querySelector('.shared-cart-bar'), null, 'redundant banner removed');
     assert.equal(container.querySelector('.shared-cart-explanation'), null);
-    assert.ok(
+    const storeHeader = container.querySelector('.shared-store-header-card');
+    assert.ok(storeHeader, 'nama toko, periode dan status berada di satu kartu');
+    assert.match(storeHeader.querySelector('h2').textContent, /Toko Bersama/);
+    assert.match(storeHeader.textContent, /Kode Toko/);
+    assert.match(storeHeader.textContent, /Periode Pengiriman/);
+    assert.match(storeHeader.textContent, /TKB-000001/);
+    assert.match(storeHeader.textContent, /1 SKU/);
+    assert.equal(
       container.querySelector('.shared-cart-summary .shared-summary-store-compact'),
-      'active store appears in the compact cart summary',
+      null,
+      'identitas toko tidak diulang di sidebar ringkasan',
     );
     assert.ok(
       container.querySelector('.shared-cart-summary .shared-cart-payment-compact'),
@@ -217,6 +225,15 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.match(activityPanel.textContent, /Versi/);
     assert.doesNotMatch(container.querySelector('.shared-cart-heading').textContent, /Versi \\d+/);
     assert.match(container.querySelector('.shared-cart-heading').textContent, /Draft terbuka/);
+    assert.equal(
+      container.querySelectorAll('.shared-store-header-card .shared-switch-store').length,
+      1,
+      'tombol Ganti Toko berada satu baris dengan identitas toko',
+    );
+    assert.ok(
+      container.querySelector('.shared-store-header-card .shared-store-header-refresh[aria-label="Muat terbaru"]'),
+      'kontrol Muat Terbaru tetap tersedia',
+    );
     assert.ok(container.querySelector('.shared-quantity-controls'));
     assert.ok(container.querySelector('.shared-item-pkg-label'));
     assert.equal(container.querySelector('.shared-item-pkg-select'), null);

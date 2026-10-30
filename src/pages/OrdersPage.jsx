@@ -68,7 +68,9 @@ export default function OrdersPage() {
         </a>
       </header>
       <p className="orders-notice">
-        <span className="orders-notice-icon" aria-hidden="true">ⓘ</span>
+        <span className="orders-notice-icon" aria-hidden="true">
+          ⓘ
+        </span>
         <span>
           {server
             ? 'Pesanan tersimpan di akun Anda dan dapat diakses dari perangkat lain setelah login.'
@@ -83,7 +85,15 @@ export default function OrdersPage() {
           <div className="orders-search-field">
             <label htmlFor="buyer-order-search">Cari pesanan</label>
             <div className="orders-search-input-wrap">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <circle cx="11" cy="11" r="7" />
                 <path d="m16 16 5 5" />
               </svg>
@@ -106,7 +116,9 @@ export default function OrdersPage() {
               onClick={() => setShowExtraFilters((current) => !current)}
             >
               Filter status lainnya
-              {extraFilterActive ? ': ' + orderExtraFilters.find((item) => item.id === filter).label : ''}
+              {extraFilterActive
+                ? ': ' + orderExtraFilters.find((item) => item.id === filter).label
+                : ''}
               <span aria-hidden="true">{showExtraFilters || extraFilterActive ? '−' : '+'}</span>
             </button>
             {(filter !== 'all' || query.trim()) && (
@@ -124,7 +136,12 @@ export default function OrdersPage() {
             )}
           </div>
           {(showExtraFilters || extraFilterActive) && (
-            <div id="orders-extra-filters" className="orders-filter-extra" role="group" aria-label="Filter status lainnya">
+            <div
+              id="orders-extra-filters"
+              className="orders-filter-extra"
+              role="group"
+              aria-label="Filter status lainnya"
+            >
               {orderExtraFilters.map(filterButton)}
             </div>
           )}
@@ -198,7 +215,16 @@ export default function OrdersPage() {
               </div>
               <div className="orders-card-recipient">
                 <span className="orders-card-store-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M4 10v11h16V10M3 5h18l1 5a4 4 0 0 1-7 2 4 4 0 0 1-6 0 4 4 0 0 1-7-2l1-5Z" />
                     <path d="M9 21v-7h6v7" />
                   </svg>
@@ -210,7 +236,11 @@ export default function OrdersPage() {
                   <strong>{order.b2b?.storeName || order.recipient || 'Belum dicatat'}</strong>
                   {order.b2b?.storeCode && <small>{order.b2b.storeCode}</small>}
                 </div>
-                <a href={'#/pesanan/' + encodeURIComponent(order.id)} className="orders-card-recipient-arrow" aria-label={'Buka pesanan ' + order.id}>
+                <a
+                  href={'#/pesanan/' + encodeURIComponent(order.id)}
+                  className="orders-card-recipient-arrow"
+                  aria-label={'Buka pesanan ' + order.id}
+                >
                   <span aria-hidden="true">→</span>
                 </a>
               </div>

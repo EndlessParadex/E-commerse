@@ -1,5 +1,10 @@
 import { parseCatalogRoute } from './catalog.js';
 
+/** Ignore only query parameters; preserve exact path matching for quick order. */
+export function isFastOrderRoute(route) {
+  return /^\/order-cepat(?:\?[^#]*)?$/.test(route || '');
+}
+
 export function catalogNavigationKey(route) {
   const catalog = parseCatalogRoute(route);
   if (catalog?.kind === 'supplier' && !catalog.brandId)

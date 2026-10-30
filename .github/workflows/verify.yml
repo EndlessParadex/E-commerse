@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Diagnostic Prettier diff for reset script
-        run: |
-          npx prettier --write tools/reset-pc-demo-passwords.mjs tools/reset-pc-demo-passwords.test.mjs
-          git diff -- tools/reset-pc-demo-passwords.mjs tools/reset-pc-demo-passwords.test.mjs
       - run: npm run format:check

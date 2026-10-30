@@ -173,7 +173,11 @@ export default function FastOrderPage() {
           Menyimpan atau menyinkronkan…
         </p>
       )}
-      {!isBusy && shared.notice && <p role="status" className="bam-fast-sync">{shared.notice}</p>}
+      {!isBusy && shared.notice && (
+        <p role="status" className="bam-fast-sync">
+          {shared.notice}
+        </p>
+      )}
       {!editable && (
         <p className="shop-warning" role="status">
           Keranjang tidak dapat diedit saat dikunci, difinalisasi, atau melewati batas waktu.

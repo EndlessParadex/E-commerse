@@ -613,16 +613,6 @@ function AdminCartWorkspace({
               >
                 <div>
                   <h2>{cart.store.storeName}</h2>
-                  {!isAdmin && (
-                    <button
-                      type="button"
-                      className="bam-button-secondary shared-switch-store"
-                      disabled={frozen || selectingStore}
-                      onClick={() => setStoreModalOpen(true)}
-                    >
-                      Ganti Toko
-                    </button>
-                  )}
                   <p>
                     {cart.store.storeCode} · {dateLabel(cart.date)}
                     {cart.overdue && (
@@ -1264,6 +1254,16 @@ export default function SharedCartPage({ adminView = false }) {
               <section className="shared-cart-heading" data-revision={cart.revision}>
                 <div>
                   <h2>{cart.store.storeName}</h2>
+                  {!isAdmin && (
+                    <button
+                      type="button"
+                      className="bam-button-secondary shared-switch-store"
+                      disabled={frozen || selectingStore}
+                      onClick={() => setStoreModalOpen(true)}
+                    >
+                      Ganti Toko
+                    </button>
+                  )}
                   <div className="shared-cart-dateline">
                     <span>
                       {cart.store.storeCode} · {dateLabel(cart.date)}

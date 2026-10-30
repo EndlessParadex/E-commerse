@@ -9,13 +9,24 @@ const orders = { label: 'Pesanan', href: '#/pesanan', icon: 'orders', desktop: t
 const account = { label: 'Akun', href: '#/akun', icon: 'account', desktop: false };
 const personalCart = { label: 'Keranjang', href: '#/keranjang', icon: 'cart', desktop: true };
 const storeCart = {
-  label: 'Keranjang', href: '#/keranjang', icon: 'cart', desktop: true, cartMode: 'store',
+  label: 'Keranjang',
+  href: '#/keranjang',
+  icon: 'cart',
+  desktop: true,
+  cartMode: 'store',
 };
 const quickOrder = {
-  label: 'Order Cepat', href: '#/order-cepat', icon: 'bolt', desktop: true, cartMode: 'store',
+  label: 'Order Cepat',
+  href: '#/order-cepat',
+  icon: 'bolt',
+  desktop: true,
+  cartMode: 'store',
 };
 const schedule = {
-  label: 'Jadwal', href: '#/akun/kalender', icon: 'calendar', desktop: true,
+  label: 'Jadwal',
+  href: '#/akun/kalender',
+  icon: 'calendar',
+  desktop: true,
 };
 
 export function roleNavigation(role) {
@@ -27,7 +38,9 @@ export function roleNavigation(role) {
     case 'admin':
       return [
         { label: 'Dashboard', href: '#/admin', icon: 'overview', desktop: true },
-        catalog, orders, account,
+        catalog,
+        orders,
+        account,
       ];
     case 'personal':
       return [home, catalog, personalCart, orders, account];
@@ -44,13 +57,12 @@ export function roleNavigationActive(link, route) {
       (prefix) => path === prefix || path.startsWith(prefix + '/'),
     );
   if (link.href === '#/akun/kalender') return path === '/akun/kalender';
-  if (link.href === '#/akun') return path === '/akun' || (path.startsWith('/akun/') && path !== '/akun/kalender');
+  if (link.href === '#/akun')
+    return path === '/akun' || (path.startsWith('/akun/') && path !== '/akun/kalender');
   if (link.href === '#/login')
     return path === '/login' || path === '/daftar' || path === '/akun' || path.startsWith('/akun/');
-  if (link.href === '#/pesanan')
-    return path === '/pesanan' || path.startsWith('/pesanan/');
-  if (link.href === '#/keranjang')
-    return path === '/keranjang' || path === '/checkout';
+  if (link.href === '#/pesanan') return path === '/pesanan' || path.startsWith('/pesanan/');
+  if (link.href === '#/keranjang') return path === '/keranjang' || path === '/checkout';
   if (link.href === '#/order-cepat') return path === '/order-cepat';
   if (link.href === '#/admin') return path === '/admin' || path.startsWith('/admin/');
   return path === link.href.slice(1);

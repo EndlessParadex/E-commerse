@@ -73,12 +73,20 @@ const Navbar = () => {
   const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
   const activeB2BDate = shared?.cart?.date || '';
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
-  const navRole = b2bCart ? shared.role : user?.role === 'admin' ? 'admin' : user ? 'personal' : 'guest';
+  const navRole = b2bCart
+    ? shared.role
+    : user?.role === 'admin'
+      ? 'admin'
+      : user
+        ? 'personal'
+        : 'guest';
   const navigationLinks = roleNavigation(navRole);
-  const bottomLinks = navigationLinks.filter((link) => link.mobile !== false).map((link) => ({
-    ...link,
-    active: roleNavigationActive(link, mobileRoute),
-  }));
+  const bottomLinks = navigationLinks
+    .filter((link) => link.mobile !== false)
+    .map((link) => ({
+      ...link,
+      active: roleNavigationActive(link, mobileRoute),
+    }));
   const goToRoleDestination = (link) => {
     if (b2bCart && link.cartMode === 'store') setCartMode?.('store');
     setShowDeliverPopup(false);
@@ -285,7 +293,9 @@ const Navbar = () => {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               onFocus={() => setShowSearchSuggestions(true)}
-              placeholder={b2bCart ? 'Cari produk atau SKU...' : `Cari di ${companyProfile.shortName}.`}
+              placeholder={
+                b2bCart ? 'Cari produk atau SKU...' : `Cari di ${companyProfile.shortName}.`
+              }
               aria-label="Cari produk"
               onKeyDown={(event) => {
                 if (event.key === 'Escape') setShowSearchSuggestions(false);

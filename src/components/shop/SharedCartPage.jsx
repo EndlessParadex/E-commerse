@@ -932,6 +932,16 @@ export default function SharedCartPage({ adminView = false }) {
   const closeStoreModal = useCallback(() => setStoreModalOpen(false), []);
   const chooseStoreCard = async (store) => {
     if (frozen || selectingStore) return;
+    if (cart && store.id !== cart.store.id) {
+      const unsaved = Array.from(document.querySelectorAll('.shared-item-compact')).some(
+        (row, index) => {
+          const input = row.querySelector('.shared-quantity input');
+          return input && cart.items[index] && input.value.trim() !== String(cart.items[index].quantity);
+        },
+      );
+      if (unsaved && !window.confirm('Ada jumlah barang yang belum disimpan. Ganti toko dan batalkan isian tersebut?'))
+        return;
+    }
     setSelectingStore(true);
     try {
       const selected = await shared.choose(storeCartTarget(store, shared.selection.date));

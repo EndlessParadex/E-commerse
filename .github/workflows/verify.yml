@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Identify order-list formatting differences
-        run: |
-          npx prettier --write src/data/orderListPresentation.test.js src/pages/OrdersPage.jsx src/pages/serverWorkflowUi.test.js
-          git diff -- src/data/orderListPresentation.test.js src/pages/OrdersPage.jsx src/pages/serverWorkflowUi.test.js
       - run: npm run format:check

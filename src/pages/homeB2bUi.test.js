@@ -41,8 +41,14 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     status: 'ready',
     stores: { stores: list, total: list.length, page: 1, pages: 1 },
     selection,
+    choose: async (target) => {
+      chosen.push(target);
+      return true;
+    },
+    findStores: async () => null,
   });
   const modes = [];
+  const chosen = [];
   const render = async (state) => {
     await act(async () => {
       root.render(
@@ -62,7 +68,7 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
     assert.equal(
       container.querySelector('.bam-role-home-card.is-stores').getAttribute('href'),
-      '#/keranjang',
+      '#/',
     );
     assert.match(
       container.querySelector('.bam-role-home-card.is-personal').textContent,
@@ -83,7 +89,20 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
         .dispatchEvent(new dom.MouseEvent('click', { bubbles: true, cancelable: true }));
       await flush();
     });
-    assert.deepEqual(modes, ['personal', 'store'], 'tiap kotak memilih keranjang yang tepat');
+    assert.deepEqual(modes, ['personal'], 'memilih List Toko belum memindahkan keranjang');
+    assert.ok(container.querySelector('.bam-store-selector.is-page'));
+    assert.ok(container.querySelector('.bam-store-card'));
+    await act(async () => {
+      container.querySelector('.bam-store-card').click();
+      await flush();
+    });
+    assert.equal(chosen[0].storeId, store.id);
+    assert.equal(modes.at(-1), 'store');
+    assert.equal(dom.location.hash, '#/keranjang');
+    await act(async () => {
+      container.querySelector('.bam-store-selector-close').click();
+      await flush();
+    });
 
     await render(shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }));
     assert.ok(container.querySelector('.bam-role-home--buyer'));

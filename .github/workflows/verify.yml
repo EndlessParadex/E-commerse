@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Diagnostic store selector formatting
-        run: |
-          npx prettier --write src/components/shop/StoreCardsSelector.jsx src/components/shop/SharedCartPage.jsx src/pages/sharedCartUi.test.js
-          git diff -- src/components/shop/StoreCardsSelector.jsx src/components/shop/SharedCartPage.jsx src/pages/sharedCartUi.test.js
       - run: npm run format:check

@@ -9,6 +9,7 @@
     "create-admin": "node server/create-admin.js",
     "create-owner": "node server/create-admin.js --owner",
     "seed:pc": "node tools/seed-pc-demo.mjs",
+    "reset:pc-passwords": "node tools/reset-pc-demo-passwords.mjs",
     "backup": "node tools/database-backup.mjs backup",
     "backup:verify": "node tools/database-backup.mjs verify",
     "backup:restore": "node tools/database-backup.mjs restore",

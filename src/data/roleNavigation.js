@@ -45,7 +45,8 @@ export function roleNavigationActive(link, route) {
     );
   if (link.href === '#/akun/kalender') return path === '/akun/kalender';
   if (link.href === '#/akun') return path === '/akun' || (path.startsWith('/akun/') && path !== '/akun/kalender');
-  if (link.href === '#/login') return path === '/login' || path === '/daftar';
+  if (link.href === '#/login')
+    return path === '/login' || path === '/daftar' || path === '/akun' || path.startsWith('/akun/');
   if (link.href === '#/pesanan')
     return path === '/pesanan' || path.startsWith('/pesanan/');
   if (link.href === '#/keranjang')

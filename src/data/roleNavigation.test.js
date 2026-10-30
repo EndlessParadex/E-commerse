@@ -4,19 +4,19 @@ import { roleNavigation, roleNavigationActive } from './roleNavigation.js';
 
 test('navigasi role hanya menampilkan jalur relevan', () => {
   const guest = roleNavigation('guest');
-  assert.deepEqual(guest.map(({ label }) => label), ['Beranda', 'Katalog', 'Keranjang', 'Akun']);
+  assert.deepEqual(
+    guest.map(({ label }) => label),
+    ['Beranda', 'Katalog', 'Keranjang', 'Akun'],
+  );
   assert.equal(guest.at(-1).href, '#/login');
   const personal = roleNavigation('personal');
   assert.ok(personal.some((link) => link.href === '#/pesanan'));
   assert.ok(!personal.some((link) => link.href === '#/order-cepat'));
   const sales = roleNavigation('sales');
-  assert.deepEqual(sales.map(({ label }) => label), [
-    'Beranda',
-    'Order Cepat',
-    'Keranjang',
-    'Pesanan',
-    'Akun',
-  ]);
+  assert.deepEqual(
+    sales.map(({ label }) => label),
+    ['Beranda', 'Order Cepat', 'Keranjang', 'Pesanan', 'Akun'],
+  );
   assert.equal(sales.find((link) => link.href === '#/order-cepat').cartMode, 'store');
   assert.ok(!sales.some((link) => link.href === '#/admin'));
   const buyer = roleNavigation('buyer');

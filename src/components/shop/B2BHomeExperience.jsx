@@ -181,7 +181,6 @@ export default function B2BHomeExperience({ shared, onCartMode, onDirectoryChang
                 event.preventDefault();
                 setShowStores(true);
                 onDirectoryChange?.(true);
-                onDirectoryChange?.(true);
               } else onCartMode?.(count ? 'store' : 'personal');
             }}
           >
@@ -233,6 +232,7 @@ export default function B2BHomeExperience({ shared, onCartMode, onDirectoryChang
               if (card.id === 'stores') {
                 event.preventDefault();
                 setShowStores(true);
+                onDirectoryChange?.(true);
               } else onCartMode?.(card.mode);
             }}
           >

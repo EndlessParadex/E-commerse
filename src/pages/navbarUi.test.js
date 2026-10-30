@@ -52,7 +52,8 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
   dom.document.body.append(container);
   let root = createRoot(container);
   const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
-  const render = (user = null) =>
+  const cartModes = [];
+  const render = (user = null, shared = null) =>
     act(async () => {
       root.render(
         createElement(
@@ -63,7 +64,16 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
             { value: { user } },
             createElement(
               ShopContext.Provider,
-              { value: { quantity: 0, unreadCount: 0, cart: [], notifications: [] } },
+              {
+                value: {
+                  quantity: 0,
+                  unreadCount: 0,
+                  cart: [],
+                  notifications: [],
+                  shared,
+                  setCartMode: (mode) => cartModes.push(mode),
+                },
+              },
               createElement(Navbar),
             ),
           ),
@@ -162,6 +172,38 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     });
     assert.match(navigation.querySelector('.deliver-code').textContent, /Alamat saya/);
     assert.doesNotMatch(navigation.querySelector('.deliver-code').textContent, /Penerima Lain/);
+
+    await render(
+      { id: 'sales-1', role: 'user', name: 'Sales Uji' },
+      {
+        status: 'ready',
+        role: 'sales',
+        canEdit: true,
+        cart: {
+          store: { storeName: 'Toko Nusantara' },
+          date: '2026-11-12',
+          items: [{ id: 'sku', quantity: 2, price: 5000 }],
+        },
+      },
+    );
+    assert.ok(navigation.classList.contains('is-b2b-context'));
+    assert.equal(bottom.querySelectorAll('a').length, 5);
+    assert.ok(navigation.querySelector('.secondary-navbar a[href="#/order-cepat"]'));
+    assert.ok(navigation.querySelector('.secondary-navbar a[href="#/pesanan"]'));
+    assert.equal(navigation.querySelector('.b2b-header-account'), null);
+    assert.match(navigation.querySelector('.b2b-header-cart').textContent, /2 kemasan/);
+    await click(bottom.querySelector('a[href="#/order-cepat"]'));
+    assert.equal(cartModes.at(-1), 'store');
+    await render(
+      { id: 'buyer-1', role: 'user', name: 'Toko Uji' },
+      { status: 'ready', role: 'buyer', cart: null },
+    );
+    assert.equal(bottom.querySelectorAll('a').length, 5);
+    assert.ok(bottom.querySelector('a[href="#/akun/kalender"]'));
+    assert.equal(bottom.querySelector('a[href="#/order-cepat"]'), null);
+    await render({ id: 'admin-1', role: 'admin', name: 'Admin Uji' });
+    assert.ok(navigation.querySelector('.secondary-navbar a[href="#/admin"]'));
+    assert.equal(bottom.querySelector('a[href="#/order-cepat"]'), null);
 
     await act(async () => root.unmount());
     assert.equal(height(), '19px');

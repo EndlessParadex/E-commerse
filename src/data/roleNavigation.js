@@ -23,7 +23,7 @@ export function roleNavigation(role) {
     case 'sales':
       return [home, quickOrder, storeCart, orders, account];
     case 'buyer':
-      return [home, catalog, storeCart, schedule, account, orders];
+      return [home, catalog, storeCart, schedule, account, { ...orders, mobile: false }];
     case 'admin':
       return [
         { label: 'Dashboard', href: '#/admin', icon: 'overview', desktop: true },

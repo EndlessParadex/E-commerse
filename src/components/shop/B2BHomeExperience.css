@@ -2,7 +2,7 @@
 .home-landing.is-store-directory .home-feature-rail {
   display: block;
 }
-.home-landing.is-store-directory .home-feature-rail > :not(:has(.bam-role-store-list)),
+.home-landing.is-store-directory .home-feature-rail > :not(.bam-role-store-list),
 .home-landing.is-store-directory > :not(.home-feature-rail) {
   display: none;
 }

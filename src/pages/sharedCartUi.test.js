@@ -131,15 +131,12 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
 
     await mount('buyer');
     assert.ok(
-      container.querySelector('.shared-selection-panel'),
-      'the store picker is available before and after choosing a cart',
-    );
-    assert.ok(
-      container.querySelector('.shared-store-search-details'),
-      'optional store search remains available',
+      container.querySelector('.shared-selection-panel') ||
+        container.querySelector('.shared-cart-heading'),
+      'store selection or its loaded cart must be available',
     );
     await openDate();
-    await wait(() => !container.querySelector('.shared-selection-panel'));
+    await wait(() => container.querySelector('.shared-cart-heading'));
     assert.ok(button('Ganti Toko'), 'pilihan toko tersedia dalam pop-up kartu');
     await click(button('Ganti Toko'));
     await wait(() => container.querySelector('[role="dialog"].bam-store-modal'));

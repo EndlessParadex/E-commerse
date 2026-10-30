@@ -2,7 +2,7 @@
  * One-time, isolated BAM PC demonstration installer.
  * Never targets data/bam.sqlite, and refuses to modify an existing file.
  */
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
@@ -11,7 +11,8 @@ import { hashPassword, createApp } from '../server/app.js';
 import { loadLocalEnv } from '../server/loadEnv.js';
 
 export const defaultPcDemoPath = join('data', 'bam-pc-demo.sqlite');
-const accountSpecs = [
+export const PC_DEMO_PASSWORD = 'BAM-Demo@2026';
+export const accountSpecs = [
   { key: 'owner', name: 'Owner BAM Demo PC', email: 'owner.pc-demo@bam.test', role: 'admin' },
   {
     key: 'admin',
@@ -55,7 +56,7 @@ const nextWeekday = (date, weekday) => {
 
 export async function seedPcDemo({
   dbPath = defaultPcDemoPath,
-  password = randomBytes(18).toString('base64url'),
+  password = PC_DEMO_PASSWORD,
   now = new Date(),
 } = {}) {
   if (typeof dbPath !== 'string' || !dbPath.trim() || dbPath === ':memory:')

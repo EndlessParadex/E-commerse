@@ -8,9 +8,9 @@ import { normalizeDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
 import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
-import { rupiah } from '../shop/shopPresentation';
 import NavigationIcon from './NavigationIcon';
 import { productVariants } from '../../data/products';
+import { roleNavigation, roleNavigationActive } from '../../data/roleNavigation';
 
 const Navbar = () => {
   const { profile: companyProfile } = useCompany();
@@ -73,50 +73,17 @@ const Navbar = () => {
   const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
   const activeB2BDate = shared?.cart?.date || '';
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
-  const b2bSubtotal =
-    shared?.cart?.items?.reduce((total, item) => total + item.quantity * item.price, 0) || 0;
-  const bottomLinks = b2bCart
-    ? [
-        { label: 'Toko', href: '#/', icon: 'home', active: mobileRoute === '/' },
-        {
-          label: 'Order Cepat',
-          href: '#/order-cepat',
-          icon: 'products',
-          active: mobileRoute === '/order-cepat' || mobileRoute === '/keranjang',
-        },
-        { label: 'Akun', href: '#/akun', icon: 'account', active: isAccountRoute },
-      ]
-    : [
-        { label: 'Beranda', href: '#/', icon: 'home', active: mobileRoute === '/' },
-        {
-          label: 'Katalog',
-          href: '#/cari?q=',
-          icon: 'products',
-          active: ['/cari', '/kategori', '/produk'].some(
-            (route) => mobileRoute === route || mobileRoute.startsWith(route + '/'),
-          ),
-        },
-        {
-          label: 'Keranjang',
-          href: '#/keranjang',
-          icon: 'cart',
-          active: mobileRoute === '/keranjang' || mobileRoute === '/checkout',
-        },
-        {
-          label: 'Akun',
-          href: user ? '#/akun' : '#/login',
-          icon: 'account',
-          active: isAccountRoute || ['/login', '/daftar'].includes(mobileRoute),
-        },
-      ];
-  const b2bNavLabel =
-    shared?.status === 'ready'
-      ? shared.role === 'sales'
-        ? 'List Toko'
-        : shared.role === 'buyer'
-          ? 'Toko Saya'
-          : ''
-      : '';
+  const navRole = b2bCart ? shared.role : user?.role === 'admin' ? 'admin' : user ? 'personal' : 'guest';
+  const navigationLinks = roleNavigation(navRole);
+  const bottomLinks = navigationLinks.map((link) => ({
+    ...link,
+    active: roleNavigationActive(link, mobileRoute),
+  }));
+  const goToRoleDestination = (link) => {
+    if (b2bCart && link.cartMode === 'store') setCartMode?.('store');
+    setShowDeliverPopup(false);
+    setShowSearchSuggestions(false);
+  };
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
@@ -290,6 +257,7 @@ const Navbar = () => {
             onSubmit={(event) => {
               event.preventDefault();
               setShowSearchSuggestions(false);
+              if (b2bCart) setCartMode?.('store');
               window.location.hash = b2bCart
                 ? '/order-cepat?q=' + encodeURIComponent(searchQuery)
                 : searchHref(searchQuery);
@@ -317,7 +285,7 @@ const Navbar = () => {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               onFocus={() => setShowSearchSuggestions(true)}
-              placeholder={`Cari di ${companyProfile.shortName}.`}
+              placeholder={b2bCart ? 'Cari produk atau SKU...' : `Cari di ${companyProfile.shortName}.`}
               aria-label="Cari produk"
               onKeyDown={(event) => {
                 if (event.key === 'Escape') setShowSearchSuggestions(false);
@@ -408,12 +376,11 @@ const Navbar = () => {
                 <a
                   className="b2b-header-cart"
                   href="#/keranjang"
-                  onClick={() => setCartMode('store')}
+                  onClick={() => setCartMode?.('store')}
+                  aria-label={`Keranjang toko, ${b2bPackages} kemasan`}
                 >
-                  {b2bPackages} kemasan · {rupiah(b2bSubtotal)}
-                </a>
-                <a className="b2b-header-account" href="#/akun">
-                  {shared.role === 'sales' ? 'Sales' : 'Toko'}: {user?.name || 'BAM'}
+                  <NavigationIcon name="cart" />
+                  <span>{b2bPackages} kemasan</span>
                 </a>
               </>
             )}
@@ -561,30 +528,28 @@ const Navbar = () => {
       <nav className="secondary-navbar" aria-label="Navigasi belanja">
         <div className="secondary-navbar-container">
           <div className="secondary-nav-left">
-            <CatalogMenu />
-            {b2bNavLabel && (
-              <a
-                className="navbar-b2b-link"
-                href="#/keranjang"
-                onClick={() => setCartMode('store')}
-                aria-label={b2bNavLabel + ' dan keranjang bersama'}
-              >
-                {b2bNavLabel}
+            {!b2bCart && <CatalogMenu />}
+            {navigationLinks
+              .filter((link) => link.desktop)
+              .map((link) => (
+                <a
+                  key={link.href}
+                  className="navbar-role-link"
+                  href={link.href}
+                  aria-current={roleNavigationActive(link, mobileRoute) ? 'page' : undefined}
+                  onClick={() => goToRoleDestination(link)}
+                >
+                  <NavigationIcon name={link.icon} />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+          </div>
+          <div className="secondary-nav-right">
+            {!b2bCart && (
+              <a className="navbar-about-link" href="#/tentang">
+                Tentang {companyProfile.shortName}
               </a>
             )}
-            <a className="navbar-catalog-link" href="#/cari?q=">
-              Jelajahi produk
-            </a>
-          </div>
-
-          <div className="secondary-nav-right">
-            <a className="navbar-orders-link" href="#/pesanan">
-              Pesanan saya
-            </a>
-
-            <a className="navbar-about-link" href="#/tentang">
-              Tentang {companyProfile.shortName}
-            </a>
           </div>
         </div>
       </nav>
@@ -595,9 +560,7 @@ const Navbar = () => {
             href={link.href}
             aria-current={link.active ? 'page' : undefined}
             onClick={() => {
-              if ((link.label === 'Keranjang' || link.label === 'Order Cepat') && b2bCart)
-                setCartMode?.('store');
-              setShowDeliverPopup(false);
+              goToRoleDestination(link);
             }}
           >
             <NavigationIcon name={link.icon} />

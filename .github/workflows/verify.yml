@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Diagnostic Prettier diff (temporary)
-        run: |
-          npx prettier --write src/components/shop/Commerce.css src/pages/recoveryBoundaryUi.test.js
-          git diff -- src/components/shop/Commerce.css src/pages/recoveryBoundaryUi.test.js
       - run: npm run format:check

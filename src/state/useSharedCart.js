@@ -121,8 +121,8 @@ export default function useSharedCart(user, authLoading) {
       } catch {
         /* Selection only; cart lives on server. */
       }
-      await Promise.all([load(target), loadCycles(1, target)]);
-      return true;
+      const [loaded] = await Promise.all([load(target), loadCycles(1, target)]);
+      return Boolean(loaded);
     },
     [userId, load, loadCycles],
   );

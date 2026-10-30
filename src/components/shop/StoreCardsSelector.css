@@ -1,0 +1,215 @@
+.bam-store-selector {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  min-width: 0;
+}
+.bam-store-selector-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+.bam-store-selector-kicker {
+  color: var(--color-link);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+}
+.bam-store-selector-heading h2 {
+  color: var(--color-text-strong);
+  margin: 4px 0 8px;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+.bam-store-selector-heading p:not(.bam-store-selector-kicker) {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+.bam-store-selector-close {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  padding: 10px 12px;
+  min-height: 44px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bam-store-selector-search label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.bam-store-selector-search > div {
+  display: flex;
+  gap: 8px;
+}
+.bam-store-selector-search input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 11px 13px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.bam-store-selector-search button {
+  background: var(--color-link);
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 18px;
+  min-height: 44px;
+  color: white;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bam-store-selector-count {
+  font-size: 0.79rem;
+  color: var(--color-text-secondary);
+}
+.bam-store-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 12px;
+}
+.bam-store-card {
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 3px 12px #0f172a08;
+}
+.bam-store-card:hover,
+.bam-store-card.is-active {
+  border-color: var(--color-border-info-strong);
+  background: var(--color-info-soft);
+}
+.bam-store-card-icon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+  font-size: 1.5rem;
+}
+.bam-store-card-copy {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.bam-store-card-copy strong {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.bam-store-card-copy small,
+.bam-store-card-copy > span {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.bam-store-card-end {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--color-link);
+  font-weight: 800;
+}
+.bam-store-card-active {
+  font-size: 0.7rem;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: var(--color-surface);
+}
+.bam-store-selector-empty {
+  padding: 24px;
+  text-align: center;
+  background: var(--color-surface-soft);
+  border-radius: 12px;
+  color: var(--color-text-secondary);
+}
+.bam-store-selector-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+.bam-store-selector-pagination button {
+  padding: 9px 12px;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+.bam-store-selector :is(button, input):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.bam-store-selector button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.bam-store-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #0f172a99;
+}
+.bam-store-modal {
+  width: min(780px, 100%);
+  max-height: min(85dvh, 850px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 18px;
+  padding: clamp(18px, 3vw, 30px);
+  background: var(--color-surface);
+  box-shadow: 0 28px 70px #0f172a33;
+}
+.bam-store-modal .bam-store-selector-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 275px), 1fr));
+}
+@media (max-width: 600px) {
+  .bam-store-modal-backdrop {
+    padding: 0;
+    align-items: end;
+  }
+  .bam-store-modal {
+    width: 100%;
+    max-height: 89dvh;
+    border-radius: 18px 18px 0 0;
+  }
+  .bam-store-selector-heading {
+    flex-wrap: wrap;
+  }
+  .bam-store-selector-search > div {
+    flex-wrap: wrap;
+  }
+  .bam-store-selector-search button {
+    width: 100%;
+  }
+  .bam-store-card {
+    padding: 13px;
+  }
+}

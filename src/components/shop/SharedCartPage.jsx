@@ -1477,7 +1477,9 @@ export default function SharedCartPage({ adminView = false }) {
                         <div className="shared-summary-store shared-summary-store-compact">
                           <strong>Toko aktif</strong>
                           <span>{cart.store.storeName}</span>
-                          <small>{cart.store.storeCode} · {dateLabel(cart.date)}</small>
+                          <small>
+                            {cart.store.storeCode} · {dateLabel(cart.date)}
+                          </small>
                         </div>
                       )}
                       <p>

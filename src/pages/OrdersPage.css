@@ -348,10 +348,43 @@
   font-weight: 700;
   color: var(--color-text-muted);
 }
+.orders-card-preview-details {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  min-width: 0;
+}
 .orders-card-preview-summary {
   font-size: 0.78rem;
   font-weight: 650;
   color: var(--color-text-secondary);
+}
+.orders-preview-packaging {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  list-style: none;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+}
+.orders-preview-packaging li {
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: var(--color-surface-soft);
+  color: var(--color-text-secondary);
+  font-size: 0.69rem;
+}
+.orders-preview-packaging .purchase-packaging {
+  font-size: inherit;
+}
+@media (max-width: 650px) {
+  .orders-card-preview-details {
+    justify-items: start;
+  }
+  .orders-preview-packaging {
+    justify-content: flex-start;
+  }
 }
 .orders-card-footer {
   display: flex;

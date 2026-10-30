@@ -75,7 +75,10 @@ test('render failure displays a recovery screen; public product path opens the m
     assert.ok(paperSelect, 'format faktur dapat dipilih');
     assert.equal(paperSelect.options.length, 2);
     assert.equal(paperSelect.value, 'a4');
-    assert.match(dom.document.querySelector('.invoice-print-root style').textContent, /210mm 297mm/);
+    assert.match(
+      dom.document.querySelector('.invoice-print-root style').textContent,
+      /210mm 297mm/,
+    );
     await act(async () => {
       Object.getOwnPropertyDescriptor(dom.HTMLSelectElement.prototype, 'value').set.call(
         paperSelect,
@@ -99,7 +102,10 @@ test('render failure displays a recovery screen; public product path opens the m
       paperSelect.dispatchEvent(new dom.Event('change', { bubbles: true }));
     });
     assert.ok(dom.document.querySelector('.invoice-print-root--a4'));
-    assert.match(dom.document.querySelector('.invoice-print-root style').textContent, /210mm 297mm/);
+    assert.match(
+      dom.document.querySelector('.invoice-print-root style').textContent,
+      /210mm 297mm/,
+    );
     await act(async () => root.render(createElement('p', null, 'Selesai')));
     assert.equal(dom.document.querySelector('.invoice-print-root'), null);
   } finally {

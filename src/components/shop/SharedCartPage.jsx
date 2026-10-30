@@ -190,28 +190,28 @@ function AdminCartAdd({ shared }) {
 
 function CartRemove({ item, shared }) {
   return (
-        <button
-          type="button"
-          className="shared-quantity-remove"
-          disabled={!shared.canEdit}
-          aria-label={'Hapus ' + item.name + ' dari keranjang'}
-          title="Hapus barang"
-          onClick={() => void shared.mutate('remove', item.id)}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
-          </svg>
-        </button>
+    <button
+      type="button"
+      className="shared-quantity-remove"
+      disabled={!shared.canEdit}
+      aria-label={'Hapus ' + item.name + ' dari keranjang'}
+      title="Hapus barang"
+      onClick={() => void shared.mutate('remove', item.id)}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m5 4v7m4-7v7" />
+      </svg>
+    </button>
   );
 }
 

@@ -5,7 +5,11 @@ import useCompany from './state/useCompany';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
 import { parseCatalogRoute } from './data/catalog';
-import { catalogNavigationKey, isFastOrderRoute, shouldResetRouteScroll } from './data/catalogNavigation';
+import {
+  catalogNavigationKey,
+  isFastOrderRoute,
+  shouldResetRouteScroll,
+} from './data/catalogNavigation';
 import ShopProvider from './state/ShopProvider';
 import WorkflowProvider from './state/WorkflowProvider';
 import ShopPage from './components/shop/ShopPage';

@@ -76,6 +76,10 @@ test('Sales fast order retains the right store, SKU and package-specific control
     assert.match(host.textContent, /Toko Nusantara/);
     assert.ok(host.querySelector('a[href^="https://wa.me/"]'));
     assert.match(host.querySelector('.bam-fast-cart-link').textContent, /Rp/);
+    const quantityInput = host.querySelector('input[aria-label="Jumlah Keripik Singkong Balado 23g"]');
+    assert.ok(quantityInput, 'jumlah dapat diisi langsung');
+    assert.equal(quantityInput.min, '0');
+    assert.equal(quantityInput.max, '99');
     const add = host.querySelector('button[aria-label="Tambah Keripik Singkong Balado 23g"]');
     assert.ok(add && !add.disabled);
     await act(async () => add.click());
@@ -84,6 +88,12 @@ test('Sales fast order retains the right store, SKU and package-specific control
     assert.ok(addOther && !addOther.disabled);
     await act(async () => addOther.click());
     assert.deepEqual(mutations[1], { action: 'add', id: 'bumbu-rendang', quantity: 1 });
+    await act(async () => {
+      quantityInput.focus();
+      quantityInput.value = '12';
+      quantityInput.blur();
+    });
+    assert.deepEqual(mutations[2], { action: 'set', id: 'snack-pedas-23g', quantity: 12 });
     await render({ ...shared, canEdit: false });
     assert.equal(
       host.querySelector('button[aria-label="Tambah Keripik Singkong Balado 23g"]').disabled,

@@ -190,7 +190,7 @@ test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembat
     assert.match(container.querySelector('h1').textContent, /dibatalkan/);
     assert.equal(orders.readOrder(first.id, dom.sessionStorage).status, 'cancelled');
     await click(container.querySelector('a[href="#/pesanan"]'));
-    await click(button('Filter status lainnya +'));
+    await click(container.querySelector('.orders-more-filters-toggle'));
     await click(button('Dibatalkan'));
     assert.equal(container.querySelectorAll('.orders-card').length, 1);
     assert.ok(container.querySelector('.orders-card-recipient'));

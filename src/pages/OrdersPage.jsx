@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PackagingSummary from '../components/shop/PackagingSummary';
 import { orderItemPresentation } from '../data/orderItemPresentation';
 import {
   orderCardStages,
@@ -243,10 +244,25 @@ export default function OrdersPage() {
                     <li className="orders-preview-more">+{order.items.length - 3}</li>
                   )}
                 </ul>
-                <p className="orders-card-preview-summary">
-                  {order.items.length} SKU ·{' '}
-                  {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan
-                </p>
+                <div className="orders-card-preview-details">
+                  <p className="orders-card-preview-summary">
+                    {order.items.length} SKU ·{' '}
+                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan
+                  </p>
+                  <ul className="orders-preview-packaging" aria-label="Ringkasan jenis kemasan">
+                    {order.items.slice(0, 3).map((item) => {
+                      const display = orderItemPresentation(item);
+                      return display.packaging ? (
+                        <li key={item.id}>
+                          <PackagingSummary
+                            packaging={display.packaging}
+                            quantity={item.quantity}
+                          />
+                        </li>
+                      ) : null;
+                    })}
+                  </ul>
+                </div>
               </div>
               <div className="orders-card-footer">
                 <div className="orders-card-total">

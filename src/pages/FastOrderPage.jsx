@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useShop } from '../state/useShop';
 import { products } from '../data/products';
 import ProductImage from '../components/shop/ProductImage';
@@ -7,31 +7,90 @@ import { sharedDraftWhatsAppUrl } from '../data/sharedDraftWhatsApp';
 import { fastOrderGroups, fastOrderPackaging, fastOrderTotals } from '../data/fastOrder';
 import './FastOrderPage.css';
 
+function QuantityEditor({ product, quantity, disabled, onQuantityChange }) {
+  const inputRef = useRef(null);
+  const commit = () => {
+    if (disabled || !inputRef.current) return;
+    const input = inputRef.current;
+    const raw = input.value.trim();
+    if (!/^(?:0|[1-9][0-9]?)$/.test(raw)) {
+      input.value = String(quantity);
+      return;
+    }
+    const next = Number(raw);
+    if (next === quantity) return;
+    void onQuantityChange(product, next).then((saved) => {
+      if (!saved && input.isConnected) input.value = String(quantity);
+    });
+  };
+  return (
+    <div className="bam-fast-stepper" role="group" aria-label={product.name}>
+      <button
+        type="button"
+        aria-label={'Kurangi ' + product.name}
+        disabled={disabled || quantity <= 0}
+        onClick={() => onQuantityChange(product, quantity - 1)}
+      >
+        −
+      </button>
+      <input
+        key={quantity}
+        ref={inputRef}
+        type="number"
+        inputMode="numeric"
+        min="0"
+        max="99"
+        step="1"
+        aria-label={'Jumlah ' + product.name}
+        defaultValue={quantity}
+        disabled={disabled}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            event.currentTarget.value = String(quantity);
+            event.currentTarget.blur();
+          }
+        }}
+      />
+      <button
+        type="button"
+        aria-label={'Tambah ' + product.name}
+        disabled={disabled || quantity >= 99}
+        onClick={() => onQuantityChange(product, quantity + 1)}
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 export default function FastOrderPage() {
   const { shared, setCartMode } = useShop();
   const queryFromRoute = () =>
     new URLSearchParams(window.location.hash.split('?')[1] || '').get('q') || '';
-  const [query, setQuery] = useState(queryFromRoute);
+  const [search, setSearch] = useState(() => ({ query: queryFromRoute(), limit: 40 }));
+  const query = search.query;
   useEffect(() => {
-    const syncQuery = () => setQuery(queryFromRoute());
+    const syncQuery = () => setSearch({ query: queryFromRoute(), limit: 40 });
     window.addEventListener('hashchange', syncQuery);
     return () => window.removeEventListener('hashchange', syncQuery);
   }, []);
   const validRole = ['sales', 'buyer'].includes(shared?.role);
   const cart = shared?.cart;
   const totals = fastOrderTotals(cart);
-  const rows = fastOrderGroups(products, cart?.items, query);
+  const matches = fastOrderGroups(products, cart?.items, query, Infinity);
+  const rows = matches.slice(0, search.limit);
   const editable = Boolean(shared?.canEdit && cart?.status === 'open');
   const isBusy = Boolean(shared?.busy || shared?.reading || shared?.uncertain);
 
-  const change = (product, direction) => {
-    if (!editable || isBusy) return;
+  const change = (product, next) => {
+    if (!editable || isBusy || !Number.isSafeInteger(next) || next < 0 || next > 99)
+      return Promise.resolve(false);
     const current = cart?.items.find((item) => item.id === product.id);
-    const previous = current?.quantity || 0;
-    const next = previous + direction;
-    if (next < 0 || next > 99) return;
+    if (next === (current?.quantity || 0)) return Promise.resolve(true);
     const action = next === 0 ? 'remove' : current ? 'set' : 'add';
-    void shared.mutate(action, product.id, action === 'add' ? 1 : next);
+    return shared.mutate(action, product.id, next);
   };
 
   if (!validRole || shared?.status !== 'ready') {
@@ -87,7 +146,7 @@ export default function FastOrderPage() {
         <input
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => setSearch({ query: event.target.value, limit: 40 })}
           placeholder="Contoh: balado, 180g, dus, SKU..."
           maxLength={100}
         />
@@ -114,6 +173,7 @@ export default function FastOrderPage() {
           Menyimpan atau menyinkronkan…
         </p>
       )}
+      {!isBusy && shared.notice && <p role="status" className="bam-fast-sync">{shared.notice}</p>}
       {!editable && (
         <p className="shop-warning" role="status">
           Keranjang tidak dapat diedit saat dikunci, difinalisasi, atau melewati batas waktu.
@@ -145,25 +205,12 @@ export default function FastOrderPage() {
                         {rupiah(unitPrice)}
                       </small>
                     </div>
-                    <div className="bam-fast-stepper" role="group" aria-label={product.name}>
-                      <button
-                        type="button"
-                        aria-label={'Kurangi ' + product.name}
-                        disabled={!editable || isBusy || quantity <= 0}
-                        onClick={() => change(product, -1)}
-                      >
-                        −
-                      </button>
-                      <output aria-live="polite">{quantity}</output>
-                      <button
-                        type="button"
-                        aria-label={'Tambah ' + product.name}
-                        disabled={!editable || isBusy || quantity >= 99}
-                        onClick={() => change(product, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
+                    <QuantityEditor
+                      product={product}
+                      quantity={quantity}
+                      disabled={!editable || isBusy}
+                      onQuantityChange={change}
+                    />
                   </div>
                 );
               })}
@@ -174,6 +221,18 @@ export default function FastOrderPage() {
           <p className="bam-fast-empty">Produk tidak ditemukan. Coba kata kunci lain.</p>
         )}
       </section>
+      <p className="bam-fast-result-count" role="status">
+        Menampilkan {rows.length} dari {matches.length} kelompok produk.
+      </p>
+      {rows.length < matches.length && (
+        <button
+          type="button"
+          className="bam-button-secondary bam-fast-more"
+          onClick={() => setSearch((current) => ({ ...current, limit: current.limit + 40 }))}
+        >
+          Tampilkan 40 produk berikutnya
+        </button>
+      )}
 
       <footer className="bam-fast-actionbar" aria-label="Aksi order cepat">
         {shared.role === 'sales' && wa && (

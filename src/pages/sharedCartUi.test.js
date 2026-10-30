@@ -168,7 +168,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.match(storeHeader.textContent, /Kode Toko/);
     assert.match(storeHeader.textContent, /Periode Pengiriman/);
     assert.match(storeHeader.textContent, /TKB-000001/);
-    assert.match(storeHeader.textContent, /1 SKU/);
+    assert.match(storeHeader.textContent, /0 SKU · 0 kemasan/);
     assert.equal(
       container.querySelector('.shared-cart-summary .shared-summary-store-compact'),
       null,

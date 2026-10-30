@@ -12,6 +12,7 @@ import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import { packagingLabel } from '../../data/productPackaging';
 import { sharedDraftWhatsAppUrl } from '../../data/sharedDraftWhatsApp';
 import SharedDeliveryCalendar from './SharedDeliveryCalendar';
+import SharedStoreCartHeader from './SharedStoreCartHeader';
 import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
 
 const dateLabel = (value) =>
@@ -1268,6 +1269,7 @@ export default function SharedCartPage({ adminView = false }) {
           )}
           {cart && (
             <>
+              {isAdmin ? (
               <section className="shared-cart-heading" data-revision={cart.revision}>
                 <div>
                   <h2>{cart.store.storeName}</h2>
@@ -1337,6 +1339,20 @@ export default function SharedCartPage({ adminView = false }) {
                   <span className="shared-quantity-submit-sr">Muat terbaru</span>
                 </button>
               </section>
+              ) : (
+                <SharedStoreCartHeader
+                  cart={cart}
+                  quantity={shop.quantity}
+                  frozen={frozen}
+                  selectingStore={selectingStore}
+                  onSwitchStore={() => setStoreModalOpen(true)}
+                  onRefresh={shared.refresh}
+                  onChooseDate={(selected) =>
+                    void shared.choose({ storeId: cart.store.id, date: selected })
+                  }
+                  dateLabel={dateLabel}
+                />
+              )}
               {showCart && (
                 <>
                   {!cart.canEdit && (
@@ -1490,15 +1506,6 @@ export default function SharedCartPage({ adminView = false }) {
                     </div>
                     <aside className="shared-cart-summary">
                       <h2>Ringkasan keranjang</h2>
-                      {!isAdmin && (
-                        <div className="shared-summary-store shared-summary-store-compact">
-                          <strong>Toko aktif</strong>
-                          <span>{cart.store.storeName}</span>
-                          <small>
-                            {cart.store.storeCode} · {dateLabel(cart.date)}
-                          </small>
-                        </div>
-                      )}
                       <p>
                         {cart.items.length} SKU · {shop.quantity} kemasan
                       </p>

@@ -23,9 +23,9 @@ Pastikan server BAM dalam keadaan mati.
 npm run seed:pc
 \`\`\`
 
-Perintah ini membuat \`data/bam-pc-demo.sqlite\`, menampilkan enam akun demo beserta **satu
-kata sandi acak** yang berlaku untuk seluruh akun tersebut. Simpan kata sandi yang dicetak
-di terminal secara lokal (jangan commit atau bagikan).
+Perintah ini membuat \`data/bam-pc-demo.sqlite\` dengan enam akun demo yang semuanya
+memakai password development default **\`BAM-Demo@2026\`**. Password ini diketahui publik;
+gunakan **hanya di localhost**, tidak pada database produksi atau server online.
 
 Akun demo:
 
@@ -56,7 +56,29 @@ Pastikan \`BAM_DB_PATH\` tetap menunjuk ke database demo setiap kali menjalankan
 Bila ingin otomatis, tambah \`BAM_DB_PATH=data/bam-pc-demo.sqlite\` ke file \`.env\`
 lokal (file ini diabaikan oleh Git).
 
-## 4. Jika database dummy sudah ada
+## 4. Reset password keenam akun dummy yang sudah ada
+
+Jika database sudah pernah dibuat, **jangan jalankan `npm run seed:pc` lagi**.
+Hentikan server, kemudian jalankan dari folder proyek:
+
+```powershell
+npm run reset:pc-passwords
+```
+
+Password keenam akun akan menjadi **`BAM-Demo@2026`**. Script reset hanya mengakses
+`data/bam-pc-demo.sqlite`, memeriksa identitas akun dan penanda Owner/Sales sebelum
+mengubah password, lalu mengakhiri sesi login lama. Data toko, keranjang, jadwal,
+produk, dan pesanan tidak dihapus. Script tidak menerima lokasi database lain
+melalui argumen maupun `BAM_DB_PATH` dan menolak berjalan di lingkungan production.
+
+Jalankan kembali:
+
+```powershell
+$env:BAM_DB_PATH = "data/bam-pc-demo.sqlite"
+npm run dev:full
+```
+
+## 5. Jika database dummy sudah ada
 
 Perintah \`npm run seed:pc\` sengaja **menolak membuat ulang** file yang telah ada.
 Gunakan saja databasenya dengan perintah pada langkah 3.

@@ -78,7 +78,7 @@ $env:BAM_DB_PATH = "data/bam-pc-demo.sqlite"
 npm run dev:full
 ```
 
-## 5. Jika database dummy sudah ada
+## 5. Membuat ulang database dummy dari nol
 
 Perintah \`npm run seed:pc\` sengaja **menolak membuat ulang** file yang telah ada.
 Gunakan saja databasenya dengan perintah pada langkah 3.

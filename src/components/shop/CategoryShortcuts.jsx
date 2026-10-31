@@ -7,9 +7,10 @@ import './CategoryShortcuts.css';
 
 const categoryColors = { snack: 'coral', beauty: 'lilac', bumbu: 'amber', rumah: 'mint' };
 
-export default function CategoryShortcuts({ page = 1, pageSize = 4, directory = false, compact = false } = {}) {
+export default function CategoryShortcuts({ page = 1, pageSize, directory = false, compact = false } = {}) {
   if (!categories.length) return null;
-  const visible = categories.slice((page - 1) * pageSize, page * pageSize);
+  const limit = pageSize ?? (compact ? 4 : categories.length);
+  const visible = categories.slice((page - 1) * limit, page * limit);
   return (
     <section className={"home-categories" + (compact ? " is-compact" : "")} aria-labelledby="home-categories-title">
       <header className="section-heading">

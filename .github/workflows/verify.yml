@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Show store promos formatting diff
-        run: |
-          npx prettier --write src/components/shop/StoreBuyerDashboard.jsx src/data/storeBuyerSelections.test.js src/pages/homeB2bUi.test.js
-          git diff -- src/components/shop/StoreBuyerDashboard.jsx src/data/storeBuyerSelections.test.js src/pages/homeB2bUi.test.js
       - run: npm run format:check

@@ -173,7 +173,13 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
             onClick={allowed ? activateStoreCart : undefined}
           >
             <DashboardIcon name="cart" />
-            {allowed ? 'Lanjutkan keranjang toko' : 'Periksa akun toko'}
+            {!allowed
+              ? 'Periksa akun toko'
+              : !cart
+                ? 'Buka keranjang toko'
+                : cart.status === 'open' && !cart.reviewRequested
+                  ? 'Lanjutkan keranjang toko'
+                  : 'Lihat keranjang toko'}
             <DashboardIcon name="arrow" />
           </a>
           <a className="bam-buyer-dashboard-secondary-action" href="#/pesanan">

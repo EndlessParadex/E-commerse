@@ -317,18 +317,23 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     });
     assert.ok(!container.querySelector('.catalog-status'));
     assert.ok(container.querySelector('.home-categories'));
-    assert.ok(container.querySelector('.bam-promotions'));
+    assert.ok(container.querySelector('.home-landing--personal'));
+    assert.equal(container.querySelector('.bam-promotions'), null, 'no redundant horizontal promotions');
     assert.ok(container.querySelector('.store-featured-products'));
+    assert.match(container.querySelector('#store-featured-title').textContent, /Produk pilihan untukmu/);
     const sections = [...container.querySelector('.home-container').children];
     const featureRail = container.querySelector('.home-feature-rail');
     const discoveryRow = container.querySelector('.home-discovery-row');
     const categoriesSection = discoveryRow?.querySelector('.home-categories');
     const supplierSection = discoveryRow?.querySelector('.bam-suppliers');
-    const promotionSection = container.querySelector('.bam-promotions');
     const featuredSection = container.querySelector('.store-featured-products');
     assert.ok(featureRail, 'Banner utama dan promo vertikal tampil di beranda');
     assert.ok(featureRail.querySelector('.bam-promo'), 'Banner katalog utama tetap ada');
-    assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
+    const panel = featureRail.querySelector('.bam-vertical-promos.is-personal');
+    assert.ok(panel, 'personal homepage has compact right-side promo panel');
+    assert.equal(panel.querySelectorAll('.bam-vertical-promo-item').length, 4);
+    assert.equal(panel.querySelectorAll('[aria-label*=deadline], [aria-label*=stok]'), 0);
+    assert.match(panel.querySelector('.bam-vertical-promos-heading h2').textContent, /Promo/);
     assert.ok(categoriesSection, 'Kategori berada dalam baris penemuan produk');
     assert.ok(supplierSection, 'Mitra pemasok berada dalam baris yang sama');
     assert.ok(discoveryRow.classList.contains('bam-compact-discovery'));
@@ -348,11 +353,10 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
       [
         sections.indexOf(featureRail),
         sections.indexOf(discoveryRow),
-        sections.indexOf(promotionSection),
         sections.indexOf(featuredSection),
       ],
-      [0, 1, 2, 3],
-      'Beranda menampilkan banner, kategori/pemasok, promo katalog, lalu produk',
+      [0, 1, 2],
+      'Beranda pribadi menampilkan banner dan promo kanan, kategori/pemasok, lalu produk',
     );
     const discoveryStyles = await readFile(
       new URL('./StorefrontDesign2.css', import.meta.url),

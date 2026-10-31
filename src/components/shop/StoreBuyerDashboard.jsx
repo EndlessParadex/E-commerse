@@ -290,7 +290,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
               {promos.length ? 'Harga khusus untuk tokomu' : 'Temukan kebutuhan tokomu'}
             </h2>
             <p>Temukan promo dan harga dari katalog pemasok BAM.</p>
-            <a href="#/cari?q=" >
+            <a href="#/cari?q=">
               Lihat semua promo <StoreIcon name="arrow" size={19} />
             </a>
           </div>
@@ -314,7 +314,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                 <span className="bam-buyer-deals-kicker">Diskon dari katalog</span>
                 <h2 id="bam-buyer-deals-title">Produk Promo</h2>
               </div>
-              <a href="#/cari?q=" >
+              <a href="#/cari?q=">
                 Lihat semua <StoreIcon name="arrow" size={16} />
               </a>
             </header>
@@ -324,7 +324,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                   key={entry.product.groupId || entry.product.id}
                   entry={entry}
                   featured
-                  />
+                />
               ))}
             </div>
           </section>
@@ -336,16 +336,13 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
         >
           <header className="bam-buyer-section-heading">
             <h2 id="bam-buyer-recommendations-title">Rekomendasi untuk toko kamu</h2>
-            <a href="#/cari?q=" >
+            <a href="#/cari?q=">
               Lihat semua <StoreIcon name="arrow" size={16} />
             </a>
           </header>
           <div className="bam-buyer-product-grid">
             {recommendations.map((entry) => (
-              <StoreProductCard
-                key={entry.product.groupId || entry.product.id}
-                entry={entry}
-              />
+              <StoreProductCard key={entry.product.groupId || entry.product.id} entry={entry} />
             ))}
           </div>
           {!recommendations.length && (
@@ -356,7 +353,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
         <section className="bam-buyer-supplier-section" aria-labelledby="bam-buyer-supplier-title">
           <header className="bam-buyer-section-heading">
             <h2 id="bam-buyer-supplier-title">Mitra pemasok</h2>
-            <a href="#/cari?q=" >
+            <a href="#/cari?q=">
               Lihat semua <StoreIcon name="arrow" size={16} />
             </a>
           </header>

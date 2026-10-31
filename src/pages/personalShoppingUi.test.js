@@ -121,6 +121,17 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     await mount('buyer', '/', () => container.querySelector('.bam-buyer-dashboard'));
     assert.match(bar(), /Keranjang bersama/);
     assert.doesNotMatch(bar(), /Belanja pribadi ·/);
+    const buyerModes = container.querySelector('.bam-buyer-catalog-mode-actions');
+    assert.ok(buyerModes, 'Pembeli Toko melihat tujuan Add-to-cart di katalog');
+    assert.equal(buyerModes.querySelector('[aria-pressed="true"]').textContent, 'Keranjang toko');
+    const switchMode = (label) =>
+      [...buyerModes.querySelectorAll('button')].find((item) => item.textContent === label);
+    await click(switchMode('Belanja pribadi'));
+    await wait(() => /Belanja pribadi/.test(bar()));
+    assert.equal(switchMode('Belanja pribadi').getAttribute('aria-pressed'), 'true');
+    await click(switchMode('Keranjang toko'));
+    await wait(() => /Keranjang bersama/.test(bar()));
+    assert.equal(switchMode('Keranjang toko').getAttribute('aria-pressed'), 'true');
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

@@ -70,4 +70,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - name: Diagnostic personal cart fix formatting
+        run: |
+          npx prettier --write src/components/layout/Navbar.jsx src/components/shop/StoreBuyerDashboard.jsx src/pages/personalShoppingUi.test.js
+          git diff -- src/components/layout/Navbar.jsx src/components/shop/StoreBuyerDashboard.jsx src/pages/personalShoppingUi.test.js
       - run: npm run format:check

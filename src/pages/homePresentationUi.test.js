@@ -332,7 +332,7 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     const panel = featureRail.querySelector('.bam-vertical-promos.is-personal');
     assert.ok(panel, 'personal homepage has compact right-side promo panel');
     assert.equal(panel.querySelectorAll('.bam-vertical-promo-item').length, 4);
-    assert.equal(panel.querySelectorAll('[aria-label*=deadline], [aria-label*=stok]'), 0);
+    assert.equal(panel.querySelectorAll('[aria-label*=deadline], [aria-label*=stok]').length, 0);
     assert.match(panel.querySelector('.bam-vertical-promos-heading h2').textContent, /Promo/);
     assert.ok(categoriesSection, 'Kategori berada dalam baris penemuan produk');
     assert.ok(supplierSection, 'Mitra pemasok berada dalam baris yang sama');

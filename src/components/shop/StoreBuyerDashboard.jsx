@@ -28,15 +28,53 @@ function displayDate(date) {
 
 function DashboardIcon({ name }) {
   const paths = {
-    store: <><path d="M3 9h18l-2-5H5L3 9Z" /><path d="M4 9v11h16V9M9 20v-7h6v7" /></>,
-    cart: <><path d="M2 4h3l3 12h11l3-9H6" /><circle cx="10" cy="21" r="1" /><circle cx="19" cy="21" r="1" /></>,
-    calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M7 3v4M17 3v4M3 10h18M8 14h3M14 14h3" /></>,
-    orders: <><path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3Z" /><path d="M9 8h6M9 12h6" /></>,
-    catalog: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
+    store: (
+      <>
+        <path d="M3 9h18l-2-5H5L3 9Z" />
+        <path d="M4 9v11h16V9M9 20v-7h6v7" />
+      </>
+    ),
+    cart: (
+      <>
+        <path d="M2 4h3l3 12h11l3-9H6" />
+        <circle cx="10" cy="21" r="1" />
+        <circle cx="19" cy="21" r="1" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M7 3v4M17 3v4M3 10h18M8 14h3M14 14h3" />
+      </>
+    ),
+    orders: (
+      <>
+        <path d="M5 3h14v18l-3-2-4 2-4-2-3 2V3Z" />
+        <path d="M9 8h6M9 12h6" />
+      </>
+    ),
+    catalog: (
+      <>
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </>
+    ),
     arrow: <path d="M4 12h16m-6-6 6 6-6 6" />,
   };
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       {paths[name] || paths.store}
     </svg>
   );
@@ -55,7 +93,8 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
   const list = Array.isArray(shared.stores?.stores) ? shared.stores.stores : [];
   const total = shared.stores?.total ?? list.length;
   const cart = shared.cart;
-  const store = cart?.store ||
+  const store =
+    cart?.store ||
     list.find((item) => item.id === shared.selection?.storeId) ||
     (total === 1 ? list[0] : null);
   const schedule = store?.deliverySchedule;
@@ -107,7 +146,9 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
     <div className="bam-buyer-dashboard" aria-labelledby="bam-buyer-dashboard-title">
       <section className="bam-buyer-dashboard-hero">
         <div className="bam-buyer-dashboard-heading">
-          <span className="bam-buyer-dashboard-symbol"><DashboardIcon name="store" /></span>
+          <span className="bam-buyer-dashboard-symbol">
+            <DashboardIcon name="store" />
+          </span>
           <div className="bam-buyer-dashboard-heading-copy">
             <span className="bam-buyer-dashboard-eyebrow">DASHBOARD TOKO</span>
             <h1 id="bam-buyer-dashboard-title">
@@ -142,25 +183,38 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
       </section>
       <div className="bam-buyer-dashboard-stats" aria-label="Ringkasan operasional toko">
         <div className="bam-buyer-dashboard-stat">
-          <span className="bam-buyer-dashboard-stat-icon"><DashboardIcon name="cart" /></span>
+          <span className="bam-buyer-dashboard-stat-icon">
+            <DashboardIcon name="cart" />
+          </span>
           <span className="bam-buyer-dashboard-stat-label">Keranjang bersama</span>
           <strong>{cart ? `${packages} kemasan` : 'Belum tersedia'}</strong>
-          <small>{cart ? `${items.length} SKU · ${cartStatus(cart)}` : 'Buka keranjang toko untuk memulai'}</small>
+          <small>
+            {cart
+              ? `${items.length} SKU · ${cartStatus(cart)}`
+              : 'Buka keranjang toko untuk memulai'}
+          </small>
         </div>
         <div className="bam-buyer-dashboard-stat">
-          <span className="bam-buyer-dashboard-stat-icon"><DashboardIcon name="calendar" /></span>
+          <span className="bam-buyer-dashboard-stat-icon">
+            <DashboardIcon name="calendar" />
+          </span>
           <span className="bam-buyer-dashboard-stat-label">Jadwal pengiriman</span>
           <strong>{displayDate(nextDate) || 'Belum ditetapkan'}</strong>
           <small>{scheduleSummary}</small>
         </div>
         <div className="bam-buyer-dashboard-stat">
-          <span className="bam-buyer-dashboard-stat-icon"><DashboardIcon name="orders" /></span>
+          <span className="bam-buyer-dashboard-stat-icon">
+            <DashboardIcon name="orders" />
+          </span>
           <span className="bam-buyer-dashboard-stat-label">Periode keranjang aktif</span>
           <strong>{displayDate(period) || 'Belum dipilih'}</strong>
           <small>{cart ? cartStatus(cart) : 'Atur periode pada keranjang toko'}</small>
         </div>
       </div>
-      <section className="bam-buyer-dashboard-activities" aria-labelledby="bam-buyer-dashboard-actions-title">
+      <section
+        className="bam-buyer-dashboard-activities"
+        aria-labelledby="bam-buyer-dashboard-actions-title"
+      >
         <div className="bam-buyer-dashboard-section-heading">
           <div>
             <h2 id="bam-buyer-dashboard-actions-title">Aktivitas Toko</h2>
@@ -175,12 +229,16 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
               className={'bam-buyer-dashboard-shortcut is-' + link.id}
               onClick={link.disabled ? undefined : link.action}
             >
-              <span className="bam-buyer-dashboard-shortcut-icon"><DashboardIcon name={link.icon} /></span>
+              <span className="bam-buyer-dashboard-shortcut-icon">
+                <DashboardIcon name={link.icon} />
+              </span>
               <span className="bam-buyer-dashboard-shortcut-copy">
                 <strong>{link.title}</strong>
                 <small>{link.description}</small>
               </span>
-              <span className="bam-buyer-dashboard-shortcut-arrow"><DashboardIcon name="arrow" /></span>
+              <span className="bam-buyer-dashboard-shortcut-arrow">
+                <DashboardIcon name="arrow" />
+              </span>
             </a>
           ))}
         </nav>

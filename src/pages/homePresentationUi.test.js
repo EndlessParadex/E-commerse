@@ -318,9 +318,16 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(!container.querySelector('.catalog-status'));
     assert.ok(container.querySelector('.home-categories'));
     assert.ok(container.querySelector('.home-landing--personal'));
-    assert.equal(container.querySelector('.bam-promotions'), null, 'no redundant horizontal promotions');
+    assert.equal(
+      container.querySelector('.bam-promotions'),
+      null,
+      'no redundant horizontal promotions',
+    );
     assert.ok(container.querySelector('.store-featured-products'));
-    assert.match(container.querySelector('#store-featured-title').textContent, /Produk pilihan untukmu/);
+    assert.match(
+      container.querySelector('#store-featured-title').textContent,
+      /Produk pilihan untukmu/,
+    );
     const sections = [...container.querySelector('.home-container').children];
     const featureRail = container.querySelector('.home-feature-rail');
     const discoveryRow = container.querySelector('.home-discovery-row');

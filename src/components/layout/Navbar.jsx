@@ -74,7 +74,9 @@ const Navbar = () => {
   const activeB2BDate = shared?.cart?.date || '';
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
   const navRole = b2bCart
-    ? shared.role === 'owner' ? 'buyer' : shared.role
+    ? shared.role === 'owner'
+      ? 'buyer'
+      : shared.role
     : user?.role === 'admin'
       ? 'admin'
       : user

@@ -98,6 +98,30 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
     await click(container.querySelector('[aria-label="Aktifkan pergantian otomatis"]'));
     assert.ok(container.querySelector('[aria-label="Jeda pergantian otomatis"]'));
 
+    for (const role of ['sales', 'buyer', 'owner']) {
+      shop.shared = {
+        enabled: true,
+        status: 'ready',
+        role,
+        stores: { stores: [], total: 0, page: 1, pages: 1 },
+        selection: {},
+        findStores: async () => null,
+      };
+      await act(async () => {
+        root.render(home({ id: 'qa-shopping-account' }));
+      });
+      const row = container.querySelector('.home-discovery-row.bam-compact-discovery');
+      assert.ok(row, role + ': shared discovery grid visible');
+      assert.equal(row.querySelectorAll('.home-category-card').length, 4);
+      assert.equal(row.querySelectorAll('.bam-supplier-card').length, 4);
+      assert.equal(row.querySelector('.home-categories .view-all-link').getAttribute('href'), '#/kategori');
+      assert.equal(row.querySelector('.bam-suppliers .view-all-link').getAttribute('href'), '#/pemasok');
+    }
+    shop.shared = { enabled: false, status: 'ready', role: 'personal' };
+    await act(async () => root.render(home({ id: 'qa-private-buyer' })));
+    assert.equal(container.querySelectorAll('.bam-compact-discovery .home-category-card').length, 4);
+    assert.equal(container.querySelectorAll('.bam-compact-discovery .bam-supplier-card').length, 4);
+
     await act(async () => root.render(createElement(AdminPage, { view: 'overview' })));
     const toggle = container.querySelector('.admin-menu-toggle');
     assert.equal(toggle.getAttribute('aria-expanded'), 'false');

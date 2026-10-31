@@ -18,7 +18,6 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   dom.scrollTo = () => {};
   let reduced = false;
-  let scrolled;
   let accepted = false;
   let confirmations = 0;
   dom.matchMedia = () => ({ matches: reduced, addEventListener() {}, removeEventListener() {} });
@@ -73,25 +72,13 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
       container.querySelector('.bam-promo-product.is-secondary'),
       'produk kedua pada banner kembali tersedia',
     );
-    assert.ok(
-      container.querySelector('.bam-promotions-intro'),
-      'kotak informasi promo kembali tersedia',
-    );
+    assert.ok(container.querySelector('.home-landing--personal'));
+    assert.ok(container.querySelector('.bam-vertical-promos.is-personal'));
+    assert.equal(container.querySelector('.bam-promotions'), null);
     assert.ok(container.querySelector('.home-category-card'));
     assert.ok(container.querySelector('.bam-supplier-card'));
-    const catalog = container.querySelector('#catalog');
-    catalog.scrollIntoView = (options) => {
-      scrolled = options;
-    };
-    const catalogLink = container.querySelector('.bam-promotions-intro a[href="#catalog"]');
-    await click(catalogLink);
-    assert.equal(scrolled.behavior, 'smooth');
-    assert.equal(dom.location.hash, '#/');
-    reduced = true;
-    await click(catalogLink);
-    assert.equal(scrolled.behavior, 'instant');
-    assert.equal(dom.location.hash, '#/');
-    reduced = false;
+    assert.equal(container.querySelector('.bam-vertical-promos-heading > a').getAttribute('href'), '#/cari?q=');
+    assert.equal(container.querySelectorAll('.bam-vertical-promo-item').length, 4);
     assert.ok(container.querySelector('[aria-label="Jeda pergantian otomatis"]'));
     await click(container.querySelector('[aria-label="Jeda pergantian otomatis"]'));
     assert.ok(container.querySelector('[aria-label="Aktifkan pergantian otomatis"]'));
@@ -110,6 +97,8 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
       await act(async () => {
         root.render(home({ id: 'qa-shopping-account' }));
       });
+      assert.equal(container.querySelector('.home-landing--personal'), null, role + ': unchanged B2B home');
+      assert.ok(container.querySelector('.bam-promotions'), role + ': existing B2B promotions remain');
       const row = container.querySelector('.home-discovery-row.bam-compact-discovery');
       assert.ok(row, role + ': shared discovery grid visible');
       assert.equal(row.querySelectorAll('.home-category-card').length, 4);
@@ -125,6 +114,9 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
     }
     shop.shared = { enabled: false, status: 'ready', role: 'personal' };
     await act(async () => root.render(home({ id: 'qa-private-buyer' })));
+    assert.ok(container.querySelector('.home-landing--personal'));
+    assert.equal(container.querySelector('.bam-promotions'), null);
+    assert.ok(container.querySelector('.bam-vertical-promos.is-personal'));
     assert.equal(
       container.querySelectorAll('.bam-compact-discovery .home-category-card').length,
       4,

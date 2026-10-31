@@ -146,22 +146,34 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     assert.equal(destinationButton('Keranjang Pribadi').getAttribute('aria-pressed'), 'true');
     assert.equal(destinationButton('Keranjang Toko').getAttribute('aria-pressed'), 'false');
     assert.match(container.querySelector('.detail-purchase-panel h2').textContent, /pribadi/);
-    assert.doesNotMatch(container.querySelector('.detail-purchase-panel').textContent, /Untuk Toko Bersama/);
+    assert.doesNotMatch(
+      container.querySelector('.detail-purchase-panel').textContent,
+      /Untuk Toko Bersama/,
+    );
 
     // Switching on the product itself changes the real destination, not just a caption.
     await click(destinationButton('Keranjang Toko'));
     await wait(() => destinationButton('Keranjang Toko').getAttribute('aria-pressed') === 'true');
     assert.match(container.querySelector('.detail-purchase-panel h2').textContent, /toko/);
     await click(destinationButton('Keranjang Pribadi'));
-    await wait(() => destinationButton('Keranjang Pribadi').getAttribute('aria-pressed') === 'true');
+    await wait(
+      () => destinationButton('Keranjang Pribadi').getAttribute('aria-pressed') === 'true',
+    );
     const addButton = container.querySelector('.detail-purchase-panel .detail-add');
     assert.ok(!addButton.disabled, 'barang dapat ditambahkan ke keranjang pribadi');
     await click(addButton);
-    await wait(() => /Berhasil ditambahkan/.test(container.querySelector('.detail-purchase-panel .detail-add').textContent));
+    await wait(() =>
+      /Berhasil ditambahkan/.test(
+        container.querySelector('.detail-purchase-panel .detail-add').textContent,
+      ),
+    );
     await navigate('/keranjang');
     await wait(() => container.querySelector('.cart-page'));
     assert.equal(container.querySelector('.shared-cart-heading'), null);
-    assert.ok(container.querySelector('.cart-page .cart-item'), 'barang benar-benar masuk ke keranjang pribadi');
+    assert.ok(
+      container.querySelector('.cart-page .cart-item'),
+      'barang benar-benar masuk ke keranjang pribadi',
+    );
     await click(container.querySelector('.bam-cart-mode-switch button[aria-pressed="false"]'));
     await wait(() => container.querySelector('.shared-cart-heading'));
     assert.equal(

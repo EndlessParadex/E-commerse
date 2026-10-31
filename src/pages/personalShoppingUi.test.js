@@ -118,7 +118,7 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     await wait(() => container.querySelector('.shared-cart-heading'));
 
     // Pembeli toko memakai preferensi sendiri: tetap mode toko.
-    await mount('buyer', '/', () => container.querySelector('.bam-role-home--buyer'));
+    await mount('buyer', '/', () => container.querySelector('.bam-buyer-dashboard'));
     assert.match(bar(), /Keranjang bersama/);
     assert.doesNotMatch(bar(), /Belanja pribadi ·/);
   } finally {

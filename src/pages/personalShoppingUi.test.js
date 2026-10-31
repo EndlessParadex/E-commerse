@@ -130,6 +130,33 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     await click(switchMode());
     await wait(() => /Keranjang bersama/.test(bar()));
     assert.match(switchMode().textContent, /belanja pribadi/);
+
+    // Product discovery must never silently undo an explicit personal-cart choice.
+    await click(switchMode());
+    await wait(() => /Belanja pribadi/.test(bar()));
+    const itemLink = container.querySelector('.bam-buyer-recommendations .bam-buyer-product-photo');
+    assert.ok(itemLink, 'produk rekomendasi tersedia untuk Pembeli Toko');
+    const productRoute = itemLink.getAttribute('href').slice(1);
+    await click(itemLink);
+    await navigate(productRoute);
+    await wait(() => container.querySelector('.detail-cart-destination'));
+    const destination = () => container.querySelector('.detail-cart-destination');
+    const destinationButton = (label) =>
+      [...destination().querySelectorAll('button')].find((button) => button.textContent === label);
+    assert.equal(destinationButton('Keranjang Pribadi').getAttribute('aria-pressed'), 'true');
+    assert.equal(destinationButton('Keranjang Toko').getAttribute('aria-pressed'), 'false');
+    assert.match(container.querySelector('.detail-purchase-panel h2').textContent, /pribadi/);
+    assert.doesNotMatch(container.querySelector('.detail-purchase-panel').textContent, /Untuk Toko Bersama/);
+
+    // Switching on the product itself changes the real destination, not just a caption.
+    await click(destinationButton('Keranjang Toko'));
+    await wait(() => destinationButton('Keranjang Toko').getAttribute('aria-pressed') === 'true');
+    assert.match(container.querySelector('.detail-purchase-panel h2').textContent, /toko/);
+    await click(destinationButton('Keranjang Pribadi'));
+    await wait(() => destinationButton('Keranjang Pribadi').getAttribute('aria-pressed') === 'true');
+    await navigate('/keranjang');
+    await wait(() => container.querySelector('.cart-page'));
+    assert.equal(container.querySelector('.shared-cart-heading'), null);
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

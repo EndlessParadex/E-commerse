@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Show storefront formatting diff
-        run: |
-          npx prettier --write src/components/shop/StoreBuyerDashboard.jsx src/pages/homeB2bUi.test.js src/pages/personalShoppingUi.test.js
-          git diff -- src/components/shop/StoreBuyerDashboard.jsx src/pages/homeB2bUi.test.js src/pages/personalShoppingUi.test.js
       - run: npm run format:check

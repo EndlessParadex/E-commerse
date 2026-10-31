@@ -104,23 +104,47 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       await flush();
     });
 
-    await render(shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }));
-    assert.ok(container.querySelector('.bam-role-home--buyer'));
-    assert.match(container.querySelector('h1').textContent, /Belanja mudah untuk tokomu/);
-    assert.match(
-      container.querySelector('.bam-role-home-card.is-store').textContent,
-      /Toko Makmur/,
+    await render({
+      ...shared('buyer', [store], { storeId: store.id, date: '2026-10-26' }),
+      cart: {
+        store,
+        date: '2026-10-26',
+        status: 'open',
+        items: [
+          { id: 'product-a', quantity: 2 },
+          { id: 'product-b', quantity: 3 },
+        ],
+      },
+    });
+    assert.ok(container.querySelector('.bam-buyer-dashboard'));
+    assert.equal(container.querySelector('h1').textContent, 'Toko Makmur');
+    assert.match(container.querySelector('.bam-buyer-dashboard-heading p').textContent, /TKB-000001/);
+    assert.match(container.querySelector('.bam-buyer-dashboard-heading p').textContent, /Senin/);
+    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /5 kemasan/);
+    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /2 SKU/);
+    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /26 Oktober 2026/);
+    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /Draft terbuka/);
+    assert.equal(container.querySelectorAll('.bam-buyer-dashboard-shortcut').length, 4);
+    assert.equal(
+      container.querySelector('.bam-buyer-dashboard-shortcut.is-schedule').getAttribute('href'),
+      '#/akun/kalender',
     );
-    assert.match(
-      container.querySelector('.bam-role-home-card.is-store').textContent,
-      /Setiap Senin · 1 minggu/,
+    assert.equal(
+      container.querySelector('.bam-buyer-dashboard-shortcut.is-orders').getAttribute('href'),
+      '#/pesanan',
     );
-    assert.match(
-      container.querySelector('.bam-role-home-card.is-store').textContent,
-      /26 Oktober 2026/,
+    assert.equal(
+      container.querySelector('.bam-buyer-dashboard-main-action').getAttribute('href'),
+      '#/keranjang',
     );
-    assert.equal(container.querySelectorAll('.bam-role-home-card').length, 2);
-    assert.doesNotMatch(container.textContent, /List Toko/);
+    assert.doesNotMatch(container.textContent, /List Toko|Belanja mudah untuk tokomu/);
+    await act(async () => {
+      container.querySelector('.bam-buyer-dashboard-main-action').click();
+      container.querySelector('.bam-buyer-dashboard-shortcut.is-catalog').click();
+      container.querySelector('.bam-buyer-dashboard-personal a').click();
+      await flush();
+    });
+    assert.deepEqual(modes.slice(-3), ['store', 'store', 'personal']);
 
     await render({
       ...shared('sales', [store], { storeId: store.id, date: '2026-10-26' }),
@@ -137,16 +161,29 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.equal(modes.at(-1), 'store');
 
     await render(shared('buyer', []));
-    assert.match(container.textContent, /Akun belum terhubung ke toko/);
+    assert.match(container.textContent, /Toko belum terhubung/);
     assert.match(container.textContent, /Belanja pribadi/);
-    assert.ok(!container.querySelector('.bam-role-home-next-date'));
+    assert.match(container.textContent, /Belum tersedia/);
+    assert.match(container.textContent, /Belum ditetapkan/);
+    assert.equal(
+      container.querySelector('.bam-buyer-dashboard-main-action').getAttribute('href'),
+      '#/akun',
+      'unassigned buyer cannot claim to open another store cart',
+    );
 
-    const css = await readFile(
+    const salesCss = await readFile(
       new URL('../components/shop/B2BHomeExperience.css', import.meta.url),
       'utf8',
     );
-    assert.match(css, /@media \(max-width: 700px\)/);
-    assert.match(css, /prefers-reduced-motion/);
+    const buyerCss = await readFile(
+      new URL('../components/shop/StoreBuyerDashboard.css', import.meta.url),
+      'utf8',
+    );
+    const home = await readFile(new URL('./Home.jsx', import.meta.url), 'utf8');
+    assert.match(salesCss, /@media \(max-width: 700px\)/);
+    assert.match(salesCss, /prefers-reduced-motion/);
+    assert.match(buyerCss, /@media \(max-width: 420px\)/);
+    assert.match(home, /!buyerDashboard && <VerticalPromoPanel \/>/);
   } finally {
     await act(async () => root.unmount());
     await server.close();

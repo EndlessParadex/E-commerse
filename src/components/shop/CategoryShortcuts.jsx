@@ -7,8 +7,9 @@ import './CategoryShortcuts.css';
 
 const categoryColors = { snack: 'coral', beauty: 'lilac', bumbu: 'amber', rumah: 'mint' };
 
-export default function CategoryShortcuts() {
+export default function CategoryShortcuts({ page = 1, pageSize = 4, directory = false } = {}) {
   if (!categories.length) return null;
+  const visible = categories.slice((page - 1) * pageSize, page * pageSize);
   return (
     <section className="home-categories" aria-labelledby="home-categories-title">
       <header className="section-heading">
@@ -16,12 +17,12 @@ export default function CategoryShortcuts() {
           <span className="section-eyebrow">Mulai dari kebutuhanmu</span>
           <h2 id="home-categories-title">Mau belanja apa?</h2>
         </div>
-        <a className="view-all-link" href={searchHref('')}>
-          Lihat semua produk <span aria-hidden="true">→</span>
+        <a className="view-all-link" href={directory ? searchHref('') : '#/kategori'}>
+          {directory ? 'Jelajahi katalog' : 'Lihat semua kategori'} <span aria-hidden="true">→</span>
         </a>
       </header>
       <ul className="home-category-grid">
-        {categories.map((category) => {
+        {visible.map((category) => {
           const items = products.filter((product) => product.categoryId === category.id);
           const featured = items.find((product) =>
             productGallery(product).some((photo) => !photo.demo),

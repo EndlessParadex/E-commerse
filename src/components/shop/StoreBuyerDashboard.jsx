@@ -366,7 +366,6 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                 className={'bam-buyer-supplier-card is-' + supplier.color}
                 href={supplierHref(supplier.id)}
                 key={supplier.id}
-                onClick={setStoreMode}
               >
                 <span className="bam-buyer-supplier-emblem">{supplier.initials}</span>
                 <strong>{supplier.name}</strong>

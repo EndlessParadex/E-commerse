@@ -54,7 +54,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
     assigned.find((entry) => entry.id === shared.selection?.storeId) ||
     (count === 1 ? assigned[0] : null);
   const schedule = store?.deliverySchedule;
-  const period = cart?.store?.id === store?.id ? cart.date : null;
+  const period = cart?.store && store && cart.store.id === store.id ? cart.date : null;
   const deliveryDate = displayDate(period) || displayDate(nextStoreDelivery(schedule, wibToday()));
   const packages = (cart?.items || []).reduce((total, item) => total + (Number(item.quantity) || 0), 0);
   const scheduleText = schedule

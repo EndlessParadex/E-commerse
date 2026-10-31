@@ -351,7 +351,10 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
           )}
         </section>
 
-        <div className="home-discovery-row bam-compact-discovery bam-buyer-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
+        <div
+          className="home-discovery-row bam-compact-discovery bam-buyer-discovery-row"
+          aria-label="Kategori dan mitra pemasok BAM"
+        >
           <CategoryShortcuts compact />
           <SupplierSection compact />
         </div>

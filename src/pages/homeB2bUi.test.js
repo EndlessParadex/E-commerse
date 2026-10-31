@@ -118,12 +118,21 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     });
     assert.ok(container.querySelector('.bam-buyer-dashboard'));
     assert.equal(container.querySelector('h1').textContent, 'Toko Makmur');
-    assert.match(container.querySelector('.bam-buyer-dashboard-heading p').textContent, /TKB-000001/);
+    assert.match(
+      container.querySelector('.bam-buyer-dashboard-heading p').textContent,
+      /TKB-000001/,
+    );
     assert.match(container.querySelector('.bam-buyer-dashboard-heading p').textContent, /Senin/);
     assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /5 kemasan/);
     assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /2 SKU/);
-    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /26 Oktober 2026/);
-    assert.match(container.querySelector('.bam-buyer-dashboard-stats').textContent, /Draft terbuka/);
+    assert.match(
+      container.querySelector('.bam-buyer-dashboard-stats').textContent,
+      /26 Oktober 2026/,
+    );
+    assert.match(
+      container.querySelector('.bam-buyer-dashboard-stats').textContent,
+      /Draft terbuka/,
+    );
     assert.equal(container.querySelectorAll('.bam-buyer-dashboard-shortcut').length, 4);
     assert.equal(
       container.querySelector('.bam-buyer-dashboard-shortcut.is-schedule').getAttribute('href'),

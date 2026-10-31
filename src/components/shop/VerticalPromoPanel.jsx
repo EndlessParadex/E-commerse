@@ -5,20 +5,20 @@ import { rupiah } from './shopPresentation';
 import ProductImage from './ProductImage';
 import './VerticalPromoPanel.css';
 
-export default function VerticalPromoPanel({ storefront = false } = {}) {
+export default function VerticalPromoPanel({ storefront = false, personal = false } = {}) {
   const { items, discountedCount } = homePromotions(products, storefront ? 3 : 4);
   return (
     <section
-      className={'bam-vertical-promos' + (storefront ? ' is-storefront' : '')}
+      className={'bam-vertical-promos' + (storefront ? ' is-storefront' : '') + (personal ? ' is-personal' : '')}
       aria-labelledby="bam-vertical-promos-title"
     >
       <header className="bam-vertical-promos-heading">
         <div>
           <span className="bam-vertical-promos-kicker">
-            {discountedCount ? 'Harga khusus di katalog' : 'Pilihan dari katalog BAM'}
+            {personal ? 'Pilihan hemat untuk belanjamu' : discountedCount ? 'Harga khusus di katalog' : 'Pilihan dari katalog BAM'}
           </span>
           <h2 id="bam-vertical-promos-title">
-            {discountedCount ? 'Promo & Penawaran' : 'Pilihan untuk Tokomu'}
+            {discountedCount ? 'Promo & Penawaran' : personal ? 'Rekomendasi Belanja' : 'Pilihan untuk Tokomu'}
           </h2>
         </div>
         <a href="#/cari?q=">
@@ -64,6 +64,11 @@ export default function VerticalPromoPanel({ storefront = false } = {}) {
                     <strong>{rupiah(product.price)}</strong>
                     {discounted && <del>{rupiah(product.oldPrice)}</del>}
                   </div>
+                  {personal && discounted && (
+                    <span className="bam-vertical-promo-saving">
+                      Hemat {rupiah(product.oldPrice - product.price)}
+                    </span>
+                  )}
                 </div>
                 <div className="bam-vertical-promo-action">
                   {discounted && <span className="bam-vertical-promo-discount">−{discount}%</span>}

@@ -49,7 +49,7 @@ export default function ShopProvider({ children }) {
   const canChooseCart =
     sharedRaw.enabled &&
     sharedRaw.status === 'ready' &&
-    ['sales', 'buyer'].includes(sharedRaw.role);
+    ['sales', 'buyer', 'owner'].includes(sharedRaw.role);
   const personalCart = canChooseCart && cartMode === 'personal';
   const setCartMode = (value) => {
     const next = value === 'personal' ? 'personal' : 'store';

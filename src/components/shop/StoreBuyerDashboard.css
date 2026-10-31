@@ -1,0 +1,323 @@
+/* Only the authenticated Pembeli Toko home uses these styles. */
+.home-landing--buyer-dashboard .bam-buyer-dashboard {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.bam-buyer-dashboard-hero {
+  display: grid;
+  gap: 16px;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid var(--color-border-info);
+  border-radius: var(--bam-ui-radius-card, 18px);
+  background: linear-gradient(115deg, var(--color-info-soft), var(--color-surface) 85%);
+  color: var(--color-text);
+}
+.bam-buyer-dashboard-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.bam-buyer-dashboard-symbol {
+  display: grid;
+  flex: 0 0 54px;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: var(--color-link);
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-info);
+}
+.bam-buyer-dashboard-heading-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.bam-buyer-dashboard-eyebrow {
+  color: var(--color-link);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+.bam-buyer-dashboard-heading h1 {
+  margin: 3px 0 4px;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  color: var(--color-text-strong);
+}
+.bam-buyer-dashboard-heading p,
+.bam-buyer-dashboard-intro,
+.bam-buyer-dashboard-activities p,
+.bam-buyer-dashboard-personal p {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.bam-buyer-dashboard-role {
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  color: var(--color-info-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-info);
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+.bam-buyer-dashboard-intro {
+  max-width: 690px;
+  margin: 0;
+}
+.bam-buyer-dashboard-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bam-buyer-dashboard-buttons a,
+.bam-buyer-dashboard-personal a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  border-radius: var(--bam-ui-radius-control, 11px);
+  padding: 10px 15px;
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.bam-buyer-dashboard-buttons svg,
+.bam-buyer-dashboard-personal a svg {
+  width: 18px;
+  height: 18px;
+}
+.bam-buyer-dashboard-main-action {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.bam-buyer-dashboard-main-action:hover {
+  background: var(--color-action-hover);
+}
+.bam-buyer-dashboard-main-action.is-disabled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+.bam-buyer-dashboard-secondary-action {
+  color: var(--color-link);
+  border: 1px solid var(--color-border-info);
+  background: var(--color-surface);
+}
+.bam-buyer-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.bam-buyer-dashboard-stat {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  gap: 7px;
+  padding: 17px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-card, 16px);
+  background: var(--color-surface);
+}
+.bam-buyer-dashboard-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 2px;
+  border-radius: 10px;
+  color: var(--color-link);
+  background: var(--color-info-soft);
+}
+.bam-buyer-dashboard-stat-label,
+.bam-buyer-dashboard-stat small {
+  font-size: 0.73rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.bam-buyer-dashboard-stat strong {
+  font-size: clamp(0.96rem, 1.4vw, 1.12rem);
+  color: var(--color-text-strong);
+  overflow-wrap: anywhere;
+}
+.bam-buyer-dashboard-activities {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-card, 16px);
+  padding: 20px;
+  background: var(--color-surface);
+}
+.bam-buyer-dashboard-section-heading h2 {
+  font-size: 1.12rem;
+  color: var(--color-text-strong);
+}
+.bam-buyer-dashboard-section-heading p {
+  margin-top: 4px;
+}
+.bam-buyer-dashboard-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.bam-buyer-dashboard-shortcut {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 9px;
+  padding: 15px;
+  min-width: 0;
+  min-height: 136px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-control, 12px);
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+  text-decoration: none;
+}
+.bam-buyer-dashboard-shortcut:hover {
+  border-color: var(--color-border-info-strong);
+  background: var(--color-info-soft);
+}
+.bam-buyer-dashboard-shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--color-link);
+  background: var(--color-surface);
+}
+.bam-buyer-dashboard-shortcut-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.bam-buyer-dashboard-shortcut strong {
+  display: block;
+  color: var(--color-text-strong);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.bam-buyer-dashboard-shortcut small {
+  font-size: 0.71rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.bam-buyer-dashboard-shortcut-arrow {
+  display: none;
+}
+.bam-buyer-dashboard-personal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-card, 16px);
+  background: var(--color-surface-soft);
+}
+.bam-buyer-dashboard-personal > div {
+  min-width: 0;
+}
+.bam-buyer-dashboard-personal strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-strong);
+}
+.bam-buyer-dashboard-personal a {
+  flex: 0 0 auto;
+  color: var(--color-link);
+  border: 1px solid var(--color-border-info);
+  background: var(--color-surface);
+}
+.bam-buyer-dashboard :is(a, button):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.home-landing.home-landing--buyer-dashboard .home-feature-rail {
+  display: block;
+}
+.home-landing--buyer-dashboard .home-feature-rail > .bam-role-home {
+  width: 100%;
+}
+.home-landing--buyer-dashboard .home-discovery-row,
+.home-landing--buyer-dashboard .bam-promotions,
+.home-landing--buyer-dashboard .store-featured-products {
+  margin-top: clamp(26px, 4vw, 46px);
+}
+@media (max-width: 980px) {
+  .bam-buyer-dashboard-shortcuts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bam-buyer-dashboard-shortcut {
+    min-height: 0;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+  }
+  .bam-buyer-dashboard-shortcut-icon {
+    grid-row: 1 / span 2;
+  }
+}
+@media (max-width: 670px) {
+  .bam-buyer-dashboard-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bam-buyer-dashboard-stat {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 4px 12px;
+    align-items: center;
+    padding: 13px;
+  }
+  .bam-buyer-dashboard-stat-icon {
+    grid-row: 1 / span 3;
+    margin: 0;
+  }
+  .bam-buyer-dashboard-hero {
+    padding: 18px;
+  }
+  .bam-buyer-dashboard-heading {
+    flex-wrap: wrap;
+  }
+  .bam-buyer-dashboard-role {
+    margin-left: 0;
+  }
+  .bam-buyer-dashboard-personal {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .bam-buyer-dashboard-personal a {
+    width: 100%;
+  }
+}
+@media (max-width: 420px) {
+  .bam-buyer-dashboard-shortcuts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bam-buyer-dashboard-shortcut {
+    min-height: 0;
+    grid-template-columns: 36px minmax(0, 1fr) 20px;
+  }
+  .bam-buyer-dashboard-shortcut-arrow {
+    display: block;
+    color: var(--color-link);
+  }
+  .bam-buyer-dashboard-shortcut-arrow svg {
+    width: 19px;
+    height: 19px;
+  }
+  .bam-buyer-dashboard-buttons a {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bam-buyer-dashboard-shortcut:hover {
+    transform: none;
+  }
+}

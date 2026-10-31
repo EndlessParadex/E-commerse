@@ -108,9 +108,9 @@ export default function Home({ catalog = null }) {
               )}
               <VerticalPromoPanel />
             </div>
-            <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
-              <CategoryShortcuts />
-              <SupplierSection />
+            <div className="home-discovery-row bam-compact-discovery" aria-label="Kategori dan mitra pemasok BAM">
+              <CategoryShortcuts compact />
+              <SupplierSection compact />
             </div>
             <PromotionSection />
             <FeaturedProducts />

@@ -331,6 +331,11 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(featureRail.querySelector('.bam-vertical-promos'), 'Panel promo vertikal tersedia');
     assert.ok(categoriesSection, 'Kategori berada dalam baris penemuan produk');
     assert.ok(supplierSection, 'Mitra pemasok berada dalam baris yang sama');
+    assert.ok(discoveryRow.classList.contains('bam-compact-discovery'));
+    assert.equal(discoveryRow.querySelectorAll('.home-category-card').length, 4);
+    assert.equal(discoveryRow.querySelectorAll('.bam-supplier-card').length, 4);
+    assert.equal(categoriesSection.querySelector('.view-all-link').getAttribute('href'), '#/kategori');
+    assert.equal(supplierSection.querySelector('.view-all-link').getAttribute('href'), '#/pemasok');
     assert.deepEqual(
       [...discoveryRow.children],
       [categoriesSection, supplierSection],

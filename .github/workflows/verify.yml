@@ -70,4 +70,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - name: Inspect buyer dashboard formatting
+        run: |
+          npx prettier --write src/components/shop/StoreBuyerDashboard.jsx src/pages/homeB2bUi.test.js src/pages/Home.jsx
+          git diff -- src/components/shop/StoreBuyerDashboard.jsx src/pages/homeB2bUi.test.js src/pages/Home.jsx
       - run: npm run format:check

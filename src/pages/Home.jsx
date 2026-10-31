@@ -75,7 +75,9 @@ export default function Home({ catalog = null }) {
         {pageCount > 1 && (
           <nav className="bam-directory-pagination" aria-label={'Halaman ' + label}>
             {page > 1 && <a href={base + '?halaman=' + (page - 1)}>← Sebelumnya</a>}
-            <span>Halaman {page} dari {pageCount}</span>
+            <span>
+              Halaman {page} dari {pageCount}
+            </span>
             {page < pageCount && <a href={base + '?halaman=' + (page + 1)}>Berikutnya →</a>}
           </nav>
         )}
@@ -108,7 +110,10 @@ export default function Home({ catalog = null }) {
               )}
               <VerticalPromoPanel />
             </div>
-            <div className="home-discovery-row bam-compact-discovery" aria-label="Kategori dan mitra pemasok BAM">
+            <div
+              className="home-discovery-row bam-compact-discovery"
+              aria-label="Kategori dan mitra pemasok BAM"
+            >
               <CategoryShortcuts compact />
               <SupplierSection compact />
             </div>

@@ -111,6 +111,14 @@ export function filterProducts({
 export function parseCatalogRoute(route) {
   try {
     const url = new URL(route, 'https://bam.local');
+    if (url.pathname === '/kategori' || url.pathname === '/pemasok') {
+      const requested = Number(url.searchParams.get('halaman') || '1');
+      const page = Number.isSafeInteger(requested) && requested > 0 ? requested : 1;
+      return {
+        kind: url.pathname === '/kategori' ? 'category-directory' : 'supplier-directory',
+        page,
+      };
+    }
     const supplierMatch = url.pathname.match(/^\/pemasok\/([^/]+)$/);
     if (supplierMatch) {
       const supplierId = decodeURIComponent(supplierMatch[1]);

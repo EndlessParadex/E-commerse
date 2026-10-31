@@ -5,10 +5,13 @@ import { rupiah } from './shopPresentation';
 import ProductImage from './ProductImage';
 import './VerticalPromoPanel.css';
 
-export default function VerticalPromoPanel() {
-  const { items, discountedCount } = homePromotions(products, 4);
+export default function VerticalPromoPanel({ storefront = false } = {}) {
+  const { items, discountedCount } = homePromotions(products, storefront ? 3 : 4);
   return (
-    <section className="bam-vertical-promos" aria-labelledby="bam-vertical-promos-title">
+    <section
+      className={"bam-vertical-promos" + (storefront ? " is-storefront" : "")}
+      aria-labelledby="bam-vertical-promos-title"
+    >
       <header className="bam-vertical-promos-heading">
         <div>
           <span className="bam-vertical-promos-kicker">

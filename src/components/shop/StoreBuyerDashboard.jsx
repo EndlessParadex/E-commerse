@@ -60,7 +60,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
     (total === 1 ? list[0] : null);
   const schedule = store?.deliverySchedule;
   const nextDate = nextStoreDelivery(schedule, dateID());
-  const period = cart?.store?.id === store?.id ? cart.date : null;
+  const period = cart?.store && store && cart.store.id === store.id ? cart.date : null;
   const items = cart?.items || [];
   const packages = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const allowed = Boolean(store);

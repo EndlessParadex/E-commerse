@@ -98,7 +98,11 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
         root.render(home({ id: 'qa-shopping-account' }));
       });
       assert.equal(container.querySelector('.home-landing--personal'), null, role + ': unchanged B2B home');
-      assert.ok(container.querySelector('.bam-promotions'), role + ': existing B2B promotions remain');
+      if (role === 'sales') {
+        assert.ok(container.querySelector('.bam-promotions'), 'Sales retains its existing promotions');
+      } else {
+        assert.equal(container.querySelector('.bam-promotions'), null, role + ': operational store homepage unchanged');
+      }
       const row = container.querySelector('.home-discovery-row.bam-compact-discovery');
       assert.ok(row, role + ': shared discovery grid visible');
       assert.equal(row.querySelectorAll('.home-category-card').length, 4);

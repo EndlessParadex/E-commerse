@@ -6,10 +6,10 @@ import './SupplierSection.css';
 import { supplierColorStyle, avatarColorStyle } from '../../data/catalogColors';
 import { brandsForSupplier } from '../../data/catalogMasters';
 
-export default function SupplierSection({ page = 1, pageSize = 4, directory = false } = {}) {
+export default function SupplierSection({ page = 1, pageSize = 4, directory = false, compact = false } = {}) {
   const visible = suppliers.slice((page - 1) * pageSize, page * pageSize);
   return (
-    <section className="bam-suppliers" id="catalog" aria-labelledby="bam-suppliers-title">
+    <section className={"bam-suppliers" + (compact ? " is-compact" : "")} id="catalog" aria-labelledby="bam-suppliers-title">
       <header className="section-heading">
         <div>
           <span className="section-eyebrow">Jelajahi berdasarkan pemasok</span>
@@ -32,7 +32,7 @@ export default function SupplierSection({ page = 1, pageSize = 4, directory = fa
             <li key={supplier.id}>
               <a
                 href={supplierHref(supplier.id)}
-                className={'bam-supplier-card bam-supplier--' + supplier.color}
+                className={'bam-supplier-card bam-supplier--' + supplier.color + (compact ? ' is-compact' : '')}
                 style={supplierColorStyle(supplier.color)}
               >
                 <div className="bam-supplier-top">
@@ -48,14 +48,18 @@ export default function SupplierSection({ page = 1, pageSize = 4, directory = fa
                     />
                   </div>
                 </div>
-                <h3>{supplier.name}</h3>
-                <p>{categories.join(' · ') || 'Produk belum tersedia'}</p>
-                <div className="bam-supplier-bottom">
+                <div className="bam-supplier-copy">
+                  <h3>{supplier.name}</h3>
+                  <p>{categories.join(' · ') || 'Produk belum tersedia'}</p>
+                  {compact && <small>{brandsForSupplier(supplier.id).length} merek</small>}
+                </div>
+                {!compact && <div className="bam-supplier-bottom">
                   <span>{brandsForSupplier(supplier.id).length} merek</span>
                   <strong>
                     Lihat merek <span aria-hidden="true">↗</span>
                   </strong>
-                </div>
+                </div>}
+                {compact && <span className="bam-supplier-card-arrow" aria-hidden="true">›</span>}
               </a>
             </li>
           );

@@ -28,6 +28,7 @@ export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
   const b2bHome =
     !catalog && shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
+  const buyerDashboard = b2bHome && shared.role === 'buyer';
   const [filterOpen, setFilterOpen] = useState(false);
   const [storeDirectory, setStoreDirectory] = useState(false);
   if (!catalog && shared?.enabled && shared.status === 'loading')
@@ -52,6 +53,7 @@ export default function Home({ catalog = null }) {
         className={
           'home-container home-landing' +
           (b2bHome ? ' home-landing--role' : '') +
+          (buyerDashboard ? ' home-landing--buyer-dashboard' : '') +
           (storeDirectory && b2bHome && shared?.role === 'sales' ? ' is-store-directory' : '')
         }
       >
@@ -65,7 +67,7 @@ export default function Home({ catalog = null }) {
           ) : (
             <PromoCarousel />
           )}
-          <VerticalPromoPanel />
+          {!buyerDashboard && <VerticalPromoPanel />}
         </div>
         <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
           <CategoryShortcuts />

@@ -57,7 +57,7 @@ export default function Home({ catalog = null }) {
           (storeDirectory && b2bHome && shared?.role === 'sales' ? ' is-store-directory' : '')
         }
       >
-        <div className="home-feature-rail" aria-label="Banner dan pilihan promo BAM">
+        <div className="home-feature-rail" aria-label={buyerDashboard ? "Ringkasan toko" : "Banner dan pilihan promo BAM"}>
           {b2bHome ? (
             <B2BHomeExperience
               shared={shared}
@@ -69,6 +69,7 @@ export default function Home({ catalog = null }) {
           )}
           {!buyerDashboard && <VerticalPromoPanel />}
         </div>
+        {buyerDashboard && <VerticalPromoPanel storefront />}
         {buyerDashboard && (
           <div
             className="bam-buyer-catalog-mode"

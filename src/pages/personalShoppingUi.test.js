@@ -118,20 +118,18 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     await wait(() => container.querySelector('.shared-cart-heading'));
 
     // Pembeli toko memakai preferensi sendiri: tetap mode toko.
-    await mount('buyer', '/', () => container.querySelector('.bam-buyer-dashboard'));
+    await mount('buyer', '/', () => container.querySelector('.bam-buyer-storefront'));
     assert.match(bar(), /Keranjang bersama/);
     assert.doesNotMatch(bar(), /Belanja pribadi ·/);
-    const buyerModes = container.querySelector('.bam-buyer-catalog-mode-actions');
-    assert.ok(buyerModes, 'Pembeli Toko melihat tujuan Add-to-cart di katalog');
-    assert.equal(buyerModes.querySelector('[aria-pressed="true"]').textContent, 'Keranjang toko');
-    const switchMode = (label) =>
-      [...buyerModes.querySelectorAll('button')].find((item) => item.textContent === label);
-    await click(switchMode('Belanja pribadi'));
+    const switchMode = () => container.querySelector('.bam-buyer-mode-footnote button');
+    assert.ok(switchMode(), 'Pembeli Toko tetap bisa berpindah mode belanja');
+    assert.match(switchMode().textContent, /belanja pribadi/);
+    await click(switchMode());
     await wait(() => /Belanja pribadi/.test(bar()));
-    assert.equal(switchMode('Belanja pribadi').getAttribute('aria-pressed'), 'true');
-    await click(switchMode('Keranjang toko'));
+    assert.match(switchMode().textContent, /keranjang toko/);
+    await click(switchMode());
     await wait(() => /Keranjang bersama/.test(bar()));
-    assert.equal(switchMode('Keranjang toko').getAttribute('aria-pressed'), 'true');
+    assert.match(switchMode().textContent, /belanja pribadi/);
   } finally {
     if (root) await act(async () => root.unmount());
     await vite.close();

@@ -69,6 +69,33 @@ export default function Home({ catalog = null }) {
           )}
           {!buyerDashboard && <VerticalPromoPanel />}
         </div>
+        {buyerDashboard && (
+          <div className="bam-buyer-catalog-mode" role="group" aria-label="Pilih mode belanja katalog">
+            <div>
+              <strong>Belanja produk untuk siapa?</strong>
+              <p>
+                Mode aktif: {shared.personal ? 'Belanja pribadi' : 'Keranjang toko'}.
+                Barang yang ditambahkan dari katalog masuk ke keranjang sesuai mode ini.
+              </p>
+            </div>
+            <div className="bam-buyer-catalog-mode-actions">
+              <button
+                type="button"
+                aria-pressed={!shared.personal}
+                onClick={() => setCartMode('store')}
+              >
+                Keranjang toko
+              </button>
+              <button
+                type="button"
+                aria-pressed={Boolean(shared.personal)}
+                onClick={() => setCartMode('personal')}
+              >
+                Belanja pribadi
+              </button>
+            </div>
+          </div>
+        )}
         <div className="home-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
           <CategoryShortcuts />
           <SupplierSection />

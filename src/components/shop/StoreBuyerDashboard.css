@@ -1,345 +1,668 @@
-/* Pembeli Toko — Option 3: compact store identity, then product discovery.
-   Scoped to this role; Sales, Guest and Admin keep their own homepage. */
-.home-landing--buyer-dashboard .bam-buyer-dashboard {
+/* Option 3 — split buyer storefront. Scope everything to the buyer's Home route. */
+.home-landing--buyer-dashboard {
+  max-width: 1540px;
+  margin-top: 14px;
+}
+.home-landing--buyer-dashboard .bam-buyer-storefront {
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(235px, 0.245fr) minmax(0, 0.755fr);
+  align-items: start;
+  gap: 18px;
+}
+.bam-buyer-storefront-sidebar,
+.bam-buyer-storefront-main {
+  display: grid;
   min-width: 0;
+  gap: 14px;
 }
-.bam-buyer-store-summary {
-  display: grid;
-  gap: 13px;
-  padding: clamp(16px, 2.5vw, 22px);
-  border: 1px solid var(--color-border-info);
-  border-radius: 17px;
-  background: linear-gradient(110deg, var(--color-info-soft), var(--color-surface) 92%);
-}
-.bam-buyer-store-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.bam-buyer-store-symbol,
-.bam-buyer-primary-icon {
-  flex: 0 0 44px;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--color-border-info);
-  border-radius: 12px;
-  color: var(--color-link);
+.bam-buyer-side-card,
+.bam-buyer-recommendations,
+.bam-buyer-supplier-section {
+  border-radius: 15px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
-.bam-buyer-store-identity {
-  flex: 1;
+.bam-buyer-side-card h2,
+.bam-buyer-section-heading h2 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1.3;
+}
+.bam-buyer-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin-top: 12px;
+}
+.bam-buyer-profile-symbol,
+.bam-buyer-cart-symbol,
+.bam-buyer-side-fact-icon {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+}
+.bam-buyer-profile-row > div,
+.bam-buyer-cart-overview > div {
+  display: grid;
+  align-content: center;
+  gap: 3px;
   min-width: 0;
 }
-.bam-buyer-store-eyebrow {
-  color: var(--color-link);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-}
-.bam-buyer-store-identity h1 {
-  margin: 3px 0;
+.bam-buyer-profile-row h1 {
   color: var(--color-text-strong);
-  font-size: clamp(1.22rem, 2vw, 1.62rem);
-  line-height: 1.28;
+  font-size: clamp(0.83rem, 1.1vw, 0.97rem);
+  line-height: 1.35;
+  font-weight: 790;
   overflow-wrap: anywhere;
 }
-.bam-buyer-store-identity p {
-  color: var(--color-text-secondary);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-.bam-buyer-store-status {
-  flex: 0 0 auto;
-  max-width: 220px;
-  border: 1px solid var(--color-border-info);
-  background: var(--color-surface);
-  color: var(--color-link);
-  border-radius: 999px;
-  padding: 7px 11px;
-  font-size: 0.73rem;
-  font-weight: 750;
-  line-height: 1.4;
-  text-align: center;
-}
-.bam-buyer-store-status.status-finalized {
-  border-color: var(--color-border);
+.bam-buyer-profile-row small,
+.bam-buyer-cart-overview small {
+  font-size: 0.71rem;
   color: var(--color-text-secondary);
 }
-.bam-buyer-store-facts {
-  display: flex;
-  flex-wrap: wrap;
+.bam-buyer-profile-button,
+.bam-buyer-cart-open {
+  display: inline-flex;
+  width: 100%;
+  min-height: 38px;
   align-items: center;
-  gap: 8px 12px;
+  justify-content: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 0.77rem;
+  font-weight: 750;
+  text-decoration: none;
 }
-.bam-buyer-store-fact {
+.bam-buyer-profile-button {
+  border: 1px solid var(--color-border-info);
+  color: var(--color-link);
+  background: var(--color-info-soft);
+}
+.bam-buyer-cart-overview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 13px;
+}
+.bam-buyer-cart-symbol {
+  color: #07835f;
+  background: #e1f8ee;
+}
+.bam-buyer-cart-overview strong {
+  color: var(--color-text-strong);
+  font-size: 0.98rem;
+}
+.bam-buyer-cart-status {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  background: var(--color-info-soft);
+  color: var(--color-link);
+}
+.bam-buyer-cart-open {
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+.bam-buyer-cart-open:hover,
+.bam-buyer-promo-copy > a:hover {
+  background: var(--color-action-hover);
+}
+.bam-buyer-side-facts {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.bam-buyer-side-fact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text);
+  text-decoration: none;
+  min-height: 78px;
+  padding: 10px 0;
+}
+.bam-buyer-side-fact + .bam-buyer-side-fact {
+  border-top: 1px solid var(--color-border);
+}
+.bam-buyer-side-fact-icon {
+  flex-basis: 39px;
+  width: 39px;
+  height: 39px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-soft);
+}
+.bam-buyer-side-fact > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  flex: 1 1 auto;
+}
+.bam-buyer-side-fact small {
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.bam-buyer-side-fact strong {
+  color: var(--color-text-strong);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.bam-buyer-side-chevron {
+  margin-left: auto;
+  color: var(--color-link);
+  font-size: 1.05rem;
+}
+.bam-buyer-side-menu {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.bam-buyer-side-menu h2 {
+  margin-bottom: 10px;
+}
+.bam-buyer-side-menu > a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 7px 5px;
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.77rem;
+  line-height: 1.3;
+  text-decoration: none;
+}
+.bam-buyer-side-menu > a + a {
+  border-top: 1px solid var(--color-border);
+}
+.bam-buyer-side-menu > a svg {
+  flex: 0 0 19px;
+  color: var(--color-link);
+}
+.bam-buyer-side-menu > a span:nth-child(2) {
+  flex: 1;
+}
+.bam-buyer-side-menu > a:hover,
+.bam-buyer-side-fact:hover {
+  background: var(--color-info-soft);
+}
+.bam-buyer-side-menu .bam-buyer-personal-link {
+  margin-top: 7px;
+  color: var(--color-link);
+  font-weight: 750;
+}
+
+/* Warm photographic-style banner built from catalog imagery, with no invented prices. */
+.bam-buyer-promo-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 209px;
+  overflow: hidden;
+  padding: clamp(19px, 2.5vw, 28px);
+  border-radius: 16px;
+  border: 1px solid #f0d5c2;
+  background: linear-gradient(109deg, #fff2e3, #ffe0c1 73%, #ffcca7);
+  isolation: isolate;
+}
+.bam-buyer-promo-hero::before,
+.bam-buyer-promo-hero::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border: 24px solid #fff5e962;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  right: -34px;
+  bottom: -177px;
+}
+.bam-buyer-promo-hero::after {
+  width: 155px;
+  height: 155px;
+  right: 37%;
+  top: -130px;
+  border-width: 17px;
+}
+.bam-buyer-promo-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  width: min(58%, 490px);
+}
+.bam-buyer-promo-eyebrow {
+  font-size: 0.66rem;
+  letter-spacing: 0.11em;
+  font-weight: 800;
+  color: #8f3d22;
+}
+.bam-buyer-promo-copy h2 {
+  margin: 0;
+  color: #601738;
+  font-size: clamp(1.35rem, 2.5vw, 2.05rem);
+  font-weight: 850;
+  line-height: 1.2;
+}
+.bam-buyer-promo-copy p {
+  margin: 0;
+  max-width: 370px;
+  font-size: clamp(0.78rem, 1.2vw, 0.98rem);
+  line-height: 1.5;
+  color: #704b3a;
+}
+.bam-buyer-promo-copy > a {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 40px;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+  padding: 9px 17px;
+  border-radius: 9px;
+  background: #7a1740;
+  color: #fff;
+  font-weight: 750;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+.bam-buyer-promo-art {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 22px;
+  bottom: 0;
+  width: 38%;
+  pointer-events: none;
+}
+.bam-buyer-promo-halo {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  top: -70px;
+  right: 12%;
+  background: #fff9ed55;
+  border-radius: 50%;
+}
+.bam-buyer-promo-package {
+  position: absolute;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 0;
+  width: 85%;
+  height: 125px;
+  right: 4%;
+  bottom: -17px;
+  padding: 0 12px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d7a26e, #b77749);
+  border: 7px solid #e6b888;
+  box-shadow: 0 13px 22px #ad663c4f;
+  transform: rotate(-3deg);
+}
+.bam-buyer-promo-visual {
+  display: grid;
+  place-items: center;
+  width: 34%;
+  height: 113px;
+  margin-bottom: 28px;
+  transform: rotate(-8deg);
+}
+.bam-buyer-promo-visual.is-1 {
+  height: 129px;
+  transform: rotate(4deg);
+}
+.bam-buyer-promo-visual.is-2 {
+  height: 109px;
+  transform: rotate(12deg);
+}
+.bam-buyer-promo-visual .bam-product-media,
+.bam-buyer-promo-visual .bam-product-media--promo {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  border-radius: 13px;
+  background: #fffaf3;
+  box-shadow: 0 8px 18px #b67e6155;
+}
+.bam-buyer-promo-visual img {
+  max-height: 100%;
+  object-fit: contain;
+}
+.bam-buyer-promo-visual .bam-product-fallback {
+  font-size: 3rem;
+}
+.bam-buyer-promo-tag {
+  position: absolute;
+  top: 11px;
+  right: 7px;
+  display: grid;
+  place-items: center;
+  width: 75px;
+  height: 70px;
+  border-radius: 16px 20px 14px 25px;
+  background: #fa4967;
+  color: white;
+  font-size: 2.4rem;
+  font-weight: 900;
+  transform: rotate(21deg);
+  box-shadow: 0 7px 15px #b62e5055;
+}
+
+/* Six real catalog group cards in one row at large desktop widths. */
+.bam-buyer-recommendations,
+.bam-buyer-supplier-section {
+  padding: 16px 14px;
+}
+.bam-buyer-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.bam-buyer-section-heading h2 {
+  font-size: clamp(0.98rem, 1.35vw, 1.15rem);
+}
+.bam-buyer-section-heading a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 9px;
-  padding: 7px 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  font-size: 0.76rem;
-  font-weight: 650;
-}
-.bam-buyer-store-fact svg {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
   color: var(--color-link);
-}
-.bam-buyer-primary-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-.bam-buyer-primary-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  min-height: 94px;
-  padding: 16px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 15px;
-  color: var(--color-text);
+  font-weight: 750;
+  white-space: nowrap;
+  font-size: 0.75rem;
   text-decoration: none;
 }
-.bam-buyer-primary-card:hover {
-  border-color: var(--color-border-info-strong);
-  background: var(--color-info-soft);
+.bam-buyer-product-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
 }
-.bam-buyer-primary-card.is-cart .bam-buyer-primary-icon {
-  background: var(--color-info-soft);
+.bam-buyer-product-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
 }
-.bam-buyer-primary-copy {
+.bam-buyer-product-photo {
+  display: grid;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.04;
+  place-items: center;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-info-soft);
+  text-decoration: none;
+}
+.bam-buyer-product-photo.color-coral,
+.bam-buyer-product-photo.color-amber {
+  background: #fff0db;
+}
+.bam-buyer-product-photo.color-rose,
+.bam-buyer-product-photo.color-red {
+  background: #fff0f1;
+}
+.bam-buyer-product-photo.color-lilac {
+  background: #f1eefe;
+}
+.bam-buyer-product-photo.color-mint {
+  background: #e9f8f4;
+}
+.bam-buyer-product-photo .bam-product-media {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+.bam-buyer-product-photo .bam-product-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.bam-buyer-product-photo .bam-product-fallback {
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+}
+.bam-buyer-discount {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 6px;
+  padding: 4px 7px;
+  border-radius: 99px;
+  font-size: 0.67rem;
+  font-weight: 800;
+  color: #fff;
+  background: #f43c62;
+}
+.bam-buyer-product-copy {
   display: grid;
   gap: 5px;
+  padding: 9px 2px 4px;
+  min-height: 76px;
+}
+.bam-buyer-product-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--color-text-strong);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  font-weight: 750;
+  text-decoration: none;
+}
+.bam-buyer-product-copy small {
+  color: var(--color-text-secondary);
+  font-size: 0.69rem;
+}
+.bam-buyer-product-bottom {
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  margin-top: auto;
+  padding: 4px 2px 3px;
+}
+.bam-buyer-product-bottom > span {
+  display: grid;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 }
-.bam-buyer-primary-copy strong {
-  font-size: 0.91rem;
+.bam-buyer-product-bottom strong {
+  font-size: 0.78rem;
+  white-space: nowrap;
   color: var(--color-text-strong);
 }
-.bam-buyer-primary-copy small {
-  font-size: 0.76rem;
-  color: var(--color-text-secondary);
-  line-height: 1.4;
+.bam-buyer-product-bottom del {
+  font-size: 0.67rem;
+  color: var(--color-text-muted);
 }
-.bam-buyer-primary-arrow {
+.bam-buyer-product-cart {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  min-width: 33px;
+  height: 34px;
+  border-radius: 8px;
   color: var(--color-link);
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-border-info);
 }
-.bam-buyer-primary-arrow svg {
-  width: 19px;
-  height: 19px;
+.bam-buyer-products-empty {
+  padding: 16px;
+  color: var(--color-text-secondary);
 }
-.home-landing.home-landing--buyer-dashboard .home-feature-rail {
-  display: block;
+
+/* Supplier row under products, same four grounded supplier entries. */
+.bam-buyer-supplier-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 11px;
 }
-.home-landing--buyer-dashboard .home-discovery-row,
-.home-landing--buyer-dashboard .bam-promotions,
-.home-landing--buyer-dashboard .store-featured-products {
-  margin-top: clamp(22px, 3vw, 32px);
+.bam-buyer-supplier-card {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 116px;
+  padding: 12px 8px;
+  border-radius: 11px;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  text-decoration: none;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
-.home-landing--buyer-dashboard .bam-buyer-dashboard :is(a, button):focus-visible,
-.home-landing--buyer-dashboard .bam-buyer-primary-card:focus-visible {
+.bam-buyer-supplier-emblem {
+  display: grid;
+  place-items: center;
+  width: 41px;
+  height: 41px;
+  border-radius: 11px;
+  background: #e5f4e9;
+  color: #25834b;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+.bam-buyer-supplier-card.is-violet .bam-buyer-supplier-emblem {
+  color: #8e56a9;
+  background: #f4e8f9;
+}
+.bam-buyer-supplier-card.is-amber .bam-buyer-supplier-emblem {
+  color: #8050a0;
+  background: #eeeafa;
+}
+.bam-buyer-supplier-card.is-mint .bam-buyer-supplier-emblem {
+  color: #bc8c0e;
+  background: #fff8df;
+}
+.bam-buyer-supplier-card strong {
+  font-size: 0.77rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.bam-buyer-supplier-card small {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+.bam-buyer-mode-footnote {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  font-size: 0.73rem;
+}
+.bam-buyer-mode-footnote button {
+  border: 1px solid var(--color-border-info);
+  background: var(--color-info-soft);
+  color: var(--color-link);
+  border-radius: 7px;
+  padding: 6px 9px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.bam-buyer-storefront :is(a, button):focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 
-/* Three catalog-backed promotions visually match the selected storefront mockup. */
-.home-landing--buyer-dashboard .bam-vertical-promos.is-storefront {
-  margin-top: 22px;
-  padding: 20px;
-  height: auto;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 17px;
-  box-shadow: none;
-  color: var(--color-text);
+/* Tablet: keep sidebar, reduce product count per row rather than squeeze. */
+@media (max-width: 1250px) {
+  .home-landing--buyer-dashboard .bam-buyer-storefront {
+    grid-template-columns: minmax(220px, 0.27fr) minmax(0, 0.73fr);
+  }
+  .bam-buyer-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-heading {
-  margin-bottom: 15px;
+@media (max-width: 860px) {
+  .home-landing--buyer-dashboard .bam-buyer-storefront {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bam-buyer-storefront-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bam-buyer-side-facts,
+  .bam-buyer-side-menu {
+    grid-column: 1 / -1;
+  }
+  .bam-buyer-side-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px 12px;
+  }
+  .bam-buyer-side-menu h2 {
+    grid-column: 1 / -1;
+  }
+  .bam-buyer-side-menu > a + a {
+    border-top: 0;
+  }
 }
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-kicker {
-  color: var(--color-link);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-heading h2 {
-  color: var(--color-text-strong);
-  font-size: clamp(1.1rem, 1.7vw, 1.4rem);
-  letter-spacing: normal;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-heading > a {
-  color: var(--color-link);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-list {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: auto;
-  gap: 14px;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-content: start;
-  align-items: start;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 13px;
-  box-shadow: none;
-  background: var(--color-surface);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-photo {
-  grid-column: 1 / -1;
-  width: 100%;
-  height: clamp(110px, 13vw, 156px);
-  border-radius: 10px;
-  background: var(--color-surface-soft);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-photo .bam-product-media {
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  padding: 10px;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-detail {
-  grid-column: 1 / 2;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-brand {
-  color: var(--color-text-secondary);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-detail h3 {
-  font-size: 0.9rem;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-detail h3 a {
-  color: var(--color-text-strong);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-package {
-  color: var(--color-text-secondary);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-prices strong {
-  color: var(--color-link);
-  font-size: 0.94rem;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-action {
-  grid-column: 2 / 3;
-  align-self: stretch;
-  min-width: 55px;
-  justify-content: space-between;
-  gap: 8px;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-action a {
-  min-height: 35px;
-  white-space: nowrap;
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-disclaimer {
-  margin: 12px 0 0;
-  color: var(--color-text-secondary);
-}
-.home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-empty {
-  background: var(--color-surface-soft);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border);
-}
-@media (max-width: 800px) {
-  .home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-list {
+@media (max-width: 550px) {
+  .home-landing--buyer-dashboard .bam-buyer-storefront-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bam-buyer-side-facts,
+  .bam-buyer-side-menu {
+    grid-column: auto;
+  }
+  .bam-buyer-side-menu {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bam-buyer-promo-hero {
+    min-height: 230px;
+    padding: 17px;
+    align-items: start;
+  }
+  .bam-buyer-promo-copy {
+    width: 75%;
+  }
+  .bam-buyer-promo-art {
+    width: 54%;
+    opacity: 0.6;
+    right: -20px;
+  }
+  .bam-buyer-promo-copy h2 {
+    font-size: 1.35rem;
+  }
+  .bam-buyer-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bam-buyer-product-bottom {
+    flex-wrap: wrap;
+  }
+  .bam-buyer-supplier-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 600px) {
-  .bam-buyer-store-heading {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-  .bam-buyer-store-status {
-    margin-left: 56px;
-  }
-  .bam-buyer-primary-actions {
+@media (max-width: 340px) {
+  .bam-buyer-product-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .bam-buyer-primary-card {
-    min-height: 76px;
-    padding: 13px;
-  }
-  .home-landing--buyer-dashboard .is-storefront .bam-vertical-promos-list {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .home-landing--buyer-dashboard .is-storefront .bam-vertical-promo-photo {
-    height: 150px;
-  }
-  .home-landing--buyer-dashboard .bam-vertical-promos.is-storefront {
-    padding: 14px;
-  }
-}
-/* Keep the destination of catalogue Add-to-cart explicit for dual-mode buyers. */
-.home-landing--buyer-dashboard .bam-buyer-catalog-mode {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 24px 0 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-border-info);
-  border-radius: var(--bam-ui-radius-card, 16px);
-  background: var(--color-info-soft);
-}
-.bam-buyer-catalog-mode > div:first-child {
-  flex: 1 1 260px;
-  min-width: 0;
-}
-.bam-buyer-catalog-mode strong {
-  display: block;
-  font-size: 0.84rem;
-  color: var(--color-text-strong);
-}
-.bam-buyer-catalog-mode p {
-  margin: 4px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 0.74rem;
-  line-height: 1.5;
-}
-.bam-buyer-catalog-mode-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-.bam-buyer-catalog-mode-actions button {
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border-info);
-  border-radius: 9px;
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 750;
-  background: var(--color-surface);
-  color: var(--color-link);
-  cursor: pointer;
-}
-.bam-buyer-catalog-mode-actions button[aria-pressed='true'] {
-  background: var(--color-action);
-  border-color: var(--color-action);
-  color: var(--color-on-action);
-}
-.bam-buyer-catalog-mode-actions button:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
-}
-@media (max-width: 500px) {
-  .bam-buyer-catalog-mode-actions {
-    width: 100%;
-  }
-  .bam-buyer-catalog-mode-actions button {
-    flex: 1 1 auto;
   }
 }

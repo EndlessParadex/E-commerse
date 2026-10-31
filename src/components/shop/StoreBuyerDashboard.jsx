@@ -92,10 +92,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
   const period = cart?.store && store && cart.store.id === store.id ? cart.date : null;
   const upcoming = nextStoreDelivery(schedule, todayWIB());
   const shownDate = displayDate(period) || displayDate(upcoming);
-  const packages = (cart?.items || []).reduce(
-    (sum, item) => sum + (Number(item.quantity) || 0),
-    0,
-  );
+  const packages = (cart?.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
   const skuCount = cart?.items?.length ?? 0;
   const status = cartStatus(cart);
   const scheduleSummary = schedule
@@ -121,19 +118,13 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                 : 'Hubungi Admin BAM untuk menghubungkan akun dengan toko.'}
             </p>
           </div>
-          {cart && (
-            <span className={'bam-buyer-store-status status-' + cart.status}>
-              {status}
-            </span>
-          )}
+          {cart && <span className={'bam-buyer-store-status status-' + cart.status}>{status}</span>}
         </div>
         <div className="bam-buyer-store-facts" aria-label="Informasi keranjang dan pengiriman toko">
           <span className="bam-buyer-store-fact">
             <StorefrontIcon name="cart" />
             <span>
-              {cart
-                ? `${skuCount} SKU · ${packages} kemasan`
-                : 'Keranjang belum tersedia'}
+              {cart ? `${skuCount} SKU · ${packages} kemasan` : 'Keranjang belum tersedia'}
             </span>
           </span>
           <span className="bam-buyer-store-fact">
@@ -153,7 +144,9 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
           href={store ? '#/keranjang' : '#/akun'}
           onClick={store ? storeCart : undefined}
         >
-          <span className="bam-buyer-primary-icon"><StorefrontIcon name="cart" /></span>
+          <span className="bam-buyer-primary-icon">
+            <StorefrontIcon name="cart" />
+          </span>
           <span className="bam-buyer-primary-copy">
             <strong>Keranjang Toko</strong>
             <small>
@@ -164,15 +157,21 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                   : 'Lihat barang dan status keranjang'}
             </small>
           </span>
-          <span className="bam-buyer-primary-arrow"><StorefrontIcon name="arrow" /></span>
+          <span className="bam-buyer-primary-arrow">
+            <StorefrontIcon name="arrow" />
+          </span>
         </a>
         <a className="bam-buyer-primary-card is-orders" href="#/pesanan">
-          <span className="bam-buyer-primary-icon"><StorefrontIcon name="orders" /></span>
+          <span className="bam-buyer-primary-icon">
+            <StorefrontIcon name="orders" />
+          </span>
           <span className="bam-buyer-primary-copy">
             <strong>Pesanan Saya</strong>
             <small>Periksa riwayat dan status pesanan akun</small>
           </span>
-          <span className="bam-buyer-primary-arrow"><StorefrontIcon name="arrow" /></span>
+          <span className="bam-buyer-primary-arrow">
+            <StorefrontIcon name="arrow" />
+          </span>
         </a>
       </nav>
     </div>

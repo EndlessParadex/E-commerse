@@ -70,4 +70,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - name: Inspect storefront Prettier differences
+        run: |
+          npx prettier --write src/components/shop/StoreBuyerDashboard.jsx src/components/shop/VerticalPromoPanel.jsx src/pages/Home.jsx src/pages/homeB2bUi.test.js
+          git diff -- src/components/shop/StoreBuyerDashboard.jsx src/components/shop/VerticalPromoPanel.jsx src/pages/Home.jsx src/pages/homeB2bUi.test.js
       - run: npm run format:check

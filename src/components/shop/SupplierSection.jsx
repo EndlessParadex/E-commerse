@@ -6,11 +6,20 @@ import './SupplierSection.css';
 import { supplierColorStyle, avatarColorStyle } from '../../data/catalogColors';
 import { brandsForSupplier } from '../../data/catalogMasters';
 
-export default function SupplierSection({ page = 1, pageSize, directory = false, compact = false } = {}) {
+export default function SupplierSection({
+  page = 1,
+  pageSize,
+  directory = false,
+  compact = false,
+} = {}) {
   const limit = pageSize ?? (compact ? 4 : suppliers.length);
   const visible = suppliers.slice((page - 1) * limit, page * limit);
   return (
-    <section className={"bam-suppliers" + (compact ? " is-compact" : "")} id="catalog" aria-labelledby="bam-suppliers-title">
+    <section
+      className={'bam-suppliers' + (compact ? ' is-compact' : '')}
+      id="catalog"
+      aria-labelledby="bam-suppliers-title"
+    >
       <header className="section-heading">
         <div>
           <span className="section-eyebrow">Jelajahi berdasarkan pemasok</span>
@@ -33,7 +42,11 @@ export default function SupplierSection({ page = 1, pageSize, directory = false,
             <li key={supplier.id}>
               <a
                 href={supplierHref(supplier.id)}
-                className={'bam-supplier-card bam-supplier--' + supplier.color + (compact ? ' is-compact' : '')}
+                className={
+                  'bam-supplier-card bam-supplier--' +
+                  supplier.color +
+                  (compact ? ' is-compact' : '')
+                }
                 style={supplierColorStyle(supplier.color)}
               >
                 <div className="bam-supplier-top">
@@ -67,7 +80,11 @@ export default function SupplierSection({ page = 1, pageSize, directory = false,
                     </div>
                   </>
                 )}
-                {compact && <span className="bam-supplier-card-arrow" aria-hidden="true">›</span>}
+                {compact && (
+                  <span className="bam-supplier-card-arrow" aria-hidden="true">
+                    ›
+                  </span>
+                )}
               </a>
             </li>
           );

@@ -247,6 +247,14 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.match(salesCss, /@media \(max-width: 700px\)/);
     assert.match(salesCss, /prefers-reduced-motion/);
     assert.match(buyerCss, /@media \(max-width: 550px\)/);
+    assert.match(buyerCss, /\.bam-buyer-side-facts \{\s*display: grid;\s*gap: 4px;\s*padding: 8px;/);
+    assert.match(buyerCss, /\.bam-buyer-side-fact \{[\s\S]*?border-radius: 10px;/);
+    assert.match(buyerCss, /\.bam-buyer-side-menu > a \{[\s\S]*?border-radius: 10px;/);
+    assert.match(buyerCss, /\.bam-buyer-side-fact:focus-visible/);
+    assert.match(buyerCss, /\.bam-buyer-side-menu > a:focus-visible/);
+    assert.match(buyerCss, /prefers-reduced-motion: reduce/);
+    assert.doesNotMatch(buyerCss, /\.bam-buyer-side-fact \+ \.bam-buyer-side-fact/);
+    assert.doesNotMatch(buyerCss, /\.bam-buyer-side-menu > a \+ a/);
     assert.match(home, /buyerDashboard \? \(/);
     assert.match(home, /<B2BHomeExperience shared=\{shared\} onCartMode=\{setCartMode\} \/>/);
   } finally {

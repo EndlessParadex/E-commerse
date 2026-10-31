@@ -9,7 +9,7 @@ export default function VerticalPromoPanel({ storefront = false } = {}) {
   const { items, discountedCount } = homePromotions(products, storefront ? 3 : 4);
   return (
     <section
-      className={"bam-vertical-promos" + (storefront ? " is-storefront" : "")}
+      className={'bam-vertical-promos' + (storefront ? ' is-storefront' : '')}
       aria-labelledby="bam-vertical-promos-title"
     >
       <header className="bam-vertical-promos-heading">

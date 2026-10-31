@@ -17,6 +17,8 @@ export default function ProductPurchasePanel({
   added,
   error,
   sharedCart,
+  cartMode,
+  onCartMode,
 }) {
   const panel = useRef(null);
   useLayoutEffect(() => {
@@ -49,9 +51,41 @@ export default function ProductPurchasePanel({
   const photo = productGallery(product)[0];
   return (
     <section ref={panel} className="detail-purchase-panel" aria-labelledby="detail-purchase-title">
+      {sharedCart?.canChooseCart && (
+        <div className="detail-cart-destination" role="group" aria-label="Tujuan keranjang">
+          <span>Belanja untuk</span>
+          <div className="detail-cart-mode-buttons">
+            <button
+              type="button"
+              aria-pressed={cartMode === 'personal'}
+              onClick={() => onCartMode?.('personal')}
+              disabled={sharedCart.busy}
+            >
+              Keranjang Pribadi
+            </button>
+            <button
+              type="button"
+              aria-pressed={cartMode === 'store'}
+              onClick={() => onCartMode?.('store')}
+              disabled={sharedCart.busy}
+            >
+              Keranjang Toko
+            </button>
+          </div>
+        </div>
+      )}
       <h2 id="detail-purchase-title">
-        {sharedCart?.enabled ? 'Atur keranjang toko' : 'Atur pembelian'}
+        {sharedCart?.enabled
+          ? 'Atur keranjang toko'
+          : sharedCart?.canChooseCart
+            ? 'Atur keranjang pribadi'
+            : 'Atur pembelian'}
       </h2>
+      {sharedCart?.canChooseCart && !sharedCart.enabled && (
+        <p className="detail-personal-context">
+          Produk ditambahkan ke keranjang pribadi dan tidak masuk ke keranjang bersama toko.
+        </p>
+      )}
       {sharedCart?.enabled && (
         <p className="detail-shared-context">
           {sharedCart.cart

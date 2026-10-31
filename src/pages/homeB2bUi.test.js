@@ -169,6 +169,18 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       'unassigned buyer cannot navigate directly to an unrelated store cart',
     );
 
+    const { default: VerticalPromoPanel } = await server.ssrLoadModule(
+      '/src/components/shop/VerticalPromoPanel.jsx',
+    );
+    await act(async () => {
+      root.render(createElement(VerticalPromoPanel, { storefront: true }));
+      await flush();
+    });
+    assert.equal(container.querySelectorAll('.bam-vertical-promos.is-storefront').length, 1);
+    assert.equal(container.querySelectorAll('.bam-vertical-promo-item').length, 3);
+    assert.equal(container.querySelectorAll('.bam-vertical-promo-photo[href^="#/produk/"]').length, 3);
+    assert.ok(container.querySelector('.bam-vertical-promo-prices strong').textContent.includes('Rp'));
+
     const salesCss = await readFile(
       new URL('../components/shop/B2BHomeExperience.css', import.meta.url),
       'utf8',

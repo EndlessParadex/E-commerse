@@ -2,9 +2,10 @@ import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import { products } from '../../data/products';
 import { storeBuyerSelections } from '../../data/storeBuyerSelections';
 import { productGallery } from '../../data/productGallery';
-import { suppliers, supplierHref } from '../../data/suppliers';
 import { rupiah } from './shopPresentation';
 import ProductImage from './ProductImage';
+import CategoryShortcuts from './CategoryShortcuts';
+import SupplierSection from './SupplierSection';
 import './StoreBuyerDashboard.css';
 
 const weekdays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -350,27 +351,10 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
           )}
         </section>
 
-        <section className="bam-buyer-supplier-section" aria-labelledby="bam-buyer-supplier-title">
-          <header className="bam-buyer-section-heading">
-            <h2 id="bam-buyer-supplier-title">Mitra pemasok</h2>
-            <a href="#/cari?q=">
-              Lihat semua <StoreIcon name="arrow" size={16} />
-            </a>
-          </header>
-          <div className="bam-buyer-supplier-grid">
-            {suppliers.slice(0, 4).map((supplier) => (
-              <a
-                className={'bam-buyer-supplier-card is-' + supplier.color}
-                href={supplierHref(supplier.id)}
-                key={supplier.id}
-              >
-                <span className="bam-buyer-supplier-emblem">{supplier.initials}</span>
-                <strong>{supplier.name}</strong>
-                <small>Lihat produk</small>
-              </a>
-            ))}
-          </div>
-        </section>
+        <div className="home-discovery-row bam-buyer-discovery-row" aria-label="Kategori dan mitra pemasok BAM">
+          <CategoryShortcuts />
+          <SupplierSection />
+        </div>
         <div className="bam-buyer-mode-footnote">
           <span>
             Belanja untuk: <strong>{shared.personal ? 'Pribadi' : 'Toko'}</strong>

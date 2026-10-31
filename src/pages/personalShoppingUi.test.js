@@ -162,17 +162,12 @@ test('website: Sales memilih List Toko atau Belanja biasa, mode bertahan, dan pe
     await wait(() => container.querySelector('.cart-page'));
     assert.equal(container.querySelector('.shared-cart-heading'), null);
     assert.ok(container.querySelector('.cart-page .cart-item'), 'barang benar-benar masuk ke keranjang pribadi');
-    const personalCartName = container.querySelector('.cart-page .cart-item').textContent;
     await click(container.querySelector('.bam-cart-mode-switch button[aria-pressed="false"]'));
     await wait(() => container.querySelector('.shared-cart-heading'));
-    assert.doesNotMatch(
-      container.querySelector('.shared-cart-page')?.textContent || '',
-      new RegExp(personalCartName.slice(0, 30).replace(/[.*+?^$()|[\]{}]/g, '\\    await click(destinationButton('Keranjang Pribadi'));
-    await wait(() => destinationButton('Keranjang Pribadi').getAttribute('aria-pressed') === 'true');
-    await navigate('/keranjang');
-    await wait(() => container.querySelector('.cart-page'));
-    assert.equal(container.querySelector('.shared-cart-heading'), null);')),
-      'barang pribadi tidak muncul pada daftar keranjang bersama',
+    assert.equal(
+      container.querySelectorAll('.shared-item-compact').length,
+      0,
+      'barang pribadi tidak berpindah ke keranjang bersama',
     );
   } finally {
     if (root) await act(async () => root.unmount());

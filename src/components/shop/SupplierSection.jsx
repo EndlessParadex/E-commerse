@@ -6,7 +6,8 @@ import './SupplierSection.css';
 import { supplierColorStyle, avatarColorStyle } from '../../data/catalogColors';
 import { brandsForSupplier } from '../../data/catalogMasters';
 
-export default function SupplierSection() {
+export default function SupplierSection({ page = 1, pageSize = 4, directory = false } = {}) {
+  const visible = suppliers.slice((page - 1) * pageSize, page * pageSize);
   return (
     <section className="bam-suppliers" id="catalog" aria-labelledby="bam-suppliers-title">
       <header className="section-heading">
@@ -14,15 +15,15 @@ export default function SupplierSection() {
           <span className="section-eyebrow">Jelajahi berdasarkan pemasok</span>
           <h2 id="bam-suppliers-title">Mitra pemasok</h2>
         </div>
-        <a className="view-all-link" href={searchHref('')}>
-          Lihat semua produk →
+        <a className="view-all-link" href={directory ? searchHref('') : '#/pemasok'}>
+          {directory ? 'Jelajahi katalog' : 'Lihat semua pemasok'} <span aria-hidden="true">→</span>
         </a>
       </header>
       <p className="bam-suppliers-note">
         Temukan produk berdasarkan PT pemasok dan merek yang tersedia di katalog.
       </p>
       <ul className="bam-supplier-grid">
-        {suppliers.map((supplier) => {
+        {visible.map((supplier) => {
           const items = groupProducts(
             products.filter((product) => supplier.productIds.includes(product.id)),
           );

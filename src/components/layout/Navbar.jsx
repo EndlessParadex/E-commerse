@@ -58,7 +58,7 @@ const Navbar = () => {
   // Deliver To State
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
   const { user } = useDelivery();
-  const { shared, setCartMode } = useShop();
+  const { shared, cartMode, setCartMode } = useShop();
   const [mobileRoute, setMobileRoute] = useState(
     () => window.location.hash.slice(1).split('?')[0] || '/',
   );
@@ -69,12 +69,12 @@ const Navbar = () => {
   }, []);
   const isAccountRoute = mobileRoute === '/akun' || mobileRoute.startsWith('/akun/');
   const isAccountDetailRoute = mobileRoute.startsWith('/akun/');
-  const b2bCart = shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
+  const b2bCart = shared?.status === 'ready' && ['sales', 'buyer', 'owner'].includes(shared.role);
   const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
   const activeB2BDate = shared?.cart?.date || '';
   const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
   const navRole = b2bCart
-    ? shared.role
+    ? shared.role === 'owner' ? 'buyer' : shared.role
     : user?.role === 'admin'
       ? 'admin'
       : user
@@ -88,7 +88,7 @@ const Navbar = () => {
       active: roleNavigationActive(link, mobileRoute),
     }));
   const goToRoleDestination = (link) => {
-    if (b2bCart && link.cartMode === 'store') setCartMode?.('store');
+    if (b2bCart && link.href === '#/order-cepat') setCartMode?.('store');
     setShowDeliverPopup(false);
     setShowSearchSuggestions(false);
   };
@@ -265,8 +265,9 @@ const Navbar = () => {
             onSubmit={(event) => {
               event.preventDefault();
               setShowSearchSuggestions(false);
-              if (b2bCart) setCartMode?.('store');
-              window.location.hash = b2bCart
+              const storeSearch = b2bCart && cartMode !== 'personal';
+              if (storeSearch) setCartMode?.('store');
+              window.location.hash = storeSearch
                 ? '/order-cepat?q=' + encodeURIComponent(searchQuery)
                 : searchHref(searchQuery);
             }}

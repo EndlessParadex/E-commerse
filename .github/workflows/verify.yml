@@ -70,4 +70,8 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - name: Inspect compact discovery formatting
+        run: |
+          npx prettier --write src/components/shop/CategoryShortcuts.jsx src/components/shop/SupplierSection.jsx src/components/shop/StoreBuyerDashboard.jsx src/pages/Home.jsx src/pages/HomeDiscoveryCompact.css src/pages/homeB2bUi.test.js src/pages/homePresentationUi.test.js src/pages/navigationUi.test.js src/pages/supplierBrandsUi.test.js src/data/catalog.test.js src/data/catalog.js
+          git diff -- src/components/shop/CategoryShortcuts.jsx src/components/shop/SupplierSection.jsx src/components/shop/StoreBuyerDashboard.jsx src/pages/Home.jsx src/pages/HomeDiscoveryCompact.css src/pages/homeB2bUi.test.js src/pages/homePresentationUi.test.js src/pages/navigationUi.test.js src/pages/supplierBrandsUi.test.js src/data/catalog.test.js src/data/catalog.js
       - run: npm run format:check

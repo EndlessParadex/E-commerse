@@ -3,7 +3,7 @@ import { useShop } from '../../state/useShop';
 import ProductCard from './ProductCard';
 
 /** Products come from the active catalog. This is not an invented sales ranking. */
-export default function FeaturedProducts() {
+export default function FeaturedProducts({ personal = false } = {}) {
   const { addItem, favoriteIds, toggleFavorite } = useShop();
   const featured = groupProducts(products).slice(0, 8);
   return (
@@ -11,9 +11,13 @@ export default function FeaturedProducts() {
       <header className="section-heading">
         <div>
           <span className="section-eyebrow">Langsung dari katalog BAM</span>
-          <h2 id="store-featured-title">Produk untuk kebutuhan tokomu</h2>
+          <h2 id="store-featured-title">
+            {personal ? 'Produk pilihan untukmu' : 'Produk untuk kebutuhan tokomu'}
+          </h2>
           <p className="store-featured-caption">
-            Pilih produk dan kemasan yang sesuai kebutuhan belanjamu.
+            {personal
+              ? 'Temukan produk untuk kebutuhan harianmu dari katalog BAM.'
+              : 'Pilih produk dan kemasan yang sesuai kebutuhan belanjamu.'}
           </p>
         </div>
         <a className="view-all-link" href="#/cari?q=">

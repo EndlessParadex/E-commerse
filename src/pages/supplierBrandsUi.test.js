@@ -151,6 +151,8 @@ test('PT opens only its brand cards; brand products and photos remain scoped; Ba
       root.render(createElement(App));
       await settle();
     });
+    await wait(() => container.querySelector('.bam-suppliers .view-all-link[href="#/pemasok"]'));
+    await click(container.querySelector('.bam-suppliers .view-all-link[href="#/pemasok"]'));
     await wait(() => container.querySelector('.bam-supplier-card[href="#/pemasok/qa-first"]'));
     assert.match(
       container.querySelector('.bam-supplier-card[href="#/pemasok/qa-first"]').textContent,

@@ -127,17 +127,33 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.match(container.querySelector('.bam-buyer-cart-card').textContent, /Draft terbuka/);
     assert.match(container.querySelector('.bam-buyer-side-facts').textContent, /26 Oktober 2026/);
     assert.ok(container.querySelector('.bam-buyer-side-menu'));
-    assert.equal(container.querySelectorAll('.bam-buyer-promo-products .bam-buyer-product-card').length, 2);
-    assert.equal(container.querySelectorAll('.bam-buyer-recommendations .bam-buyer-product-card').length, 6);
+    assert.equal(
+      container.querySelectorAll('.bam-buyer-promo-products .bam-buyer-product-card').length,
+      2,
+    );
+    assert.equal(
+      container.querySelectorAll('.bam-buyer-recommendations .bam-buyer-product-card').length,
+      6,
+    );
     assert.equal(container.querySelectorAll('.bam-buyer-supplier-card').length, 4);
     const promoHeading = container.querySelector('.bam-buyer-promo-products');
     const recommendationsHeading = container.querySelector('.bam-buyer-recommendations');
-    assert.ok(promoHeading.compareDocumentPosition(recommendationsHeading) & 4, 'promos precede recommendations');
-    const promoLinks = [...promoHeading.querySelectorAll('.bam-buyer-product-photo')].map((a) => a.href);
-    const recommendationLinks = [...recommendationsHeading.querySelectorAll('.bam-buyer-product-photo')].map((a) => a.href);
+    assert.ok(
+      promoHeading.compareDocumentPosition(recommendationsHeading) & 4,
+      'promos precede recommendations',
+    );
+    const promoLinks = [...promoHeading.querySelectorAll('.bam-buyer-product-photo')].map(
+      (a) => a.href,
+    );
+    const recommendationLinks = [
+      ...recommendationsHeading.querySelectorAll('.bam-buyer-product-photo'),
+    ].map((a) => a.href);
     assert.equal(new Set([...promoLinks, ...recommendationLinks]).size, 8);
     assert.ok(promoHeading.querySelector('.bam-buyer-discount'), 'promos show actual savings');
-    assert.ok(promoHeading.querySelector('.bam-buyer-product-bottom del'), 'original price is visible');
+    assert.ok(
+      promoHeading.querySelector('.bam-buyer-product-bottom del'),
+      'original price is visible',
+    );
     assert.ok(container.querySelector('.bam-buyer-promo-hero'));
     assert.equal(container.querySelectorAll('.bam-buyer-store-summary').length, 0);
     assert.equal(container.querySelectorAll('.bam-buyer-primary-card').length, 0);
@@ -169,13 +185,24 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.equal(modes.at(-1), 'store');
 
     await render(shared('owner', [store], { storeId: store.id, date: '2026-10-26' }));
-    assert.ok(container.querySelector('.bam-buyer-storefront'), 'pemilik toko mendapat storefront sama');
+    assert.ok(
+      container.querySelector('.bam-buyer-storefront'),
+      'pemilik toko mendapat storefront sama',
+    );
     assert.match(container.querySelector('.bam-buyer-store-profile').textContent, /Toko Makmur/);
 
-    const secondStore = { ...store, id: 'store-2', storeName: 'Toko Kedua', storeCode: 'TKB-000002' };
+    const secondStore = {
+      ...store,
+      id: 'store-2',
+      storeName: 'Toko Kedua',
+      storeCode: 'TKB-000002',
+    };
     await render(shared('buyer', [store, secondStore]));
     assert.ok(container.querySelector('.bam-buyer-storefront'));
-    assert.equal(container.querySelector('.bam-buyer-cart-open').getAttribute('href'), '#/keranjang');
+    assert.equal(
+      container.querySelector('.bam-buyer-cart-open').getAttribute('href'),
+      '#/keranjang',
+    );
     assert.match(container.querySelector('.bam-buyer-cart-open').textContent, /Pilih toko/);
 
     await render(shared('buyer', []));
@@ -210,7 +237,10 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       'utf8',
     );
     const home = await readFile(new URL('./Home.jsx', import.meta.url), 'utf8');
-    const shopProvider = await readFile(new URL('../state/ShopProvider.jsx', import.meta.url), 'utf8');
+    const shopProvider = await readFile(
+      new URL('../state/ShopProvider.jsx', import.meta.url),
+      'utf8',
+    );
     assert.match(home, /\['sales', 'buyer', 'owner'\]/);
     assert.match(home, /\['buyer', 'owner'\]/);
     assert.match(shopProvider, /\['sales', 'buyer', 'owner'\]/);

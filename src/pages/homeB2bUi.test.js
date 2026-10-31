@@ -133,9 +133,9 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.equal(container.querySelectorAll('.bam-buyer-store-summary').length, 0);
     assert.equal(container.querySelectorAll('.bam-buyer-primary-card').length, 0);
     assert.equal(
-      container.querySelector('.bam-buyer-side-menu a[href="#/akun/kalender"]').textContent.includes(
-        'Jadwal pengiriman',
-      ),
+      container
+        .querySelector('.bam-buyer-side-menu a[href="#/akun/kalender"]')
+        .textContent.includes('Jadwal pengiriman'),
       true,
     );
     assert.doesNotMatch(container.textContent, /List Toko|Belanja mudah untuk tokomu/);
@@ -163,10 +163,7 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.match(container.textContent, /Toko belum terhubung/);
     assert.match(container.textContent, /Belum tersedia/);
     assert.match(container.textContent, /Belum ditetapkan/);
-    assert.equal(
-      container.querySelector('.bam-buyer-cart-open').getAttribute('href'),
-      '#/akun',
-    );
+    assert.equal(container.querySelector('.bam-buyer-cart-open').getAttribute('href'), '#/akun');
 
     const { default: VerticalPromoPanel } = await server.ssrLoadModule(
       '/src/components/shop/VerticalPromoPanel.jsx',

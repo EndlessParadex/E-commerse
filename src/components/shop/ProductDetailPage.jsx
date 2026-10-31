@@ -32,7 +32,8 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
   const [selectedId, setSelectedId] = useState(productId);
   const product = products.find((item) => item.id === selectedId);
   const variants = productVariants(productId);
-  const { addItem, cart, favoriteIds, toggleFavorite, stockFor, shared } = useShop();
+  const { addItem, cart, favoriteIds, toggleFavorite, stockFor, shared, cartMode, setCartMode } =
+    useShop();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [shareMessage, setShareMessage] = useState('');
@@ -106,6 +107,13 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
   const selectVariant = (variant) => {
     setSelectedId(variant.id);
     setQuantity(1);
+    setAdded(false);
+    setAddError('');
+    window.clearTimeout(feedbackTimer.current);
+  };
+
+  const chooseCartMode = (mode) => {
+    setCartMode(mode);
     setAdded(false);
     setAddError('');
     window.clearTimeout(feedbackTimer.current);
@@ -328,6 +336,8 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
             added={added}
             error={addError}
             sharedCart={shared}
+            cartMode={cartMode}
+            onCartMode={chooseCartMode}
           />
         </aside>
       </div>

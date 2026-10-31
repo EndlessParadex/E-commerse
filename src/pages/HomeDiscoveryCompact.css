@@ -1,0 +1,257 @@
+/* Shared BAM discovery cards — the same compact 2×2 layout for each
+   shopping homepage role. Overrides the older full-height storefront styles
+   without changing catalog/category directory cards. */
+.home-landing .home-discovery-row.bam-compact-discovery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.5vw, 18px);
+  align-items: stretch;
+  margin: 22px 0 0;
+  min-width: 0;
+}
+.home-landing .home-discovery-row.bam-compact-discovery > section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--bam-ui-radius-card, 16px);
+  background: var(--color-surface);
+}
+.home-landing .home-discovery-row.bam-compact-discovery .section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 0;
+  margin: 0 0 14px;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .section-heading h2 {
+  font-size: clamp(0.98rem, 1.5vw, 1.16rem);
+  line-height: 1.3;
+  letter-spacing: normal;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .section-eyebrow {
+  display: none;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .view-all-link {
+  flex: 0 0 auto;
+  max-width: 45%;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  font-weight: 750;
+  color: var(--color-link);
+  white-space: normal;
+  text-align: right;
+  text-decoration: none;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-grid,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-grid > li,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid > li {
+  min-width: 0;
+  min-height: 0;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-card,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 96px;
+  margin: 0;
+  padding: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: none;
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  text-decoration: none;
+  transform: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-card:hover,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact:hover {
+  border-color: var(--color-border-info-strong);
+  background: var(--color-info-soft);
+  transform: none;
+  box-shadow: none;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-card:focus-visible,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-visual,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 49px;
+  width: 49px;
+  height: 49px;
+  min-width: 49px;
+  margin: 0;
+  padding: 5px;
+  border-radius: 11px;
+  grid-column: auto;
+  grid-row: auto;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-visual .bam-product-media--shortcut,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-logo .bam-product-media--promo {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-visual .bam-product-fallback {
+  font-size: 1.7rem;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-copy,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-copy {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+  grid-column: auto;
+  grid-row: auto;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-copy strong,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-copy h3 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 0.77rem;
+  line-height: 1.38;
+  font-weight: 770;
+  overflow-wrap: anywhere;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-copy > span,
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-copy small,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-copy p,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-copy small {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-subcategories {
+  display: none;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .home-category-arrow,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card-arrow {
+  position: static;
+  display: block;
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
+  align-self: center;
+  color: var(--color-link);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .bam-suppliers-note,
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-bottom {
+  display: none;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-top {
+  display: block;
+  flex: 0 0 49px;
+  width: 49px;
+  height: 49px;
+  margin: 0;
+  grid-column: auto;
+  grid-row: auto;
+}
+.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact .bam-supplier-logo {
+  color: var(--supplier-ink);
+  background: var(--supplier-tint);
+}
+.bam-discovery-directory .bam-directory-heading {
+  margin: 20px 0;
+}
+.bam-discovery-directory .bam-directory-heading h1 {
+  color: var(--color-text-strong);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+.bam-discovery-directory .bam-directory-heading p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+}
+.bam-discovery-directory .bam-directory-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0;
+}
+.bam-directory-pagination a {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-info);
+  border-radius: 10px;
+  color: var(--color-link);
+  text-decoration: none;
+}
+.bam-discovery-directory .bam-supplier-copy {
+  min-width: 0;
+}
+.bam-discovery-directory .bam-supplier-copy h3 {
+  color: var(--color-text-strong);
+  font-size: 1rem;
+}
+.bam-discovery-directory .bam-supplier-copy p {
+  margin: 9px 0 20px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+@media (max-width: 980px) {
+  .home-landing .home-discovery-row.bam-compact-discovery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 550px) {
+  .home-landing .home-discovery-row.bam-compact-discovery > section {
+    padding: 12px;
+  }
+  .home-landing .home-discovery-row.bam-compact-discovery .home-category-grid,
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid {
+    gap: 8px;
+  }
+  .home-landing .home-discovery-row.bam-compact-discovery .home-category-card,
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact {
+    min-height: 90px;
+    padding: 9px;
+    gap: 7px;
+  }
+  .home-landing .home-discovery-row.bam-compact-discovery .home-category-visual,
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-logo,
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-top {
+    flex-basis: 39px;
+    min-width: 39px;
+    width: 39px;
+    height: 43px;
+  }
+}
+@media (max-width: 370px) {
+  .home-landing .home-discovery-row.bam-compact-discovery .home-category-grid,
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-landing .home-discovery-row.bam-compact-discovery :is(.home-category-card, .bam-supplier-card) {
+    transition: none;
+  }
+}

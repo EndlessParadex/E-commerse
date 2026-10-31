@@ -1,6 +1,6 @@
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import { products } from '../../data/products';
-import { homePromotions } from '../../data/homePromotions';
+import { storeBuyerSelections } from '../../data/storeBuyerSelections';
 import { productGallery } from '../../data/productGallery';
 import { suppliers, supplierHref } from '../../data/suppliers';
 import { rupiah } from './shopPresentation';
@@ -106,6 +106,48 @@ function StoreIcon({ name, size = 20 }) {
   );
 }
 
+function StoreProductCard({ entry, featured = false, onStoreMode }) {
+  const { product, discounted, discount } = entry;
+  const photo = productGallery(product).find((item) => !item.demo);
+  const preview = photo ? { ...product, image: photo.src, imageAlt: photo.alt } : product;
+  const href = '#/produk/' + encodeURIComponent(product.id);
+  const name = product.baseName || product.name;
+  return (
+    <article
+      className={'bam-buyer-product-card' + (featured ? ' is-promo' : '')}
+      key={product.groupId || product.id}
+    >
+      <a
+        className={'bam-buyer-product-photo color-' + (product.color || 'sky')}
+        href={href}
+        onClick={onStoreMode}
+        aria-label={'Lihat ' + name}
+      >
+        {discounted && <span className="bam-buyer-discount">−{discount}%</span>}
+        <ProductImage product={preview} variant="promo" />
+      </a>
+      <div className="bam-buyer-product-copy">
+        <a href={href} onClick={onStoreMode} className="bam-buyer-product-title">{name}</a>
+        <small>{product.sizeLabel || 'Pilih kemasan'}</small>
+      </div>
+      <div className="bam-buyer-product-bottom">
+        <span>
+          <strong>{rupiah(product.price)}</strong>
+          {discounted && <del>{rupiah(product.oldPrice)}</del>}
+        </span>
+        <a
+          href={href}
+          onClick={onStoreMode}
+          className="bam-buyer-product-cart"
+          aria-label={'Lihat pilihan kemasan ' + name}
+        >
+          <StoreIcon name="cart" size={20} />
+        </a>
+      </div>
+    </article>
+  );
+}
+
 export default function StoreBuyerDashboard({ shared, onCartMode }) {
   const assigned = Array.isArray(shared.stores?.stores) ? shared.stores.stores : [];
   const count = shared.stores?.total ?? assigned.length;
@@ -125,8 +167,9 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
     ? `Setiap ${weekdays[schedule.weekday] || 'hari terjadwal'} · ${schedule.intervalWeeks === 2 ? 'dua mingguan' : 'mingguan'}`
     : 'Jadwal ditentukan Admin';
   const status = cartStatus(cart);
-  const selected = homePromotions(products, 6);
-  const bannerProducts = selected.items.slice(0, 3);
+  const { promos, recommendations } = storeBuyerSelections(products);
+  const bannerProducts = (promos.length ? promos : recommendations).slice(0, 3);
+  const canOpenStoreCart = Boolean(store || count > 0);
   const setStoreMode = () => onCartMode?.('store');
   const setPersonalMode = () => onCartMode?.('personal');
 
@@ -173,10 +216,14 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
           </div>
           <a
             className="bam-buyer-cart-open"
-            href={store ? '#/keranjang' : '#/akun'}
-            onClick={store ? setStoreMode : undefined}
+            href={canOpenStoreCart ? '#/keranjang' : '#/akun'}
+            onClick={canOpenStoreCart ? setStoreMode : undefined}
           >
-            {store ? 'Lanjutkan keranjang' : 'Periksa akun toko'}{' '}
+            {store
+              ? 'Lanjutkan keranjang'
+              : count > 0
+                ? 'Pilih toko untuk belanja'
+                : 'Periksa akun toko'}{' '}
             <StoreIcon name="arrow" size={17} />
           </a>
         </section>
@@ -239,7 +286,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
         <section className="bam-buyer-promo-hero" aria-labelledby="bam-buyer-promo-title">
           <div className="bam-buyer-promo-copy">
             <span className="bam-buyer-promo-eyebrow">PENAWARAN UNTUK TOKO</span>
-            <h2 id="bam-buyer-promo-title">Harga khusus untuk tokomu</h2>
+            <h2 id="bam-buyer-promo-title">{promos.length ? "Harga khusus untuk tokomu" : "Temukan kebutuhan tokomu"}</h2>
             <p>Temukan promo dan harga dari katalog pemasok BAM.</p>
             <a href="#/cari?q=" onClick={setStoreMode}>
               Lihat semua promo <StoreIcon name="arrow" size={19} />
@@ -254,9 +301,33 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
                 </span>
               ))}
             </span>
-            <span className="bam-buyer-promo-tag">%</span>
+            {promos.length > 0 && <span className="bam-buyer-promo-tag">%</span>}
           </div>
         </section>
+
+        {promos.length > 0 && (
+          <section className="bam-buyer-promo-products" aria-labelledby="bam-buyer-deals-title">
+            <header className="bam-buyer-section-heading">
+              <div className="bam-buyer-promo-section-title">
+                <span className="bam-buyer-deals-kicker">Diskon dari katalog</span>
+                <h2 id="bam-buyer-deals-title">Produk Promo</h2>
+              </div>
+              <a href="#/cari?q=" onClick={setStoreMode}>
+                Lihat semua <StoreIcon name="arrow" size={16} />
+              </a>
+            </header>
+            <div className="bam-buyer-promo-product-grid">
+              {promos.map((entry) => (
+                <StoreProductCard
+                  key={entry.product.groupId || entry.product.id}
+                  entry={entry}
+                  featured
+                  onStoreMode={setStoreMode}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section
           className="bam-buyer-recommendations"
@@ -269,45 +340,15 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
             </a>
           </header>
           <div className="bam-buyer-product-grid">
-            {selected.items.map(({ product, discounted, discount }) => {
-              const photo = productGallery(product).find((entry) => !entry.demo);
-              const preview = photo
-                ? { ...product, image: photo.src, imageAlt: photo.alt }
-                : product;
-              const href = '#/produk/' + encodeURIComponent(product.id);
-              return (
-                <article className="bam-buyer-product-card" key={product.groupId || product.id}>
-                  <a
-                    className={'bam-buyer-product-photo color-' + (product.color || 'sky')}
-                    href={href}
-                  >
-                    {discounted && <span className="bam-buyer-discount">−{discount}%</span>}
-                    <ProductImage product={preview} variant="promo" />
-                  </a>
-                  <div className="bam-buyer-product-copy">
-                    <a href={href} className="bam-buyer-product-title">
-                      {product.baseName || product.name}
-                    </a>
-                    <small>{product.sizeLabel || 'Pilih kemasan'}</small>
-                  </div>
-                  <div className="bam-buyer-product-bottom">
-                    <span>
-                      <strong>{rupiah(product.price)}</strong>
-                      {discounted && <del>{rupiah(product.oldPrice)}</del>}
-                    </span>
-                    <a
-                      href={href}
-                      className="bam-buyer-product-cart"
-                      aria-label={'Lihat pilihan kemasan ' + (product.baseName || product.name)}
-                    >
-                      <StoreIcon name="cart" size={20} />
-                    </a>
-                  </div>
-                </article>
-              );
-            })}
+            {recommendations.map((entry) => (
+              <StoreProductCard
+                key={entry.product.groupId || entry.product.id}
+                entry={entry}
+                onStoreMode={setStoreMode}
+              />
+            ))}
           </div>
-          {!selected.items.length && (
+          {!recommendations.length && (
             <p className="bam-buyer-products-empty">Belum ada produk katalog yang tersedia.</p>
           )}
         </section>

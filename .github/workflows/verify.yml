@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Inspect personal storefront formatting
-        run: |
-          npx prettier --write src/components/shop/VerticalPromoPanel.jsx src/pages/homePresentationUi.test.js src/pages/navigationUi.test.js src/pages/PersonalStorefront.css
-          git diff -- src/components/shop/VerticalPromoPanel.jsx src/pages/homePresentationUi.test.js src/pages/navigationUi.test.js src/pages/PersonalStorefront.css
       - run: npm run format:check

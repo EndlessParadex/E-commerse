@@ -666,3 +666,93 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Real discounted catalog products, visually distinct from regular recommendations. */
+.bam-buyer-promo-products {
+  padding: 16px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 15px;
+  background: var(--color-surface);
+}
+.bam-buyer-promo-section-title {
+  display: grid;
+  gap: 3px;
+}
+.bam-buyer-deals-kicker {
+  color: var(--color-link);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+}
+.bam-buyer-promo-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.bam-buyer-promo-product-grid .bam-buyer-product-card.is-promo {
+  display: grid;
+  grid-template-columns: minmax(98px, 38%) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 5px 12px;
+  min-height: 153px;
+  padding: 8px;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-photo {
+  grid-row: 1 / 3;
+  height: 100%;
+  min-height: 134px;
+  aspect-ratio: auto;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-copy {
+  grid-column: 2;
+  min-height: 0;
+  align-content: center;
+  padding: 5px 0 0;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-title {
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-copy small {
+  font-size: 0.72rem;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-bottom {
+  grid-column: 2;
+  align-items: end;
+  padding: 0 0 4px;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-bottom strong {
+  color: var(--color-link);
+  font-size: 0.9rem;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-product-bottom del {
+  font-size: 0.71rem;
+}
+.bam-buyer-product-card.is-promo .bam-buyer-discount {
+  font-size: 0.73rem;
+  padding: 5px 9px;
+}
+@media (max-width: 1110px) {
+  .bam-buyer-promo-product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 860px) {
+  .bam-buyer-promo-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .bam-buyer-promo-product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 350px) {
+  .bam-buyer-promo-product-grid .bam-buyer-product-card.is-promo {
+    grid-template-columns: minmax(90px, 35%) minmax(0, 1fr);
+    gap: 4px 9px;
+  }
+  .bam-buyer-product-card.is-promo .bam-buyer-product-bottom {
+    flex-wrap: wrap;
+  }
+}

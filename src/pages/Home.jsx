@@ -105,7 +105,7 @@ export default function Home({ catalog = null }) {
           <CategoryShortcuts />
           <SupplierSection />
         </div>
-        <PromotionSection />
+        {!buyerDashboard && <PromotionSection />}
         <FeaturedProducts />
       </div>
     );

@@ -135,7 +135,11 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       container.querySelectorAll('.bam-buyer-recommendations .bam-buyer-product-card').length,
       6,
     );
-    assert.equal(container.querySelectorAll('.bam-buyer-supplier-card').length, 4);
+    assert.equal(container.querySelectorAll('.bam-compact-discovery .home-category-card').length, 4);
+    assert.equal(container.querySelectorAll('.bam-compact-discovery .bam-supplier-card').length, 4);
+    assert.ok(container.querySelector('.bam-buyer-discovery-row'));
+    assert.equal(container.querySelector('.bam-compact-discovery .home-categories .view-all-link').getAttribute('href'), '#/kategori');
+    assert.equal(container.querySelector('.bam-compact-discovery .bam-suppliers .view-all-link').getAttribute('href'), '#/pemasok');
     const promoHeading = container.querySelector('.bam-buyer-promo-products');
     const recommendationsHeading = container.querySelector('.bam-buyer-recommendations');
     assert.ok(

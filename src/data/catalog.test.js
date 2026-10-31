@@ -195,9 +195,18 @@ test('kategori, subkategori, query dan urutan harga tidak keluar dari lingkup PT
 
 test('direktori kategori dan pemasok memakai halaman yang tervalidasi', () => {
   assert.deepEqual(parseCatalogRoute('/kategori'), { kind: 'category-directory', page: 1 });
-  assert.deepEqual(parseCatalogRoute('/pemasok?halaman=2'), { kind: 'supplier-directory', page: 2 });
-  assert.deepEqual(parseCatalogRoute('/kategori?halaman=-5'), { kind: 'category-directory', page: 1 });
-  assert.deepEqual(parseCatalogRoute('/pemasok?halaman=abc'), { kind: 'supplier-directory', page: 1 });
+  assert.deepEqual(parseCatalogRoute('/pemasok?halaman=2'), {
+    kind: 'supplier-directory',
+    page: 2,
+  });
+  assert.deepEqual(parseCatalogRoute('/kategori?halaman=-5'), {
+    kind: 'category-directory',
+    page: 1,
+  });
+  assert.deepEqual(parseCatalogRoute('/pemasok?halaman=abc'), {
+    kind: 'supplier-directory',
+    page: 1,
+  });
   assert.equal(parseCatalogRoute('/kategori/snack').kind, 'category');
   assert.equal(parseCatalogRoute('/pemasok/demo-pangan').kind, 'supplier');
 });

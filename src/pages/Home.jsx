@@ -27,8 +27,8 @@ import './StorefrontFeatureRail.css';
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
   const b2bHome =
-    !catalog && shared?.status === 'ready' && ['sales', 'buyer'].includes(shared.role);
-  const buyerDashboard = b2bHome && shared.role === 'buyer';
+    !catalog && shared?.status === 'ready' && ['sales', 'buyer', 'owner'].includes(shared.role);
+  const buyerDashboard = b2bHome && ['buyer', 'owner'].includes(shared.role);
   const [filterOpen, setFilterOpen] = useState(false);
   const [storeDirectory, setStoreDirectory] = useState(false);
   if (!catalog && shared?.enabled && shared.status === 'loading')

@@ -7,11 +7,11 @@ import './CategoryShortcuts.css';
 
 const categoryColors = { snack: 'coral', beauty: 'lilac', bumbu: 'amber', rumah: 'mint' };
 
-export default function CategoryShortcuts({ page = 1, pageSize = 4, directory = false } = {}) {
+export default function CategoryShortcuts({ page = 1, pageSize = 4, directory = false, compact = false } = {}) {
   if (!categories.length) return null;
   const visible = categories.slice((page - 1) * pageSize, page * pageSize);
   return (
-    <section className="home-categories" aria-labelledby="home-categories-title">
+    <section className={"home-categories" + (compact ? " is-compact" : "")} aria-labelledby="home-categories-title">
       <header className="section-heading">
         <div>
           <span className="section-eyebrow">Mulai dari kebutuhanmu</span>

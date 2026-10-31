@@ -9,16 +9,28 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
   const { items, discountedCount } = homePromotions(products, storefront ? 3 : 4);
   return (
     <section
-      className={'bam-vertical-promos' + (storefront ? ' is-storefront' : '') + (personal ? ' is-personal' : '')}
+      className={
+        'bam-vertical-promos' +
+        (storefront ? ' is-storefront' : '') +
+        (personal ? ' is-personal' : '')
+      }
       aria-labelledby="bam-vertical-promos-title"
     >
       <header className="bam-vertical-promos-heading">
         <div>
           <span className="bam-vertical-promos-kicker">
-            {personal ? 'Pilihan hemat untuk belanjamu' : discountedCount ? 'Harga khusus di katalog' : 'Pilihan dari katalog BAM'}
+            {personal
+              ? 'Pilihan hemat untuk belanjamu'
+              : discountedCount
+                ? 'Harga khusus di katalog'
+                : 'Pilihan dari katalog BAM'}
           </span>
           <h2 id="bam-vertical-promos-title">
-            {discountedCount ? 'Promo & Penawaran' : personal ? 'Rekomendasi Belanja' : 'Pilihan untuk Tokomu'}
+            {discountedCount
+              ? 'Promo & Penawaran'
+              : personal
+                ? 'Rekomendasi Belanja'
+                : 'Pilihan untuk Tokomu'}
           </h2>
         </div>
         <a href="#/cari?q=">

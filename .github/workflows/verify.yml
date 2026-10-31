@@ -70,8 +70,4 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - name: Inspect final personal cart regression test formatting
-        run: |
-          npx prettier --write src/pages/personalShoppingUi.test.js
-          git diff -- src/pages/personalShoppingUi.test.js
       - run: npm run format:check

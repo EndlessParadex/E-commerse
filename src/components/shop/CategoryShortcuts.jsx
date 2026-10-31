@@ -7,19 +7,28 @@ import './CategoryShortcuts.css';
 
 const categoryColors = { snack: 'coral', beauty: 'lilac', bumbu: 'amber', rumah: 'mint' };
 
-export default function CategoryShortcuts({ page = 1, pageSize, directory = false, compact = false } = {}) {
+export default function CategoryShortcuts({
+  page = 1,
+  pageSize,
+  directory = false,
+  compact = false,
+} = {}) {
   if (!categories.length) return null;
   const limit = pageSize ?? (compact ? 4 : categories.length);
   const visible = categories.slice((page - 1) * limit, page * limit);
   return (
-    <section className={"home-categories" + (compact ? " is-compact" : "")} aria-labelledby="home-categories-title">
+    <section
+      className={'home-categories' + (compact ? ' is-compact' : '')}
+      aria-labelledby="home-categories-title"
+    >
       <header className="section-heading">
         <div>
           <span className="section-eyebrow">Mulai dari kebutuhanmu</span>
           <h2 id="home-categories-title">Mau belanja apa?</h2>
         </div>
         <a className="view-all-link" href={directory ? searchHref('') : '#/kategori'}>
-          {directory ? 'Jelajahi katalog' : 'Lihat semua kategori'} <span aria-hidden="true">→</span>
+          {directory ? 'Jelajahi katalog' : 'Lihat semua kategori'}{' '}
+          <span aria-hidden="true">→</span>
         </a>
       </header>
       <ul className="home-category-grid">

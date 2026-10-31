@@ -127,7 +127,9 @@ function StoreProductCard({ entry, featured = false, onStoreMode }) {
         <ProductImage product={preview} variant="promo" />
       </a>
       <div className="bam-buyer-product-copy">
-        <a href={href} onClick={onStoreMode} className="bam-buyer-product-title">{name}</a>
+        <a href={href} onClick={onStoreMode} className="bam-buyer-product-title">
+          {name}
+        </a>
         <small>{product.sizeLabel || 'Pilih kemasan'}</small>
       </div>
       <div className="bam-buyer-product-bottom">
@@ -286,7 +288,9 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
         <section className="bam-buyer-promo-hero" aria-labelledby="bam-buyer-promo-title">
           <div className="bam-buyer-promo-copy">
             <span className="bam-buyer-promo-eyebrow">PENAWARAN UNTUK TOKO</span>
-            <h2 id="bam-buyer-promo-title">{promos.length ? "Harga khusus untuk tokomu" : "Temukan kebutuhan tokomu"}</h2>
+            <h2 id="bam-buyer-promo-title">
+              {promos.length ? 'Harga khusus untuk tokomu' : 'Temukan kebutuhan tokomu'}
+            </h2>
             <p>Temukan promo dan harga dari katalog pemasok BAM.</p>
             <a href="#/cari?q=" onClick={setStoreMode}>
               Lihat semua promo <StoreIcon name="arrow" size={19} />

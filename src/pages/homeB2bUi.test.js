@@ -116,31 +116,31 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
         ],
       },
     });
-    assert.ok(container.querySelector('.bam-buyer-dashboard'));
+    const buyerStorefront = container.querySelector('.bam-buyer-storefront');
+    assert.ok(buyerStorefront, 'Pembeli Toko memakai split storefront');
+    assert.ok(buyerStorefront.querySelector('.bam-buyer-storefront-sidebar'));
+    assert.ok(buyerStorefront.querySelector('.bam-buyer-storefront-main'));
     assert.equal(container.querySelector('h1').textContent, 'Toko Makmur');
-    assert.match(
-      container.querySelector('.bam-buyer-store-identity p').textContent,
-      /TKB-000001 · Senin/,
-    );
-    const summary = container.querySelector('.bam-buyer-store-summary');
-    assert.match(summary.textContent, /2 SKU · 5 kemasan/);
-    assert.match(summary.textContent, /Periode keranjang: 26 Oktober 2026/);
-    assert.match(summary.textContent, /Draft terbuka/);
-    assert.equal(container.querySelectorAll('.bam-buyer-store-summary').length, 1);
-    assert.equal(container.querySelectorAll('.bam-buyer-primary-card').length, 2);
-    assert.equal(container.querySelectorAll('.bam-buyer-dashboard-stats').length, 0);
-    assert.equal(container.querySelectorAll('.bam-buyer-dashboard-shortcut').length, 0);
+    assert.match(container.querySelector('.bam-buyer-store-profile').textContent, /TKB-000001/);
+    assert.match(container.querySelector('.bam-buyer-cart-card').textContent, /5 kemasan/);
+    assert.match(container.querySelector('.bam-buyer-cart-card').textContent, /2 SKU/);
+    assert.match(container.querySelector('.bam-buyer-cart-card').textContent, /Draft terbuka/);
+    assert.match(container.querySelector('.bam-buyer-side-facts').textContent, /26 Oktober 2026/);
+    assert.ok(container.querySelector('.bam-buyer-side-menu'));
+    assert.equal(container.querySelectorAll('.bam-buyer-product-card').length, 6);
+    assert.equal(container.querySelectorAll('.bam-buyer-supplier-card').length, 4);
+    assert.ok(container.querySelector('.bam-buyer-promo-hero'));
+    assert.equal(container.querySelectorAll('.bam-buyer-store-summary').length, 0);
+    assert.equal(container.querySelectorAll('.bam-buyer-primary-card').length, 0);
     assert.equal(
-      container.querySelector('.bam-buyer-primary-card.is-orders').getAttribute('href'),
-      '#/pesanan',
-    );
-    assert.equal(
-      container.querySelector('.bam-buyer-primary-card.is-cart').getAttribute('href'),
-      '#/keranjang',
+      container.querySelector('.bam-buyer-side-menu a[href="#/akun/kalender"]').textContent.includes(
+        'Jadwal pengiriman',
+      ),
+      true,
     );
     assert.doesNotMatch(container.textContent, /List Toko|Belanja mudah untuk tokomu/);
     await act(async () => {
-      container.querySelector('.bam-buyer-primary-card.is-cart').click();
+      container.querySelector('.bam-buyer-cart-open').click();
       await flush();
     });
     assert.equal(modes.at(-1), 'store');
@@ -161,12 +161,11 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
 
     await render(shared('buyer', []));
     assert.match(container.textContent, /Toko belum terhubung/);
-    assert.match(container.textContent, /Keranjang belum tersedia/);
-    assert.match(container.textContent, /Jadwal pengiriman belum ditetapkan/);
+    assert.match(container.textContent, /Belum tersedia/);
+    assert.match(container.textContent, /Belum ditetapkan/);
     assert.equal(
-      container.querySelector('.bam-buyer-primary-card.is-cart').getAttribute('href'),
+      container.querySelector('.bam-buyer-cart-open').getAttribute('href'),
       '#/akun',
-      'unassigned buyer cannot navigate directly to an unrelated store cart',
     );
 
     const { default: VerticalPromoPanel } = await server.ssrLoadModule(
@@ -198,8 +197,8 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     assert.match(salesCss, /@media \(max-width: 700px\)/);
     assert.match(salesCss, /prefers-reduced-motion/);
     assert.match(buyerCss, /@media \(max-width: 600px\)/);
-    assert.match(home, /!buyerDashboard && <VerticalPromoPanel \/>/);
-    assert.match(home, /buyerDashboard && <VerticalPromoPanel storefront \/>/);
+    assert.match(home, /buyerDashboard \? \(/);
+    assert.match(home, /<B2BHomeExperience shared=\{shared\} onCartMode=\{setCartMode\} \/>/);
   } finally {
     await act(async () => root.unmount());
     await server.close();

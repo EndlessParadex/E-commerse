@@ -77,7 +77,10 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
     assert.equal(container.querySelector('.bam-promotions'), null);
     assert.ok(container.querySelector('.home-category-card'));
     assert.ok(container.querySelector('.bam-supplier-card'));
-    assert.equal(container.querySelector('.bam-vertical-promos-heading > a').getAttribute('href'), '#/cari?q=');
+    assert.equal(
+      container.querySelector('.bam-vertical-promos-heading > a').getAttribute('href'),
+      '#/cari?q=',
+    );
     assert.equal(container.querySelectorAll('.bam-vertical-promo-item').length, 4);
     assert.ok(container.querySelector('[aria-label="Jeda pergantian otomatis"]'));
     await click(container.querySelector('[aria-label="Jeda pergantian otomatis"]'));

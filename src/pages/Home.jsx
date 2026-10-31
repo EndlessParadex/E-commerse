@@ -24,12 +24,14 @@ import './Home.css';
 import './StorefrontDesign2.css';
 import './StorefrontFeatureRail.css';
 import './HomeDiscoveryCompact.css';
+import './PersonalStorefront.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
   const b2bHome =
     !catalog && shared?.status === 'ready' && ['sales', 'buyer', 'owner'].includes(shared.role);
   const buyerDashboard = b2bHome && ['buyer', 'owner'].includes(shared.role);
+  const personalHome = !catalog && !b2bHome;
   const [filterOpen, setFilterOpen] = useState(false);
   const [storeDirectory, setStoreDirectory] = useState(false);
   if (!catalog && shared?.enabled && shared.status === 'loading')
@@ -91,6 +93,7 @@ export default function Home({ catalog = null }) {
           'home-container home-landing' +
           (b2bHome ? ' home-landing--role' : '') +
           (buyerDashboard ? ' home-landing--buyer-dashboard' : '') +
+          (personalHome ? ' home-landing--personal' : '') +
           (storeDirectory && b2bHome && shared?.role === 'sales' ? ' is-store-directory' : '')
         }
       >
@@ -108,7 +111,7 @@ export default function Home({ catalog = null }) {
               ) : (
                 <PromoCarousel />
               )}
-              <VerticalPromoPanel />
+              <VerticalPromoPanel personal={personalHome} />
             </div>
             <div
               className="home-discovery-row bam-compact-discovery"
@@ -117,8 +120,8 @@ export default function Home({ catalog = null }) {
               <CategoryShortcuts compact />
               <SupplierSection compact />
             </div>
-            <PromotionSection />
-            <FeaturedProducts />
+            {!personalHome && <PromotionSection />}
+            <FeaturedProducts personal={personalHome} />
           </>
         )}
       </div>

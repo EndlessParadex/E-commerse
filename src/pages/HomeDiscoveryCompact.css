@@ -80,7 +80,9 @@
   color: var(--color-text);
   text-decoration: none;
   transform: none;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
 .home-landing .home-discovery-row.bam-compact-discovery .home-category-card:hover,
 .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact:hover {
@@ -90,7 +92,9 @@
   box-shadow: none;
 }
 .home-landing .home-discovery-row.bam-compact-discovery .home-category-card:focus-visible,
-.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact:focus-visible {
+.home-landing
+  .home-discovery-row.bam-compact-discovery
+  .bam-supplier-card.is-compact:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
@@ -108,14 +112,23 @@
   grid-column: auto;
   grid-row: auto;
 }
-.home-landing .home-discovery-row.bam-compact-discovery .home-category-visual .bam-product-media--shortcut,
-.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-logo .bam-product-media--promo {
+.home-landing
+  .home-discovery-row.bam-compact-discovery
+  .home-category-visual
+  .bam-product-media--shortcut,
+.home-landing
+  .home-discovery-row.bam-compact-discovery
+  .bam-supplier-logo
+  .bam-product-media--promo {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
 }
-.home-landing .home-discovery-row.bam-compact-discovery .home-category-visual .bam-product-fallback {
+.home-landing
+  .home-discovery-row.bam-compact-discovery
+  .home-category-visual
+  .bam-product-fallback {
   font-size: 1.7rem;
 }
 .home-landing .home-discovery-row.bam-compact-discovery .home-category-copy,
@@ -174,7 +187,10 @@
   grid-column: auto;
   grid-row: auto;
 }
-.home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-card.is-compact .bam-supplier-logo {
+.home-landing
+  .home-discovery-row.bam-compact-discovery
+  .bam-supplier-card.is-compact
+  .bam-supplier-logo {
   color: var(--supplier-ink);
   background: var(--supplier-tint);
 }
@@ -251,7 +267,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-landing .home-discovery-row.bam-compact-discovery :is(.home-category-card, .bam-supplier-card) {
+  .home-landing
+    .home-discovery-row.bam-compact-discovery
+    :is(.home-category-card, .bam-supplier-card) {
     transition: none;
   }
 }

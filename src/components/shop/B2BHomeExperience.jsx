@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
+import StoreBuyerDashboard from './StoreBuyerDashboard';
 import './B2BHomeExperience.css';
 
 const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -143,6 +144,7 @@ export default function B2BHomeExperience({ shared, onCartMode, onDirectoryChang
       setSelecting(false);
     }
   };
+  if (!sales) return <StoreBuyerDashboard shared={shared} onCartMode={onCartMode} />;
   if (sales && showStores)
     return (
       <div className="bam-role-store-list">

@@ -23,6 +23,7 @@ import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 import './StorefrontDesign2.css';
 import './StorefrontFeatureRail.css';
+import './HomeDiscoveryCompact.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
@@ -47,6 +48,40 @@ export default function Home({ catalog = null }) {
         </button>
       </div>
     );
+  if (catalog?.kind === 'category-directory' || catalog?.kind === 'supplier-directory') {
+    const categoryDirectory = catalog.kind === 'category-directory';
+    const records = categoryDirectory ? categories.length : suppliers.length;
+    const pageSize = 12;
+    const pageCount = Math.max(1, Math.ceil(records / pageSize));
+    const page = Math.min(catalog.page, pageCount);
+    const label = categoryDirectory ? 'Kategori produk' : 'Mitra pemasok';
+    const base = categoryDirectory ? '#/kategori' : '#/pemasok';
+    return (
+      <div className="home-container home-landing bam-discovery-directory">
+        <nav className="shop-breadcrumb" aria-label="Breadcrumb">
+          <a href="#/">Beranda</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{label}</span>
+        </nav>
+        <div className="bam-directory-heading">
+          <h1>{label}</h1>
+          <p>Telusuri {categoryDirectory ? 'kategori' : 'pemasok'} yang tersedia di katalog BAM.</p>
+        </div>
+        {categoryDirectory ? (
+          <CategoryShortcuts page={page} pageSize={pageSize} directory />
+        ) : (
+          <SupplierSection page={page} pageSize={pageSize} directory />
+        )}
+        {pageCount > 1 && (
+          <nav className="bam-directory-pagination" aria-label={'Halaman ' + label}>
+            {page > 1 && <a href={base + '?halaman=' + (page - 1)}>← Sebelumnya</a>}
+            <span>Halaman {page} dari {pageCount}</span>
+            {page < pageCount && <a href={base + '?halaman=' + (page + 1)}>Berikutnya →</a>}
+          </nav>
+        )}
+      </div>
+    );
+  }
   if (!catalog)
     return (
       <div

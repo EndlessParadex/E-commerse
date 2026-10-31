@@ -196,7 +196,7 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
     const home = await readFile(new URL('./Home.jsx', import.meta.url), 'utf8');
     assert.match(salesCss, /@media \(max-width: 700px\)/);
     assert.match(salesCss, /prefers-reduced-motion/);
-    assert.match(buyerCss, /@media \(max-width: 600px\)/);
+    assert.match(buyerCss, /@media \(max-width: 550px\)/);
     assert.match(home, /buyerDashboard \? \(/);
     assert.match(home, /<B2BHomeExperience shared=\{shared\} onCartMode=\{setCartMode\} \/>/);
   } finally {

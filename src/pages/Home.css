@@ -280,10 +280,6 @@
   color: var(--color-text);
   font: inherit;
 }
-.category-page .category-results .product-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
 .section-heading {
   display: flex;
   justify-content: space-between;
@@ -517,12 +513,6 @@
   .product-emoji {
     font-size: 3.625rem;
   }
-  .product-card-body {
-    padding: 12px;
-  }
-  .product-card h3 {
-    font-size: 0.8125rem;
-  }
   .category-page .category-filter {
     border-radius: 14px;
     border-color: var(--color-border-info);
@@ -656,7 +646,6 @@
 
 /* BAM homepage: hero at left, stacked promotions at right. */
 .home-landing {
-  max-width: 1580px;
   margin: 18px auto;
   padding: 0 clamp(16px, 2vw, 30px);
 }
@@ -714,9 +703,6 @@
 }
 .home-feature-rail .bam-promo-footer {
   padding: 6px 24px;
-}
-.home-landing .home-categories {
-  margin-top: 26px;
 }
 .home-landing .bam-promotions {
   margin-top: 28px;

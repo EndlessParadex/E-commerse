@@ -576,9 +576,11 @@
   display: none;
 }
 .shared-admin-sidebar {
-  position: sticky;
-  top: 20px;
   gap: 12px;
+}
+/* The sidebar stacks several cards, so a sticky summary would cover the next one. */
+.shared-cart-page .shared-admin-sidebar .shared-cart-summary {
+  position: static;
 }
 .shared-admin-sidebar .shared-cart-summary,
 .shared-admin-sidebar .admin-cart-processing {
@@ -615,9 +617,6 @@
 @media (max-width: 1050px) {
   .shared-admin-workspace {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .shared-admin-sidebar {
-    position: static;
   }
   .shared-admin-sidebar .shared-cart-summary,
   .shared-admin-sidebar .admin-cart-processing {

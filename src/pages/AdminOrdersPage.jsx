@@ -30,7 +30,7 @@ const ORDER_FILTERS = [
   { id: 'expired', label: 'Kedaluwarsa' },
 ];
 
-export default function AdminOrdersPage() {
+export default function AdminOrdersPage({ embedded = false, initialFilter = 'all' }) {
   const company = useCompany();
   const [shippingCost, setShippingCost] = useState(''),
     [rejectionReason, setRejectionReason] = useState('');
@@ -39,7 +39,7 @@ export default function AdminOrdersPage() {
   const [reference, setReference] = useState('');
   useUnsavedChanges(false, undefined, busy);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(initialFilter);
   const {
     orders,
     failed,
@@ -125,7 +125,7 @@ export default function AdminOrdersPage() {
             : 'Simulasi di tab browser ini. Pesanan belum tersimpan ke server. Perubahan di sini langsung terlihat pada detail pesanan pembeli di tab yang sama.'}
         </p>
       </details>
-      {company.commerce?.version === 31 && <CommerceReadiness />}
+      {!embedded && company.commerce?.version === 31 && <CommerceReadiness />}
       <div className="workflow-filters">
         <div className="admin-field">
           <label htmlFor="admin-order-search">Cari pesanan</label>

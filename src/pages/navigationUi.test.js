@@ -161,8 +161,8 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
       'rincian pemasok kembali langsung ditampilkan',
     );
     await click(
-      [...container.querySelectorAll('button')].find(
-        (button) => button.textContent === '+ Tambah produk',
+      [...container.querySelectorAll('.admin-overview-quick button')].find((button) =>
+        button.textContent.includes('Tambah produk'),
       ),
     );
     const name = container.querySelector('#product-baseName');

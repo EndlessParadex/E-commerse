@@ -34,6 +34,7 @@ import AdminCompanyPage from './AdminCompanyPage';
 import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
 import AdminOpsOverview from './AdminOpsOverview';
+import useAdminWorkCounts from './useAdminWorkCounts';
 import { approveNextRoute } from '../state/routeGuards';
 // Load the final shared layer after every admin view's styles.
 import './AdminPage.css';
@@ -178,6 +179,12 @@ export default function AdminPage({ view = 'overview' }) {
     else setNotice('Data pratinjau berhasil diimpor ke database.');
   };
   const metrics = getMetrics();
+  const workCounts = useAdminWorkCounts(view);
+  const navBadges = {
+    orders: workCounts.orders,
+    stock: workCounts.stockEmpty,
+    approvals: workCounts.approvals,
+  };
   const brands = adminBrands(supplierId);
   const filtered = filterAdminProducts({ query, supplierId, brandId });
   const productPagination = paginateAdminList(filtered, productPage, 24);
@@ -194,17 +201,22 @@ export default function AdminPage({ view = 'overview' }) {
     setBrandId('');
   };
   const isProducts = view === 'products';
+  // Storage notes matter only while data can be lost; a database-backed dashboard omits them.
+  const hideStorageNote = view === 'overview' && catalogUsesServer;
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
   const workflowView = view === 'orders' || view === 'stock';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const ownerSettingsView = ['company', 'email', 'accounts', 'approvals'].includes(view);
-  const areaLabel = b2bView
-    ? 'Pengelolaan toko B2B'
-    : workflowView
-      ? 'Operasional pesanan & stok'
-      : ownerSettingsView
-        ? 'Pengaturan & akses'
-        : 'Pengelolaan katalog';
+  const areaLabel =
+    view === 'overview'
+      ? 'Dashboard'
+      : b2bView
+        ? 'Pengelolaan toko B2B'
+        : workflowView
+          ? 'Operasional pesanan & stok'
+          : ownerSettingsView
+            ? 'Pengaturan & akses'
+            : 'Pengelolaan katalog';
   const areaDescription = {
     company: 'Perbarui identitas perusahaan, alamat, dan pengaturan toko.',
     email: 'Atur pengiriman email verifikasi, pemulihan akun, dan pembaruan pesanan.',
@@ -334,6 +346,14 @@ export default function AdminPage({ view = 'overview' }) {
                   >
                     <AdminIcon name={item.view} />
                     <span className="admin-nav-label">{item.label}</span>
+                    {navBadges[item.view] > 0 && (
+                      <span
+                        className="admin-nav-badge"
+                        aria-label={navBadges[item.view] + ' perlu ditindak'}
+                      >
+                        {navBadges[item.view]}
+                      </span>
+                    )}
                   </a>
                 ))}
             </div>
@@ -413,44 +433,50 @@ export default function AdminPage({ view = 'overview' }) {
                 : areaDescription[view] ||
                   (isProducts
                     ? 'Telusuri produk berdasarkan pemasok, merek, dan ukuran.'
-                    : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`)}
+                    : view === 'overview'
+                      ? 'Pekerjaan yang perlu ditindak hari ini.'
+                      : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`)}
             </p>
           </div>
-          <span className="admin-demo-badge">
-            {b2bView
-              ? 'B2B · Database'
-              : ownerSettingsView
-                ? 'Administrasi · Database'
-                : workflowView
-                  ? workflowUsesServer
-                    ? 'Operasional · Database'
-                    : 'Pratinjau · Simulasi'
-                  : catalogUsesServer
-                    ? 'Katalog · Database'
-                    : 'Pratinjau · Data dummy'}
-          </span>
+          {!hideStorageNote && (
+            <span className="admin-demo-badge">
+              {b2bView
+                ? 'B2B · Database'
+                : ownerSettingsView
+                  ? 'Administrasi · Database'
+                  : workflowView
+                    ? workflowUsesServer
+                      ? 'Operasional · Database'
+                      : 'Pratinjau · Simulasi'
+                    : catalogUsesServer
+                      ? 'Katalog · Database'
+                      : 'Pratinjau · Data dummy'}
+            </span>
+          )}
         </header>
-        <p className="admin-preview-notice">
-          {b2bView
-            ? view === 'sharedCarts'
-              ? 'Pilih toko dan periode, tambahkan atau ubah barang saat terbuka, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok hanya dicadangkan setelah berhasil.'
-              : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
-            : view === 'accounts'
-              ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
-              : view === 'approvals'
-                ? 'Tinjau pendaftaran yang menunggu persetujuan. Persetujuan akun tidak menggantikan verifikasi email.'
-                : view === 'company'
-                  ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
-                  : view === 'email'
-                    ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
-                    : workflowView
-                      ? workflowUsesServer
-                        ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
-                        : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
-                      : catalogUsesServer
-                        ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
-                        : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
-        </p>
+        {!hideStorageNote && (
+          <p className="admin-preview-notice">
+            {b2bView
+              ? view === 'sharedCarts'
+                ? 'Pilih toko dan periode, tambahkan atau ubah barang saat terbuka, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok hanya dicadangkan setelah berhasil.'
+                : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
+              : view === 'accounts'
+                ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
+                : view === 'approvals'
+                  ? 'Tinjau pendaftaran yang menunggu persetujuan. Persetujuan akun tidak menggantikan verifikasi email.'
+                  : view === 'company'
+                    ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
+                    : view === 'email'
+                      ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
+                      : workflowView
+                        ? workflowUsesServer
+                          ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
+                          : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
+                        : catalogUsesServer
+                          ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
+                          : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
+          </p>
+        )}
         {!editor && view !== 'b2bStores' && <AdminPageGuide view={view} />}
         {pendingLocalImport && view === 'overview' && !editor && (
           <section className="admin-next">
@@ -548,37 +574,13 @@ export default function AdminPage({ view = 'overview' }) {
                 </p>
               </section>
             )}
-            <section className="admin-home-hero" aria-labelledby="admin-hero-title">
-              <div className="admin-home-hero-copy">
-                <span className="admin-home-hero-eyebrow">Dashboard BAM · Katalog &amp; B2B</span>
-                <h2 id="admin-hero-title">
-                  Kelola katalog, stok, dan kemitraan B2B dengan lebih mudah
-                </h2>
-                <p>
-                  Pusat kerja untuk memantau produk dan mengakses pengelolaan pesanan, stok, toko,
-                  serta Sales dalam satu tempat.
-                </p>
-                <div className="admin-home-hero-actions">
-                  <a href="#/admin/pesanan" className="admin-primary">
-                    Lihat pesanan <span aria-hidden="true">→</span>
-                  </a>
-                  <a href="#/admin/toko-sales" className="admin-secondary">
-                    Kelola toko &amp; Sales
-                  </a>
-                </div>
-              </div>
-              <div className="admin-home-hero-visual" aria-hidden="true">
-                <div className="admin-home-hero-orbit" />
-                <div className="admin-home-hero-cube one" />
-                <div className="admin-home-hero-cube two" />
-                <div className="admin-home-hero-cube three" />
-                <div className="admin-home-hero-float">
-                  <AdminIcon name="products" />
-                  <span>Katalog BAM</span>
-                  <strong>{metrics[0].value} produk utama</strong>
-                </div>
-              </div>
-            </section>
+            <AdminOpsOverview
+              counts={workCounts}
+              user={delivery?.user}
+              disabled={Boolean(deleting || importing)}
+              onProductSaved={finishEdit}
+              onLeave={leaveEditor}
+            />
             <section className="admin-metrics" aria-label="Ringkasan katalog">
               {metrics.map((metric) => (
                 <article className="admin-metric" key={metric.label}>
@@ -591,169 +593,46 @@ export default function AdminPage({ view = 'overview' }) {
                 </article>
               ))}
             </section>
-            <AdminOpsOverview />
-            <section
-              className="admin-overview-grid"
-              aria-label="Pengelolaan katalog dan akses cepat"
-            >
-              <div className="admin-overview-main">
-                <section
-                  className="admin-panel admin-overview-products"
-                  aria-labelledby="admin-overview-products-title"
-                >
-                  <div className="admin-panel-heading">
-                    <AdminSectionIcon name="products" />
-                    <div>
-                      <h2 id="admin-overview-products-title">Daftar produk</h2>
-                      <p>Ringkasan SKU yang tersimpan dalam katalog BAM.</p>
-                    </div>
-                    <div className="admin-heading-actions">
-                      <a className="admin-secondary" href="#/admin/produk">
-                        Lihat semua produk →
-                      </a>
-                      <button
-                        type="button"
-                        className="admin-primary"
-                        disabled={Boolean(deleting || importing)}
-                        onClick={() => startEdit()}
-                      >
-                        + Tambah produk
-                      </button>
-                    </div>
-                  </div>
-                  <div className="admin-overview-product-search">
-                    <label htmlFor="admin-overview-search">Cari produk atau SKU</label>
-                    <input
-                      id="admin-overview-search"
-                      type="search"
-                      maxLength={200}
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Nama, merek, ukuran, atau SKU"
-                    />
-                  </div>
-                  <div className="admin-overview-table-wrap">
-                    <table className="admin-overview-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Produk</th>
-                          <th scope="col">Merek</th>
-                          <th scope="col">Pemasok</th>
-                          <th scope="col">Harga</th>
-                          <th scope="col">Tindakan</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filterAdminProducts({ query })
-                          .slice(0, 6)
-                          .map((product) => (
-                            <tr key={product.id}>
-                              <td>
-                                <ProductIdentity product={product} />
-                              </td>
-                              <td>{product.brand || '—'}</td>
-                              <td>{product.supplier?.name || '—'}</td>
-                              <td>{rupiah(product.price)}</td>
-                              <td>
-                                <button
-                                  type="button"
-                                  className="admin-secondary"
-                                  onClick={() => startEdit(product.groupId)}
-                                >
-                                  Kelola
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                    {filterAdminProducts({ query }).length === 0 && (
-                      <p className="admin-overview-empty">Produk tidak ditemukan.</p>
-                    )}
-                  </div>
-                  <p className="admin-overview-footer">
-                    Menampilkan hingga 6 dari {filterAdminProducts({ query }).length} SKU sesuai
-                    pencarian.
-                  </p>
-                </section>
-                <section className="admin-panel">
-                  <div className="admin-panel-heading">
-                    <AdminSectionIcon name="suppliers" />
-                    <div>
-                      <h2>PT pemasok</h2>
-                      <p>Sebaran produk utama dan varian pada setiap pemasok.</p>
-                    </div>
-                    <a className="admin-primary" href="#/admin/pemasok">
-                      Kelola PT pemasok →
-                    </a>
-                  </div>
-                  <div className="admin-suppliers">
-                    {suppliers.map((supplier) => {
-                      const items = adminProducts.filter(
-                        (product) => product.supplier?.id === supplier.id,
-                      );
-                      return (
-                        <article
-                          className="admin-supplier"
-                          key={supplier.id}
-                          style={supplierColorStyle(supplier.color)}
-                        >
-                          <span
-                            className="admin-supplier-avatar"
-                            style={avatarColorStyle(supplier.color)}
-                            aria-hidden="true"
-                          >
-                            {supplier.initials}
-                          </span>
-                          <div>
-                            <h3>{supplier.name}</h3>
-                            <p>
-                              {new Set(items.map((product) => product.groupId)).size} produk utama ·{' '}
-                              {items.length} varian produk
-                            </p>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </section>
+            <section className="admin-panel">
+              <div className="admin-panel-heading">
+                <AdminSectionIcon name="suppliers" />
+                <div>
+                  <h2>PT pemasok</h2>
+                  <p>Sebaran produk utama dan varian pada setiap pemasok.</p>
+                </div>
+                <a className="admin-primary" href="#/admin/pemasok">
+                  Kelola PT pemasok →
+                </a>
               </div>
-              <aside className="admin-overview-side" aria-label="Akses cepat Admin">
-                <section className="admin-panel admin-overview-quick">
-                  <h2>Aksi cepat</h2>
-                  <div className="admin-overview-quick-links">
-                    <a href="#/admin/pesanan">
-                      <AdminIcon name="orders" /> Periksa pesanan
-                    </a>
-                    <a href="#/admin/stok">
-                      <AdminIcon name="stock" /> Kelola stok
-                    </a>
-                    <a href="#/admin/toko-sales">
-                      <AdminIcon name="b2bStores" /> Toko &amp; Sales
-                    </a>
-                    <a href="#/admin/keranjang">
-                      <AdminIcon name="sharedCarts" /> Keranjang bersama
-                    </a>
-                    <a href="#/admin/pemasok">
-                      <AdminIcon name="suppliers" /> Kelola pemasok
-                    </a>
-                  </div>
-                </section>
-                <section className="admin-next">
-                  <h2>Kelola katalog produk</h2>
-                  <p>
-                    Tambahkan produk baru atau perbarui foto, informasi, dan harga setiap ukuran.
-                  </p>
-                  <button
-                    type="button"
-                    className="admin-primary"
-                    disabled={Boolean(deleting || importing)}
-                    onClick={() => startEdit()}
-                  >
-                    + Tambah produk
-                  </button>
-                </section>
-              </aside>
+              <div className="admin-suppliers">
+                {suppliers.map((supplier) => {
+                  const items = adminProducts.filter(
+                    (product) => product.supplier?.id === supplier.id,
+                  );
+                  return (
+                    <article
+                      className="admin-supplier"
+                      key={supplier.id}
+                      style={supplierColorStyle(supplier.color)}
+                    >
+                      <span
+                        className="admin-supplier-avatar"
+                        style={avatarColorStyle(supplier.color)}
+                        aria-hidden="true"
+                      >
+                        {supplier.initials}
+                      </span>
+                      <div>
+                        <h3>{supplier.name}</h3>
+                        <p>
+                          {new Set(items.map((product) => product.groupId)).size} produk utama ·{' '}
+                          {items.length} varian produk
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             </section>
           </>
         ) : (

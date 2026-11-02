@@ -20,6 +20,9 @@ const paths = {
   info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20 M12 11v6 M12 7h.01',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16 M17 17l5 5',
   plus: 'M12 5v14 M5 12h14',
+  sharedCarts: 'M3 3h2l3 13h11l2-9H6 M9 21h.01 M18 21h.01',
+  approvals:
+    'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M16 11l2 2 4-4',
 };
 
 export default function AdminIcon({ name }) {

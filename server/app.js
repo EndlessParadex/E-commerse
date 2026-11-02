@@ -703,6 +703,14 @@ export function createApp({
             processingOrders: db
               .prepare("SELECT COUNT(*) AS n FROM orders WHERE status='processing'")
               .get().n,
+            proofPending: db
+              .prepare(
+                "SELECT COUNT(*) AS n FROM orders WHERE json_extract(data,'$.payment.status')='proof_submitted'",
+              )
+              .get().n,
+            approvalsPending: db
+              .prepare("SELECT COUNT(*) AS n FROM account_approvals WHERE status='pending'")
+              .get().n,
           });
         const retryMatch = path.match(/^\/api\/admin\/notifications\/(.+)\/retry$/);
         if (retryMatch && req.method === 'POST')

@@ -27,7 +27,9 @@ export default function useSharedCart(user, authLoading) {
   const userId = user?.id;
   const { route } = useSyncExternalStore(subscribeShopRoute, shopRouteSnapshot, shopRouteSnapshot);
   const active =
-    workflowUsesServer && Boolean(user) && (user.role !== 'admin' || route === '/admin/keranjang');
+    workflowUsesServer &&
+    Boolean(user) &&
+    (user.role !== 'admin' || route === '/admin/keranjang' || route === '/admin');
   const [context, setContext] = useState(null);
   const [status, setStatus] = useState(active ? 'loading' : 'legacy');
   const [selection, setSelection] = useState({ storeId: '', date: '' });

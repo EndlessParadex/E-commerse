@@ -81,10 +81,12 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
   };
   try {
     await render('overview');
-    assert.ok(
-      container.querySelector('.admin-home-hero'),
-      'Design 2 hero is rendered on the Admin dashboard',
+    assert.equal(
+      container.querySelectorAll('.admin-work-card').length,
+      4,
+      'dashboard leads with the four pending-work cards',
     );
+    assert.equal(container.querySelector('.admin-home-hero'), null);
     assert.ok(container.querySelector('.admin-ops-orders'), 'live order activity panel is present');
     assert.ok(
       container.querySelector('.admin-ops-inventory'),
@@ -113,10 +115,6 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     );
     assert.equal(container.querySelectorAll('.admin-metric').length, 4);
     assert.ok(
-      container.querySelector('.admin-overview-table'),
-      'dashboard uses the real catalog table',
-    );
-    assert.ok(
       container.querySelector('.admin-topbar-search'),
       'catalog search is available in the Admin toolbar',
     );
@@ -142,11 +140,20 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await render('overview');
     const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
     assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);
-    assert.match(adminTheme, /\.admin-shell \.admin-home-hero\s*\{/);
+    assert.match(adminTheme, /\.admin-shell \.admin-work-card\s*\{/);
     assert.match(adminTheme, /\.admin-shell \.workflow-order-card/);
     assert.match(adminTheme, /\.admin-shell \.b2b-panel/);
     assert.match(adminTheme, /@media\s*\(\s*max-width:\s*950px\s*\)/);
-    await click(button('+ Tambah produk'));
+    await click(
+      [...container.querySelectorAll('.admin-overview-quick button')].find((entry) =>
+        entry.textContent.includes('Tambah produk'),
+      ),
+    );
+    assert.equal(
+      container.querySelector('.admin-ops-orders'),
+      null,
+      'quick action replaces the order queue panel',
+    );
     assert.ok(
       container.querySelector('aside.admin-form-preview .admin-preview-image'),
       'product photo remains visible in the right-side preview',
@@ -209,7 +216,11 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     accepted = true;
     await click(container.querySelector('nav a[href="#/admin"]'));
     assert.equal(container.querySelector('.admin-editor'), null);
-    await click(button('+ Tambah produk'));
+    await click(
+      [...container.querySelectorAll('.admin-overview-quick button')].find((entry) =>
+        entry.textContent.includes('Tambah produk'),
+      ),
+    );
     assert.equal(container.querySelector('#product-baseName').value, '');
     await click(container.querySelector('nav a[href="#/admin/produk"]'));
     assert.equal(container.querySelector('.admin-editor'), null);

@@ -16,14 +16,7 @@
 }
 .admin-shell
   .admin-content
-  > :is(
-    .admin-panel,
-    .admin-next,
-    .admin-metrics,
-    .admin-home-hero,
-    .admin-ops-overview,
-    .admin-overview-grid
-  ) {
+  > :is(.admin-panel, .admin-next, .admin-metrics, .admin-ops-overview, .admin-overview-grid) {
   margin: 0 0 var(--admin-space-panel);
 }
 .admin-shell .admin-header {

@@ -3,7 +3,7 @@ import useWorkflow from '../state/useWorkflow';
 import AdminIcon from '../components/admin/AdminIcon';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import SharedCartPage from '../components/shop/SharedCartPage';
-import { rupiah } from '../components/shop/shopPresentation';
+import { dateLabel, rupiah } from '../components/shop/shopPresentation';
 import { orderStatusLabel } from '../state/orderModel';
 import AdminOrdersPage from './AdminOrdersPage';
 import AdminProductForm from './AdminProductForm';
@@ -33,6 +33,12 @@ const nextAction = (order) => {
     }[order.status] || 'Lihat pesanan'
   );
 };
+const statusTone = (order) => {
+  if (order.payment?.status === 'proof_submitted') return 'danger';
+  return { processing: 'info', shipped: 'success' }[order.status] || 'warning';
+};
+// Full identifiers stay available on hover; a UUID is too long to scan in a table.
+const shortOrderId = (id) => String(id).split('-').slice(0, 2).join('-');
 const quickActions = [
   { id: 'add', label: 'Tambah produk', icon: 'plus' },
   { id: 'check', label: 'Periksa pesanan', icon: 'orders' },
@@ -94,29 +100,33 @@ function OrderQueue({ onReview }) {
           <table className="admin-ops-table">
             <thead>
               <tr>
+                <th scope="col">No</th>
                 <th scope="col">Pesanan</th>
                 <th scope="col">Penerima</th>
                 <th scope="col">Total</th>
+                <th scope="col">Tanggal</th>
                 <th scope="col">Status</th>
                 <th scope="col">Tindakan</th>
               </tr>
             </thead>
             <tbody>
-              {queue.map((order) => (
+              {queue.map((order, index) => (
                 <tr key={order.id}>
+                  <td>{index + 1}</td>
                   <td>
-                    <span className="admin-ops-order-id">{order.id}</span>
+                    <span className="admin-ops-order-id" title={order.id}>
+                      {shortOrderId(order.id)}
+                    </span>
                   </td>
                   <td>{order.b2b?.storeName || order.recipient || '—'}</td>
                   <td>{rupiah(order.total)}</td>
-                  <td>
-                    <span className={'workflow-badge status-' + order.status}>
-                      {orderStatusLabel(order)}
-                    </span>
+                  <td>{dateLabel(order.createdAt)}</td>
+                  <td className={'admin-ops-status is-' + statusTone(order)}>
+                    {orderStatusLabel(order)}
                   </td>
                   <td>
-                    <button type="button" className="admin-text-button" onClick={onReview}>
-                      {nextAction(order)}
+                    <button type="button" className="admin-ops-action" onClick={onReview}>
+                      <AdminIcon name="orders" /> {nextAction(order)}
                     </button>
                   </td>
                 </tr>
@@ -258,7 +268,7 @@ export default function AdminOpsOverview({ counts, user, disabled, onProductSave
           href="#/admin/persetujuan"
         />
       </section>
-      <div className="admin-work-layout">
+      <div className={'admin-work-layout' + (panel === 'queue' ? '' : ' has-panel')}>
         <div className="admin-work-main">
           {panel === 'queue' ? (
             <OrderQueue onReview={() => setPanel('check')} />
@@ -287,7 +297,7 @@ export default function AdminOpsOverview({ counts, user, disabled, onProductSave
           )}
         </div>
         <aside className="admin-work-side" aria-label="Akses cepat Admin">
-          <InventorySummary />
+          {panel === 'queue' && <InventorySummary />}
           <section className="admin-panel admin-overview-quick">
             <h2>Aksi cepat</h2>
             <div className="admin-overview-quick-links">

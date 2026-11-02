@@ -338,40 +338,78 @@
 }
 .admin-shell .admin-ops-table-wrap {
   overflow-x: auto;
-  margin: 0 17px;
+  margin: 0 17px 17px;
+  border-radius: 12px;
 }
 .admin-shell .admin-ops-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   font-size: 0.82rem;
-  min-width: 485px;
 }
 .admin-shell .admin-ops-table th {
-  padding: 12px;
-  text-align: left;
-  color: var(--color-text-secondary);
-  background: var(--color-surface-soft);
+  padding: 13px 12px;
+  background: var(--color-action);
+  color: var(--color-on-action, #ffffff);
   font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
 }
 .admin-shell .admin-ops-table td {
   padding: 12px;
   border-bottom: 1px solid var(--color-border-soft);
+  text-align: center;
   vertical-align: middle;
 }
-.admin-shell .admin-ops-table tr:hover td {
+.admin-shell .admin-ops-table tbody tr:hover td:not(.admin-ops-status) {
   background: var(--color-surface-soft);
 }
 .admin-shell .admin-ops-order-id {
   color: var(--color-link);
   font-weight: 700;
-  overflow-wrap: anywhere;
-}
-.admin-shell .admin-ops-table .workflow-badge {
-  display: inline-block;
   white-space: nowrap;
-  padding: 5px 9px;
-  border-radius: 999px;
-  font-size: 0.75rem;
+}
+.admin-shell .admin-ops-table .admin-ops-status {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-shell .admin-ops-status.is-info {
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+}
+.admin-shell .admin-ops-status.is-danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+.admin-shell .admin-ops-status.is-warning {
+  background: var(--color-warning-pill);
+  color: var(--color-warning-text);
+}
+.admin-shell .admin-ops-status.is-success {
+  background: var(--color-success-pill);
+  color: var(--color-success-text);
+}
+.admin-shell .admin-ops-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-info-strong);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-link);
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-shell .admin-ops-action:hover {
+  background: var(--color-surface-hover);
+}
+.admin-shell .admin-ops-action .admin-icon {
+  width: 16px;
+  height: 16px;
 }
 .admin-shell .admin-ops-placeholder {
   padding: 22px;
@@ -607,6 +645,37 @@
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
+}
+/* Embedded pages were built for full width, so an open panel takes the whole row. */
+.admin-shell .admin-work-layout.has-panel {
+  grid-template-columns: minmax(0, 1fr);
+}
+.admin-shell .admin-work-layout.has-panel .admin-work-side {
+  order: -1;
+}
+.admin-shell .admin-work-layout.has-panel .admin-overview-quick {
+  padding: 14px 16px;
+}
+.admin-shell .admin-work-layout.has-panel .admin-overview-quick h2 {
+  display: none;
+}
+.admin-shell .admin-work-layout.has-panel .admin-overview-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-shell .admin-work-layout.has-panel .admin-overview-quick-links :is(a, button) {
+  width: auto;
+  margin: 0;
+}
+.admin-shell .admin-work-main .shared-admin-sidebar {
+  position: static;
+}
+.admin-shell .admin-work-main .shared-cart-page {
+  padding: 0;
+}
+.admin-shell .admin-work-main .shared-admin-navigation {
+  margin-top: 0;
 }
 @media (max-width: 1180px) {
   .admin-shell .admin-work-layout {

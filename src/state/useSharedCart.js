@@ -368,8 +368,9 @@ export default function useSharedCart(user, authLoading) {
   };
   return {
     enabled: active && status !== 'legacy',
-    status,
-    role: context?.role,
+    // Leaving an Admin cart route keeps the loaded state; the storefront must not reuse it.
+    status: active ? status : 'legacy',
+    role: active ? context?.role : undefined,
     selection,
     stores,
     cycles,

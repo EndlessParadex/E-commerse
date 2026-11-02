@@ -140,6 +140,25 @@ test('a delayed Admin cart response cannot replace a new account cart or clear i
     assert.equal(current.cart.items[0].quantity, 1);
     assert.equal(current.busy, false);
     assert.equal(api.sharedCarts.read(actors.owner, first.id, date).status, 'locked');
+
+    who = 'owner';
+    await act(async () => {
+      root.render(createElement(Probe, { user: actors.owner }));
+      await settle();
+    });
+    await wait(() => current.status === 'ready' && current.role === 'owner');
+    const navigate = (hash) =>
+      act(async () => {
+        dom.location.hash = hash;
+        dom.dispatchEvent(new dom.Event('hashchange'));
+        await settle();
+      });
+    await navigate('#/');
+    assert.equal(current.status, 'legacy', 'storefront must not see the Admin cart state');
+    assert.equal(current.role, undefined, 'Owner must not receive the store buyer home');
+    assert.equal(current.enabled, false);
+    await navigate('#/admin');
+    await wait(() => current.status === 'ready' && current.role === 'owner');
   } finally {
     releaseAdmin?.();
     releaseBuyer?.();

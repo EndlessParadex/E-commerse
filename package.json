@@ -27,7 +27,8 @@
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "verify": "npm run format:check && npm run lint -- --deny-warnings && npm test && npm run build && npm audit --audit-level=high",
-    "hooks:install": "git config core.hooksPath .githooks"
+    "hooks:install": "git config core.hooksPath .githooks",
+    "verify:quick": "npm run format:check && npm run lint -- --deny-warnings"
   },
   "dependencies": {
     "nodemailer": "10.2.1",

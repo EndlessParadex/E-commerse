@@ -58,7 +58,7 @@ jobs:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
-      - run: npm run lint
+      - run: npm run lint -- --deny-warnings
 
   format:
     name: Prettier format check (Node 24)

@@ -253,7 +253,7 @@
     padding: 12px;
   }
   .product-card h3 {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
   }
   .product-card .product-image {
     aspect-ratio: 1;
@@ -314,4 +314,27 @@
   font-size: 0.8rem;
   line-height: 1.6;
   margin: 8px 0 0;
+}
+
+.home-landing .product-card,
+.category-page .product-card {
+  border-radius: 19px;
+  box-shadow: 0 8px 24px #235b9e12;
+}
+.home-landing .product-card .product-image,
+.category-page .product-card .product-image {
+  aspect-ratio: 1 / 0.85;
+}
+.home-landing .product-card-body,
+.category-page .product-card-body {
+  padding: 16px;
+}
+.home-landing .product-card .add-product-button,
+.category-page .product-card .add-product-button {
+  border-radius: 10px;
+  min-height: 44px;
+}
+.home-landing .bam-promotions-track .product-card {
+  border-color: var(--color-border-store);
+  border-radius: 15px;
 }

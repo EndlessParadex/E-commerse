@@ -1,4 +1,4 @@
-import { gzipSync } from 'node:zlib';
+import { publicEncoding, compressPublic } from './publicCompression.js';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { packagingValues, packagingLabel } from '../src/data/productPackaging.js';
@@ -104,13 +104,20 @@ export function createSite(
       : existsSync(resolve(dist, 'index.html'))
         ? readFileSync(resolve(dist, 'index.html'), 'utf8')
         : null;
-  const send = (res, status, body, type = 'text/html; charset=utf-8', cache = 'no-cache') => {
+  const send = (req, res, status, body, type = 'text/html; charset=utf-8', cache = 'no-cache') => {
+    const encoding = type.startsWith('text/html')
+      ? publicEncoding(req.headers?.['accept-encoding'])
+      : undefined;
+    const bytes = compressPublic(body, encoding);
     res.writeHead(status, {
+      ...(type.startsWith('text/html') ? { vary: 'Accept-Encoding' } : {}),
+      ...(encoding ? { 'content-encoding': encoding } : {}),
+      'content-length': bytes.length,
       'content-type': type,
       'cache-control': cache,
       'x-content-type-options': 'nosniff',
     });
-    res.end(body);
+    res.end(req.method === 'HEAD' ? undefined : bytes);
   };
   return {
     product: (id) => publicProduct(catalog, company, id, publicUrl),
@@ -118,6 +125,7 @@ export function createSite(
       if (req.method !== 'GET' && req.method !== 'HEAD') return false;
       if (path === '/robots.txt') {
         send(
+          req,
           res,
           200,
           'User-agent: *\nAllow: /produk/\nAllow: /api/public/\nDisallow: /api/\n' +
@@ -128,7 +136,7 @@ export function createSite(
       }
       if (path === '/sitemap.xml') {
         if (!publicUrl) {
-          send(res, 503, 'Alamat publik website belum dikonfigurasi.', 'text/plain');
+          send(req, res, 503, 'Alamat publik website belum dikonfigurasi.', 'text/plain');
           return true;
         }
         const urls = [
@@ -138,6 +146,7 @@ export function createSite(
             .edits.flatMap((p) => p.variants.map((v) => '/produk/' + encodeURIComponent(v.id))),
         ];
         send(
+          req,
           res,
           200,
           '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
@@ -170,25 +179,16 @@ export function createSite(
         if (!types[extension]) return false;
         const compressible = ['js', 'css', 'svg'].includes(extension);
         // Public build assets only: never compress secrets or authenticated API responses.
-        const accepts = String(req.headers?.['accept-encoding'] || '')
-          .toLowerCase()
-          .split(',');
-        const quality = (name) => {
-          const entry = accepts
-            .map((part) => part.trim())
-            .find((part) => part.split(';')[0].trim() === name);
-          if (!entry) return undefined;
-          const q = entry.match(/;\s*q=([0-9.]+)/);
-          return q ? Number(q[1]) : 1;
-        };
-        const gzip = compressible && (quality('gzip') ?? quality('*') ?? 0) > 0;
+        const encoding = compressible
+          ? publicEncoding(req.headers?.['accept-encoding'])
+          : undefined;
         let body;
-        if (gzip) {
+        if (encoding) {
           const stat = statSync(target);
-          const key = target + ':' + stat.mtimeMs + ':' + stat.size;
+          const key = target + ':' + stat.mtimeMs + ':' + stat.size + ':' + encoding;
           body = compressedAssets.get(key);
           if (!body) {
-            body = gzipSync(readFileSync(target));
+            body = compressPublic(readFileSync(target), encoding);
             if (compressedAssets.size >= 32)
               compressedAssets.delete(compressedAssets.keys().next().value);
             compressedAssets.set(key, body);
@@ -202,7 +202,7 @@ export function createSite(
           'x-content-type-options': 'nosniff',
           'content-length': body.length,
           ...(compressible ? { vary: 'Accept-Encoding' } : {}),
-          ...(gzip ? { 'content-encoding': 'gzip' } : {}),
+          ...(encoding ? { 'content-encoding': encoding } : {}),
         });
         res.end(req.method === 'HEAD' ? undefined : body);
         return true;
@@ -217,11 +217,12 @@ export function createSite(
         }
         const meta = publicProduct(catalog, company, id, publicUrl);
         if (!meta) {
-          send(res, 404, '<h1>Produk tidak ditemukan</h1>');
+          send(req, res, 404, '<h1>Produk tidak ditemukan</h1>');
           return true;
         }
         const html = template();
         send(
+          req,
           res,
           html ? 200 : 503,
           html
@@ -233,11 +234,12 @@ export function createSite(
       if (path === '/') {
         const html = template();
         if (!html) {
-          send(res, 503, '<h1>Website belum dibangun</h1>');
+          send(req, res, 503, '<h1>Website belum dibangun</h1>');
           return true;
         }
         const p = company.snapshot().profile;
         send(
+          req,
           res,
           200,
           html

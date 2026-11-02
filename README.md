@@ -20,7 +20,7 @@ npm run hooks:install
 npm run verify
 ```
 
-Hook pre-push menjalankan pemeriksaan format, lint tanpa warning, seluruh tes, build produksi, dan audit dependensi. Hook perlu dipasang sekali pada setiap clone. Perbaiki kegagalan lokal sebelum push; CI tetap menjadi pemeriksaan independen. Hook lokal dapat dilewati oleh Git dan bukan pengganti aturan branch.
+Hook pre-push hanya menjalankan format dan lint tanpa warning (`npm run verify:quick`). Jalankan `npm run verify` sebelum mengirim perubahan perilaku; seluruh tes, build produksi, dan audit dependensi tetap dijalankan di CI. Hook perlu dipasang sekali pada setiap clone. Perbaiki kegagalan lokal sebelum push; CI tetap menjadi pemeriksaan independen. Hook lokal dapat dilewati oleh Git dan bukan pengganti aturan branch.
 
 ## Build dan server
 
@@ -29,7 +29,7 @@ npm run build
 npm run server
 ```
 
-Server mengirim gzip untuk aset JS/CSS/SVG ketika browser mendukungnya, dengan `Vary: Accept-Encoding` dan cache kompresi terbatas. API akun dan transaksi tidak dikompresi. Semua respons mendapat perlindungan frame, nosniff, dan referrer policy. HSTS aktif bila URL publik terkonfigurasi HTTPS atau koneksi server memakai TLS; header dari klien tidak dipakai sebagai sumber kepercayaan. Ini tidak memasang sertifikat TLS atau menggantikan konfigurasi reverse proxy.
+Server mengirim Brotli atau gzip untuk aset JS/CSS/SVG dan HTML publik ketika browser mendukungnya, dengan `Vary: Accept-Encoding`, negosiasi kualitas encoding, dan cache kompresi aset terbatas. API akun dan transaksi tidak dikompresi. Semua respons mendapat perlindungan frame, nosniff, dan referrer policy. HSTS aktif bila URL publik terkonfigurasi HTTPS atau koneksi server memakai TLS; header dari klien tidak dipakai sebagai sumber kepercayaan. Ini tidak memasang sertifikat TLS atau menggantikan konfigurasi reverse proxy.
 
 ## Panduan utama
 

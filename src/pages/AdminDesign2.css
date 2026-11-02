@@ -675,26 +675,9 @@
   display: flex;
   gap: 8px;
 }
-.admin-shell .admin-driver-add input {
+.admin-shell .admin-driver-add select {
   flex: 1;
   min-width: 0;
-}
-.admin-shell .admin-driver-add ul {
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.admin-shell .admin-driver-add li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--color-border);
-}
-.admin-shell .admin-driver-add li small {
-  display: block;
-  color: var(--color-text-secondary);
 }
 .admin-shell .admin-work-main .shared-cart-page {
   padding: 0;

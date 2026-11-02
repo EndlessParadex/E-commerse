@@ -4,14 +4,26 @@ import { accountApi } from '../components/account/accountApi';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 
+// The server pages this list, but a dropdown must offer every eligible account.
+async function eligibleAccounts() {
+  const users = [];
+  for (let page = 1, pages = 1; page <= pages; page++) {
+    const params = new URLSearchParams({ purpose: 'owner', page: String(page) });
+    const payload = await accountApi('/api/b2b/accounts?' + params);
+    users.push(...payload.users);
+    pages = payload.pages;
+  }
+  return users;
+}
+
 export default function AdminDriversPage() {
   const { user } = useDelivery();
   const owner = user?.isOwner === true;
   const [drivers, setDrivers] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [query, setQuery] = useState('');
   const [candidates, setCandidates] = useState(null);
+  const [selectedId, setSelectedId] = useState('');
   const [appointment, setAppointment] = useState(null);
   const [removal, setRemoval] = useState(null);
   const [dialogError, setDialogError] = useState('');
@@ -24,19 +36,17 @@ export default function AdminDriversPage() {
         .catch((failure) => setError(failure.message)),
     [],
   );
+  const loadCandidates = useCallback(
+    () =>
+      eligibleAccounts()
+        .then(setCandidates)
+        .catch((failure) => setError(failure.message)),
+    [],
+  );
   useEffect(() => {
     load();
-  }, [load]);
-  const search = async (event) => {
-    event.preventDefault();
-    setError('');
-    try {
-      const params = new URLSearchParams({ q: query.trim(), purpose: 'owner' });
-      setCandidates((await accountApi('/api/b2b/accounts?' + params)).users);
-    } catch (failure) {
-      setError(failure.message);
-    }
-  };
+    if (owner) loadCandidates();
+  }, [load, loadCandidates, owner]);
   const save = async (path, userId, message, close) => {
     if (pending.current) return;
     pending.current = true;
@@ -44,9 +54,9 @@ export default function AdminDriversPage() {
     try {
       await accountApi(path, { userId });
       close();
-      setCandidates(null);
+      setSelectedId('');
       setNotice(message);
-      await load();
+      await Promise.all([load(), loadCandidates()]);
     } catch (failure) {
       setDialogError(failure.message);
     } finally {
@@ -124,49 +134,42 @@ export default function AdminDriversPage() {
         <section className="admin-panel admin-driver-add" aria-labelledby="admin-driver-add-title">
           <h2 id="admin-driver-add-title">Daftarkan sopir</h2>
           <p>
-            Sopir memakai akun sendiri. Minta sopir mendaftar di website, setujui akunnya, lalu cari
-            di sini.
+            Sopir memakai akun sendiri. Minta sopir mendaftar di website, setujui akunnya, lalu
+            pilih di sini.
           </p>
-          <form onSubmit={search}>
-            <label htmlFor="driver-search">Nama atau email akun</label>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              setDialogError('');
+              setAppointment(candidates.find((account) => account.id === selectedId));
+            }}
+          >
+            <label htmlFor="driver-account">Akun sopir</label>
             <div>
-              <input
-                id="driver-search"
-                type="search"
-                maxLength={200}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              <button type="submit" className="admin-secondary">
-                Cari akun
+              <select
+                id="driver-account"
+                value={selectedId}
+                disabled={!candidates?.length}
+                onChange={(event) => setSelectedId(event.target.value)}
+              >
+                <option value="">
+                  {!candidates
+                    ? 'Memuat akun…'
+                    : candidates.length
+                      ? 'Pilih akun'
+                      : 'Tidak ada akun yang bisa dijadikan sopir'}
+                </option>
+                {(candidates || []).map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} · {account.email}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className="admin-primary" disabled={!selectedId}>
+                Jadikan sopir
               </button>
             </div>
           </form>
-          {candidates &&
-            (candidates.length ? (
-              <ul>
-                {candidates.map((account) => (
-                  <li key={account.id}>
-                    <span>
-                      <strong>{account.name}</strong>
-                      <small>{account.email}</small>
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-primary"
-                      onClick={() => {
-                        setDialogError('');
-                        setAppointment(account);
-                      }}
-                    >
-                      Jadikan sopir
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Tidak ada akun yang bisa dijadikan sopir.</p>
-            ))}
         </section>
       )}
       {appointment && (

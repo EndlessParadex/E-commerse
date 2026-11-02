@@ -26,10 +26,11 @@ export default function FeaturedProducts({ personal = false } = {}) {
       </header>
       {featured.length ? (
         <div className="product-grid">
-          {featured.map((product) => (
+          {featured.map((product, index) => (
             <ProductCard
               key={product.groupId || product.id}
               product={product}
+              imageLoading={index < 2 ? 'eager' : 'lazy'}
               onAdd={addItem}
               isFavorite={favoriteIds.includes(product.id)}
               onToggleFavorite={toggleFavorite}

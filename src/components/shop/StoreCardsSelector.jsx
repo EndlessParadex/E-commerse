@@ -1,18 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import './StoreCardsSelector.css';
+import { wibToday } from '../../data/storeCartTarget';
 
 const weekdays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-const wibToday = () => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const part = (type) => parts.find((entry) => entry.type === type)?.value;
-  return part('year') + '-' + part('month') + '-' + part('day');
-};
 const formatted = (iso) =>
   iso
     ? new Date(iso + 'T00:00:00+07:00').toLocaleDateString('id-ID', {
@@ -22,11 +13,6 @@ const formatted = (iso) =>
         timeZone: 'Asia/Jakarta',
       })
     : '';
-
-export function storeCartTarget(store, previousDate) {
-  const date = nextStoreDelivery(store.deliverySchedule, wibToday());
-  return { storeId: store.id, date: date || previousDate || wibToday() };
-}
 
 /**
  * The same server-scoped store cards appear on Sales home and as a cart modal.

@@ -13,7 +13,8 @@ import { packagingLabel } from '../../data/productPackaging';
 import { sharedDraftWhatsAppUrl } from '../../data/sharedDraftWhatsApp';
 import SharedDeliveryCalendar from './SharedDeliveryCalendar';
 import SharedStoreCartHeader from './SharedStoreCartHeader';
-import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
+import StoreCardsSelector from './StoreCardsSelector';
+import { storeCartTarget } from '../../data/storeCartTarget';
 
 const dateLabel = (value) =>
   new Date(value + 'T00:00:00+07:00').toLocaleDateString('id-ID', {

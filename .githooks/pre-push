@@ -1,0 +1,3 @@
+#!/bin/sh
+# Fail before sending commits if local validation fails.
+npm run verify

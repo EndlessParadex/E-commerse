@@ -64,7 +64,7 @@ export default function AccountPage({ section = null }) {
         calendar: 'kalender',
         appearance: 'tampilan',
       }[id];
-      window.location.hash = '/akun/' + slug;
+      window.location.assign('#/akun/' + slug);
       return;
     }
     selectTab(id, true);

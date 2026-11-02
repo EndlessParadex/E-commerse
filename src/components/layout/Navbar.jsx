@@ -97,7 +97,7 @@ const Navbar = () => {
   const accountLocation = user
     ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
     : null;
-  const deliveryTitle = user ? user.storeName || 'Alamat saya' : 'Masuk';
+  const deliveryTitle = user ? user.storeName || 'Alamat saya' : 'Alamat pengiriman';
   const deliverRef = useRef(null);
   const [compactDelivery, setCompactDelivery] = useState(
     () => window.matchMedia('(max-width: 600px)').matches,

@@ -1,4 +1,5 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { packagingValues, packagingLabel } from '../src/data/productPackaging.js';
 const escape = (value) =>
@@ -96,6 +97,7 @@ export function createSite(
   company,
   { publicUrl = '', indexHtml, dist = resolve('dist') } = {},
 ) {
+  const compressedAssets = new Map();
   const template = () =>
     indexHtml
       ? indexHtml()
@@ -166,15 +168,43 @@ export function createSite(
             woff2: 'font/woff2',
           };
         if (!types[extension]) return false;
-        send(
-          res,
-          200,
-          req.method === 'HEAD' ? '' : readFileSync(target),
-          types[extension],
-          path.startsWith('/assets/')
+        const compressible = ['js', 'css', 'svg'].includes(extension);
+        // Public build assets only: never compress secrets or authenticated API responses.
+        const accepts = String(req.headers?.['accept-encoding'] || '')
+          .toLowerCase()
+          .split(',');
+        const quality = (name) => {
+          const entry = accepts
+            .map((part) => part.trim())
+            .find((part) => part.split(';')[0].trim() === name);
+          if (!entry) return undefined;
+          const q = entry.match(/;\s*q=([0-9.]+)/);
+          return q ? Number(q[1]) : 1;
+        };
+        const gzip = compressible && (quality('gzip') ?? quality('*') ?? 0) > 0;
+        let body;
+        if (gzip) {
+          const stat = statSync(target);
+          const key = target + ':' + stat.mtimeMs + ':' + stat.size;
+          body = compressedAssets.get(key);
+          if (!body) {
+            body = gzipSync(readFileSync(target));
+            if (compressedAssets.size >= 32)
+              compressedAssets.delete(compressedAssets.keys().next().value);
+            compressedAssets.set(key, body);
+          }
+        } else body = readFileSync(target);
+        res.writeHead(200, {
+          'content-type': types[extension],
+          'cache-control': path.startsWith('/assets/')
             ? 'public, max-age=31536000, immutable'
             : 'public, max-age=3600',
-        );
+          'x-content-type-options': 'nosniff',
+          'content-length': body.length,
+          ...(compressible ? { vary: 'Accept-Encoding' } : {}),
+          ...(gzip ? { 'content-encoding': 'gzip' } : {}),
+        });
+        res.end(req.method === 'HEAD' ? undefined : body);
         return true;
       }
       const match = path.match(/^\/produk\/([^/]+)$/);

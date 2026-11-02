@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
-import StoreCardsSelector, { storeCartTarget } from './StoreCardsSelector';
+import StoreCardsSelector from './StoreCardsSelector';
+import { storeCartTarget } from '../../data/storeCartTarget';
 import StoreBuyerDashboard from './StoreBuyerDashboard';
 import './B2BHomeExperience.css';
 

@@ -23,8 +23,6 @@ import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 import './StorefrontDesign2.css';
 import './StorefrontFeatureRail.css';
-import './HomeDiscoveryCompact.css';
-import './PersonalStorefront.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
@@ -364,10 +362,11 @@ export default function Home({ catalog = null }) {
             )}
             {visible.length ? (
               <div className="product-grid">
-                {visible.map((product) => (
+                {visible.map((product, index) => (
                   <ProductCard
                     key={product.id}
                     product={product}
+                    imageLoading={index < 2 ? 'eager' : 'lazy'}
                     onAdd={addItem}
                     isFavorite={favoriteIds.includes(product.id)}
                     onToggleFavorite={toggleFavorite}

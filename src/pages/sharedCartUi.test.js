@@ -8,8 +8,16 @@ import { createApp } from '../../server/app.js';
 import { seedSharedCart, sharedRequest } from '../../server/sharedCartFixture.js';
 
 test('shared cart website handles buyer/Sales edits and Admin editing, conflicts, retries, and store isolation', async () => {
+  // Calendar opens the current month; keep the fixture reachable after month rollover.
+  const month = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+  }).format(new Date());
+  const fixtureDate = month + '-21';
+  const fixtureLabel = 'Tanggal 21/' + month.slice(5) + '/' + month.slice(0, 4);
   const api = createApp({ dbPath: ':memory:', logger: () => {} });
-  const { first, second, actors } = seedSharedCart(api);
+  const { first, actors } = seedSharedCart(api);
   const dom = new Window({ url: 'http://fixture.test/#/keranjang' });
   const previousFetch = globalThis.fetch;
   Object.assign(globalThis, {
@@ -122,16 +130,12 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     };
     const openDate = async () => {
       if (container.querySelector('#shared-date')) {
-        await fill('#shared-date', '2026-10-21');
+        await fill('#shared-date', fixtureDate);
         await submit('.shared-open-form');
       } else if (
-        !container.querySelector(
-          '.shared-calendar-date.is-selected[aria-label="Tanggal 21/10/2026"]',
-        )
+        !container.querySelector(`.shared-calendar-date.is-selected[aria-label="${fixtureLabel}"]`)
       ) {
-        await click(
-          container.querySelector('.shared-calendar-date[aria-label="Tanggal 21/10/2026"]'),
-        );
+        await click(container.querySelector(`.shared-calendar-date[aria-label="${fixtureLabel}"]`));
       }
       await wait(() => container.querySelector('.shared-cart-heading'));
     };
@@ -185,7 +189,11 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     const monthDates = container.querySelectorAll(
       '.shared-delivery-calendar-grid .shared-calendar-date:not(.is-outside)',
     );
-    assert.equal(monthDates.length, 31, 'all October dates must be visible, not marked outside');
+    assert.equal(
+      monthDates.length,
+      new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 0)).getUTCDate(),
+      'all dates in the selected month must be visible',
+    );
     const chosenDate = container.querySelector('.shared-calendar-date.is-selected');
     assert.equal(
       chosenDate?.textContent.trim(),
@@ -199,10 +207,10 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     assert.match(container.querySelector('.shared-cart-heading h2').textContent, /Toko Bersama/);
     await fill('#shared-cart-payment', 'transfer-bca');
     await wait(
-      () => api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').paymentId === 'transfer-bca',
+      () => api.sharedCarts.read(actors.buyer, first.id, fixtureDate).paymentId === 'transfer-bca',
     );
     assert.equal(
-      api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').events[0].actorRole,
+      api.sharedCarts.read(actors.buyer, first.id, fixtureDate).events[0].actorRole,
       'buyer',
     );
     await navigate('/produk/snack-pedas-23g');
@@ -276,7 +284,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await fill('.shared-quantity input', '4');
     await submit('.shared-quantity');
     await wait(
-      () => api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').items[0].quantity === 4,
+      () => api.sharedCarts.read(actors.buyer, first.id, fixtureDate).items[0].quantity === 4,
     );
 
     await mount('sales');
@@ -293,10 +301,10 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await fill('#shared-cart-payment', 'transfer-mandiri');
     await wait(
       () =>
-        api.sharedCarts.read(actors.sales, first.id, '2026-10-21').paymentId === 'transfer-mandiri',
+        api.sharedCarts.read(actors.sales, first.id, fixtureDate).paymentId === 'transfer-mandiri',
     );
     assert.equal(
-      api.sharedCarts.read(actors.sales, first.id, '2026-10-21').events[0].actorRole,
+      api.sharedCarts.read(actors.sales, first.id, fixtureDate).events[0].actorRole,
       'sales',
     );
     assert.equal(container.querySelector('.shared-quantity input').value, '4');
@@ -309,7 +317,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       '6',
       'another account/device sees persisted edits',
     );
-    const current = api.sharedCarts.read(actors.sales, first.id, '2026-10-21');
+    const current = api.sharedCarts.read(actors.sales, first.id, fixtureDate);
     await fill('.shared-quantity input', '9');
     api.sharedCarts.mutate(actors.sales, first.id, {
       date: current.date,
@@ -421,7 +429,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     await submit('.shared-admin-add');
     await wait(() =>
       api.sharedCarts
-        .read(actors.operator, first.id, '2026-10-21')
+        .read(actors.operator, first.id, fixtureDate)
         .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 3),
     );
     await wait(() => container.querySelectorAll('.shared-item').length === 2);
@@ -435,7 +443,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
       control.getAttribute('aria-label')?.startsWith('Tambah '),
     );
     assert.ok(increment && !increment.disabled, 'new SKU must have an enabled increment control');
-    const beforeStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    const beforeStep = api.sharedCarts.read(actors.operator, first.id, fixtureDate);
     assert.equal(
       [...container.querySelectorAll('.shared-item')].at(-1).querySelector('input')?.value,
       '3',
@@ -443,7 +451,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     assert.equal(beforeStep.items.find((row) => row.id === 'snack-pedas-62g').quantity, 3);
     await click(increment);
-    const afterStep = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    const afterStep = api.sharedCarts.read(actors.operator, first.id, fixtureDate);
     assert.equal(
       afterStep.items.find((row) => row.id === 'snack-pedas-62g').quantity,
       4,
@@ -456,10 +464,10 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     await wait(() =>
       api.sharedCarts
-        .read(actors.operator, first.id, '2026-10-21')
+        .read(actors.operator, first.id, fixtureDate)
         .items.some((item) => item.id === 'snack-pedas-62g' && item.quantity === 4),
     );
-    const adminCart = api.sharedCarts.read(actors.operator, first.id, '2026-10-21');
+    const adminCart = api.sharedCarts.read(actors.operator, first.id, fixtureDate);
     assert.equal(adminCart.events[0].actorRole, 'admin');
     assert.equal(adminCart.events[0].actorName, 'Akun operator');
     assert.match(container.textContent, /Pemrosesan Admin/);
@@ -505,7 +513,7 @@ test('shared cart website handles buyer/Sales edits and Admin editing, conflicts
     );
     await fill('.shared-item-pkg-select', 'snack-pedas-23g-DUS-12');
     await wait(() => {
-      const items = api.sharedCarts.read(actors.buyer, first.id, '2026-10-21').items;
+      const items = api.sharedCarts.read(actors.buyer, first.id, fixtureDate).items;
       return (
         items.some((item) => item.id === 'snack-pedas-23g-DUS-12') &&
         !items.some((item) => item.id === 'snack-pedas-23g')

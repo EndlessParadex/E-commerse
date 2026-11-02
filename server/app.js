@@ -1,4 +1,5 @@
 import { createSite } from './site.js';
+import { responseHeaders } from './responseHeaders.js';
 import { installCommerce } from './commerce.js';
 import { OrderMessages } from './orderMessages.js';
 import { createServer } from 'node:http';
@@ -346,6 +347,14 @@ export function createApp({
       throw new CatalogError('Akses pengelola telah berubah. Masuk kembali.', 403, 'forbidden');
   };
   const handler = async (req, res) => {
+    const writeHead = res.writeHead.bind(res);
+    res.writeHead = (status, headers) =>
+      writeHead(status, {
+        ...responseHeaders(
+          Boolean(req.socket?.encrypted) || identity.publicUrl?.protocol === 'https:',
+        ),
+        ...headers,
+      });
     const requestId = randomUUID();
     let path = '';
     try {

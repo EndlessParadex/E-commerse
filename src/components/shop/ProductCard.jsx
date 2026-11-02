@@ -17,6 +17,7 @@ export default function ProductCard({
   isFavorite = false,
   onToggleFavorite,
   showDiscount = false,
+  imageLoading = 'lazy',
 }) {
   const [added, setAdded] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
@@ -130,7 +131,7 @@ export default function ProductCard({
           href={'#/produk/' + product.id}
           aria-label={'Lihat detail ' + productName}
         >
-          <ProductImage product={preview} />
+          <ProductImage product={preview} loading={imageLoading} />
           {badge && <span className="product-tag">{badge}</span>}
         </a>
         <button

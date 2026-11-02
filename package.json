@@ -25,7 +25,9 @@
     "server:company": "node tools/company-command.cjs server",
     "create-admin:company": "node tools/company-command.cjs admin",
     "format": "prettier --write . --ignore-unknown",
-    "format:check": "prettier --check . --ignore-unknown"
+    "format:check": "prettier --check . --ignore-unknown",
+    "verify": "npm run format:check && npm run lint -- --deny-warnings && npm test && npm run build && npm audit --audit-level=high",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "nodemailer": "10.2.1",

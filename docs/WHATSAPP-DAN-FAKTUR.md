@@ -21,7 +21,7 @@ Pembeli harus memiliki nomor HP terkonfirmasi dan mencentang **Kirim faktur dan 
 ## Menyambungkan WhatsApp
 
 1. Siapkan WhatsApp Business Platform di Meta: akun bisnis, nomor pengirim, dan metode pembayaran.
-2. Buat dua template kategori **Utility** dalam bahasa Indonesia, lalu tunggu persetujuan Meta. Meta tidak mengizinkan variabel di awal atau akhir isi template.
+2. Buat template kategori **Authentication** untuk kode verifikasi nomor HP, dalam bahasa Indonesia dengan tombol salin kode, misalnya `bam_otp`. Lalu buat dua template kategori **Utility** dalam bahasa Indonesia dan tunggu persetujuan Meta. Meta tidak mengizinkan variabel di awal atau akhir isi template.
 
    **`order_invoice`** dengan header **Document**:
 
@@ -37,14 +37,16 @@ Pembeli harus memiliki nomor HP terkonfirmasi dan mencentang **Kirim faktur dan 
 
 3. Isi `.env` server. Jangan menaruh token di GitHub atau chat.
 
-   | Variabel                         | Isi                                          |
-   | -------------------------------- | -------------------------------------------- |
-   | `BAM_WHATSAPP_TOKEN`             | Token akses pengirim dari Meta               |
-   | `BAM_WHATSAPP_PHONE_ID`          | Phone Number ID pengirim                     |
-   | `BAM_WHATSAPP_API_VERSION`       | Versi Graph API, format `vNN.N`              |
-   | `BAM_WHATSAPP_INVOICE_TEMPLATE`  | Nama template faktur yang disetujui          |
-   | `BAM_WHATSAPP_ORDER_TEMPLATE`    | Nama template info pesanan yang disetujui    |
-   | `BAM_WHATSAPP_TEMPLATE_LANGUAGE` | Bahasa template, misalnya `id` (bawaan `id`) |
+   | Variabel                         | Isi                                               |
+   | -------------------------------- | ------------------------------------------------- |
+   | `BAM_WHATSAPP_TOKEN`             | Token akses pengirim dari Meta                    |
+   | `BAM_WHATSAPP_PHONE_ID`          | Phone Number ID pengirim                          |
+   | `BAM_WHATSAPP_API_VERSION`       | Versi Graph API, format `vNN.N`                   |
+   | `BAM_WHATSAPP_OTP_TEMPLATE`      | Nama template kode verifikasi yang disetujui      |
+   | `BAM_WHATSAPP_OTP_LANGUAGE`      | Bahasa template kode, misalnya `id` (bawaan `id`) |
+   | `BAM_WHATSAPP_INVOICE_TEMPLATE`  | Nama template faktur yang disetujui               |
+   | `BAM_WHATSAPP_ORDER_TEMPLATE`    | Nama template info pesanan yang disetujui         |
+   | `BAM_WHATSAPP_TEMPLATE_LANGUAGE` | Bahasa template, misalnya `id` (bawaan `id`)      |
 
 4. Jalankan ulang server. Uji dengan akun dan nomor milik sendiri sebelum dipakai pembeli.
 

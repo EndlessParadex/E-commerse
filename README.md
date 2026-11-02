@@ -37,6 +37,7 @@ Server mengirim gzip untuk aset JS/CSS/SVG ketika browser mendukungnya, dengan `
 - [Fitur operasional dan kemasan](docs/FITUR-OPERASIONAL.md)
 - [Keamanan backend](docs/KEAMANAN-BACKEND.md)
 - [Backup dan pemulihan](docs/BACKUP-DAN-PEMULIHAN.md)
+- [WhatsApp pesanan dan faktur otomatis](docs/WHATSAPP-DAN-FAKTUR.md)
 - [Roadmap dan status fitur](docs/B2B-ROADMAP.md)
 - [Catatan versi dan panduan lama](docs/README-HISTORY.md)
 

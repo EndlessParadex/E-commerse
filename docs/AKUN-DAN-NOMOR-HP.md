@@ -8,7 +8,7 @@
 4. Nomor Indonesia dapat ditulis `08...`, `628...`, atau `+628...`; format tersimpan memakai `+62`.
 5. Muat ulang halaman untuk memastikan nomor tetap ada. Kosongkan kolom dan simpan untuk menghapusnya.
 
-Nomor tersimpan pada database server untuk akun yang sedang masuk. Nomor baru berstatus **belum dikonfirmasi**. Menambah nomor tidak membuat akun baru, tidak menghubungkan akun ke toko, tidak mengirim pesan WhatsApp, dan tidak mengaktifkan login nomor HP. Nomor toko di halaman Toko & Sales tetap terpisah. Nomor yang sama boleh digunakan sebagai kontak beberapa akun; nomor kontak bukan identitas autentikasi.
+Nomor tersimpan pada database server untuk akun yang sedang masuk. Nomor baru berstatus **belum dikonfirmasi**. Menambah nomor tidak membuat akun baru, tidak menghubungkan akun ke toko, dan tidak mengaktifkan login nomor HP. Pesan WhatsApp pesanan hanya dikirim bila pembeli mengaktifkannya; lihat [WhatsApp pesanan dan faktur otomatis](WHATSAPP-DAN-FAKTUR.md). Nomor toko di halaman Toko & Sales tetap terpisah. Nomor yang sama boleh digunakan sebagai kontak beberapa akun; nomor kontak bukan identitas autentikasi.
 
 ## Mengonfirmasi email dan nomor HP
 

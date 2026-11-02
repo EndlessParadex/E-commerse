@@ -20,6 +20,8 @@ export class PhoneVerificationRepository {
       db.exec('ALTER TABLE user_contact_phones ADD COLUMN verified_at INTEGER');
     if (!columns.includes('revision'))
       db.exec("ALTER TABLE user_contact_phones ADD COLUMN revision TEXT NOT NULL DEFAULT ''");
+    if (!columns.includes('whatsapp_consent_at'))
+      db.exec('ALTER TABLE user_contact_phones ADD COLUMN whatsapp_consent_at INTEGER');
     db.exec("UPDATE user_contact_phones SET revision=lower(hex(randomblob(16))) WHERE revision=''");
     db.exec(`CREATE TABLE IF NOT EXISTS phone_otp_challenges (
       user_id TEXT PRIMARY KEY REFERENCES user_contact_phones(user_id) ON DELETE CASCADE,
@@ -48,14 +50,30 @@ export class PhoneVerificationRepository {
   }
   contact(userId) {
     const row = this.db
-      .prepare('SELECT phone,verified_at,revision FROM user_contact_phones WHERE user_id=?')
+      .prepare(
+        'SELECT phone,verified_at,revision,whatsapp_consent_at FROM user_contact_phones WHERE user_id=?',
+      )
       .get(userId);
     return {
       phone: row?.phone || '',
       phoneVerified: row?.verified_at != null,
       phoneVerifiedAt: row?.verified_at ?? null,
       phoneRevision: row?.revision || '',
+      whatsappNotifications: row?.whatsapp_consent_at != null,
     };
+  }
+  // Consent belongs to one number: changing the number clears it in save().
+  setWhatsAppNotifications(userId, enabled) {
+    if (typeof enabled !== 'boolean') fail('Pilihan tidak valid.', 422, 'validation_error');
+    return this.transaction(() => {
+      this.requireActive(userId);
+      if (enabled && !this.contact(userId).phoneVerified)
+        fail('Konfirmasi nomor HP terlebih dahulu.', 409, 'phone_unverified');
+      this.db
+        .prepare('UPDATE user_contact_phones SET whatsapp_consent_at=? WHERE user_id=?')
+        .run(enabled ? this.now() : null, userId);
+      return this.status(userId);
+    });
   }
   save(userId, value) {
     if (typeof value !== 'string' || value.length > 40)
@@ -73,7 +91,7 @@ export class PhoneVerificationRepository {
           this.db
             .prepare(
               `INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)
-            ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone,verified_at=NULL,revision=excluded.revision`,
+            ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone,verified_at=NULL,whatsapp_consent_at=NULL,revision=excluded.revision`,
             )
             .run(userId, phone, randomUUID());
         }

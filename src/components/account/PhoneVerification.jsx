@@ -27,6 +27,7 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
             phoneRevision: value.phoneRevision,
             phoneVerified: value.phoneVerified === true,
             phoneVerifiedAt: value.phoneVerifiedAt ?? null,
+            whatsappNotifications: value.whatsappNotifications === true,
           }
         : current,
     );
@@ -45,6 +46,7 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
                 phoneRevision: value.phoneRevision,
                 phoneVerified: value.phoneVerified === true,
                 phoneVerifiedAt: value.phoneVerifiedAt ?? null,
+                whatsappNotifications: value.whatsappNotifications === true,
               }
             : current,
         );
@@ -62,6 +64,35 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
     const timer = setInterval(() => setTime(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [data?.challenge]);
+  const toggleNotifications = async (enabled) => {
+    if (pending.current || disabled) return;
+    pending.current = true;
+    setBusy(true);
+    onBusyChange(true);
+    setError('');
+    setMessage('');
+    try {
+      const value = await accountApi(
+        '/api/profile/phone/whatsapp-notifications',
+        { enabled },
+        undefined,
+        'PUT',
+      );
+      if (!active.current) return;
+      apply(value);
+      setMessage(
+        enabled ? 'Pemberitahuan WhatsApp diaktifkan.' : 'Pemberitahuan WhatsApp dinonaktifkan.',
+      );
+    } catch (e) {
+      if (active.current) setError(e.message);
+    } finally {
+      pending.current = false;
+      if (active.current) {
+        setBusy(false);
+        onBusyChange(false);
+      }
+    }
+  };
   const run = async (kind) => {
     if (pending.current || disabled) return;
     if (kind === 'confirm' && !/^\d{6}$/.test(code)) {
@@ -130,6 +161,18 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
             Konfirmasi membuktikan kode diterima pada saat itu, bukan jaminan nomor akan selalu
             aktif. Login dapat memakai email atau nomor HP dengan kata sandi.
           </p>
+          {user.phoneVerified && (
+            <label className="account-profile-help">
+              <input
+                type="checkbox"
+                checked={user.whatsappNotifications === true}
+                disabled={disabled || busy}
+                onChange={(event) => toggleNotifications(event.target.checked)}
+              />{' '}
+              Kirim faktur dan info pesanan ke WhatsApp nomor ini. Anda dapat menonaktifkannya kapan
+              saja.
+            </label>
+          )}
           {!user.phoneVerified && (
             <>
               {data?.ready === false && (

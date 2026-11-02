@@ -97,6 +97,8 @@ export default function DeliveryProvider({ children }) {
           phoneVerified: current?.phoneVerified ?? payload.user.phoneVerified ?? false,
           phoneVerifiedAt: current?.phoneVerifiedAt ?? payload.user.phoneVerifiedAt ?? null,
           phoneRevision: current?.phoneRevision ?? payload.user.phoneRevision ?? '',
+          whatsappNotifications:
+            current?.whatsappNotifications ?? payload.user.whatsappNotifications ?? false,
         }));
       } catch {
         return { ok: false, persisted: false };
@@ -200,6 +202,7 @@ export default function DeliveryProvider({ children }) {
               phoneVerified: payload.user.phoneVerified === true,
               phoneVerifiedAt: payload.user.phoneVerifiedAt ?? null,
               phoneRevision: payload.user.phoneRevision || '',
+              whatsappNotifications: payload.user.whatsappNotifications === true,
             }
           : current,
       );

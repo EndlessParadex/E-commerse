@@ -34,6 +34,8 @@ import { PhoneVerificationRepository } from './phoneVerification.js';
 import { PhoneLoginDirectory } from './phoneLoginDirectory.js';
 import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { createWhatsAppOtpSender } from './whatsappOtp.js';
+import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
+import { OrderDelivery } from './orderDelivery.js';
 import { DeliveryScheduleRepository } from './deliverySchedules.js';
 
 const scrypt = promisify(scryptCallback);
@@ -136,6 +138,7 @@ export function createApp({
   mailConfig,
   mailTransportFactory,
   whatsappSender,
+  whatsappBusinessSender,
   passwordQueueOptions,
   passwordCheck = verifyPassword,
   logger = (entry) => console.error(entry),
@@ -215,6 +218,15 @@ export function createApp({
     queue: passwordQueue,
     hashPassword,
   });
+  const delivery = new OrderDelivery(db, {
+    identity,
+    company,
+    phones: phoneVerification,
+    sender: whatsappBusinessSender ?? createWhatsAppBusinessSender(),
+    now,
+    logger,
+  });
+  messages.delivery = delivery;
   const publicUser = (user) => ({
     ...userView(user),
     avatar:
@@ -667,6 +679,9 @@ export function createApp({
           return json(res, 200, {
             emailReady: identity.ready,
             whatsappConfigured: phoneVerification.ready,
+            whatsappInvoiceReady: delivery.sender.invoiceReady,
+            whatsappUpdateReady: delivery.sender.updateReady,
+            documentDelivery: delivery.summary(),
             deliveryCutoffConfigured: b2bCutoff != null,
             canManageEmail: isStoreOwner(db, user),
             verificationRequired: true,
@@ -938,6 +953,12 @@ export function createApp({
           : await phoneVerification.confirm(actor, body, clientIp(req));
         return json(res, 200, result);
       }
+      if (req.method === 'PUT' && path === '/api/profile/phone/whatsapp-notifications') {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        const body = await readBody(req);
+        return json(res, 200, phoneVerification.setWhatsAppNotifications(actor.id, body.enabled));
+      }
       if (req.method === 'PUT' && path === '/api/profile/phone') {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
@@ -1039,6 +1060,7 @@ export function createApp({
     identity,
     phoneVerification,
     messages,
+    delivery,
     emailSettings,
     accounts,
     b2bStores,

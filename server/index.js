@@ -6,7 +6,7 @@ loadLocalEnv();
 
 const port = Number(process.env.PORT || 3001);
 const host = process.env.HOST || '127.0.0.1';
-const { server, db, workflow, identity, messages, refreshMailSettings } = createApp();
+const { server, db, workflow, identity, messages, delivery, refreshMailSettings } = createApp();
 const expiryTimer = setInterval(() => {
   try {
     workflow.tick();
@@ -26,6 +26,7 @@ const emailTimer = setInterval(() => {
       refreshMailSettings();
       await identity.flushMail();
       await messages.flush();
+      await delivery.flush();
     } catch (error) {
       logUnexpectedError((entry) => console.error(entry), error, {
         operation: 'account_email_worker',

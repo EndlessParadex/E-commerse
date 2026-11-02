@@ -36,6 +36,7 @@ export class OrderMessages {
   }
   enqueue(order, kind, time) {
     if (!labels[kind]) return;
+    this.delivery?.enqueue(order, kind, time);
     const recipients = order.b2b
       ? (this.b2bRecipients?.(order.b2b.storeId) || []).map((user) => ({ id: user.id, admin: 0 }))
       : [{ id: order.userId, admin: 0 }];
@@ -205,7 +206,9 @@ export class OrderMessages {
         "SELECT id,order_id,kind,status,attempts,leased_until FROM order_mail WHERE status IN ('failed','queued') AND attempts>0 ORDER BY created_at DESC LIMIT 20",
       )
       .all()
-      .map(({ leased_until, ...row }) => ({ ...row, canRetry: leased_until <= this.now() }));
+      .map(({ leased_until, ...row }) => ({ ...row, canRetry: leased_until <= this.now() }))
+      .concat(this.delivery?.failedMessages() || [])
+      .slice(0, 20);
   }
   retry(id) {
     return (
@@ -213,7 +216,7 @@ export class OrderMessages {
         .prepare(
           "UPDATE order_mail SET status='queued',next_attempt=?,leased_until=0,attempts=0 WHERE id=? AND status IN ('failed','queued') AND attempts>0 AND leased_until<=?",
         )
-        .run(this.now(), id, this.now()).changes === 1
+        .run(this.now(), id, this.now()).changes === 1 || this.delivery?.retry(id) === true
     );
   }
 }

@@ -41,6 +41,10 @@ export class B2BFinalizationRepository {
     });
     messages.b2bRecipients = (storeId) => this.recipients(storeId);
     messages.b2bCanRead = (actor, storeId) => this.canRead(actor, storeId);
+    if (messages.delivery) {
+      messages.delivery.b2bBuyers = (storeId) => this.buyers(storeId);
+      messages.delivery.b2bCanRead = (actor, storeId) => this.canRead(actor, storeId);
+    }
   }
   canRead(actor, storeId) {
     try {
@@ -57,6 +61,13 @@ export class B2BFinalizationRepository {
       UNION SELECT sales_user_id AS id FROM b2b_sales_assignments WHERE store_id=?`,
       )
       .all(storeId, storeId)
+      .filter((user) => this.canRead(user, storeId));
+  }
+  // Invoices go to the store's own accounts, not to its assigned Sales.
+  buyers(storeId) {
+    return this.db
+      .prepare('SELECT user_id AS id FROM b2b_store_members WHERE store_id=?')
+      .all(storeId)
       .filter((user) => this.canRead(user, storeId));
   }
   admin(actor) {

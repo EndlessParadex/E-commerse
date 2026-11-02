@@ -147,9 +147,11 @@ export class OrderMessages {
           ? 'Total akhir: Rp ' + order.total.toLocaleString('id-ID')
           : 'Total sementara belum termasuk ongkir.',
         order.cancellationReason || '',
-        order.shipping.trackingNumber
-          ? 'Kurir: ' + order.shipping.courier + '; resi: ' + order.shipping.trackingNumber
-          : '',
+        order.shipping.driverName
+          ? 'Sopir: ' + order.shipping.driverName
+          : order.shipping.trackingNumber
+            ? 'Kurir: ' + order.shipping.courier + '; resi: ' + order.shipping.trackingNumber
+            : '',
         row.kind === 'proofRejected' ? order.payment.proof?.reason : '',
         order.status === 'awaiting_acceptance'
           ? 'Setujui total akhir pada detail pesanan. Batas reservasi: ' +

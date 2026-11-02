@@ -36,6 +36,10 @@ Checkout pribadi menampilkan jadwal wilayah jika tersedia. Backend merekam wilay
 
 Jadwal rutin tidak menjamin tanggal tiba. Detail/status pesanan tetap menjadi acuan proses sebenarnya. Perubahan wilayah dan hubungan akun tercatat pada audit server. Admin operasional, Sales dan pembeli tidak dapat mengubah pengaturan ini melalui API.
 
+## Sopir
+
+Pesanan diantar sopir BAM, tanpa nomor resi. Pemilik mendaftarkan akun sopir di Admin → Sopir. Akun itu tidak boleh merangkap Sales atau pembeli toko. Admin memilih sopir saat Catat pengiriman. Sopir masuk ke `#/sopir`, melihat alamat, barang, dan uang yang perlu ditagih, lalu menekan Sudah sampai. Tombol itu menyelesaikan pesanan dan mencatat pembayaran COD. Admin tetap dapat menyelesaikan pesanan. Sopir tidak dapat dilepas selama masih membawa pesanan.
+
 ## Layanan dan validasi
 
 Status **Kesiapan toko** pada Admin membedakan pengaturan email/WhatsApp yang tersedia dari bukti pengiriman nyata. Layanan harus dikonfigurasi dengan kredensial sah milik BAM. Pengujian otomatis memakai pengirim uji; tidak mengirim ke pelanggan.

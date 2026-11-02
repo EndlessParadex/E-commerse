@@ -16,7 +16,9 @@ const updates = {
   proofRejected: (order) =>
     'Bukti pembayaran perlu diperbaiki. ' + (order.payment.proof?.reason || ''),
   orderShipped: (order) =>
-    `Pesanan dikirim dengan ${order.shipping.courier}, nomor resi ${order.shipping.trackingNumber}.`,
+    order.shipping.driverName
+      ? `Pesanan sedang diantar oleh sopir ${order.shipping.driverName}.`
+      : `Pesanan dikirim dengan ${order.shipping.courier}, nomor resi ${order.shipping.trackingNumber}.`,
   orderCompleted: () => 'Pesanan telah selesai.',
   orderCancelled: (order) => 'Pesanan dibatalkan. ' + (order.cancellationReason || ''),
   paymentExpired: () => 'Batas pembayaran berakhir.',

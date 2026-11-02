@@ -238,18 +238,27 @@ export default function OrderConfirmationPage({ orderId }) {
             </div>
           </section>
           <PaymentDetails order={order} />
-          {order.shipping.trackingNumber && (
+          {(order.shipping.trackingNumber || order.shipping.driverName) && (
             <section className="confirmation-card workflow-shipment">
-              <h2>Resi pengiriman</h2>
+              <h2>{order.shipping.driverName ? 'Pengiriman' : 'Resi pengiriman'}</h2>
               <dl>
-                <div>
-                  <dt>Kurir</dt>
-                  <dd>{order.shipping.courier}</dd>
-                </div>
-                <div>
-                  <dt>Nomor resi</dt>
-                  <dd>{order.shipping.trackingNumber}</dd>
-                </div>
+                {order.shipping.driverName ? (
+                  <div>
+                    <dt>Sopir</dt>
+                    <dd>{order.shipping.driverName}</dd>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <dt>Kurir</dt>
+                      <dd>{order.shipping.courier}</dd>
+                    </div>
+                    <div>
+                      <dt>Nomor resi</dt>
+                      <dd>{order.shipping.trackingNumber}</dd>
+                    </div>
+                  </>
+                )}
                 <div>
                   <dt>Dikirim</dt>
                   <dd>{dateLabel(order.shipping.shippedAt)}</dd>
@@ -262,9 +271,11 @@ export default function OrderConfirmationPage({ orderId }) {
                 )}
               </dl>
               <p>
-                {server
-                  ? 'Resi dan status dicatat Admin BAM. Pelacakan otomatis ke kurir belum terhubung.'
-                  : 'Resi dan status pengiriman pratinjau. Belum terhubung ke kurir.'}
+                {order.shipping.driverName
+                  ? 'Pesanan diantar langsung oleh sopir BAM.'
+                  : server
+                    ? 'Resi dan status dicatat Admin BAM. Pelacakan otomatis ke kurir belum terhubung.'
+                    : 'Resi dan status pengiriman pratinjau. Belum terhubung ke kurir.'}
               </p>
             </section>
           )}

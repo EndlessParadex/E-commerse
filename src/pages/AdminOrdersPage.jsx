@@ -15,6 +15,7 @@ import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
+import { accountApi } from '../components/account/accountApi';
 import '../styles/workflow.css';
 
 const ORDER_FILTERS = [
@@ -57,6 +58,8 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
   const [cancelTarget, setCancelTarget] = useState(null);
   const [courier, setCourier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [drivers, setDrivers] = useState(null);
+  const [driverId, setDriverId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const visible = orders;
@@ -68,6 +71,16 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
     setTrackingNumber('');
     setReference('');
     setError('');
+    setDriverId('');
+    if (server && action === 'ship') {
+      setDrivers(null);
+      accountApi('/api/drivers')
+        .then((payload) => setDrivers(payload.drivers))
+        .catch((failure) => {
+          setDrivers([]);
+          setError(failure.message);
+        });
+    }
   };
   const confirm = async () => {
     if (pending.current) return;
@@ -77,13 +90,14 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
       ? await changeServerOrder(
           target.order.id,
           target.action,
-          {
-            courier,
-            trackingNumber,
-            reference,
-            shippingCost: shippingCost === '' ? null : Number(shippingCost),
-            reason: rejectionReason,
-          },
+          target.action === 'ship'
+            ? { driverId }
+            : {
+                courier,
+                reference,
+                shippingCost: shippingCost === '' ? null : Number(shippingCost),
+                reason: rejectionReason,
+              },
           target.order.revision,
         )
       : updatePreviewOrder(target.order.id, target.action, window.sessionStorage, {
@@ -284,6 +298,11 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
                 {order.note && (
                   <p>
                     <strong>Catatan:</strong> {order.note}
+                  </p>
+                )}
+                {order.shipping.driverName && (
+                  <p>
+                    <strong>Sopir:</strong> {order.shipping.driverName}
                   </p>
                 )}
                 {order.shipping.trackingNumber && (
@@ -504,7 +523,39 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
               />
             </label>
           )}
-          {target.action === 'ship' && (
+          {server && target.action === 'ship' && (
+            <>
+              <label htmlFor="shipment-driver">
+                Sopir
+                <select
+                  id="shipment-driver"
+                  value={driverId}
+                  disabled={busy || !drivers?.length}
+                  aria-invalid={Boolean(error) && !driverId}
+                  onChange={(event) => {
+                    setDriverId(event.target.value);
+                    setError('');
+                  }}
+                >
+                  <option value="">{drivers ? 'Pilih sopir' : 'Memuat sopir…'}</option>
+                  {(drivers || []).map((driver) => (
+                    <option key={driver.id} value={driver.id}>
+                      {driver.name}
+                      {driver.activeDeliveries
+                        ? ' · sedang membawa ' + driver.activeDeliveries + ' pesanan'
+                        : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {drivers?.length === 0 && !error && (
+                <p>
+                  Belum ada sopir. <a href="#/admin/sopir">Daftarkan sopir</a> terlebih dahulu.
+                </p>
+              )}
+            </>
+          )}
+          {!server && target.action === 'ship' && (
             <>
               <label htmlFor="shipment-courier">
                 Nama kurir

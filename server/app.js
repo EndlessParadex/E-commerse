@@ -240,6 +240,7 @@ export function createApp({
       db.prepare('SELECT verified_at FROM auth_account_state WHERE user_id=?').get(user.id)
         ?.verified_at ?? null,
     isOwner: isStoreOwner(db, user),
+    isDriver: b2bStores.isDriver(user.id),
     ...customerAccess(db, user),
   });
   const workflow = new WorkflowRepository(db, catalog, company, now, reservationPolicy, messages);
@@ -596,6 +597,34 @@ export function createApp({
               await readBody(req),
             ),
           );
+        return sendError(res, 405, 'method_not_allowed');
+      }
+      const driverTaskMatch = path.match(/^\/api\/driver\/deliveries\/([^/]+)\/complete$/);
+      if (
+        path === '/api/drivers' ||
+        path === '/api/drivers/appoint' ||
+        path === '/api/drivers/remove' ||
+        path === '/api/driver/deliveries' ||
+        driverTaskMatch
+      ) {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        if (req.method === 'GET' && path === '/api/drivers')
+          return json(res, 200, { drivers: b2bStores.driverList(actor) });
+        if (req.method === 'POST' && path === '/api/drivers/appoint')
+          return json(res, 200, b2bStores.appointDriver(actor, (await readBody(req)).userId));
+        if (req.method === 'POST' && path === '/api/drivers/remove')
+          return json(res, 200, b2bStores.removeDriver(actor, (await readBody(req)).userId));
+        if (req.method === 'GET' && path === '/api/driver/deliveries')
+          return json(res, 200, workflow.driverTasks(actor));
+        if (req.method === 'POST' && driverTaskMatch)
+          return json(res, 200, {
+            task: workflow.deliverAsDriver(
+              actor,
+              decodeURIComponent(driverTaskMatch[1]),
+              await readBody(req),
+            ),
+          });
         return sendError(res, 405, 'method_not_allowed');
       }
       const approvalMatch = path.match(/^\/api\/admin\/approvals(?:\/([^/]+))?$/);

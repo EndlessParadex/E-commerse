@@ -69,6 +69,16 @@ export default function AccountMenu({ onNavigate, profileActive = false, hidePro
             />
           </a>
         )}
+        {user?.isDriver && (
+          <a className="account-menu-link" href="#/sopir" onClick={onNavigate}>
+            <AccountMenuEntry
+              icon="orders"
+              kind="orders"
+              title="Tugas pengiriman"
+              description="Pesanan yang perlu Anda antar"
+            />
+          </a>
+        )}
         <a className="account-menu-link" href="#/pesanan" onClick={onNavigate}>
           <AccountMenuEntry
             icon="orders"

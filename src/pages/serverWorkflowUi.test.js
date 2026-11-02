@@ -46,6 +46,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     ['admin', 'admin'],
     ['alice', 'user'],
     ['bob', 'user'],
+    ['sopir', 'user'],
   ])
     api.db
       .prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)')
@@ -61,6 +62,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   api.db.exec(
     'INSERT OR REPLACE INTO auth_account_state(user_id,verified_at) SELECT id,1 FROM users',
   );
+  api.db.prepare('INSERT INTO delivery_drivers VALUES(?,?,?)').run('sopir', 'admin', Date.now());
   const settings = api.company.snapshot();
   api.company.save({
     ...settings,
@@ -402,8 +404,16 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.equal(api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id).payment.status, 'paid');
     await wait(() => button('Catat pengiriman'));
     await click(button('Catat pengiriman'));
-    await fill('#shipment-courier', 'JNE');
-    await fill('#shipment-tracking', 'RESI-BOB-001');
+    await wait(() => container.querySelector('#shipment-driver option[value="sopir"]'));
+    assert.equal(container.querySelector('#shipment-courier'), null);
+    await click(button('Simpan perubahan'));
+    assert.match(container.querySelector('[role=alert]').textContent, /Pilih sopir/);
+    await act(async () => {
+      const select = container.querySelector('#shipment-driver');
+      select.value = 'sopir';
+      select.dispatchEvent(new dom.Event('change', { bubbles: true }));
+      await settle();
+    });
     await click(button('Simpan perubahan'));
     await wait(() => button('Selesaikan pesanan'));
     await click(button('Selesaikan pesanan'));
@@ -430,7 +440,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
       'pesanan saya pada admin hanya berisi pesanan admin sendiri',
     );
     await mountAs('bob', '/pesanan/' + bobOrder.id);
-    assert.match(container.textContent, /RESI-BOB-001/);
+    assert.match(container.textContent, /Akun sopir/);
     assert.match(container.textContent, /Selesai/);
     const codInput = {
       requestKey: randomUUID(),

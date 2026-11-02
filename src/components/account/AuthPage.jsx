@@ -111,9 +111,11 @@ export default function AuthPage({ mode }) {
       window.location.hash =
         payload.user.role === 'admin'
           ? '/admin'
-          : payload.user.canViewCustomers
-            ? '/pelanggan'
-            : '/';
+          : payload.user.isDriver
+            ? '/sopir'
+            : payload.user.canViewCustomers
+              ? '/pelanggan'
+              : '/';
     } catch {
       setNotice('Belum dapat terhubung ke layanan akun. Periksa koneksi lalu coba lagi.');
     } finally {

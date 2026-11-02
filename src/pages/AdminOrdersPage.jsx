@@ -15,7 +15,7 @@ import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
-import { accountApi } from '../components/account/accountApi';
+import { driverNames } from '../data/companyProfile';
 import '../styles/workflow.css';
 
 const ORDER_FILTERS = [
@@ -58,8 +58,7 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
   const [cancelTarget, setCancelTarget] = useState(null);
   const [courier, setCourier] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
-  const [drivers, setDrivers] = useState(null);
-  const [driverId, setDriverId] = useState('');
+  const [driverName, setDriverName] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const visible = orders;
@@ -71,16 +70,7 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
     setTrackingNumber('');
     setReference('');
     setError('');
-    setDriverId('');
-    if (server && action === 'ship') {
-      setDrivers(null);
-      accountApi('/api/drivers')
-        .then((payload) => setDrivers(payload.drivers))
-        .catch((failure) => {
-          setDrivers([]);
-          setError(failure.message);
-        });
-    }
+    setDriverName('');
   };
   const confirm = async () => {
     if (pending.current) return;
@@ -91,7 +81,7 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
           target.order.id,
           target.action,
           target.action === 'ship'
-            ? { driverId }
+            ? { driverName }
             : {
                 courier,
                 reference,
@@ -529,28 +519,26 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
                 Sopir
                 <select
                   id="shipment-driver"
-                  value={driverId}
-                  disabled={busy || !drivers?.length}
-                  aria-invalid={Boolean(error) && !driverId}
+                  value={driverName}
+                  disabled={busy || !driverNames(company.profile).length}
+                  aria-invalid={Boolean(error) && !driverName}
                   onChange={(event) => {
-                    setDriverId(event.target.value);
+                    setDriverName(event.target.value);
                     setError('');
                   }}
                 >
-                  <option value="">{drivers ? 'Pilih sopir' : 'Memuat sopir…'}</option>
-                  {(drivers || []).map((driver) => (
-                    <option key={driver.id} value={driver.id}>
-                      {driver.name}
-                      {driver.activeDeliveries
-                        ? ' · sedang membawa ' + driver.activeDeliveries + ' pesanan'
-                        : ''}
+                  <option value="">Pilih sopir</option>
+                  {driverNames(company.profile).map((name) => (
+                    <option key={name} value={name}>
+                      {name}
                     </option>
                   ))}
                 </select>
               </label>
-              {drivers?.length === 0 && !error && (
+              {!driverNames(company.profile).length && (
                 <p>
-                  Belum ada sopir. <a href="#/admin/sopir">Daftarkan sopir</a> terlebih dahulu.
+                  Belum ada sopir. Isi namanya di{' '}
+                  <a href="#/admin/perusahaan">Pengaturan perusahaan</a>.
                 </p>
               )}
             </>

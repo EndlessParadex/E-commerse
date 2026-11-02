@@ -38,7 +38,7 @@ Jadwal rutin tidak menjamin tanggal tiba. Detail/status pesanan tetap menjadi ac
 
 ## Sopir
 
-Pesanan diantar sopir BAM, tanpa nomor resi. Pemilik mendaftarkan akun sopir di Admin → Sopir. Akun itu tidak boleh merangkap Sales atau pembeli toko. Admin memilih sopir saat Catat pengiriman. Sopir masuk ke `#/sopir`, melihat alamat, barang, dan uang yang perlu ditagih, lalu menekan Sudah sampai. Tombol itu menyelesaikan pesanan dan mencatat pembayaran COD. Admin tetap dapat menyelesaikan pesanan. Sopir tidak dapat dilepas selama masih membawa pesanan.
+Pesanan diantar sopir BAM, tanpa nomor resi. Nama sopir ditulis di Pengaturan perusahaan, satu nama per baris. Admin memilih sopir saat Catat pengiriman, lalu menekan Selesaikan pesanan setelah barang diterima. Sopir tidak memerlukan akun.
 
 ## Layanan dan validasi
 

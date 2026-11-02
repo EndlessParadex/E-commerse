@@ -46,7 +46,6 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     ['admin', 'admin'],
     ['alice', 'user'],
     ['bob', 'user'],
-    ['sopir', 'user'],
   ])
     api.db
       .prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)')
@@ -62,7 +61,6 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
   api.db.exec(
     'INSERT OR REPLACE INTO auth_account_state(user_id,verified_at) SELECT id,1 FROM users',
   );
-  api.db.prepare('INSERT INTO delivery_drivers VALUES(?,?,?)').run('sopir', 'admin', Date.now());
   const settings = api.company.snapshot();
   api.company.save({
     ...settings,
@@ -71,6 +69,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
       bankName: 'Bank Fixture',
       bankAccount: '12345678',
       bankHolder: 'Fixture Company',
+      deliveryDrivers: 'Budi Sopir\nAndi Sopir',
     },
   });
   async function request(method, path, body, cookie = '') {
@@ -404,13 +403,16 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     assert.equal(api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id).payment.status, 'paid');
     await wait(() => button('Catat pengiriman'));
     await click(button('Catat pengiriman'));
-    await wait(() => container.querySelector('#shipment-driver option[value="sopir"]'));
+    assert.deepEqual(
+      [...container.querySelectorAll('#shipment-driver option')].map((option) => option.value),
+      ['', 'Budi Sopir', 'Andi Sopir'],
+    );
     assert.equal(container.querySelector('#shipment-courier'), null);
     await click(button('Simpan perubahan'));
-    assert.match(container.querySelector('[role=alert]').textContent, /Pilih sopir/);
+    assert.match(container.querySelector('[role=alert]').textContent, /Pilih sopir dari daftar/);
     await act(async () => {
       const select = container.querySelector('#shipment-driver');
-      select.value = 'sopir';
+      select.value = 'Budi Sopir';
       select.dispatchEvent(new dom.Event('change', { bubbles: true }));
       await settle();
     });
@@ -440,7 +442,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
       'pesanan saya pada admin hanya berisi pesanan admin sendiri',
     );
     await mountAs('bob', '/pesanan/' + bobOrder.id);
-    assert.match(container.textContent, /Akun sopir/);
+    assert.match(container.textContent, /Budi Sopir/);
     assert.match(container.textContent, /Selesai/);
     const codInput = {
       requestKey: randomUUID(),

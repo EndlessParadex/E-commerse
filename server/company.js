@@ -41,6 +41,7 @@ export class CompanyRepository {
         bankAccount: '',
         bankHolder: '',
         bankInstructions: '',
+        deliveryDrivers: '',
         codEnabled: true,
         showSoldCount: false,
         showExactStock: true,

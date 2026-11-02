@@ -10,11 +10,6 @@ export const adminGuideByView = {
     ['orders', 'Periksa status', 'Tinjau pembayaran dan detail.'],
     ['details', 'Proses pesanan', 'Simpan tindakan yang diizinkan.'],
   ],
-  drivers: [
-    ['accounts', 'Siapkan akun', 'Sopir mendaftar dan disetujui.'],
-    ['drivers', 'Daftarkan sopir', 'Pilih akun sopir di halaman ini.'],
-    ['orders', 'Tugaskan pesanan', 'Pilih sopir saat Catat pengiriman.'],
-  ],
   stock: [
     ['search', 'Cari produk', 'Pilih ukuran atau SKU.'],
     ['stock', 'Periksa stok', 'Cek persediaan tersedia.'],

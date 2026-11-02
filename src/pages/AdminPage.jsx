@@ -30,7 +30,6 @@ import useUnsavedChanges from '../state/useUnsavedChanges';
 import { packagingLabel } from '../data/productPackaging';
 import { productColorStyle, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
 import AdminOrdersPage from './AdminOrdersPage';
-import AdminDriversPage from './AdminDriversPage';
 import AdminCompanyPage from './AdminCompanyPage';
 import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
@@ -76,7 +75,6 @@ const navigationGroups = [
     items: [
       { view: 'overview', label: 'Dashboard', href: '#/admin' },
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
-      { view: 'drivers', label: 'Sopir', href: '#/admin/sopir' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
     ],
   },
@@ -206,7 +204,7 @@ export default function AdminPage({ view = 'overview' }) {
   // Storage notes matter only while data can be lost; a database-backed dashboard omits them.
   const hideStorageNote = view === 'overview' && catalogUsesServer;
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
-  const workflowView = view === 'orders' || view === 'stock' || view === 'drivers';
+  const workflowView = view === 'orders' || view === 'stock';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const ownerSettingsView = ['company', 'email', 'accounts', 'approvals'].includes(view);
   const areaLabel =
@@ -227,7 +225,6 @@ export default function AdminPage({ view = 'overview' }) {
     suppliers: 'Kelola perusahaan pemasok dan relasinya dengan produk.',
     brands: 'Kelola merek dan perusahaan pemasok yang terhubung.',
     categories: 'Susun kategori dan subkategori katalog toko.',
-    drivers: 'Kelola akun sopir yang mengantar pesanan BAM.',
     stock: workflowUsesServer
       ? 'Kelola stok produk yang tersimpan di database.'
       : 'Kelola stok produk pada pratinjau frontend.',
@@ -242,7 +239,6 @@ export default function AdminPage({ view = 'overview' }) {
     brands: 'Merek',
     categories: 'Kategori & subkategori',
     orders: 'Pesanan toko',
-    drivers: 'Sopir',
     stock: 'Stok produk',
     company: 'Pengaturan perusahaan',
     email: 'Pengaturan email',
@@ -474,7 +470,7 @@ export default function AdminPage({ view = 'overview' }) {
                       ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
                       : workflowView
                         ? workflowUsesServer
-                          ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin dan sopir; belum terhubung otomatis ke penyedia layanan.'
+                          ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
                           : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
                         : catalogUsesServer
                           ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
@@ -544,8 +540,6 @@ export default function AdminPage({ view = 'overview' }) {
           <AdminCompanyPage />
         ) : view === 'orders' ? (
           <AdminOrdersPage />
-        ) : view === 'drivers' ? (
-          <AdminDriversPage />
         ) : view === 'stock' ? (
           <AdminStockPage />
         ) : masterType ? (

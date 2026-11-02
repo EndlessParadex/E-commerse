@@ -26,7 +26,6 @@ const AccountPage = lazy(() => import('./pages/AccountPage'));
 import OrdersPage from './pages/OrdersPage';
 const AdminPage = lazy(() => import('./pages/AdminPage'));
 const CustomerDirectoryPage = lazy(() => import('./pages/CustomerDirectoryPage'));
-const DriverPage = lazy(() => import('./pages/DriverPage'));
 const AccountRecoveryPage = lazy(() => import('./pages/AccountRecoveryPage'));
 import { subscribeCatalog, catalogRevision, initializeCatalog } from './data/adminStore';
 import AdminAccess from './components/account/AdminAccess';
@@ -78,7 +77,6 @@ function App() {
     '/admin/merek': 'brands',
     '/admin/kategori': 'categories',
     '/admin/pesanan': 'orders',
-    '/admin/sopir': 'drivers',
     '/admin/stok': 'stock',
     '/admin/perusahaan': 'company',
     '/admin/email': 'email',
@@ -121,7 +119,6 @@ function App() {
         brands: 'Admin · Merek',
         categories: 'Admin · Kategori',
         orders: 'Admin · Pesanan',
-        drivers: 'Admin · Sopir',
         stock: 'Admin · Stok',
         company: 'Admin · Pengaturan Perusahaan',
         accounts: 'Admin · Kelola Akun',
@@ -143,7 +140,6 @@ function App() {
               : {
                   '/': 'Beranda',
                   '/pelanggan': 'Daftar Pembeli',
-                  '/sopir': 'Tugas Pengiriman',
                   '/pesanan': 'Pesanan Saya',
                   '/keranjang': 'Keranjang',
                   '/checkout': 'Checkout',
@@ -232,8 +228,6 @@ function App() {
                   >
                     <CustomerDirectoryPage />
                   </Suspense>
-                ) : route === '/sopir' ? (
-                  <DriverPage />
                 ) : recoveryMatch ? (
                   <AccountRecoveryPage
                     mode={recoveryMatch[1]}

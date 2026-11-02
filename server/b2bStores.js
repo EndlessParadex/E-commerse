@@ -114,11 +114,6 @@ export class B2BStoreRepository {
       assigned_at INTEGER NOT NULL,
       PRIMARY KEY(store_id,sales_user_id)
     );
-    CREATE TABLE IF NOT EXISTS delivery_drivers (
-      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-      appointed_by TEXT NOT NULL REFERENCES users(id),
-      appointed_at INTEGER NOT NULL
-    );
     CREATE TABLE IF NOT EXISTS b2b_store_audit (
       id TEXT PRIMARY KEY, actor_id TEXT NOT NULL REFERENCES users(id),
       store_id TEXT REFERENCES b2b_stores(id),
@@ -159,9 +154,6 @@ export class B2BStoreRepository {
   }
   isSales(userId) {
     return Boolean(this.db.prepare('SELECT 1 FROM b2b_sales_agents WHERE user_id=?').get(userId));
-  }
-  isDriver(userId) {
-    return Boolean(this.db.prepare('SELECT 1 FROM delivery_drivers WHERE user_id=?').get(userId));
   }
   role(actor) {
     return isStoreOwner(this.db, actor)
@@ -435,7 +427,6 @@ export class B2BStoreRepository {
       WHERE u.role='user' AND access.disabled_at IS NULL
       AND COALESCE(approval.status,'approved')='approved'
       AND NOT EXISTS(SELECT 1 FROM b2b_sales_agents a WHERE a.user_id=u.id)
-      AND NOT EXISTS(SELECT 1 FROM delivery_drivers d WHERE d.user_id=u.id)
       ${ownerFilter}
       AND instr(lower(u.name||' '||u.email),?)>0`;
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from).get(query).n;
@@ -503,8 +494,6 @@ export class B2BStoreRepository {
     const user = validUser(this.db, userId);
     if (user.role !== 'user')
       fail('Akun Sales harus merupakan akun staf non-Admin.', 422, 'invalid_sales_account');
-    if (this.isDriver(user.id))
-      fail('Akun ini sudah terdaftar sebagai Sopir.', 409, 'driver_sales_conflict');
     // The responsible store owner must hand over ownership before promotion.
     // Promoting a buyer to Sales revokes buyer links; explicit Sales assignments
     // become the only source of storefront access for that user.
@@ -626,60 +615,5 @@ export class B2BStoreRepository {
       GROUP BY u.id ORDER BY u.name,u.id`,
       )
       .all();
-  }
-  activeDeliveries(userId) {
-    return this.db
-      .prepare(
-        "SELECT COUNT(*) AS n FROM orders WHERE status='shipped' AND json_extract(data,'$.shipping.driverId')=?",
-      )
-      .get(userId).n;
-  }
-  driverList(actor) {
-    this.requireStaff(actor);
-    return this.db
-      .prepare(
-        `SELECT u.id,u.name,u.email FROM delivery_drivers d JOIN users u ON u.id=d.user_id
-      LEFT JOIN account_access access ON access.user_id=u.id
-      LEFT JOIN account_approvals approval ON approval.user_id=u.id
-      WHERE access.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'
-      ORDER BY u.name,u.id`,
-      )
-      .all()
-      .map((driver) => ({ ...driver, activeDeliveries: this.activeDeliveries(driver.id) }));
-  }
-  appointDriver(actor, userId) {
-    this.requireOwner(actor);
-    const user = validUser(this.db, userId);
-    if (user.role !== 'user')
-      fail('Akun Sopir harus merupakan akun staf non-Admin.', 422, 'invalid_driver_account');
-    if (
-      this.isSales(user.id) ||
-      this.db.prepare('SELECT 1 FROM b2b_store_members WHERE user_id=? LIMIT 1').get(user.id) ||
-      this.db.prepare('SELECT 1 FROM b2b_store_owners WHERE user_id=? LIMIT 1').get(user.id)
-    )
-      fail('Akun Sales atau pembeli toko tidak dapat menjadi Sopir.', 409, 'driver_role_conflict');
-    return this.transaction(() => {
-      this.db
-        .prepare('INSERT OR IGNORE INTO delivery_drivers VALUES(?,?,?)')
-        .run(user.id, actor.id, this.now());
-      this.record(actor, 'driver_appointed', null, user.id);
-      return { userId: user.id, driver: true };
-    });
-  }
-  removeDriver(actor, userId) {
-    this.requireOwner(actor);
-    if (typeof userId !== 'string' || !this.isDriver(userId))
-      fail('Akun belum terdaftar sebagai Sopir.', 404, 'driver_not_found');
-    if (this.activeDeliveries(userId))
-      fail(
-        'Sopir masih membawa pesanan. Selesaikan pengirimannya terlebih dahulu.',
-        409,
-        'driver_busy',
-      );
-    return this.transaction(() => {
-      this.db.prepare('DELETE FROM delivery_drivers WHERE user_id=?').run(userId);
-      this.record(actor, 'driver_removed', null, userId);
-      return { userId, driver: false };
-    });
   }
 }

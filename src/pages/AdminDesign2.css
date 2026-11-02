@@ -668,17 +668,6 @@
   width: auto;
   margin: 0;
 }
-.admin-shell .admin-driver-add {
-  margin-top: var(--admin-space-panel);
-}
-.admin-shell .admin-driver-add form > div {
-  display: flex;
-  gap: 8px;
-}
-.admin-shell .admin-driver-add select {
-  flex: 1;
-  min-width: 0;
-}
 .admin-shell .admin-work-main .shared-cart-page {
   padding: 0;
 }

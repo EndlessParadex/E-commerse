@@ -333,6 +333,16 @@ export default function AdminCompanyPage() {
             )}
             <section
               className="company-settings-section company-settings-divider"
+              aria-labelledby="company-drivers-title"
+            >
+              <div className="company-section-heading">
+                <h3 id="company-drivers-title">Sopir</h3>
+                <p>Tulis satu nama per baris. Nama ini muncul saat Catat pengiriman.</p>
+              </div>
+              {field('deliveryDrivers', 'Nama sopir', 500, true)}
+            </section>
+            <section
+              className="company-settings-section company-settings-divider"
               aria-labelledby="company-visibility-title"
             >
               <div className="company-section-heading">

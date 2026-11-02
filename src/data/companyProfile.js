@@ -12,6 +12,7 @@ export const demoCompanyProfile = Object.freeze({
   bankAccount: '',
   bankHolder: '',
   bankInstructions: '',
+  deliveryDrivers: '',
   codEnabled: true,
 });
 export const emptyCompanyProfile = Object.freeze({
@@ -28,6 +29,7 @@ export const emptyCompanyProfile = Object.freeze({
   bankAccount: '',
   bankHolder: '',
   bankInstructions: '',
+  deliveryDrivers: '',
   codEnabled: true,
 });
 export const companyFields = [
@@ -42,6 +44,16 @@ export const companyFields = [
   'bankAccount',
   'bankHolder',
   'bankInstructions',
+  'deliveryDrivers',
+];
+// Each line of the company setting is one driver offered when recording a shipment.
+export const driverNames = (profile) => [
+  ...new Set(
+    String(profile?.deliveryDrivers || '')
+      .split('\n')
+      .map((name) => name.trim())
+      .filter(Boolean),
+  ),
 ];
 export function companyProfileErrors(value) {
   const errors = {};
@@ -57,9 +69,11 @@ export function companyProfileErrors(value) {
     bankAccount: [0, 40],
     bankHolder: [0, 100],
     bankInstructions: [0, 500],
+    deliveryDrivers: [0, 500],
   };
   for (const field of companyFields) {
-    const entry = value?.[field] ?? (field.startsWith('bank') ? '' : undefined);
+    const optional = field.startsWith('bank') || field === 'deliveryDrivers';
+    const entry = value?.[field] ?? (optional ? '' : undefined);
     const [min, max] = limits[field];
     if (typeof entry !== 'string' || entry.trim().length < min || entry.length > max)
       errors[field] = `Isi ${min ? min + '–' : 'maksimal '}${max} karakter.`;

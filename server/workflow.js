@@ -2,6 +2,7 @@ import { accountIsActive } from './accountAccess.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { packagingValues, sizeKey, packagingLabel } from '../src/data/productPackaging.js';
+import { driverNames } from '../src/data/companyProfile.js';
 import { paymentMethod } from '../src/state/paymentMethods.js';
 import { shippingOptions } from '../src/data/shippingOptions.js';
 import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
@@ -388,7 +389,6 @@ export class WorkflowRepository {
   }
   publicOrder(order, viewer = null) {
     const value = copy(order);
-    delete value.shipping.driverId;
     if (!value.requestKey)
       value.requestKey = this.db
         .prepare('SELECT request_key FROM orders WHERE id=?')
@@ -690,93 +690,6 @@ export class WorkflowRepository {
       return this.publicOrder(order);
     });
   }
-  activeDriver(id) {
-    const driver =
-      typeof id === 'string' && id
-        ? this.db
-            .prepare(
-              `SELECT u.id,u.name FROM delivery_drivers d JOIN users u ON u.id=d.user_id
-              LEFT JOIN account_access access ON access.user_id=u.id
-              WHERE d.user_id=? AND access.disabled_at IS NULL`,
-            )
-            .get(id)
-        : null;
-    if (!driver) fail('Pilih sopir yang masih aktif.', 422, 'driver_required');
-    return driver;
-  }
-  finishDelivery(order, user, time) {
-    for (const row of order.inventory) this.adjustStats(row.key, -row.units, row.units);
-    order.inventoryReserved = false;
-    order.status = 'completed';
-    order.shipping.deliveredAt = time;
-    if (isCOD(order)) {
-      order.payment.status = 'paid';
-      order.payment.paidAt = time;
-      order.payment.recordedBy = user.id;
-      order.payment.simulation = false;
-    }
-  }
-  // Drivers only receive what the trip needs, never the buyer's full order record.
-  driverTask(order) {
-    return {
-      id: order.id,
-      revision: order.revision,
-      status: order.status,
-      storeName: order.b2b?.storeName || '',
-      recipient: order.recipient,
-      address: order.address,
-      phone: order.b2b
-        ? this.db.prepare('SELECT phone FROM b2b_stores WHERE id=?').get(order.b2b.storeId)?.phone
-        : order.whatsapp?.number || '',
-      note: order.note,
-      items: order.items.map((item) => ({
-        id: item.id,
-        name: item.details.name,
-        sizeLabel: item.details.sizeLabel,
-        quantity: item.quantity,
-      })),
-      collectAmount: isCOD(order) ? order.total : 0,
-      shippedAt: order.shipping.shippedAt,
-      deliveredAt: order.shipping.deliveredAt,
-    };
-  }
-  driverTasks(user) {
-    this.activeDriver(user.id);
-    const rows = (status, suffix) =>
-      this.db
-        .prepare(
-          `SELECT data FROM orders WHERE status=? AND json_extract(data,'$.shipping.driverId')=? ${suffix}`,
-        )
-        .all(status, user.id)
-        .map((row) => this.driverTask(JSON.parse(row.data)));
-    return {
-      active: rows('shipped', "ORDER BY json_extract(data,'$.shipping.shippedAt')"),
-      finished: rows(
-        'completed',
-        "ORDER BY json_extract(data,'$.shipping.deliveredAt') DESC LIMIT 20",
-      ),
-    };
-  }
-  deliverAsDriver(user, id, body) {
-    return this.transaction(() => {
-      this.activeDriver(user.id);
-      const row = this.db.prepare('SELECT data FROM orders WHERE id=?').get(id);
-      let order = row && JSON.parse(row.data);
-      if (order?.shipping.driverId !== user.id)
-        fail('Pesanan ini tidak ditugaskan kepada Anda.', 404, 'not_found');
-      if (!Number.isSafeInteger(body?.revision) || body.revision !== order.revision)
-        fail('Pesanan berubah. Muat data terbaru sebelum melanjutkan.', 409, 'revision_conflict');
-      if (order.status !== 'shipped')
-        fail('Pesanan ini tidak lagi dalam pengiriman.', 409, 'invalid_status');
-      const time = this.now();
-      this.finishDelivery(order, user, time);
-      order.revision++;
-      order = withNotificationEvent(order, 'orderCompleted', time);
-      this.writeOrder(order);
-      this.messages?.enqueue(order, 'orderCompleted', time);
-      return this.driverTask(order);
-    });
-  }
   update(user, id, body) {
     return this.transaction(() => {
       if (!accountIsActive(this.db, user.id))
@@ -872,10 +785,10 @@ export class WorkflowRepository {
         } else if (action === 'ship') {
           if (order.status !== 'processing' || (!isCOD(order) && order.payment.status !== 'paid'))
             fail('Pesanan belum siap dikirim.', 409, 'invalid_status');
-          if ('driverId' in body) {
-            const driver = this.activeDriver(body.driverId);
-            order.shipping.driverId = driver.id;
-            order.shipping.driverName = driver.name;
+          if ('driverName' in body) {
+            if (!driverNames(this.company.snapshot().profile).includes(body.driverName))
+              fail('Pilih sopir dari daftar.', 422, 'driver_required');
+            order.shipping.driverName = body.driverName;
           } else {
             // Orders handed to an outside courier keep the original receipt record.
             order.shipping.courier = text(body.courier, 2, 100, 'Kurir');
@@ -888,7 +801,16 @@ export class WorkflowRepository {
         } else if (action === 'complete') {
           if (order.status !== 'shipped')
             fail('Pesanan harus dikirim terlebih dahulu.', 409, 'invalid_status');
-          this.finishDelivery(order, user, time);
+          for (const row of order.inventory) this.adjustStats(row.key, -row.units, row.units);
+          order.inventoryReserved = false;
+          order.status = 'completed';
+          order.shipping.deliveredAt = time;
+          if (isCOD(order)) {
+            order.payment.status = 'paid';
+            order.payment.paidAt = time;
+            order.payment.recordedBy = user.id;
+            order.payment.simulation = false;
+          }
           kind = 'orderCompleted';
         } else fail('Tindakan tidak tersedia.');
       }

@@ -84,8 +84,12 @@ test('COD gratis: total final saat checkout, stok dicadangkan, langsung diproses
   }
 });
 
-test('COD langsung diproses tetap dibatasi lima pesanan aktif dan transaksi gagal tidak mengambil stok', async () => {
-  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+test('COD langsung diproses mengikuti batas pesanan aktif yang diatur dan transaksi gagal tidak mengambil stok', async () => {
+  const app = createApp({
+    dbPath: ':memory:',
+    logger: () => {},
+    reservationPolicy: { maxOpenOrders: 5 },
+  });
   try {
     app.db
       .prepare('INSERT INTO users VALUES(?,?,?,?,?,?,?)')

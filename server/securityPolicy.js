@@ -1,10 +1,12 @@
+// BAM does not cap order size by default: the highest accepted values leave only the stock
+// itself as the limit. Set the BAM_MAX_* variables to bring a cap back.
 export const DEFAULT_RESERVATION_POLICY = Object.freeze({
-  maxOpenOrders: 5,
+  maxOpenOrders: 1000,
   reviewWindowMs: 7 * 86400000,
   quoteHoldWindowMs: 86400000,
   paymentHoldWindowMs: 30 * 60 * 1000,
-  maxReservedUnits: 1000,
-  maxUnitsPerStock: 200,
+  maxReservedUnits: 1_000_000_000,
+  maxUnitsPerStock: 1_000_000_000,
   codConfirmationWindowMs: 24 * 60 * 60 * 1000,
 });
 

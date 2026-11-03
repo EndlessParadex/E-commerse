@@ -745,6 +745,17 @@ test('active limiter buckets cannot be evicted by churn; expired buckets recover
   }
 });
 
+test('orders have no size cap by default and BAM_MAX_* values bring one back', () => {
+  const defaults = normalizeReservationPolicy(reservationPolicyFromEnv({}));
+  assert.equal(defaults.maxOpenOrders, 1000);
+  assert.equal(defaults.maxReservedUnits, 1_000_000_000);
+  assert.equal(defaults.maxUnitsPerStock, 1_000_000_000);
+  const capped = normalizeReservationPolicy(
+    reservationPolicyFromEnv({ BAM_MAX_RESERVED_UNITS_PER_PRODUCT: '200' }),
+  );
+  assert.equal(capped.maxUnitsPerStock, 200);
+});
+
 test('invalid reservation configuration fails closed instead of silently disabling limits', () => {
   for (const value of ['0', 'NaN', '-10', '1.5'])
     assert.throws(() =>

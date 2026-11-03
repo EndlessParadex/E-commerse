@@ -50,16 +50,16 @@ WhatsApp bersifat **kontak manual opsional**. Nomor yang disetujui pelanggan dig
 
 ## Batas waktu dan permintaan
 
-| Variabel                             |     Awal | Keterangan                                      |
-| ------------------------------------ | -------: | ----------------------------------------------- |
-| `BAM_REVIEW_HOURS`                   |  168 jam | Pemeriksaan permintaan, tanpa menahan stok      |
-| `BAM_QUOTE_HOLD_HOURS`               |   24 jam | Reservasi penawaran menunggu pelanggan          |
-| `BAM_PAYMENT_HOLD_MINUTES`           | 30 menit | Pembayaran setelah total diterima pelanggan     |
-| `BAM_MAX_OPEN_ORDERS`                |        5 | Permintaan yang belum selesai diperiksa/dibayar |
-| `BAM_MAX_RESERVED_UNITS`             |     1000 | Total satuan dasar permintaan tersebut per akun |
-| `BAM_MAX_RESERVED_UNITS_PER_PRODUCT` |      200 | Satuan dasar per produk/ukuran per akun         |
+| Variabel                             |        Awal | Keterangan                                      |
+| ------------------------------------ | ----------: | ----------------------------------------------- |
+| `BAM_REVIEW_HOURS`                   |     168 jam | Pemeriksaan permintaan, tanpa menahan stok      |
+| `BAM_QUOTE_HOLD_HOURS`               |      24 jam | Reservasi penawaran menunggu pelanggan          |
+| `BAM_PAYMENT_HOLD_MINUTES`           |    30 menit | Pembayaran setelah total diterima pelanggan     |
+| `BAM_MAX_OPEN_ORDERS`                | tanpa batas | Permintaan yang belum selesai diperiksa/dibayar |
+| `BAM_MAX_RESERVED_UNITS`             | tanpa batas | Total satuan dasar permintaan tersebut per akun |
+| `BAM_MAX_RESERVED_UNITS_PER_PRODUCT` | tanpa batas | Satuan dasar per produk/ukuran per akun         |
 
-Durasi baru berlaku pada deadline baru; deadline tersimpan tidak diperpanjang oleh restart. Permintaan checkout juga dibatasi 20 per akun dalam 24 jam dan 30 per sumber IP per jam. Retry dengan nomor permintaan yang sama mengembalikan pesanan semula dan tidak menggunakan kuota baru. Batas ini tidak menggantikan perlindungan jaringan terhadap serangan terdistribusi.
+Tiga batas jumlah pesanan tidak aktif secara bawaan, sehingga stok yang tersedia menjadi satu-satunya batas. Isi variabelnya dengan angka bulat positif untuk memasang batas per akun. Durasi baru berlaku pada deadline baru; deadline tersimpan tidak diperpanjang oleh restart. Permintaan checkout juga dibatasi 20 per akun dalam 24 jam dan 30 per sumber IP per jam. Retry dengan nomor permintaan yang sama mengembalikan pesanan semula dan tidak menggunakan kuota baru. Batas ini tidak menggantikan perlindungan jaringan terhadap serangan terdistribusi.
 
 ## Pesanan lama
 

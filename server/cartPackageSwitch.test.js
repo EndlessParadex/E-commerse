@@ -137,7 +137,7 @@ test('switch_package rejects invalid, stale, locked and over-capacity changes wi
     app.sharedCarts.mutate(
       actors.buyer,
       first.id,
-      request(1, 'add', { productId: destSku, quantity: 98 }),
+      request(1, 'add', { productId: destSku, quantity: 998 }),
     );
     assert.throws(
       () =>
@@ -151,7 +151,7 @@ test('switch_package rejects invalid, stale, locked and over-capacity changes wi
     assert.equal(unchanged().revision, 2);
     assert.equal(unchanged().items.length, 2);
     assert.equal(unchanged().items.find((item) => item.id === sourceSku).quantity, 2);
-    assert.equal(unchanged().items.find((item) => item.id === destSku).quantity, 98);
+    assert.equal(unchanged().items.find((item) => item.id === destSku).quantity, 998);
 
     app.sharedCarts.mutate(
       actors.buyer,

@@ -8,6 +8,7 @@ import { shippingOptions } from '../src/data/shippingOptions.js';
 import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { withNotificationEvent } from '../src/state/orderNotifications.js';
 import { normalizeReservationPolicy } from './securityPolicy.js';
+import { MAX_ITEM_QUANTITY } from '../src/data/orderLimits.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -586,7 +587,7 @@ export class WorkflowRepository {
           seen.has(row.id.toLowerCase()) ||
           !Number.isSafeInteger(row.quantity) ||
           row.quantity < 1 ||
-          row.quantity > 99 ||
+          row.quantity > MAX_ITEM_QUANTITY ||
           !Number.isSafeInteger(row.expectedPrice) ||
           row.expectedPrice <= 0
         )

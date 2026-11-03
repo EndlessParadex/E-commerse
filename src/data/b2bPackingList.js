@@ -1,4 +1,5 @@
 import { orderItemPresentation } from './orderItemPresentation.js';
+import { MAX_ITEM_QUANTITY } from './orderLimits.js';
 
 export const packingColumns = [
   ['satuan', 'Satuan'],
@@ -22,7 +23,7 @@ export function b2bPackingList(order) {
       !shown.packaging ||
       !Number.isSafeInteger(item.quantity) ||
       item.quantity < 1 ||
-      item.quantity > 99
+      item.quantity > MAX_ITEM_QUANTITY
     )
       throw new Error(
         'Snapshot kemasan pesanan ini belum lengkap. Dokumen tidak dapat dicetak dengan konversi perkiraan.',

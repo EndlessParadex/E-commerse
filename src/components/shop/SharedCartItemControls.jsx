@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { products } from '../../data/products';
 import { rupiah } from './shopPresentation';
+import { MAX_ITEM_QUANTITY } from '../../data/orderLimits';
 
 export function AdminCartAdd({ shared }) {
   const [query, setQuery] = useState('');
@@ -22,7 +23,8 @@ export function AdminCartAdd({ shared }) {
     )
     .slice(0, 50);
   const selected = options.find((product) => product.id === sku);
-  const valid = /^\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= 99;
+  const valid =
+    /^\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= MAX_ITEM_QUANTITY;
 
   return (
     <form
@@ -98,7 +100,7 @@ export function AdminCartAdd({ shared }) {
             id="shared-admin-quantity"
             type="number"
             min="1"
-            max="99"
+            max={MAX_ITEM_QUANTITY}
             step="1"
             inputMode="numeric"
             value={quantity}
@@ -159,14 +161,14 @@ export function CartQuantity({ item, shared }) {
   const [draft, setDraft] = useState(null);
   const debounce = useRef(null);
   const value = draft?.value ?? String(item.quantity);
-  const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 99;
+  const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= MAX_ITEM_QUANTITY;
   useEffect(() => () => window.clearTimeout(debounce.current), []);
 
   const save = async (candidate) => {
     window.clearTimeout(debounce.current);
     if (!shared.canEdit || !candidate) return;
     const next = Number(candidate.value);
-    if (!/^\d+$/.test(candidate.value) || next < 1 || next > 99) return;
+    if (!/^\d+$/.test(candidate.value) || next < 1 || next > MAX_ITEM_QUANTITY) return;
     if (next === item.quantity && candidate.revision === shared.cart.revision) {
       setDraft(null);
       return;
@@ -177,7 +179,7 @@ export function CartQuantity({ item, shared }) {
   const step = (difference) => {
     if (!shared.canEdit || !valid) return;
     const next = Number(value) + difference;
-    if (next < 1 || next > 99) return;
+    if (next < 1 || next > MAX_ITEM_QUANTITY) return;
     void save({ value: String(next), revision: draft?.revision ?? shared.cart.revision });
   };
   return (
@@ -203,7 +205,7 @@ export function CartQuantity({ item, shared }) {
             id={'shared-quantity-' + item.id}
             type="number"
             min="1"
-            max="99"
+            max={MAX_ITEM_QUANTITY}
             step="1"
             inputMode="numeric"
             aria-label={'Jumlah ' + item.name}
@@ -220,7 +222,7 @@ export function CartQuantity({ item, shared }) {
               if (
                 /^\d+$/.test(next.value) &&
                 Number(next.value) >= 1 &&
-                Number(next.value) <= 99 &&
+                Number(next.value) <= MAX_ITEM_QUANTITY &&
                 Number(next.value) !== item.quantity
               ) {
                 debounce.current = window.setTimeout(() => void save(next), 700);
@@ -235,7 +237,7 @@ export function CartQuantity({ item, shared }) {
             type="button"
             className="shared-quantity-step"
             aria-label={'Tambah ' + item.name}
-            disabled={!shared.canEdit || !valid || Number(value) >= 99}
+            disabled={!shared.canEdit || !valid || Number(value) >= MAX_ITEM_QUANTITY}
             onClick={() => step(1)}
           >
             +
@@ -245,7 +247,7 @@ export function CartQuantity({ item, shared }) {
       <button type="submit" className="shared-quantity-submit-sr">
         Simpan jumlah
       </button>
-      {!valid && <small role="alert">Masukkan 1–99 kemasan.</small>}
+      {!valid && <small role="alert">Masukkan 1–{MAX_ITEM_QUANTITY} kemasan.</small>}
       {draft && draft.revision !== shared.cart.revision && (
         <p role="status">Keranjang berubah saat Anda mengisi. Periksa isian terbaru.</p>
       )}
@@ -256,7 +258,7 @@ export function CartQuantity({ item, shared }) {
 export function AdminCartQuantity({ item, shared }) {
   const [draft, setDraft] = useState(null);
   const value = draft?.value ?? String(item.quantity);
-  const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= 99;
+  const valid = /^\d+$/.test(value) && Number(value) >= 1 && Number(value) <= MAX_ITEM_QUANTITY;
   return (
     <form
       className="shared-quantity shared-admin-quantity-legacy"
@@ -273,7 +275,7 @@ export function AdminCartQuantity({ item, shared }) {
         <input
           type="number"
           min="1"
-          max="99"
+          max={MAX_ITEM_QUANTITY}
           step="1"
           inputMode="numeric"
           aria-label={'Jumlah ' + item.name}
@@ -304,7 +306,7 @@ export function AdminCartQuantity({ item, shared }) {
           <button
             type="button"
             aria-label={'Tambah ' + item.name}
-            disabled={!shared.canEdit || draft !== null || item.quantity >= 99}
+            disabled={!shared.canEdit || draft !== null || item.quantity >= MAX_ITEM_QUANTITY}
             onClick={() => void shared.mutate('set', item.id, item.quantity + 1)}
           >
             +

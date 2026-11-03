@@ -81,7 +81,7 @@ test('Sales fast order retains the right store, SKU and package-specific control
     );
     assert.ok(quantityInput, 'jumlah dapat diisi langsung');
     assert.equal(quantityInput.min, '0');
-    assert.equal(quantityInput.max, '99');
+    assert.equal(quantityInput.max, '999');
     const add = host.querySelector('button[aria-label="Tambah Keripik Singkong Balado 23g"]');
     assert.ok(add && !add.disabled);
     await act(async () => add.click());

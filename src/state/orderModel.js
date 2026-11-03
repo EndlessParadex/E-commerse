@@ -6,6 +6,7 @@ import { reviewCart } from '../data/cartValidation.js';
 import { paymentMethod } from './paymentMethods.js';
 import { notifyWorkflow } from './workflowEvents.js';
 import { withNotificationEvent } from './orderNotifications.js';
+import { MAX_ITEM_QUANTITY } from '../data/orderLimits.js';
 export const ORDER_STORAGE_KEY = 'bam.order.last.v1';
 export const ORDER_HISTORY_KEY = 'bam.orders.v1';
 export const ORDER_NOTE_MAX_LENGTH = 300;
@@ -96,7 +97,7 @@ export function createOrder({
 export function createCheckoutOrder(input) {
   if (
     !Array.isArray(input?.cart) ||
-    input.cart.some((item) => !validItem(item) || item.quantity > 99)
+    input.cart.some((item) => !validItem(item) || item.quantity > MAX_ITEM_QUANTITY)
   )
     throw new Error('Jumlah barang pada keranjang tidak valid.');
   const review = reviewCart(input.cart);

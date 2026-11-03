@@ -6,6 +6,7 @@ import { rupiah } from '../components/shop/shopPresentation';
 import { sharedDraftWhatsAppUrl } from '../data/sharedDraftWhatsApp';
 import { fastOrderGroups, fastOrderPackaging, fastOrderTotals } from '../data/fastOrder';
 import './FastOrderPage.css';
+import { MAX_ITEM_QUANTITY } from '../data/orderLimits';
 
 function QuantityEditor({ product, quantity, disabled, onQuantityChange }) {
   const inputRef = useRef(null);
@@ -39,7 +40,7 @@ function QuantityEditor({ product, quantity, disabled, onQuantityChange }) {
         type="number"
         inputMode="numeric"
         min="0"
-        max="99"
+        max={MAX_ITEM_QUANTITY}
         step="1"
         aria-label={'Jumlah ' + product.name}
         defaultValue={quantity}
@@ -56,7 +57,7 @@ function QuantityEditor({ product, quantity, disabled, onQuantityChange }) {
       <button
         type="button"
         aria-label={'Tambah ' + product.name}
-        disabled={disabled || quantity >= 99}
+        disabled={disabled || quantity >= MAX_ITEM_QUANTITY}
         onClick={() => onQuantityChange(product, quantity + 1)}
       >
         +
@@ -85,7 +86,7 @@ export default function FastOrderPage() {
   const isBusy = Boolean(shared?.busy || shared?.reading || shared?.uncertain);
 
   const change = (product, next) => {
-    if (!editable || isBusy || !Number.isSafeInteger(next) || next < 0 || next > 99)
+    if (!editable || isBusy || !Number.isSafeInteger(next) || next < 0 || next > MAX_ITEM_QUANTITY)
       return Promise.resolve(false);
     const current = cart?.items.find((item) => item.id === product.id);
     if (next === (current?.quantity || 0)) return Promise.resolve(true);

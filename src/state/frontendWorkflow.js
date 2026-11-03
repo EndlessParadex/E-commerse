@@ -7,6 +7,7 @@ import { paymentMethod } from './paymentMethods.js';
 import { withNotificationEvent } from './orderNotifications.js';
 import { workflowUsesServer } from '../data/adminStore.js';
 import { serverStock } from './serverWorkflow.js';
+import { MAX_ITEM_QUANTITY } from '../data/orderLimits.js';
 
 export const STOCK_KEY = 'bam.stock.preview.v1';
 export const DEMO_STOCK = 120;
@@ -67,7 +68,7 @@ export function availableStock(product, storage, orders = readOrders(storage)) {
 }
 export function cartStockLimit(product, cart, storage, orders = readOrders(storage)) {
   if (workflowUsesServer && serverStock(product).available === null)
-    return serverStock(product).inStock ? 99 : 0;
+    return serverStock(product).inStock ? MAX_ITEM_QUANTITY : 0;
   const key = stockKey(product);
   const others = cart
     .filter((item) => item.id !== product.id)
@@ -78,7 +79,7 @@ export function cartStockLimit(product, cart, storage, orders = readOrders(stora
         : sum;
     }, 0);
   return Math.min(
-    99,
+    MAX_ITEM_QUANTITY,
     Math.max(
       0,
       Math.floor(

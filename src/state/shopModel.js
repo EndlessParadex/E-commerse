@@ -6,6 +6,7 @@ import {
   orderNotification,
   syncOrderNotifications,
 } from './orderNotifications.js';
+import { MAX_ITEM_QUANTITY } from '../data/orderLimits.js';
 export { orderNotification } from './orderNotifications.js';
 export const STORAGE_KEY = 'bam.shop.v1';
 export const emptyShop = () => ({ cart: [], notifications: [], favoriteIds: [] });
@@ -28,7 +29,7 @@ export function normalizeShop(value) {
       !validProduct(item) ||
       !Number.isInteger(item.quantity) ||
       item.quantity < 1 ||
-      item.quantity > 99 ||
+      item.quantity > MAX_ITEM_QUANTITY ||
       ids.has(item.id)
     )
       continue;
@@ -99,9 +100,12 @@ export function shopReducer(state, action) {
     case 'add': {
       if (!validProduct(action.product)) return state;
       const quantity = action.quantity ?? 1;
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return state;
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_ITEM_QUANTITY) return state;
       const existing = state.cart.find((item) => item.id === action.product.id);
-      if ((existing?.quantity || 0) + quantity > 99 || (!existing && state.cart.length >= 100))
+      if (
+        (existing?.quantity || 0) + quantity > MAX_ITEM_QUANTITY ||
+        (!existing && state.cart.length >= 100)
+      )
         return state;
       const packaging = readPackagingSnapshot(packagingSnapshot(action.product));
       const cart = existing
@@ -140,7 +144,11 @@ export function shopReducer(state, action) {
       return synced === state ? state : normalizeShop(synced);
     }
     case 'quantity':
-      if (!Number.isInteger(action.quantity) || action.quantity < 1 || action.quantity > 99)
+      if (
+        !Number.isInteger(action.quantity) ||
+        action.quantity < 1 ||
+        action.quantity > MAX_ITEM_QUANTITY
+      )
         return state;
       return {
         ...state,

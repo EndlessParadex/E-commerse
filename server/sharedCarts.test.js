@@ -291,7 +291,7 @@ test('shared cart validates dates/quantities, preserves deleted SKUs, refreshes 
     const { first } = seedSharedCart(app);
     for (const invalid of ['2026-02-30', '2026-99-99', '2026-2-01', '', null])
       assert.throws(() => cartDate(invalid), { code: 'validation_error' });
-    for (const quantity of [0, -1, 1.5, '2', 100])
+    for (const quantity of [0, -1, 1.5, '2', 1000])
       assert.equal(
         (await sharedRequest(app, 'POST', url(first), 'buyer', change({ quantity }))).status,
         422,
@@ -402,7 +402,7 @@ test('shared carts paginate historical periods and audit events; locked drafts c
   }
 });
 
-test('shared cart accepts real uppercase SKUs and packaging, caps 100 SKUs/99 packages, and rolls back invalid changes', () => {
+test('shared cart accepts real uppercase SKUs and packaging, caps 100 SKUs/999 packages, and rolls back invalid changes', () => {
   const app = createApp({ dbPath: ':memory:', logger: () => {} });
   try {
     const { first, actors } = seedSharedCart(app);
@@ -436,7 +436,7 @@ test('shared cart accepts real uppercase SKUs and packaging, caps 100 SKUs/99 pa
     snapshot = app.sharedCarts.mutate(
       actors.sales,
       first.id,
-      change({ revision: 100, productId: 'GORIO-0', action: 'set', quantity: 99 }),
+      change({ revision: 100, productId: 'GORIO-0', action: 'set', quantity: 999 }),
     );
     assert.throws(
       () =>
@@ -445,7 +445,7 @@ test('shared cart accepts real uppercase SKUs and packaging, caps 100 SKUs/99 pa
           first.id,
           change({ revision: 101, productId: 'GORIO-0', quantity: 1 }),
         ),
-      /Maksimal 99/,
+      /Maksimal 999/,
     );
     assert.equal(app.sharedCarts.read(actors.buyer, first.id, date).revision, snapshot.revision);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM cart_events').get().n, 101);

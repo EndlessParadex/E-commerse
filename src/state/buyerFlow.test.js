@@ -43,7 +43,7 @@ test('checkout menolak SKU dihapus, harga berubah, jumlah invalid, keranjang kos
   );
   assert.throws(() => createCheckoutOrder({ ...current, cart: [{ ...cartItem(), price: 1 }] }));
   assert.throws(() => createCheckoutOrder({ ...current, cart: [] }));
-  for (const quantity of [0, -1, 1.5, 100])
+  for (const quantity of [0, -1, 1.5, 1000])
     assert.throws(() => createCheckoutOrder({ ...current, cart: [{ ...cartItem(), quantity }] }));
   assert.throws(() => createCheckoutOrder({ ...current, payment: { id: 'unsupported' } }));
   for (const id of ['card-visa', 'card-mastercard', 'card-jcb'])

@@ -4,6 +4,7 @@ import { accountIsActive, accountIsApproved } from './accountAccess.js';
 import { packagingLabel, packagingSnapshot } from '../src/data/productPackaging.js';
 import { paymentMethod } from '../src/state/paymentMethods.js';
 import { cutoffTime, isPastCutoff, isPastDeliveryDate } from './b2bCutoff.js';
+import { MAX_ITEM_QUANTITY } from '../src/data/orderLimits.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -31,7 +32,7 @@ export class SharedCartRepository {
     );
     CREATE TABLE IF NOT EXISTS cart_items (
       cart_id TEXT NOT NULL REFERENCES cart_cycles(id) ON DELETE CASCADE,
-      product_id TEXT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity BETWEEN 1 AND 99),
+      product_id TEXT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity BETWEEN 1 AND ${MAX_ITEM_QUANTITY}),
       snapshot TEXT NOT NULL, PRIMARY KEY(cart_id,product_id)
     );
     CREATE TABLE IF NOT EXISTS cart_events (
@@ -58,6 +59,28 @@ export class SharedCartRepository {
         .some((column) => column.name === 'payment_id')
     )
       db.exec("ALTER TABLE cart_cycles ADD COLUMN payment_id TEXT NOT NULL DEFAULT 'cod'");
+    // SQLite cannot change a CHECK in place, so older carts are copied to a table with the new cap.
+    const items = db
+      .prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='cart_items'")
+      .get().sql;
+    if (!items.includes(`BETWEEN 1 AND ${MAX_ITEM_QUANTITY}`)) {
+      db.exec('BEGIN IMMEDIATE');
+      try {
+        db.exec(`CREATE TABLE cart_items_next (
+          cart_id TEXT NOT NULL REFERENCES cart_cycles(id) ON DELETE CASCADE,
+          product_id TEXT NOT NULL, quantity INTEGER NOT NULL CHECK(quantity BETWEEN 1 AND ${MAX_ITEM_QUANTITY}),
+          snapshot TEXT NOT NULL, PRIMARY KEY(cart_id,product_id)
+        );
+        INSERT INTO cart_items_next(cart_id,product_id,quantity,snapshot)
+          SELECT cart_id,product_id,quantity,snapshot FROM cart_items;
+        DROP TABLE cart_items;
+        ALTER TABLE cart_items_next RENAME TO cart_items;`);
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        throw error;
+      }
+    }
   }
   actor(actor) {
     const user = actor?.id && this.db.prepare('SELECT id,role FROM users WHERE id=?').get(actor.id);
@@ -328,8 +351,11 @@ export class SharedCartRepository {
     )
       fail('SKU tidak valid.');
     const quantity = ['add', 'set'].includes(action) ? body.quantity : null;
-    if (quantity !== null && (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 99))
-      fail('Jumlah harus antara 1 dan 99 kemasan per SKU.');
+    if (
+      quantity !== null &&
+      (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_ITEM_QUANTITY)
+    )
+      fail(`Jumlah harus antara 1 dan ${MAX_ITEM_QUANTITY} kemasan per SKU.`);
     const hash = createHash('sha256')
       .update(
         JSON.stringify({
@@ -420,7 +446,7 @@ export class SharedCartRepository {
       const current = products.find((product) => product.id === productId);
       const after =
         action === 'add' ? (previous?.quantity || 0) + quantity : action === 'set' ? quantity : 0;
-      if (after > 99) fail('Maksimal 99 kemasan per SKU.');
+      if (after > MAX_ITEM_QUANTITY) fail(`Maksimal ${MAX_ITEM_QUANTITY} kemasan per SKU.`);
       if (action === 'request_review') {
         // Keep the cart open. Admin sees this event in the shared pending queue.
       } else if (action === 'payment') {
@@ -468,8 +494,12 @@ export class SharedCartRepository {
           .prepare('SELECT quantity,snapshot FROM cart_items WHERE cart_id=? AND product_id=?')
           .get(cycle.id, targetProductId);
         const newQuantity = previous.quantity + (existingDestination?.quantity || 0);
-        if (newQuantity > 99)
-          fail('Gabungan kemasan melebihi batas 99 per SKU.', 422, 'quantity_limit');
+        if (newQuantity > MAX_ITEM_QUANTITY)
+          fail(
+            `Gabungan kemasan melebihi batas ${MAX_ITEM_QUANTITY} per SKU.`,
+            422,
+            'quantity_limit',
+          );
         this.db
           .prepare('DELETE FROM cart_items WHERE cart_id=? AND product_id=?')
           .run(cycle.id, productId);

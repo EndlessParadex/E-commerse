@@ -11,6 +11,7 @@ import { workflowUsesServer } from '../data/adminStore';
 import { DeliveryContext } from './useDelivery';
 import { clearCompletedCheckoutRequest, serverStock } from './serverWorkflow';
 import useSharedCart from './useSharedCart';
+import { MAX_ITEM_QUANTITY } from '../data/orderLimits.js';
 
 function loadShop(key) {
   try {
@@ -175,7 +176,7 @@ function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode
         available: availableStock(product, window.sessionStorage, workflow.orders),
         maximum: storeCartActive
           ? shared.canEdit
-            ? 99
+            ? MAX_ITEM_QUANTITY
             : 0
           : cartStockLimit(product, cart, window.sessionStorage, workflow.orders),
         soldUnits: statistics.soldUnits ?? null,

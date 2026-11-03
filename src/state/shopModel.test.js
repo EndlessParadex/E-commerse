@@ -43,12 +43,12 @@ test('barang yang sama digabung dan subtotal mengikuti jumlah', () => {
   assert.equal(state.notifications.length, 0);
 });
 
-test('batas jumlah tidak menerima nol, pecahan, negatif atau lebih dari 99', () => {
+test('batas jumlah tidak menerima nol, pecahan, negatif atau lebih dari 999', () => {
   const state = shopReducer(emptyShop(), add());
-  for (const quantity of [0, -1, 1.5, 100, NaN]) {
+  for (const quantity of [0, -1, 1.5, 1000, NaN]) {
     assert.equal(shopReducer(state, { type: 'quantity', id: product.id, quantity }), state);
   }
-  const capped = shopReducer(state, { type: 'quantity', id: product.id, quantity: 99 });
+  const capped = shopReducer(state, { type: 'quantity', id: product.id, quantity: 999 });
   assert.equal(shopReducer(capped, add('note-2')), capped);
 });
 

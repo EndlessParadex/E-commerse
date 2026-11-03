@@ -159,7 +159,7 @@ export class WorkflowRepository {
     }
     this.paymentReminders?.();
   }
-  checkReservations(user, allocations) {
+  checkReservations(user, allocations, names = new Map()) {
     const pending = this.db
       .prepare(
         "SELECT data FROM orders WHERE user_id=? AND status IN ('awaiting_payment','awaiting_confirmation','awaiting_review','awaiting_acceptance','processing','shipped')",
@@ -181,15 +181,21 @@ export class WorkflowRepository {
       for (const allocation of order.inventory)
         held.set(allocation.key, (held.get(allocation.key) || 0) + allocation.units);
     for (const [key, units] of allocations) held.set(key, (held.get(key) || 0) + units);
-    if (
-      pending.length >= this.policy.maxOpenOrders ||
-      [...held.values()].reduce((sum, units) => sum + units, 0) > this.policy.maxReservedUnits ||
-      [...held.values()].some((units) => units > this.policy.maxUnitsPerStock)
-    )
-      fail(
-        'Batas pesanan atau stok yang belum dikonfirmasi telah tercapai. Selesaikan atau batalkan pesanan sebelumnya, kurangi jumlah barang, atau hubungi toko untuk pesanan besar.',
-        409,
-        'reservation_limit',
+    const limit = (message) => fail(message, 409, 'reservation_limit');
+    if (pending.length >= this.policy.maxOpenOrders)
+      limit(
+        `Anda masih memiliki ${pending.length} pesanan yang belum selesai, sudah mencapai batas ${this.policy.maxOpenOrders} pesanan. Tunggu pesanan sebelumnya selesai atau batalkan salah satunya.`,
+      );
+    // Held units include this account's unfinished orders, so name the product that overflows.
+    for (const [key, units] of held)
+      if (units > this.policy.maxUnitsPerStock)
+        limit(
+          `Jumlah ${names.get(key) || 'salah satu produk'} menjadi ${units} satuan isi, melebihi batas ${this.policy.maxUnitsPerStock} satuan per produk. Batas ini termasuk pesanan Anda yang belum selesai. Kurangi jumlahnya atau hubungi toko untuk pesanan besar.`,
+        );
+    const total = [...held.values()].reduce((sum, units) => sum + units, 0);
+    if (total > this.policy.maxReservedUnits)
+      limit(
+        `Total barang menjadi ${total} satuan isi, melebihi batas ${this.policy.maxReservedUnits} satuan untuk semua pesanan yang belum selesai. Kurangi jumlahnya atau hubungi toko untuk pesanan besar.`,
       );
   }
   tick() {
@@ -516,6 +522,7 @@ export class WorkflowRepository {
   snapshotItems(requested) {
     const catalog = this.catalogItems();
     const allocations = new Map();
+    const names = new Map();
     const items = requested.map((entry) => {
       const found = catalog.find(({ variant }) => variant.id === entry.id);
       if (!found)
@@ -535,6 +542,7 @@ export class WorkflowRepository {
       const pack = packagingValues(variant);
       const sizeLabel = `${Number(variant.sizeValue)}${variant.sizeUnit}`;
       allocations.set(key, (allocations.get(key) || 0) + entry.quantity * pack.unitsPerPackage);
+      names.set(key, `${draft.baseName} ${sizeLabel}`);
       const photos = variant.gallery ?? draft.gallery ?? [];
       const image = photos[0]?.src || (variant.gallery ? '' : draft.image) || '';
       return {
@@ -555,7 +563,7 @@ export class WorkflowRepository {
         },
       };
     });
-    return { items, allocations };
+    return { items, allocations, names };
   }
   create(user, body, ip = user.id) {
     const requestKey = text(body?.requestKey, 36, 36, 'Nomor permintaan');
@@ -621,8 +629,8 @@ export class WorkflowRepository {
       }
       this.validateCheckout?.(user, body, payment);
       this.checkCheckoutSource?.(user, ip);
-      const { items, allocations } = this.snapshotItems(requested);
-      this.checkReservations(user, allocations);
+      const { items, allocations, names } = this.snapshotItems(requested);
+      this.checkReservations(user, allocations, names);
       const id = 'BAM-' + randomUUID().toUpperCase();
       const time = this.now();
       for (const [key, units] of allocations)

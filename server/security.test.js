@@ -96,7 +96,10 @@ test('reservation abuse: order cap is atomic; retries at the cap succeed and ano
     const first = app.workflow.create(alice, body);
     app.workflow.create(alice, input(app));
     const before = app.workflow.stock();
-    assert.throws(() => app.workflow.create(alice, input(app)), { code: 'reservation_limit' });
+    assert.throws(() => app.workflow.create(alice, input(app)), {
+      code: 'reservation_limit',
+      message: /masih memiliki 2 pesanan yang belum selesai, sudah mencapai batas 2 pesanan/,
+    });
     assert.deepEqual(app.workflow.stock(), before);
     assert.equal(app.workflow.create(alice, body).id, first.id);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM orders').get().n, 2);
@@ -134,7 +137,10 @@ test('reservation abuse: packaging aliases share a quantity cap; totals across p
           alice,
           input(app, { items: [{ id: 'SECURITY-PACK', quantity: 2, expectedPrice: 150000 }] }),
         ),
-      { code: 'reservation_limit' },
+      {
+        code: 'reservation_limit',
+        message: /menjadi 20 satuan isi, melebihi batas 10 satuan per produk/,
+      },
     );
     assert.deepEqual(app.workflow.stock(), before);
     app.workflow.create(alice, input(app, { items: [{ ...input(app).items[0], quantity: 8 }] }));
@@ -159,7 +165,7 @@ test('reservation abuse: packaging aliases share a quantity cap; totals across p
             items: [{ id: other.id, quantity: 5, expectedPrice: Number(other.price) }],
           }),
         ),
-      { code: 'reservation_limit' },
+      { code: 'reservation_limit', message: /Total barang menjadi 13 satuan isi/ },
     );
     assert.equal(app.workflow.stock().stock[key].available, 120);
   } finally {

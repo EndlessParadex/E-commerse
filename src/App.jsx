@@ -269,10 +269,21 @@ function App() {
                 ) : route === '/' ? (
                   <Home />
                 ) : (
-                  <div className="shop-page">
+                  <section className="shop-page not-found-page">
+                    <p className="not-found-code" aria-hidden="true">
+                      404
+                    </p>
                     <h1>Halaman tidak ditemukan</h1>
-                    <a href="#/">Kembali ke beranda</a>
-                  </div>
+                    <p>Tautan mungkin salah ketik atau halamannya sudah dipindahkan.</p>
+                    <div className="not-found-actions">
+                      <a className="shop-primary" href="#/">
+                        Kembali ke beranda
+                      </a>
+                      <a className="not-found-secondary" href="#/cari?q=">
+                        Lihat katalog
+                      </a>
+                    </div>
+                  </section>
                 )}
               </Suspense>
             </main>

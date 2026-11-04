@@ -5,6 +5,7 @@ import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import SharedCartPage from '../components/shop/SharedCartPage';
 import { dateLabel, rupiah } from '../components/shop/shopPresentation';
 import { orderStatusLabel } from '../state/orderModel';
+import { shortOrderNumber } from '../data/orderListPresentation';
 import AdminOrdersPage from './AdminOrdersPage';
 import AdminProductForm from './AdminProductForm';
 import { useStockCounts } from './useAdminWorkCounts';
@@ -37,8 +38,6 @@ const statusTone = (order) => {
   if (order.payment?.status === 'proof_submitted') return 'danger';
   return { processing: 'info', shipped: 'success' }[order.status] || 'warning';
 };
-// Full identifiers stay available on hover; a UUID is too long to scan in a table.
-const shortOrderId = (id) => String(id).split('-').slice(0, 2).join('-');
 const quickActions = [
   { id: 'add', label: 'Tambah produk', icon: 'plus' },
   { id: 'check', label: 'Periksa pesanan', icon: 'orders' },
@@ -115,7 +114,7 @@ function OrderQueue({ onReview }) {
                   <td>{index + 1}</td>
                   <td>
                     <span className="admin-ops-order-id" title={order.id}>
-                      {shortOrderId(order.id)}
+                      {shortOrderNumber(order.id)}
                     </span>
                   </td>
                   <td>{order.b2b?.storeName || order.recipient || '—'}</td>

@@ -5,6 +5,7 @@ import {
   orderCardStages,
   orderExtraFilters,
   orderPrimaryFilters,
+  shortOrderNumber,
 } from '../data/orderListPresentation';
 import { orderStatus, orderStatusLabel, cancellationReason } from '../state/orderModel';
 import useOrderSearch from '../state/useOrderSearch';
@@ -203,7 +204,9 @@ export default function OrdersPage() {
             <li key={order.id} className="orders-card">
               <div className="orders-card-header">
                 <div className="orders-card-identity">
-                  <strong className="orders-number">{order.id}</strong>
+                  <strong className="orders-number" title={order.id}>
+                    {shortOrderNumber(order.id)}
+                  </strong>
                   <time dateTime={new Date(order.createdAt).toISOString()}>
                     {dateLabel(order.createdAt)}
                   </time>

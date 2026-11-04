@@ -4,6 +4,7 @@ import {
   orderCardStages,
   orderPrimaryFilters,
   orderExtraFilters,
+  shortOrderNumber,
 } from './orderListPresentation.js';
 
 test('order list keeps every supported status accessible', () => {
@@ -48,4 +49,9 @@ test('order cards only indicate milestones supported by the saved order status',
   ]) {
     assert.deepEqual(orderCardStages(status), [], status);
   }
+});
+
+test('short order numbers keep the readable prefix and leave other ids unchanged', () => {
+  assert.equal(shortOrderNumber('BAM-637AF5D9-A098-41F4-9DF4-CD1F777BB5BA'), 'BAM-637AF5D9');
+  assert.equal(shortOrderNumber('OLD-000'), 'OLD-000');
 });

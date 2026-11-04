@@ -117,13 +117,13 @@ export default function AdminCompanyPage() {
       setBusy(false);
     }
   };
-  const field = (key, label, max, multiline = false, full = false) => (
+  const field = (key, label, max, multiline = false, full = false, rows = 2) => (
     <div className={'admin-field' + (multiline || full ? ' admin-full' : '')}>
       <label htmlFor={'company-' + key}>{label}</label>
       {multiline ? (
         <textarea
           id={'company-' + key}
-          rows={2}
+          rows={rows}
           maxLength={max}
           value={draft[key]}
           onChange={(event) => update(key, event.target.value)}
@@ -339,7 +339,18 @@ export default function AdminCompanyPage() {
                 <h3 id="company-drivers-title">Sopir</h3>
                 <p>Tulis satu nama per baris. Nama ini muncul saat Catat pengiriman.</p>
               </div>
-              {field('deliveryDrivers', 'Nama sopir', 500, true)}
+              {/* The box grows with the list, so every driver stays visible without scrolling. */}
+              {field(
+                'deliveryDrivers',
+                'Nama sopir',
+                500,
+                true,
+                false,
+                Math.min(
+                  10,
+                  Math.max(4, String(draft.deliveryDrivers || '').split('\n').length + 1),
+                ),
+              )}
             </section>
             <section
               className="company-settings-section company-settings-divider"

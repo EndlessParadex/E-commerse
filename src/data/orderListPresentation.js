@@ -2,6 +2,9 @@
  * Presentation-only order list metadata. Do not infer timestamps for stages
  * that are not explicitly represented in the order snapshot.
  */
+// Lists show the readable prefix; the full number stays in the tooltip, detail page and search.
+export const shortOrderNumber = (id) => String(id).split('-').slice(0, 2).join('-');
+
 export const orderPrimaryFilters = [
   { id: 'all', label: 'Semua' },
   { id: 'active', label: 'Aktif' },

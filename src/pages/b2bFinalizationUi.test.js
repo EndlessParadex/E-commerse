@@ -215,7 +215,7 @@ test('Admin locks and reviews B2B cart, rejects a stale review, safely retries a
     );
     for (const who of ['buyer', 'sales']) {
       await mount(who, '/pesanan');
-      await wait(() => container.querySelector('.orders-number')?.textContent === order.id);
+      await wait(() => container.querySelector('.orders-number')?.title === order.id);
       assert.equal(button('Batalkan pesanan'), undefined);
       await navigate('/pesanan/' + order.id);
       await wait(() => container.querySelector('[aria-label="Pesanan toko B2B"]'));

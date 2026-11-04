@@ -618,7 +618,7 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await wait(
       () =>
         container.querySelectorAll('.orders-card').length === 1 &&
-        container.querySelector('.orders-number')?.textContent === 'OLD-000',
+        container.querySelector('.orders-number')?.title === 'OLD-000',
     );
     await mountAs('alice', '/pesanan');
     await fill('#buyer-order-search', 'OLD-000');

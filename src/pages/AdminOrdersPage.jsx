@@ -15,10 +15,9 @@ import PackagingSummary from '../components/shop/PackagingSummary';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import { driverNames } from '../data/companyProfile';
+import { shortOrderNumber } from '../data/orderListPresentation';
 import '../styles/workflow.css';
 
-// The full number stays in the tooltip and search; a UUID is too long to scan in a list.
-const shortOrderId = (id) => String(id).split('-').slice(0, 2).join('-');
 const ORDER_FILTERS = [
   { id: 'awaiting_acceptance', label: 'Menunggu persetujuan total' },
   { id: 'all', label: 'Semua' },
@@ -210,7 +209,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
             <li key={order.id} className="workflow-order-card">
               <header>
                 <div>
-                  <h3 title={order.id}>{shortOrderId(order.id)}</h3>
+                  <h3 title={order.id}>{shortOrderNumber(order.id)}</h3>
                   <p>
                     {dateLabel(order.createdAt)} · {order.recipient}
                   </p>

@@ -303,7 +303,9 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
     );
     assert.deepEqual(breakdownCounts(), ['0', '1', '0']);
     await navigate('/produk/QA-PACK');
-    assert.match(container.querySelector('.detail-stock').textContent, /1 pack/);
+    // With an empty cart the stock box carries the number; the add-limit line stays empty.
+    assert.equal(container.querySelector('.detail-stock-remaining').textContent, '1 pack');
+    assert.equal(container.querySelector('.detail-stock').textContent, '');
     assert.equal(container.querySelector('button[aria-label="Tambah jumlah"]').disabled, true);
     await click(button('Beli sekarang'));
     await navigate('/produk/snack-pedas');

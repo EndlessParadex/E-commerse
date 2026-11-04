@@ -364,13 +364,26 @@ export default function AdminCartProcessing({ shared }) {
       <p>
         Status: <strong>{statusLabel[cart.status]}</strong>
       </p>
+      {/* An overdue cart needs a new date first, so this sits above the other actions. */}
+      {cart.overdue && cart.status !== 'finalized' && (
+        <div className="admin-cart-actions">
+          <p className="shop-warning">
+            Tanggal pengiriman sudah lewat dan keranjang belum menjadi pesanan. Pilih tanggal baru
+            dengan Jadwalkan ulang.
+          </p>
+          <button
+            type="button"
+            className="bam-button-secondary"
+            disabled={frozen}
+            onClick={() => open('reschedule')}
+          >
+            Jadwalkan ulang keranjang
+          </button>
+        </div>
+      )}
       {cart.status === 'open' && (
         <>
-          <p>
-            Admin, Pemilik, pembeli, dan Sales berizin dapat mengubah keranjang selama terbuka.
-            Kunci isi keranjang saat mulai memeriksa. Setelah dikunci, semua perubahan ditahan
-            sampai Admin membuka kembali dengan alasan.
-          </p>
+          <p>Pembeli dan Sales masih bisa mengubah isi. Kunci sebelum memeriksa barang dan stok.</p>
           <button
             type="button"
             className="shop-primary"
@@ -399,21 +412,6 @@ export default function AdminCartProcessing({ shared }) {
             title={cart.cutoffPassed ? 'Cut-off terlewati. Jadwalkan ulang keranjang.' : undefined}
           >
             Buka kembali untuk diperbaiki
-          </button>
-        </div>
-      )}
-      {cart.overdue && cart.status !== 'finalized' && (
-        <div className="admin-cart-actions">
-          <p className="shop-warning">
-            Tanggal pengiriman telah terlewat. Keranjang belum menjadi pesanan.
-          </p>
-          <button
-            type="button"
-            className="bam-button-secondary"
-            disabled={frozen}
-            onClick={() => open('reschedule')}
-          >
-            Jadwalkan ulang keranjang
           </button>
         </div>
       )}
@@ -561,17 +559,23 @@ export default function AdminCartProcessing({ shared }) {
                                   terbaru di atas.
                                 </p>
                               )}
-                              <p className={stock?.sufficient ? '' : 'shop-warning'}>
-                                Stok bersama ukuran ini: perlu{' '}
-                                {stock?.required.toLocaleString('id-ID')} satuan, tersedia{' '}
-                                {stock?.available.toLocaleString('id-ID')} satuan.
-                              </p>
+                              {/* Only a shortage needs attention; enough stock is the normal case. */}
+                              {!stock?.sufficient && (
+                                <p className="shop-warning">
+                                  Stok kurang: perlu {stock?.required.toLocaleString('id-ID')}{' '}
+                                  satuan, tersedia {stock?.available.toLocaleString('id-ID')}{' '}
+                                  satuan.
+                                </p>
+                              )}
                             </>
                           )}
                         </li>
                       );
                     })}
                   </ul>
+                  {review.stock.every((row) => row.sufficient) && (
+                    <p className="admin-cart-stock-ok">Stok cukup untuk semua barang.</p>
+                  )}
                   <p>
                     Pengiriman: <strong>Gratis</strong> · Pembayaran:{' '}
                     <strong>{review.payment?.label || 'Belum dipilih'}</strong>

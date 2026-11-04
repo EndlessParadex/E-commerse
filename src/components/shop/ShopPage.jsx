@@ -10,12 +10,17 @@ import { useEffect, useState } from 'react';
 import CancelShoppingDialog from './CancelShoppingDialog';
 import CartReview from './CartReview';
 import PackagingSummary from './PackagingSummary';
-import { initializeCatalog, catalogUsesServer } from '../../data/adminStore';
+import { initializeCatalog, catalogUsesServer, workflowUsesServer } from '../../data/adminStore';
+import useCompany from '../../state/useCompany';
 import NotificationsPanel from './NotificationsPanel';
 import SharedCartPage from './SharedCartPage';
 
 export default function ShopPage({ type }) {
   const shop = useShop();
+  const company = useCompany();
+  // Mirrors checkout: COD-only stores ship every order for free.
+  const freeShipping =
+    workflowUsesServer && company.commerce?.version === 31 && company.commerce?.codOnly === true;
   const isCart = type === 'cart';
   const [cancelOpen, setCancelOpen] = useState(false);
   const [catalogError, setCatalogError] = useState(false);
@@ -269,7 +274,11 @@ export default function ShopPage({ type }) {
               <span>Subtotal barang</span>
               <strong>{rupiah(shop.subtotal)}</strong>
             </div>
-            <p>Ongkos kirim dihitung saat checkout.</p>
+            <p>
+              {freeShipping
+                ? 'Ongkir gratis untuk semua pesanan.'
+                : 'Ongkos kirim dihitung saat checkout.'}
+            </p>
             {shop.cartReview.ready && !catalogError ? (
               <a className="shop-primary" href="#/checkout">
                 Lanjut ke checkout <span aria-hidden="true">→</span>
@@ -277,11 +286,7 @@ export default function ShopPage({ type }) {
             ) : (
               <p className="shop-warning">Periksa kembali keranjang sebelum checkout.</p>
             )}
-            <button
-              type="button"
-              className="bam-button-danger cart-cancel"
-              onClick={() => setCancelOpen(true)}
-            >
+            <button type="button" className="cart-cancel" onClick={() => setCancelOpen(true)}>
               Batalkan belanja
             </button>
           </footer>

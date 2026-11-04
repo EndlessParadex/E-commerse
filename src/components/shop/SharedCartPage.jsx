@@ -47,13 +47,14 @@ export function SharedCartBar() {
           ? ` · ${shared.cart.store.storeName} · ${dateLabel(shared.cart.date)}`
           : shared.status === 'loading'
             ? ' · Memeriksa akun…'
-            : ' · Pilih toko dan periode'}
+            : ' · belum ada toko dipilih'}
       </span>
       <span>
-        <a href="#/keranjang">{shared.cart ? 'Buka / ganti toko →' : 'Pilih toko →'}</a>
+        {/* Without a cart the header store picker already offers the choice; avoid a second prompt. */}
+        {shared.cart && <a href="#/keranjang">Buka / ganti toko →</a>}
         {shared.canChooseCart && (
           <>
-            {' · '}
+            {shared.cart && ' · '}
             <a href="#/cari?q=" onClick={() => setCartMode('personal')}>
               Belanja pribadi →
             </a>

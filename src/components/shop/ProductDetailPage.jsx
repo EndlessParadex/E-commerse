@@ -193,17 +193,20 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
                     </span>
                   </>
                 )}
-                <span
-                  className="detail-demo-stock"
-                  title={
-                    workflowUsesServer
-                      ? 'Stok tersedia mengikuti server.'
-                      : 'Stok pratinjau pada tab browser.'
-                  }
-                >
-                  Stok {purchaseStockLabel(product, stock)}
-                  {!workflowUsesServer && ' · simulasi'}
-                </span>
+                {/* The purchase panel shows Sisa stok for personal carts; store carts only get this badge. */}
+                {shared?.enabled && (
+                  <span
+                    className="detail-demo-stock"
+                    title={
+                      workflowUsesServer
+                        ? 'Stok tersedia mengikuti server.'
+                        : 'Stok pratinjau pada tab browser.'
+                    }
+                  >
+                    Stok {purchaseStockLabel(product, stock)}
+                    {!workflowUsesServer && ' · simulasi'}
+                  </span>
+                )}
                 <a
                   className="detail-reviews-link"
                   href="#detail-reviews"
@@ -330,6 +333,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
             packaging={packaging}
             stock={stock}
             remaining={remaining}
+            inCart={cartItem?.quantity || 0}
             quantity={quantity}
             onQuantity={setQuantity}
             onAdd={addToCart}

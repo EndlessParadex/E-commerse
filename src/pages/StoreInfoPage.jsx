@@ -176,7 +176,7 @@ export default function StoreInfoPage({ page }) {
     };
     configured.pengiriman.sections[2] = {
       title: 'Status pengiriman',
-      text: 'Toko mencatat kurir dan resi setelah pengiriman dilakukan. Pembaruan dikirim melalui email dan tersedia pada Pesanan saya. Pelacakan otomatis ke sistem kurir belum terhubung.',
+      text: 'Pesanan diantar langsung oleh sopir BAM. Nama sopir dicatat saat pesanan dikirim, dan pembaruannya dikirim melalui email serta tersedia pada Pesanan saya.',
     };
     configured.bantuan.sections[3] = {
       title: 'Memilih pembayaran',
@@ -214,7 +214,7 @@ export default function StoreInfoPage({ page }) {
     };
     configured.pengiriman.sections[2] = {
       title: 'Status dan pengiriman barang',
-      text: 'Pesanan baru langsung diproses jika checkout berhasil. Toko menyiapkan barang dan mencatat kurir serta resi saat dikirim. Lihat perkembangan di Pesanan saya; pelacakan otomatis ke sistem kurir belum tersedia.',
+      text: 'Pesanan baru langsung diproses jika checkout berhasil. Toko menyiapkan barang, lalu sopir BAM mengantarnya. Nama sopir dan status pesanan dapat dilihat di Pesanan saya.',
     };
     configured.bantuan.sections[3] = {
       title: 'Pembayaran COD',

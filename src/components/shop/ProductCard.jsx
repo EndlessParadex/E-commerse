@@ -42,14 +42,8 @@ export default function ProductCard({
     );
   });
   const hasVariants = variants.length > 1;
-  const hasPackaging = variants.some(
-    (variant) => packagingValues(variant).packagingType !== 'satuan',
-  );
-  const sizeAction = hasPackaging
-    ? 'Pilih kemasan'
-    : product.sizeUnit === 'g'
-      ? 'Pilih gramasi'
-      : 'Pilih ukuran';
+  // One label for every product with choices, so the grid reads the same everywhere.
+  const sizeAction = 'Pilih varian';
   const minimumPrice = hasVariants
     ? Math.min(...variants.map((item) => item.price))
     : product.price;
@@ -105,7 +99,7 @@ export default function ProductCard({
   const discounted =
     !hasVariants && Number.isFinite(product.oldPrice) && product.oldPrice > product.price;
   const badge = hasVariants
-    ? `${variants.length} ${hasPackaging ? 'varian' : 'ukuran'}`
+    ? `${variants.length} varian`
     : showDiscount && discounted
       ? `Hemat ${Math.floor(((product.oldPrice - product.price) * 100) / product.oldPrice)}%`
       : product.tag;

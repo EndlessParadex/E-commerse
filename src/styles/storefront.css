@@ -61,8 +61,19 @@
   justify-self: start;
 }
 .cart-cancel {
-  width: 100%;
-  margin-top: 12px;
+  /* A quiet link: leaving the cart is rare and must not compete with checkout. */
+  display: block;
+  margin: 12px auto 0;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-danger-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 .checkout-main {
   min-width: 0;

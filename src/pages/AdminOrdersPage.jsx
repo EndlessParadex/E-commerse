@@ -122,7 +122,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
         <summary>Informasi pembayaran dan pengiriman</summary>
         <p>
           {server
-            ? 'Pesanan tersimpan di database dan terhubung ke akun pelanggan. Pembayaran dicatat admin setelah diperiksa; layanan pembayaran dan kurir belum terhubung otomatis.'
+            ? 'Pesanan tersimpan di database dan terhubung ke akun pelanggan. Pembayaran dicatat admin setelah diperiksa, dan pengiriman dicatat dengan memilih sopir BAM. Pembayaran online belum terhubung.'
             : 'Simulasi di tab browser ini. Pesanan belum tersimpan ke server. Perubahan di sini langsung terlihat pada detail pesanan pembeli di tab yang sama.'}
         </p>
       </details>

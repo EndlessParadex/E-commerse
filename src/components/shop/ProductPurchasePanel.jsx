@@ -11,6 +11,7 @@ export default function ProductPurchasePanel({
   packaging,
   stock,
   remaining,
+  inCart = 0,
   quantity,
   onQuantity,
   onAdd,
@@ -146,6 +147,7 @@ export default function ProductPurchasePanel({
           </div>
         )}
       </div>
+      {/* With an empty cart the add limit equals the stock shown above, so it is not repeated. */}
       <p className="detail-stock" role="status">
         {sharedCart?.enabled
           ? sharedCart.busy
@@ -157,9 +159,11 @@ export default function ProductPurchasePanel({
             ? 'Stok belum dapat diperiksa'
             : stock.inStock === false
               ? 'Stok kemasan ini habis'
-              : remaining
-                ? `Dapat ditambah ${purchasePackagingLabel(product, remaining)} ke keranjang`
-                : 'Stok tersedia sudah masuk keranjang atau batas jumlah tercapai'}
+              : !remaining
+                ? 'Stok tersedia sudah masuk keranjang atau batas jumlah tercapai'
+                : inCart
+                  ? `Sudah ${purchasePackagingLabel(product, inCart)} di keranjang, dapat ditambah ${purchasePackagingLabel(product, remaining)}`
+                  : null}
       </p>
       {!stock.failed && stock.reservedUnits > 0 && (
         <p className="detail-stock-reserved">

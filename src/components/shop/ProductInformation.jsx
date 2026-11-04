@@ -178,7 +178,7 @@ export default function ProductInformation({
         </p>
         <p className="detail-description-note">
           {workflowUsesServer
-            ? 'Stok mengikuti data server. Pesanan terhubung ke akun; pembayaran dan kurir belum terhubung otomatis.'
+            ? 'Stok mengikuti data toko. Pesanan tersimpan di akun Anda dan diantar oleh sopir BAM.'
             : 'Ketersediaan stok dan proses pembelian masih berupa simulasi.'}
         </p>
         <div className="detail-benefits">

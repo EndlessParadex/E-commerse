@@ -162,7 +162,7 @@ export default function AdminCompanyPage() {
         </p>
         <p>
           {workflowUsesServer
-            ? 'Identitas, akun, katalog, pesanan, dan stok tersimpan di server. Pembayaran serta kurir belum terhubung otomatis.'
+            ? 'Identitas, akun, katalog, pesanan, dan stok tersimpan di server. Pembayaran online belum terhubung; pengiriman memakai sopir BAM.'
             : 'Identitas, akun, dan katalog tersimpan di server. Pesanan, stok, dan pembayaran masih simulasi pada tab browser.'}
         </p>
       </div>

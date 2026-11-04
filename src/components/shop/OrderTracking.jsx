@@ -60,7 +60,7 @@ export default function OrderTracking({ status = 'processing', server = false, r
       </div>
       <p className="order-tracking-note">
         {server
-          ? 'Status tersimpan di server dan diperbarui oleh toko. Pelacakan kurir belum terhubung otomatis.'
+          ? 'Status diperbarui oleh toko. Pesanan diantar langsung oleh sopir BAM.'
           : 'Pratinjau frontend, bukan informasi pengiriman nyata. Belum terhubung ke toko atau kurir.'}
       </p>
       <p className="order-tracking-summary" role="status">

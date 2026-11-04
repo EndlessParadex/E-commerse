@@ -62,10 +62,8 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
                     </span>
                   )}
                 </a>
+                {/* Name, size and price only: the photo and name already open the product. */}
                 <div className="bam-vertical-promo-detail">
-                  <span className="bam-vertical-promo-brand">
-                    {product.brand || product.category}
-                  </span>
                   <h3>
                     <a href={href}>{product.baseName || product.name}</a>
                   </h3>
@@ -76,18 +74,12 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
                     <strong>{rupiah(product.price)}</strong>
                     {discounted && <del>{rupiah(product.oldPrice)}</del>}
                   </div>
-                  {personal && discounted && (
-                    <span className="bam-vertical-promo-saving">
-                      Hemat {rupiah(product.oldPrice - product.price)}
-                    </span>
-                  )}
                 </div>
-                <div className="bam-vertical-promo-action">
-                  {discounted && <span className="bam-vertical-promo-discount">−{discount}%</span>}
-                  <a href={href} aria-label={'Lihat pilihan ' + (product.baseName || product.name)}>
-                    Lihat <span aria-hidden="true">→</span>
-                  </a>
-                </div>
+                {discounted && (
+                  <div className="bam-vertical-promo-action">
+                    <span className="bam-vertical-promo-discount">−{discount}%</span>
+                  </div>
+                )}
               </article>
             );
           })

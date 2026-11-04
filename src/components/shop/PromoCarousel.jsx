@@ -3,7 +3,7 @@ import CompanyBrand from '../layout/CompanyBrand';
 import { useEffect, useState } from 'react';
 import { promoSlides } from '../../data/promoSlides';
 import './PromoCarousel.css';
-import ProductImage from './ProductImage';
+import ProductImage, { ProductPlaceholderIcon } from './ProductImage';
 import { productVariants } from '../../data/products';
 import { packagingOptionLabel } from '../../data/packagingPresentation';
 import { productGallery } from '../../data/productGallery';
@@ -94,22 +94,23 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
         aria-live={playing ? 'off' : 'polite'}
       >
         <div className="bam-promo-copy">
-          <div className="bam-promo-brand">
+          {/* One fixed page heading says what the store is; slide titles change below it. */}
+          <h1 className="bam-promo-brand">
             <CompanyBrand />
-            <span>{companyProfile.legalName}</span>
-          </div>
+            <span>Grosir kebutuhan toko dari {companyProfile.legalName}</span>
+          </h1>
           <span className="bam-promo-eyebrow">
             <span aria-hidden="true" />
             {slide.category}
           </span>
-          <h1>
+          <h2 className="bam-promo-title">
             {titleLines.map((line, i) => (
               <span key={i}>
                 {line}
                 {i < titleLines.length - 1 && <br />}
               </span>
             ))}
-          </h1>
+          </h2>
           <p>{slide.description}</p>
           <div className="bam-promo-copy-actions">
             <a className="bam-promo-cta" href={slide.href}>
@@ -169,31 +170,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                             role="img"
                             aria-label={'Foto ' + name + ' belum tersedia'}
                           >
-                            <svg viewBox="0 0 96 96" fill="none" aria-hidden="true">
-                              <rect
-                                x="24"
-                                y="31"
-                                width="48"
-                                height="44"
-                                rx="12"
-                                fill="currentColor"
-                                opacity=".10"
-                              />
-                              <path
-                                d="M30 39h36v30H30zM38 39v-8a10 10 0 0 1 20 0v8M30 51h36"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                              <path
-                                d="M40 59h16"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            <span>{product.brand || slide.category}</span>
+                            <ProductPlaceholderIcon />
                           </div>
                         )}
                       </div>
@@ -202,9 +179,9 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                           {product.brand && (
                             <span className="bam-promo-product-brand">{product.brand}</span>
                           )}
-                          <h2 className="bam-promo-product-name" title={name}>
+                          <h3 className="bam-promo-product-name" title={name}>
                             {name}
-                          </h2>
+                          </h3>
                           <span className="bam-promo-product-size">
                             {product.sizeLabel && <span>{product.sizeLabel}</span>}
                             <span>{packaging}</span>

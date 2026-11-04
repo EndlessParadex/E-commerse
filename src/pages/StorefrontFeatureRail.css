@@ -70,10 +70,10 @@
   background: #fff;
   border-color: #d5e7fc;
 }
-.home-landing .home-feature-rail .bam-promo-copy h1 {
+.home-landing .home-feature-rail .bam-promo-copy .bam-promo-title {
   color: var(--feature-hero-ink);
 }
-.home-landing .home-feature-rail .bam-promo-copy h1 > span:last-child {
+.home-landing .home-feature-rail .bam-promo-copy .bam-promo-title > span:last-child {
   color: var(--feature-hero-accent);
 }
 .home-landing .home-feature-rail .bam-promo-copy > p,
@@ -596,7 +596,7 @@
 .home-landing--personal .home-feature-rail .bam-promo-brand {
   margin-bottom: 11px;
 }
-.home-landing--personal .home-feature-rail .bam-promo-copy h1 {
+.home-landing--personal .home-feature-rail .bam-promo-copy .bam-promo-title {
   font-size: clamp(1.55rem, 2.5vw, 2.65rem);
   line-height: 1.14;
   margin: 9px 0 11px;
@@ -821,7 +821,7 @@
   .home-landing--personal .home-feature-rail .is-personal .bam-vertical-promo-item {
     grid-template-columns: 68px minmax(0, 1fr) auto;
   }
-  .home-landing--personal .home-feature-rail .bam-promo-copy h1 {
+  .home-landing--personal .home-feature-rail .bam-promo-copy .bam-promo-title {
     font-size: clamp(1.5rem, 7vw, 2.2rem);
   }
 }

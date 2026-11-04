@@ -32,8 +32,10 @@ Pembeli harus memiliki nomor HP terkonfirmasi dan mencentang **Kirim faktur dan 
    **`order_update`** tanpa header:
 
    ```text
-   Halo {{1}}, info pesanan {{2}}: {{3}} Terima kasih.
+   Halo {{1}}, ada kabar terbaru untuk pesanan Anda dengan nomor {{2}} di BAM. Keterangan: {{3}} Silakan buka menu Pesanan di website BAM untuk melihat detail lengkapnya. Terima kasih.
    ```
+
+   Meta menolak isi yang terlalu pendek dibanding jumlah variabelnya, jadi teks tetapnya dibuat lebih panjang. Urutan variabel tetap: nama, nomor pesanan, keterangan status.
 
 3. Isi `.env` server. Jangan menaruh token di GitHub atau chat.
 

@@ -115,13 +115,15 @@ export default function ProductCard({
     <article className="product-card">
       <div
         className={
-          'product-image-wrap ' + (product.color || '') + (!photo.demo ? ' has-photo' : '')
+          'product-image-wrap ' +
+          (photo.demo ? 'is-placeholder' : (product.color || '') + ' has-photo')
         }
-        style={productColorStyle(product.color)}
+        style={photo.demo ? undefined : productColorStyle(product.color)}
       >
+        {/* Without a photo the card stays neutral, so missing photos read as one quiet state. */}
         <a
-          className={'product-image ' + (product.color || '')}
-          style={productColorStyle(product.color)}
+          className={'product-image ' + (photo.demo ? 'is-placeholder' : product.color || '')}
+          style={photo.demo ? undefined : productColorStyle(product.color)}
           href={'#/produk/' + product.id}
           aria-label={'Lihat detail ' + productName}
         >

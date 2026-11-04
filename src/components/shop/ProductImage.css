@@ -35,12 +35,19 @@
 .bam-product-media.bam-product-media--thumbnail .bam-product-fallback {
   font-size: 1.75rem;
   line-height: 1;
-  filter: drop-shadow(0 2px 2px #0f172a18);
 }
 .bam-product-fallback {
+  display: inline-grid;
+  place-items: center;
   font-size: 4.75rem;
-  line-height: 1.2;
-  filter: drop-shadow(0 10px 9px #0f172a26);
+  line-height: 1;
+  color: var(--color-text-muted, #94a3b8);
+  opacity: 0.75;
+}
+.bam-product-placeholder-icon {
+  display: block;
+  width: 0.8em;
+  height: 0.8em;
 }
 .bam-product-media--detail .bam-product-fallback {
   font-size: 9.375rem;

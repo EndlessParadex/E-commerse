@@ -41,7 +41,9 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
         {items.length ? (
           items.map(({ product, discounted, discount }) => {
             const photo = productGallery(product).find((entry) => !entry.demo);
-            const preview = photo ? { ...product, image: photo.src, imageAlt: photo.alt } : product;
+            const preview = photo
+              ? { ...product, image: photo.src, imageAlt: photo.alt }
+              : { ...product, image: '' };
             const href = '#/produk/' + encodeURIComponent(product.id);
             return (
               <article className="bam-vertical-promo-item" key={product.groupId || product.id}>
@@ -50,17 +52,7 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
                   href={href}
                   aria-label={'Lihat ' + (product.baseName || product.name)}
                 >
-                  {photo ? (
-                    <ProductImage product={preview} variant="promo" />
-                  ) : (
-                    <span
-                      className="bam-vertical-promo-monogram"
-                      role="img"
-                      aria-label={'Foto ' + (product.baseName || product.name) + ' belum tersedia'}
-                    >
-                      {(product.brand || product.baseName || 'BAM').slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
+                  <ProductImage product={preview} variant="promo" />
                 </a>
                 {/* Name, size and price only: the photo and name already open the product. */}
                 <div className="bam-vertical-promo-detail">

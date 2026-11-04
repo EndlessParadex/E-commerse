@@ -248,7 +248,9 @@ test('banner: harga panjang, foto, SKU termurah, navigasi, jeda keyboard, geraka
       root.render(createElement(Banner, { catalog: [], categoryList }));
       await settle();
     });
-    assert.match(container.querySelector('h1').textContent, /Katalog sedang/);
+    assert.match(container.querySelector('.bam-promo-title').textContent, /Katalog sedang/);
+    assert.equal(container.querySelectorAll('h1').length, 1, 'the banner keeps one fixed H1');
+    assert.match(container.querySelector('h1').textContent, /Grosir kebutuhan toko/);
     assert.equal(container.querySelectorAll('.bam-promo-product').length, 0);
     assert.equal(container.querySelector('.bam-promo-footer'), null);
     assert.equal(container.querySelector('.bam-promo-cta').getAttribute('href'), '#/cari?q=');

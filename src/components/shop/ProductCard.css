@@ -44,6 +44,12 @@
   min-height: 0;
   padding: 24px;
 }
+.product-card .product-image.is-placeholder {
+  background: var(--color-surface-muted, #f1f5f9);
+}
+.product-card .product-image.is-placeholder::after {
+  display: none;
+}
 .product-card .has-photo .bam-product-media--card {
   padding: 18px;
 }

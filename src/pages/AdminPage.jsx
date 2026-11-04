@@ -201,12 +201,14 @@ export default function AdminPage({ view = 'overview' }) {
     setBrandId('');
   };
   const isProducts = view === 'products';
-  // Storage notes matter only while data can be lost; a database-backed dashboard omits them.
-  const hideStorageNote = view === 'overview' && catalogUsesServer;
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
   const workflowView = view === 'orders' || view === 'stock';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const ownerSettingsView = ['company', 'email', 'accounts', 'approvals'].includes(view);
+  // Storage notes matter only while data can be lost; database-backed pages go straight to the work.
+  const previewStorage = workflowView
+    ? !workflowUsesServer
+    : !b2bView && !ownerSettingsView && !catalogUsesServer;
   const areaLabel =
     view === 'overview'
       ? 'Dashboard'
@@ -226,10 +228,10 @@ export default function AdminPage({ view = 'overview' }) {
     brands: 'Kelola merek dan perusahaan pemasok yang terhubung.',
     categories: 'Susun kategori dan subkategori katalog toko.',
     stock: workflowUsesServer
-      ? 'Kelola stok produk yang tersimpan di database.'
+      ? 'Periksa dan perbarui stok setiap ukuran produk.'
       : 'Kelola stok produk pada pratinjau frontend.',
     orders: workflowUsesServer
-      ? 'Kelola pesanan pelanggan yang tersimpan di database.'
+      ? 'Proses pesanan pelanggan dari masuk sampai selesai.'
       : 'Kelola pesanan pelanggan pada pratinjau frontend.',
   };
   const pageTitle = {
@@ -438,43 +440,17 @@ export default function AdminPage({ view = 'overview' }) {
                       : `Gambaran produk dan pemasok dalam katalog ${companyProfile.shortName}.`)}
             </p>
           </div>
-          {!hideStorageNote && (
+          {previewStorage && (
             <span className="admin-demo-badge">
-              {b2bView
-                ? 'B2B · Database'
-                : ownerSettingsView
-                  ? 'Administrasi · Database'
-                  : workflowView
-                    ? workflowUsesServer
-                      ? 'Operasional · Database'
-                      : 'Pratinjau · Simulasi'
-                    : catalogUsesServer
-                      ? 'Katalog · Database'
-                      : 'Pratinjau · Data dummy'}
+              {workflowView ? 'Pratinjau · Simulasi' : 'Pratinjau · Data dummy'}
             </span>
           )}
         </header>
-        {!hideStorageNote && (
+        {previewStorage && (
           <p className="admin-preview-notice">
-            {b2bView
-              ? view === 'sharedCarts'
-                ? 'Pilih toko dan periode, tambahkan atau ubah barang saat terbuka, kunci keranjang, periksa harga dan stok, lalu finalisasi. Stok hanya dicadangkan setelah berhasil.'
-                : 'Pemilik BAM mengelola toko dan penugasan. Admin operasional dapat melihat data toko dan Sales.'
-              : view === 'accounts'
-                ? 'Hanya pemilik toko yang dapat mengelola akun. Riwayat pesanan tetap disimpan saat akun dinonaktifkan.'
-                : view === 'approvals'
-                  ? 'Tinjau pendaftaran yang menunggu persetujuan. Persetujuan akun tidak menggantikan verifikasi email.'
-                  : view === 'company'
-                    ? 'Pengaturan identitas perusahaan mengikuti izin akun dan tersimpan sesuai mode instalasi BAM.'
-                    : view === 'email'
-                      ? 'Pengaturan email memerlukan akses pemilik dan konfirmasi kata sandi akun.'
-                      : workflowView
-                        ? workflowUsesServer
-                          ? 'Pesanan dan stok tersimpan di database. Pembayaran dan pengiriman dicatat oleh admin; belum terhubung otomatis ke penyedia layanan.'
-                          : 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
-                        : catalogUsesServer
-                          ? 'Katalog tersimpan di database. Perubahan yang berhasil disimpan tersedia bagi pengunjung toko setelah halaman dimuat ulang.'
-                          : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
+            {workflowView
+              ? 'Pesanan, stok, pembayaran, dan pengiriman pada halaman ini masih pratinjau frontend. Katalog menggunakan penyimpanan yang sudah tersedia.'
+              : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
           </p>
         )}
         {!editor && view !== 'b2bStores' && <AdminPageGuide view={view} />}

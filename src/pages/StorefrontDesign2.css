@@ -490,7 +490,8 @@
   margin: 0 0 18px;
 }
 .category-page .category-results .product-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Fill the row with as many readable cards as fit, so wholesale buyers scroll less. */
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 17px;
 }
 .category-page .catalog-empty {

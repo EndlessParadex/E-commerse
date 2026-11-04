@@ -323,7 +323,7 @@
 }
 .home-landing .product-card .product-image,
 .category-page .product-card .product-image {
-  aspect-ratio: 1 / 0.85;
+  aspect-ratio: 4 / 3;
 }
 .home-landing .product-card-body,
 .category-page .product-card-body {

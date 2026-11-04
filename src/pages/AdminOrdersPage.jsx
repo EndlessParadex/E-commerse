@@ -1,4 +1,3 @@
-import CommerceReadiness from './CommerceReadiness';
 import B2BPackingList from '../components/shop/B2BPackingList';
 import useCompany from '../state/useCompany';
 import { useRef, useState } from 'react';
@@ -18,6 +17,8 @@ import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import { driverNames } from '../data/companyProfile';
 import '../styles/workflow.css';
 
+// The full number stays in the tooltip and search; a UUID is too long to scan in a list.
+const shortOrderId = (id) => String(id).split('-').slice(0, 2).join('-');
 const ORDER_FILTERS = [
   { id: 'awaiting_acceptance', label: 'Menunggu persetujuan total' },
   { id: 'all', label: 'Semua' },
@@ -31,7 +32,7 @@ const ORDER_FILTERS = [
   { id: 'expired', label: 'Kedaluwarsa' },
 ];
 
-export default function AdminOrdersPage({ embedded = false, initialFilter = 'all' }) {
+export default function AdminOrdersPage({ initialFilter = 'all' }) {
   const company = useCompany();
   const [shippingCost, setShippingCost] = useState(''),
     [rejectionReason, setRejectionReason] = useState('');
@@ -110,12 +111,8 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
       <div className="admin-panel-heading">
         <AdminSectionIcon name="orders" />
         <div>
-          <h2>Pesanan toko</h2>
-          <p>
-            {server
-              ? 'Kelola pesanan pelanggan, catatan pembayaran, dan resi pengiriman.'
-              : 'Kelola status pesanan, pembayaran, dan resi pada pratinjau frontend.'}
-          </p>
+          <h2>Daftar pesanan</h2>
+          {!server && <p>Kelola status pesanan, pembayaran, dan resi pada pratinjau frontend.</p>}
         </div>
         <span className="admin-result-pill">
           {loading ? 'Memuat…' : `${total ?? orders.length} pesanan`}
@@ -129,7 +126,6 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
             : 'Simulasi di tab browser ini. Pesanan belum tersimpan ke server. Perubahan di sini langsung terlihat pada detail pesanan pembeli di tab yang sama.'}
         </p>
       </details>
-      {!embedded && company.commerce?.version === 31 && <CommerceReadiness />}
       <div className="workflow-filters">
         <div className="admin-field">
           <label htmlFor="admin-order-search">Cari pesanan</label>
@@ -214,7 +210,7 @@ export default function AdminOrdersPage({ embedded = false, initialFilter = 'all
             <li key={order.id} className="workflow-order-card">
               <header>
                 <div>
-                  <h3>{order.id}</h3>
+                  <h3 title={order.id}>{shortOrderId(order.id)}</h3>
                   <p>
                     {dateLabel(order.createdAt)} · {order.recipient}
                   </p>

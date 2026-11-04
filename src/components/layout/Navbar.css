@@ -386,6 +386,11 @@
   color: var(--color-text);
 }
 
+/* The global theme gives inputs a solid background; here it would cover the box's rounded border. */
+.store-navigation .navbar-search input[type='text'] {
+  background: transparent;
+}
+
 .navbar-search .search-button {
   background-color: var(--color-action);
   color: white;

@@ -291,7 +291,7 @@ export default function AdminOpsOverview({ counts, user, disabled, onProductSave
                   onSaved={onProductSaved}
                 />
               )}
-              {panel === 'check' && <AdminOrdersPage embedded initialFilter="processing" />}
+              {panel === 'check' && <AdminOrdersPage initialFilter="processing" />}
               {panel === 'cart' && <SharedCartPage key={user?.id} adminView />}
             </>
           )}

@@ -343,12 +343,12 @@
 }
 .admin-shell .admin-ops-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 600px;
   border-collapse: collapse;
   font-size: 0.82rem;
 }
 .admin-shell .admin-ops-table th {
-  padding: 13px 12px;
+  padding: 12px 8px;
   background: var(--color-action);
   color: var(--color-on-action, #ffffff);
   font-weight: 700;
@@ -356,7 +356,7 @@
   white-space: nowrap;
 }
 .admin-shell .admin-ops-table td {
-  padding: 12px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--color-border-soft);
   text-align: center;
   vertical-align: middle;
@@ -393,8 +393,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
-  padding: 6px 12px;
+  min-height: 40px;
+  padding: 6px 10px;
   border: 1px solid var(--color-border-info-strong);
   border-radius: 10px;
   background: var(--color-surface);
@@ -678,4 +678,41 @@
   .admin-shell .admin-work-layout {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+/* Admin order list: denser cards so several orders fit on one screen. */
+.admin-shell .workflow-admin-orders .workflow-order-list {
+  gap: 10px;
+}
+.admin-shell .workflow-admin-orders .workflow-order-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px 18px;
+}
+.admin-shell .workflow-admin-orders .workflow-order-card > * {
+  margin-block: 0;
+}
+.admin-shell .workflow-admin-orders .workflow-order-card h3 {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.admin-shell .workflow-admin-orders .workflow-order-card header p,
+.admin-shell .workflow-admin-orders .workflow-order-summary {
+  line-height: 1.5;
+}
+.admin-shell .workflow-admin-orders .workflow-preview {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+.admin-shell .workflow-admin-orders .b2b-packing-disclosure {
+  margin: 0;
+  padding: 8px 12px;
+  box-shadow: none;
+}
+.admin-shell .workflow-admin-orders .workflow-actions {
+  margin-top: 2px;
+  padding-top: 10px;
+}
+.admin-shell .workflow-admin-orders .b2b-packing-disclosure > summary {
+  font-size: 0.85rem;
 }

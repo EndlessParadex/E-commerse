@@ -210,7 +210,11 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     assert.equal(product.image, '');
     assert.deepEqual(product.gallery, []);
     await act(async () => root.render(createElement(Gallery, { product })));
-    assert.ok(container.querySelector('.gallery-demo'));
+    assert.ok(
+      container.querySelector('.detail-image.is-placeholder .bam-product-fallback'),
+      'without photos the gallery shows one neutral placeholder',
+    );
+    assert.ok(!container.querySelector('.gallery-demo, .gallery-thumbnails'));
     assert.ok(!/Depan|Belakang|Samping|Detail/.test(container.textContent));
     await renderForm('limit');
     await upload(Array.from({ length: 8 }, (_, index) => file(index)));

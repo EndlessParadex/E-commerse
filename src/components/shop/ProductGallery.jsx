@@ -45,8 +45,20 @@ function GalleryMedia({ product, entry, thumbnail = false }) {
 }
 
 export default function ProductGallery({ product }) {
-  const entries = productGallery(product);
+  const allEntries = productGallery(product);
+  const photos = allEntries.filter((entry) => !entry.demo);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Without real photos, one neutral placeholder replaces the drawn package mock-ups.
+  if (!photos.length)
+    return (
+      <section className="product-gallery" aria-label="Galeri gambar produk">
+        <div className="detail-image is-placeholder">
+          <ProductImage product={{ ...product, image: '' }} variant="detail" />
+          {product.tag && <span className="detail-tag">{product.tag}</span>}
+        </div>
+      </section>
+    );
+  const entries = photos;
   const activeIndex = Math.min(selectedIndex, entries.length - 1);
   const selected = entries[activeIndex];
   return (

@@ -254,3 +254,31 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+.cart-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--color-text);
+  color: var(--color-surface);
+  font-size: 0.9375rem;
+}
+.cart-undo button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cart-undo button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

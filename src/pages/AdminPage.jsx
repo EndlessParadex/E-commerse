@@ -5,6 +5,8 @@ import AdminEmailPage from './AdminEmailPage';
 import AdminAccountsPage from './AdminAccountsPage';
 import AdminApprovalsPage from './AdminApprovalsPage';
 import AdminB2BStoresPage from './AdminB2BStoresPage';
+import AdminReviewsPage from './AdminReviewsPage';
+import AdminDeliveriesPage from './AdminDeliveriesPage';
 import SharedCartPage from '../components/shop/SharedCartPage';
 import { suppliers } from '../data/suppliers';
 import { adminProducts, adminBrands, filterAdminProducts } from '../data/adminCatalog';
@@ -75,6 +77,7 @@ const navigationGroups = [
     items: [
       { view: 'overview', label: 'Dashboard', href: '#/admin' },
       { view: 'orders', label: 'Pesanan', href: '#/admin/pesanan' },
+      { view: 'deliveries', label: 'Daftar antar', href: '#/admin/antar' },
       { view: 'stock', label: 'Stok', href: '#/admin/stok' },
     ],
   },
@@ -86,6 +89,7 @@ const navigationGroups = [
       { view: 'suppliers', label: 'PT pemasok', href: '#/admin/pemasok' },
       { view: 'brands', label: 'Merek', href: '#/admin/merek' },
       { view: 'categories', label: 'Kategori', href: '#/admin/kategori' },
+      { view: 'reviews', label: 'Ulasan pembeli', href: '#/admin/ulasan' },
     ],
   },
   {
@@ -202,7 +206,7 @@ export default function AdminPage({ view = 'overview' }) {
   };
   const isProducts = view === 'products';
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
-  const workflowView = view === 'orders' || view === 'stock';
+  const workflowView = view === 'orders' || view === 'stock' || view === 'deliveries';
   const b2bView = view === 'b2bStores' || view === 'sharedCarts';
   const ownerSettingsView = ['company', 'email', 'accounts', 'approvals'].includes(view);
   // Storage notes matter only while data can be lost; database-backed pages go straight to the work.
@@ -227,6 +231,8 @@ export default function AdminPage({ view = 'overview' }) {
     suppliers: 'Kelola perusahaan pemasok dan relasinya dengan produk.',
     brands: 'Kelola merek dan perusahaan pemasok yang terhubung.',
     categories: 'Susun kategori dan subkategori katalog toko.',
+    reviews: 'Baca ulasan pembeli dan sembunyikan ulasan yang tidak pantas.',
+    deliveries: 'Pesanan per sopir per hari, siap dicetak untuk pengantaran.',
     stock: workflowUsesServer
       ? 'Periksa dan perbarui stok setiap ukuran produk.'
       : 'Kelola stok produk pada pratinjau frontend.',
@@ -240,6 +246,8 @@ export default function AdminPage({ view = 'overview' }) {
     suppliers: 'PT pemasok',
     brands: 'Merek',
     categories: 'Kategori & subkategori',
+    reviews: 'Ulasan pembeli',
+    deliveries: 'Daftar antar sopir',
     orders: 'Pesanan toko',
     stock: 'Stok produk',
     company: 'Pengaturan perusahaan',
@@ -491,7 +499,11 @@ export default function AdminPage({ view = 'overview' }) {
             ✓ {notice}
           </p>
         )}
-        {view === 'sharedCarts' ? (
+        {view === 'deliveries' ? (
+          <AdminDeliveriesPage />
+        ) : view === 'reviews' ? (
+          <AdminReviewsPage />
+        ) : view === 'sharedCarts' ? (
           <SharedCartPage key={delivery?.user?.id} adminView />
         ) : view === 'b2bStores' ? (
           <AdminB2BStoresPage key={delivery?.user?.id} />

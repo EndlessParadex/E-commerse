@@ -13,6 +13,7 @@ import './OrderConfirmationPage.css';
 import '../components/shop/OrderItem.css';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import PaymentDetails from '../components/shop/PaymentDetails';
+import OrderReviews from '../components/shop/OrderReviews';
 
 export default function OrderConfirmationPage({ orderId }) {
   const { order, failed, loading, server, detailError } = useOrderDetail(orderId);
@@ -210,6 +211,7 @@ export default function OrderConfirmationPage({ orderId }) {
               <strong>{rupiah(order.total)}</strong>
             </div>
           </div>
+          {server && orderStatus(order) === 'completed' && <OrderReviews order={order} />}
         </section>
         <aside className="confirmation-side">
           {typeof order.note === 'string' && order.note.trim() && (

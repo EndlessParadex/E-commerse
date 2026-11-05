@@ -589,6 +589,13 @@
   color: var(--color-text);
 }
 
+.deliver-pin {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  color: var(--color-link, #0369a1);
+}
+
 .deliver-code {
   font-weight: 700;
   max-width: 120px;

@@ -344,3 +344,6 @@
   border-color: var(--color-border-store);
   border-radius: 15px;
 }
+.product-card-stars {
+  font-size: 0.8125rem;
+}

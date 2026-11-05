@@ -1,0 +1,98 @@
+.delivery-sheet-heading {
+  flex-wrap: wrap;
+}
+.delivery-sheet-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 24px 0;
+}
+.delivery-sheet-filters .admin-field {
+  flex: 1 1 200px;
+  max-width: 280px;
+}
+.delivery-sheet-empty {
+  margin: 20px 24px 24px;
+  color: var(--color-text-secondary);
+}
+.delivery-sheet-driver {
+  margin: 20px 24px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  break-inside: avoid;
+}
+.delivery-sheet-driver:last-of-type {
+  margin-bottom: 24px;
+}
+.delivery-sheet-driver header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 14px 16px;
+  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--color-border);
+}
+.delivery-sheet-driver h3 {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+.delivery-sheet-driver header p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+.delivery-sheet-table {
+  overflow-x: auto;
+}
+.delivery-sheet-table table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.delivery-sheet-table th,
+.delivery-sheet-table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+.delivery-sheet-table thead th {
+  border-top: 0;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.delivery-sheet-address {
+  min-width: 220px;
+}
+.delivery-sheet-more {
+  margin: 0 24px 24px;
+}
+
+/* Print only the sheet: no Admin menu, header or filters. */
+@media print {
+  body:has(.delivery-sheet) .admin-sidebar,
+  body:has(.delivery-sheet) .admin-header,
+  body:has(.delivery-sheet) .admin-save-notice,
+  .delivery-sheet-print,
+  .delivery-sheet-filters,
+  .delivery-sheet-more {
+    display: none !important;
+  }
+  body:has(.delivery-sheet) .admin-shell {
+    display: block;
+  }
+  .delivery-sheet {
+    border: 0;
+    box-shadow: none;
+  }
+  .delivery-sheet-table table {
+    min-width: 0;
+    font-size: 11pt;
+  }
+  .delivery-sheet-driver {
+    break-inside: avoid;
+  }
+}

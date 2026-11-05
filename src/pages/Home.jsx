@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import CategoryIcon from '../components/shop/CategoryIcon';
 import { useShop } from '../state/useShop';
 import {
   availableBrands,
@@ -23,6 +24,7 @@ import { suppliers, supplierBy } from '../data/suppliers';
 import './Home.css';
 import './StorefrontDesign2.css';
 import './StorefrontFeatureRail.css';
+import './HomeMobile.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
@@ -189,7 +191,7 @@ export default function Home({ catalog = null }) {
             <span className="store-category-intro-count">{visible.length} produk ditampilkan</span>
           </div>
           <div className="store-category-intro-symbol" aria-hidden="true">
-            <span>{category?.icon || '✦'}</span>
+            <CategoryIcon category={category} />
             <span>BAM.</span>
           </div>
         </div>
@@ -255,7 +257,7 @@ export default function Home({ catalog = null }) {
                   ...categories.map((item) => ({
                     id: item.id,
                     name: item.name,
-                    icon: item.icon,
+                    icon: <CategoryIcon category={item} />,
                     count: count({ categoryId: item.id, subcategoryId: '' }),
                   })),
                 ]}
@@ -276,7 +278,7 @@ export default function Home({ catalog = null }) {
                     ...category.children.map((item) => ({
                       id: item.id,
                       name: item.name,
-                      icon: category.icon,
+                      icon: <CategoryIcon category={category} />,
                       count: count({ subcategoryId: item.id }),
                     })),
                   ]}

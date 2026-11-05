@@ -47,7 +47,10 @@ function StockProductIdentity({ product, variants }) {
   };
   return (
     <div className="workflow-stock-identity">
-      <div className="workflow-stock-photo" style={productColorStyle(source.color)}>
+      <div
+        className={'workflow-stock-photo' + (photo ? '' : ' is-placeholder')}
+        style={photo ? productColorStyle(source.color) : undefined}
+      >
         <ProductImage product={preview} variant="thumbnail" />
       </div>
       <div className="workflow-stock-name">

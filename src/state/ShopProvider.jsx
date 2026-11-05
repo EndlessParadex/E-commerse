@@ -131,6 +131,7 @@ function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode
   const dispatch = (action) => {
     if (
       storeCartActive &&
+      !action.personal &&
       ['add', 'quantity', 'remove', 'clearCart', 'updateCart', 'completeOrder'].includes(
         action.type,
       )
@@ -151,6 +152,7 @@ function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode
     const next = shopReducer(previous, action);
     if (
       action.type === 'add' ||
+      action.type === 'restore' ||
       (action.type === 'quantity' &&
         action.quantity > (previous.cart.find((item) => item.id === action.id)?.quantity || 0))
     ) {
@@ -162,13 +164,18 @@ function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode
       }
     }
     if (next === previous) return false;
-    if (workflowUsesServer && ['add', 'quantity', 'remove', 'clearCart'].includes(action.type))
+    if (
+      workflowUsesServer &&
+      ['add', 'restore', 'quantity', 'remove', 'clearCart'].includes(action.type)
+    )
       clearCompletedCheckoutRequest();
     stateRef.current = next;
     rawDispatch(action);
     return true;
   };
-  const addItem = (product, quantity = 1) => dispatch({ type: 'add', product, quantity });
+  // `personal: true` always targets the personal cart, even while the store cart is shown.
+  const addItem = (product, quantity = 1, { personal = false } = {}) =>
+    dispatch({ type: 'add', product, quantity, personal });
   const stockFor = (product) => {
     try {
       const statistics = workflowUsesServer ? serverStock(product) : {};

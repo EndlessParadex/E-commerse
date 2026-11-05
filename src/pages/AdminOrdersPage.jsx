@@ -18,6 +18,19 @@ import { driverNames } from '../data/companyProfile';
 import { shortOrderNumber } from '../data/orderListPresentation';
 import '../styles/workflow.css';
 
+// Store delivery dates are plain YYYY-MM-DD days; show them like other dates ("2 Nov 2026").
+const deliveryDay = (value) => {
+  const date = new Date(value + 'T00:00:00+07:00');
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      });
+};
+
 const ORDER_FILTERS = [
   { id: 'awaiting_acceptance', label: 'Menunggu persetujuan total' },
   { id: 'all', label: 'Semua' },
@@ -62,6 +75,50 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const visible = orders;
+  // Bulk actions: record delivery for several orders at once, or complete them.
+  const canShip = (order) =>
+    (order.status || 'processing') === 'processing' &&
+    (isCOD(order) || order.payment.status === 'paid');
+  const canComplete = (order) => order.status === 'shipped';
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulk, setBulk] = useState(null);
+  const [bulkDriver, setBulkDriver] = useState('');
+  const selected = visible.filter((order) => selectedIds.includes(order.id));
+  const shipSelection = selected.filter(canShip);
+  const completeSelection = selected.filter(canComplete);
+  const toggleSelected = (id) =>
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
+    );
+  const runBulk = async () => {
+    if (pending.current || !bulk) return;
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    const list = bulk === 'ship' ? shipSelection : completeSelection;
+    const failedOrders = [];
+    let done = 0;
+    for (const order of list) {
+      const result = await changeServerOrder(
+        order.id,
+        bulk,
+        bulk === 'ship' ? { driverName: bulkDriver } : {},
+        order.revision,
+      );
+      if (result.error) failedOrders.push(shortOrderNumber(order.id) + ' (' + result.error + ')');
+      else done += 1;
+    }
+    pending.current = false;
+    setBusy(false);
+    setBulk(null);
+    setSelectedIds([]);
+    setNotice(
+      (bulk === 'ship'
+        ? done + ' pesanan dicatat dikirim oleh ' + bulkDriver + '.'
+        : done + ' pesanan diselesaikan.') +
+        (failedOrders.length ? ' Belum berhasil: ' + failedOrders.join(', ') + '.' : ''),
+    );
+  };
   const openAction = (order, action) => {
     setTarget({ order, action });
     setCourier(order.shipping.courier || '');
@@ -204,199 +261,282 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
           )}
         </div>
       ) : (
-        <ul className="workflow-order-list">
-          {visible.map((order) => (
-            <li key={order.id} className="workflow-order-card">
-              <header>
-                <div>
-                  <h3 title={order.id}>{shortOrderNumber(order.id)}</h3>
-                  <p>
-                    {dateLabel(order.createdAt)} · {order.recipient}
-                  </p>
+        <>
+          {server && selected.length > 0 && (
+            <div
+              className="workflow-bulk-bar"
+              role="region"
+              aria-label="Tindakan untuk pesanan terpilih"
+            >
+              <strong>{selected.length} pesanan dipilih</strong>
+              {shipSelection.length > 0 && (
+                <button type="button" className="admin-primary" onClick={() => setBulk('ship')}>
+                  Catat pengiriman ({shipSelection.length})
+                </button>
+              )}
+              {completeSelection.length > 0 && (
+                <button type="button" className="admin-primary" onClick={() => setBulk('complete')}>
+                  Selesaikan ({completeSelection.length})
+                </button>
+              )}
+              <button type="button" className="admin-secondary" onClick={() => setSelectedIds([])}>
+                Batal pilih
+              </button>
+            </div>
+          )}
+          <ul className="workflow-order-list">
+            {visible.map((order) => (
+              <li key={order.id} className="workflow-order-card">
+                <header>
+                  {server && (canShip(order) || canComplete(order)) && (
+                    <label className="workflow-order-select">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(order.id)}
+                        onChange={() => toggleSelected(order.id)}
+                      />
+                      <span className="visually-hidden">Pilih pesanan {order.id}</span>
+                    </label>
+                  )}
+                  <div>
+                    <h3 title={order.id}>{shortOrderNumber(order.id)}</h3>
+                    <p>
+                      {dateLabel(order.createdAt)} · {order.recipient}
+                    </p>
+                  </div>
+                  <span className={'workflow-badge status-' + order.status}>
+                    {orderStatusLabel(order)}
+                  </span>
+                </header>
+                <div className="workflow-order-summary">
+                  <span>
+                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan ·{' '}
+                    {order.payment.label}
+                  </span>
+                  <strong>{rupiah(order.total)}</strong>
                 </div>
-                <span className={'workflow-badge status-' + order.status}>
-                  {orderStatusLabel(order)}
-                </span>
-              </header>
-              <div className="workflow-order-summary">
-                <span>
-                  {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan ·{' '}
-                  {order.payment.label}
-                </span>
-                <strong>{rupiah(order.total)}</strong>
-              </div>
-              {order.codFixedTotal && order.status === 'processing' && (
-                <p className="workflow-preview">
-                  {order.b2b
-                    ? 'Harga final setelah pemeriksaan Admin'
-                    : 'Harga final sejak checkout'}{' '}
-                  · Gratis ongkir · COD saat diterima. Stok sudah dicadangkan.
-                </p>
-              )}
-              {order.b2b && (
-                <p className="workflow-preview">
-                  {order.b2b.storeCode} · Rencana pengiriman {order.b2b.date} · Difinalisasi{' '}
-                  {order.b2b.finalizedBy.name}
-                </p>
-              )}
-              {order.status === 'awaiting_confirmation' && (
-                <p className="workflow-preview">
-                  {order.codConfirmation?.legacyReview
-                    ? 'Pesanan COD lama perlu diperiksa kembali. '
-                    : 'Periksa alamat dan kesiapan pesanan sebelum konfirmasi. '}
-                  Batas konfirmasi: <strong>{dateLabel(order.codConfirmation.expiresAt)}</strong>.
-                  Stok belum ditahan. Stok diperiksa dan ditahan ketika pesanan dikonfirmasi.
-                </p>
-              )}
-              <details className="workflow-order-details">
-                <summary>Lihat barang dan pengiriman</summary>
-                <ul>
-                  {order.items.map((item) => {
-                    const display = orderItemPresentation(item);
-                    return (
-                      <li key={item.id}>
-                        <ProductImage product={display.product} variant="thumbnail" />
-                        <div>
-                          <strong>{display.name}</strong>
-                          <small>
-                            {item.id} · {display.sizeLabel || 'Ukuran belum tercatat'}
-                          </small>
-                          <PackagingSummary
-                            packaging={display.packaging}
-                            quantity={item.quantity}
-                          />
-                          <span>
-                            {item.quantity} × {rupiah(item.price)}
-                          </span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p>
-                  <strong>Penerima:</strong> {order.recipient}
-                  <br />
-                  <strong>Alamat:</strong> {order.address}
-                  <br />
-                  <strong>Pengiriman:</strong> {order.shipping.label}
-                </p>
-                {order.note && (
-                  <p>
-                    <strong>Catatan:</strong> {order.note}
+                {order.codFixedTotal && order.status === 'processing' && (
+                  <p className="workflow-preview">
+                    {order.b2b
+                      ? 'Harga final setelah pemeriksaan Admin'
+                      : 'Harga final sejak checkout'}{' '}
+                    · Gratis ongkir · COD saat diterima. Stok sudah dicadangkan.
                   </p>
                 )}
-                {order.shipping.driverName && (
-                  <p>
-                    <strong>Sopir:</strong> {order.shipping.driverName}
+                {order.b2b && (
+                  <p className="workflow-preview">
+                    {order.b2b.storeCode} · Rencana pengiriman {deliveryDay(order.b2b.date)} ·
+                    Difinalisasi {order.b2b.finalizedBy.name}
                   </p>
                 )}
-                {order.shipping.trackingNumber && (
+                {order.status === 'awaiting_confirmation' && (
+                  <p className="workflow-preview">
+                    {order.codConfirmation?.legacyReview
+                      ? 'Pesanan COD lama perlu diperiksa kembali. '
+                      : 'Periksa alamat dan kesiapan pesanan sebelum konfirmasi. '}
+                    Batas konfirmasi: <strong>{dateLabel(order.codConfirmation.expiresAt)}</strong>.
+                    Stok belum ditahan. Stok diperiksa dan ditahan ketika pesanan dikonfirmasi.
+                  </p>
+                )}
+                <details className="workflow-order-details">
+                  <summary>Lihat barang dan pengiriman</summary>
+                  <ul>
+                    {order.items.map((item) => {
+                      const display = orderItemPresentation(item);
+                      return (
+                        <li key={item.id}>
+                          <ProductImage product={display.product} variant="thumbnail" />
+                          <div>
+                            <strong>{display.name}</strong>
+                            <small>
+                              {item.id} · {display.sizeLabel || 'Ukuran belum tercatat'}
+                            </small>
+                            <PackagingSummary
+                              packaging={display.packaging}
+                              quantity={item.quantity}
+                            />
+                            <span>
+                              {item.quantity} × {rupiah(item.price)}
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
                   <p>
-                    <strong>Kurir:</strong> {order.shipping.courier}
+                    <strong>Penerima:</strong> {order.recipient}
                     <br />
-                    <strong>Resi:</strong> {order.shipping.trackingNumber}
+                    <strong>Alamat:</strong> {order.address}
+                    <br />
+                    <strong>Pengiriman:</strong> {order.shipping.label}
+                  </p>
+                  {order.note && (
+                    <p>
+                      <strong>Catatan:</strong> {order.note}
+                    </p>
+                  )}
+                  {order.shipping.driverName && (
+                    <p>
+                      <strong>Sopir:</strong> {order.shipping.driverName}
+                    </p>
+                  )}
+                  {order.shipping.trackingNumber && (
+                    <p>
+                      <strong>Kurir:</strong> {order.shipping.courier}
+                      <br />
+                      <strong>Resi:</strong> {order.shipping.trackingNumber}
+                    </p>
+                  )}
+                  {order.cancellationReason && (
+                    <p>
+                      <strong>Alasan pembatalan:</strong> {order.cancellationReason}
+                    </p>
+                  )}
+                </details>
+                {order.status === 'awaiting_review' && (
+                  <p className="workflow-preview">
+                    Stok belum ditahan. Periksa permintaan pelanggan sebelum menyetujui dan
+                    memberikan instruksi pembayaran. Batas pemeriksaan:{' '}
+                    {dateLabel(order.review.expiresAt)}.
                   </p>
                 )}
-                {order.cancellationReason && (
-                  <p>
-                    <strong>Alasan pembatalan:</strong> {order.cancellationReason}
-                  </p>
-                )}
-              </details>
-              {order.status === 'awaiting_review' && (
-                <p className="workflow-preview">
-                  Stok belum ditahan. Periksa permintaan pelanggan sebelum menyetujui dan memberikan
-                  instruksi pembayaran. Batas pemeriksaan: {dateLabel(order.review.expiresAt)}.
+                {server && order.b2b && <B2BPackingList key={order.id} order={order} />}
+                <div className="workflow-actions">
+                  <a className="admin-secondary" href={'#/pesanan/' + encodeURIComponent(order.id)}>
+                    Detail di toko
+                  </a>
+                  {server && order.status === 'awaiting_confirmation' && (
+                    <button
+                      className="admin-primary"
+                      onClick={() => openAction(order, 'confirm_cod')}
+                    >
+                      Konfirmasi COD
+                    </button>
+                  )}
+                  {server && order.status === 'awaiting_review' && (
+                    <button
+                      className="admin-primary"
+                      onClick={() => openAction(order, 'approve_payment')}
+                    >
+                      Setujui untuk pembayaran
+                    </button>
+                  )}
+                  {order.whatsapp?.optedIn && (
+                    <a
+                      className="admin-secondary"
+                      href={
+                        'https://wa.me/' +
+                        order.whatsapp.number.replace(/\D/g, '') +
+                        '?text=' +
+                        encodeURIComponent(
+                          'Informasi pesanan ' +
+                            order.id +
+                            ': silakan periksa detail pesanan dan email dari ' +
+                            company.profile.shortName,
+                        )
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Hubungi pembeli via WhatsApp
+                    </a>
+                  )}
+                  {order.payment.proof && (
+                    <a
+                      className="admin-secondary"
+                      href={order.payment.proof.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Periksa bukti transfer
+                    </a>
+                  )}
+                  {order.payment.status === 'proof_submitted' && (
+                    <button
+                      className="bam-button-danger"
+                      onClick={() => openAction(order, 'reject_proof')}
+                    >
+                      Minta perbaikan bukti
+                    </button>
+                  )}
+                  {(order.status === 'awaiting_payment' ||
+                    (order.b2b &&
+                      order.status === 'processing' &&
+                      order.payment.status === 'proof_submitted')) &&
+                    paymentMethod(order.payment.id) && (
+                      <button className="admin-primary" onClick={() => openAction(order, 'paid')}>
+                        {server ? 'Catat pembayaran manual' : 'Catat pembayaran simulasi'}
+                      </button>
+                    )}
+                  {(order.status || 'processing') === 'processing' &&
+                    (isCOD(order) || order.payment.status === 'paid') && (
+                      <button className="admin-primary" onClick={() => openAction(order, 'ship')}>
+                        {server ? 'Catat pengiriman' : 'Kirim pesanan simulasi'}
+                      </button>
+                    )}
+                  {order.status === 'shipped' && (
+                    <button className="admin-primary" onClick={() => openAction(order, 'complete')}>
+                      {server ? 'Selesaikan pesanan' : 'Selesaikan pesanan simulasi'}
+                    </button>
+                  )}
+                  {!cancellationReason(order) && (
+                    <button className="bam-button-danger" onClick={() => setCancelTarget(order)}>
+                      Batalkan pesanan
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {bulk && (
+        <ConfirmDialog
+          busy={busy}
+          danger={false}
+          error={error}
+          title={
+            bulk === 'ship'
+              ? 'Catat pengiriman ' + shipSelection.length + ' pesanan?'
+              : 'Selesaikan ' + completeSelection.length + ' pesanan?'
+          }
+          confirmLabel={bulk === 'ship' ? 'Catat pengiriman' : 'Selesaikan pesanan'}
+          confirmDisabled={bulk === 'ship' && !bulkDriver}
+          onConfirm={runBulk}
+          onClose={() => setBulk(null)}
+        >
+          <p>
+            {(bulk === 'ship' ? shipSelection : completeSelection)
+              .map(
+                (order) =>
+                  shortOrderNumber(order.id) + ' · ' + (order.b2b?.storeName || order.recipient),
+              )
+              .join(', ')}
+          </p>
+          {bulk === 'ship' && (
+            <div className="admin-field">
+              <label htmlFor="bulk-driver">Sopir</label>
+              <select
+                id="bulk-driver"
+                value={bulkDriver}
+                disabled={busy || !driverNames(company.profile).length}
+                onChange={(event) => setBulkDriver(event.target.value)}
+              >
+                <option value="">Pilih sopir</option>
+                {driverNames(company.profile).map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              {!driverNames(company.profile).length && (
+                <p className="shop-warning">
+                  Isi daftar sopir di Pengaturan perusahaan terlebih dahulu.
                 </p>
               )}
-              {server && order.b2b && <B2BPackingList key={order.id} order={order} />}
-              <div className="workflow-actions">
-                <a className="admin-secondary" href={'#/pesanan/' + encodeURIComponent(order.id)}>
-                  Detail di toko
-                </a>
-                {server && order.status === 'awaiting_confirmation' && (
-                  <button
-                    className="admin-primary"
-                    onClick={() => openAction(order, 'confirm_cod')}
-                  >
-                    Konfirmasi COD
-                  </button>
-                )}
-                {server && order.status === 'awaiting_review' && (
-                  <button
-                    className="admin-primary"
-                    onClick={() => openAction(order, 'approve_payment')}
-                  >
-                    Setujui untuk pembayaran
-                  </button>
-                )}
-                {order.whatsapp?.optedIn && (
-                  <a
-                    className="admin-secondary"
-                    href={
-                      'https://wa.me/' +
-                      order.whatsapp.number.replace(/\D/g, '') +
-                      '?text=' +
-                      encodeURIComponent(
-                        'Informasi pesanan ' +
-                          order.id +
-                          ': silakan periksa detail pesanan dan email dari ' +
-                          company.profile.shortName,
-                      )
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Hubungi pembeli via WhatsApp
-                  </a>
-                )}
-                {order.payment.proof && (
-                  <a
-                    className="admin-secondary"
-                    href={order.payment.proof.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Periksa bukti transfer
-                  </a>
-                )}
-                {order.payment.status === 'proof_submitted' && (
-                  <button
-                    className="bam-button-danger"
-                    onClick={() => openAction(order, 'reject_proof')}
-                  >
-                    Minta perbaikan bukti
-                  </button>
-                )}
-                {(order.status === 'awaiting_payment' ||
-                  (order.b2b &&
-                    order.status === 'processing' &&
-                    order.payment.status === 'proof_submitted')) &&
-                  paymentMethod(order.payment.id) && (
-                    <button className="admin-primary" onClick={() => openAction(order, 'paid')}>
-                      {server ? 'Catat pembayaran manual' : 'Catat pembayaran simulasi'}
-                    </button>
-                  )}
-                {(order.status || 'processing') === 'processing' &&
-                  (isCOD(order) || order.payment.status === 'paid') && (
-                    <button className="admin-primary" onClick={() => openAction(order, 'ship')}>
-                      {server ? 'Catat pengiriman' : 'Kirim pesanan simulasi'}
-                    </button>
-                  )}
-                {order.status === 'shipped' && (
-                  <button className="admin-primary" onClick={() => openAction(order, 'complete')}>
-                    {server ? 'Selesaikan pesanan' : 'Selesaikan pesanan simulasi'}
-                  </button>
-                )}
-                {!cancellationReason(order) && (
-                  <button className="bam-button-danger" onClick={() => setCancelTarget(order)}>
-                    Batalkan pesanan
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+        </ConfirmDialog>
       )}
       {pageError && (
         <p className="shop-warning" role="alert">

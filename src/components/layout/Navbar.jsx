@@ -424,7 +424,21 @@ const Navbar = () => {
                 <span className="deliver-label">Kirim ke</span>
 
                 <div className="deliver-country">
-                  <span>🇮🇩</span>
+                  {/* Windows shows the flag emoji as the letters "ID"; a pin icon reads the same everywhere. */}
+                  <svg
+                    className="deliver-pin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M12 21s-6-5.4-6-11a6 6 0 0 1 12 0c0 5.6-6 11-6 11z" />
+                    <circle cx="12" cy="10" r="2.2" />
+                  </svg>
 
                   <span className="deliver-code" title={deliveryTitle}>
                     {deliveryTitle}
@@ -492,7 +506,7 @@ const Navbar = () => {
                                 Penerima: {accountLocation.namaToko}
                               </span>
                               <p>{accountLocation.namaJalan}</p>
-                              <span className="delivery-account-country">🇮🇩 Indonesia</span>
+                              <span className="delivery-account-country">Indonesia</span>
                             </div>
                           ) : (
                             <div className="delivery-account-empty">

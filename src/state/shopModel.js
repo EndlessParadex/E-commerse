@@ -173,6 +173,23 @@ export function shopReducer(state, action) {
     }
     case 'remove':
       return { ...state, cart: state.cart.filter((item) => item.id !== action.id) };
+    case 'restore': {
+      // Undo a removal: put the same line back where it was, unless it was re-added meanwhile.
+      const item = action.item;
+      if (
+        !item ||
+        !validId(item.id) ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > MAX_ITEM_QUANTITY ||
+        state.cart.some((entry) => entry.id === item.id) ||
+        state.cart.length >= 100
+      )
+        return state;
+      const cart = [...state.cart];
+      cart.splice(Math.min(Math.max(action.index ?? cart.length, 0), cart.length), 0, item);
+      return { ...state, cart };
+    }
     case 'clearCart':
       return { ...state, cart: [] };
     case 'toggleFavorite': {

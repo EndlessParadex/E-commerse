@@ -37,6 +37,7 @@ import { createWhatsAppOtpSender } from './whatsappOtp.js';
 import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
 import { OrderDelivery } from './orderDelivery.js';
 import { DeliveryScheduleRepository } from './deliverySchedules.js';
+import { ReviewRepository } from './reviews.js';
 
 const scrypt = promisify(scryptCallback);
 const digest = (token) => createHash('sha256').update(token).digest('hex');
@@ -250,6 +251,7 @@ export function createApp({
   workflow.deliverySnapshot = (user) => deliverySchedules.snapshot(user);
   const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now, b2bCutoff);
   const b2bFinalization = new B2BFinalizationRepository(db, sharedCarts, workflow, messages);
+  const reviews = new ReviewRepository(db, workflow, now);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',
     indexHtml: siteIndexHtml,
@@ -662,6 +664,43 @@ export function createApp({
         }
         return sendError(res, 405, 'method_not_allowed');
       }
+      // Product reviews: public summaries and lists, buyer reviews per order, Admin moderation.
+      if (req.method === 'GET' && path === '/api/reviews/summary')
+        return json(res, 200, { summary: reviews.summary() });
+      const productReviewsMatch = path.match(/^\/api\/products\/([^/]+)\/reviews$/);
+      if (productReviewsMatch && req.method === 'GET')
+        return json(res, 200, reviews.forProduct(decodeURIComponent(productReviewsMatch[1])));
+      const orderReviewsMatch = path.match(/^\/api\/orders\/([^/]+)\/reviews$/);
+      const adminReviewMatch = path.match(/^\/api\/admin\/reviews(?:\/([^/]+))?$/);
+      if (orderReviewsMatch || adminReviewMatch) {
+        const user = currentUser(req);
+        if (!user) return sendError(res, 401, 'unauthorized');
+        if (orderReviewsMatch) {
+          const orderId = decodeURIComponent(orderReviewsMatch[1]);
+          if (req.method === 'GET') return json(res, 200, reviews.forOrder(user, orderId));
+          if (req.method === 'PUT')
+            return json(res, 200, reviews.save(user, orderId, await readBody(req, 5000)));
+          return sendError(res, 405, 'method_not_allowed');
+        }
+        if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (!adminReviewMatch[1] && req.method === 'GET')
+          return json(
+            res,
+            200,
+            reviews.adminList(new URL(req.url, 'http://bam.local').searchParams),
+          );
+        if (adminReviewMatch[1] && req.method === 'PUT')
+          return json(
+            res,
+            200,
+            reviews.setHidden(
+              user,
+              decodeURIComponent(adminReviewMatch[1]),
+              await readBody(req, 1000),
+            ),
+          );
+        return sendError(res, 405, 'method_not_allowed');
+      }
       if (
         path === '/api/orders' ||
         path.startsWith('/api/orders/') ||
@@ -793,8 +832,19 @@ export function createApp({
         if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
         return json(res, 200, company.save(await readBody(req, 1500000)));
       }
-      if (req.method === 'GET' && path === '/api/catalog')
-        return json(res, 200, catalog.snapshot());
+      if (req.method === 'GET' && path === '/api/catalog') {
+        // Ratings come only from buyer reviews, never from catalog sample data.
+        const snapshot = catalog.snapshot();
+        const ratings = reviews.summary();
+        return json(res, 200, {
+          ...snapshot,
+          edits: snapshot.edits.map((draft) => ({
+            ...draft,
+            rating: ratings[draft.groupId]?.average || 0,
+            reviewCount: ratings[draft.groupId]?.count || 0,
+          })),
+        });
+      }
       if (path === '/api/admin/catalog' && req.method === 'PUT') {
         const user = currentUser(req);
         if (!user) return sendError(res, 401, 'unauthorized');
@@ -1075,6 +1125,7 @@ export function createApp({
     deliverySchedules,
     sharedCarts,
     b2bFinalization,
+    reviews,
     refreshMailSettings,
   };
 }

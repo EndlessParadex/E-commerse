@@ -475,7 +475,8 @@
   font-size: 0.67rem;
   font-weight: 800;
   color: #fff;
-  background: #f43c62;
+  /* White text needs a darker red to reach 4.5:1 contrast. */
+  background: #c81e45;
 }
 .bam-buyer-product-copy {
   display: grid;

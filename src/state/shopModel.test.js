@@ -166,3 +166,30 @@ test('favorit dapat ditambah, dihapus, disimpan, dan dibatasi', () => {
   const saved = normalizeShop({ favoriteIds: [product.id, product.id, '', 'x'.repeat(101)] });
   assert.deepEqual(saved.favoriteIds, [product.id]);
 });
+
+test('urungkan hapus mengembalikan barang ke posisi semula tanpa menggandakannya', () => {
+  const other = { id: 'kopi', name: 'Kopi', price: 9000 };
+  let state = shopReducer(emptyShop(), { type: 'add', product, quantity: 3 });
+  state = shopReducer(state, { type: 'add', product: other, quantity: 1 });
+  const removed = state.cart[0];
+  state = shopReducer(state, { type: 'remove', id: removed.id });
+  assert.deepEqual(
+    state.cart.map((item) => item.id),
+    ['kopi'],
+  );
+  state = shopReducer(state, { type: 'restore', item: removed, index: 0 });
+  assert.deepEqual(
+    state.cart.map((item) => [item.id, item.quantity]),
+    [
+      ['snack', 3],
+      ['kopi', 1],
+    ],
+  );
+  assert.equal(
+    shopReducer(state, { type: 'restore', item: removed, index: 0 }),
+    state,
+    'a line that is back in the cart is not added twice',
+  );
+  for (const item of [null, { id: 'x', quantity: 0 }, { id: '', quantity: 1 }])
+    assert.equal(shopReducer(emptyShop(), { type: 'restore', item }).cart.length, 0);
+});

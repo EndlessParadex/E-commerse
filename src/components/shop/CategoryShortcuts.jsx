@@ -1,4 +1,5 @@
 import { categories, categoryHref, searchHref } from '../../data/catalog';
+import CategoryIcon from './CategoryIcon';
 import { products, groupProducts } from '../../data/products';
 import { productGallery } from '../../data/productGallery';
 import { supplierColorStyle } from '../../data/catalogColors';
@@ -38,9 +39,7 @@ export default function CategoryShortcuts({
             productGallery(product).some((photo) => !photo.demo),
           );
           const photo = featured && productGallery(featured)[0];
-          const preview = featured
-            ? { ...featured, image: photo.src, imageAlt: photo.alt }
-            : { name: category.name, icon: category.icon || '📦' };
+          const preview = featured && { ...featured, image: photo.src, imageAlt: photo.alt };
           const count = groupProducts(items).length;
           return (
             <li key={category.id}>
@@ -50,7 +49,11 @@ export default function CategoryShortcuts({
                   style={supplierColorStyle(categoryColors[category.id] || featured?.color)}
                   aria-hidden="true"
                 >
-                  <ProductImage product={preview} variant="shortcut" />
+                  {preview ? (
+                    <ProductImage product={preview} variant="shortcut" />
+                  ) : (
+                    <CategoryIcon category={category} className="home-category-icon" />
+                  )}
                 </span>
                 <span className="home-category-copy">
                   <strong>{category.name}</strong>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import CategoryIcon from '../shop/CategoryIcon';
 import {
   categories,
   categoryHref,
@@ -137,7 +138,7 @@ export default function CatalogMenu() {
                     style={view === 'suppliers' ? avatarColorStyle(item.color) : undefined}
                     aria-hidden="true"
                   >
-                    {item.icon || item.initials}
+                    {view === 'categories' ? <CategoryIcon category={item} /> : item.initials}
                   </span>
                   <span>{item.name}</span>
                   <small>

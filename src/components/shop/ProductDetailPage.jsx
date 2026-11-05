@@ -10,6 +10,8 @@ import './ProductDetailPage.css';
 import ProductGallery from './ProductGallery';
 import ProductPurchasePanel from './ProductPurchasePanel';
 import ProductInformation from './ProductInformation';
+import ProductReviews from './ProductReviews';
+import StarRating from './StarRating';
 import { rupiah } from './shopPresentation';
 import { purchaseStockLabel, soldStockLabel } from '../../data/productStockPresentation';
 import {
@@ -181,7 +183,11 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
               </div>
               <h1 id="product-detail-title">{productName}</h1>
               <div className="detail-rating">
-                <strong>{product.rating > 0 ? `★ ${product.rating}` : 'Belum ada ulasan'}</strong>
+                {product.rating > 0 ? (
+                  <StarRating value={product.rating} count={product.reviewCount} />
+                ) : (
+                  <strong className="is-empty">Belum ada ulasan</strong>
+                )}
                 {(workflowUsesServer ? soldStockLabel(stock) : `${product.sold} terjual`) && (
                   <>
                     <span>•</span>
@@ -207,20 +213,23 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
                     {!workflowUsesServer && ' · simulasi'}
                   </span>
                 )}
-                <a
-                  className="detail-reviews-link"
-                  href="#detail-reviews"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    document.getElementById('detail-reviews')?.scrollIntoView({
-                      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                        ? 'instant'
-                        : 'smooth',
-                    });
-                  }}
-                >
-                  Lihat penilaian
-                </a>
+                {/* Only link to the reviews section when there is a rating to read. */}
+                {product.rating > 0 && (
+                  <a
+                    className="detail-reviews-link"
+                    href="#detail-reviews"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      document.getElementById('detail-reviews')?.scrollIntoView({
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                          ? 'instant'
+                          : 'smooth',
+                      });
+                    }}
+                  >
+                    Lihat ulasan
+                  </a>
+                )}
               </div>
               <div className="detail-price" aria-live="polite" aria-atomic="true">
                 <strong>{rupiah(product.price)}</strong>
@@ -307,24 +316,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
           </button>
           {shareMessage && <p role="status">{shareMessage}</p>}
 
-          <section
-            className="detail-reviews"
-            id="detail-reviews"
-            aria-labelledby="detail-reviews-title"
-          >
-            <h2 id="detail-reviews-title">Penilaian dan ulasan</h2>
-            {product.rating > 0 && (
-              <p className="detail-review-score">
-                <strong>★ {product.rating}</strong>
-                <span>Penilaian dari katalog</span>
-              </p>
-            )}
-            <p>
-              {product.rating > 0
-                ? 'Ulasan tertulis belum tersedia untuk produk ini.'
-                : 'Belum ada ulasan untuk produk ini.'}
-            </p>
-          </section>
+          <ProductReviews groupId={product.groupId} />
         </div>
         <aside className="detail-purchase-rail">
           <ProductPurchasePanel

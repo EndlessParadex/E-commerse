@@ -88,7 +88,10 @@ export function productHtml(meta, template) {
     encodeURIComponent(meta.id) +
     '">Lihat pilihan dan pesan</a></article>';
   return template
-    .replace(/<title>[\s\S]*?<\/title>|<meta\s+name="description"[^>]*>/gi, '')
+    .replace(
+      /<title>[\s\S]*?<\/title>|<meta\s+(?:name="description"|property="og:[a-z_]+")[^>]*>/gi,
+      '',
+    )
     .replace('</head>', head + '</head>')
     .replace('<div id="root"></div>', '<div id="root">' + body + '</div>');
 }
@@ -242,14 +245,27 @@ export function createSite(
           req,
           res,
           200,
+          // The page title, description and link preview follow the company profile.
           html
             .replace(
-              /<title>.*?<\/title>/,
-              '<title>' + escape(p.shortName) + ' · Katalog produk</title>',
+              /<title>[\s\S]*?<\/title>|<meta\s+(?:name="description"|property="og:(?:title|description|site_name)")[^>]*>/gi,
+              '',
             )
             .replace(
               '</head>',
-              '<meta name="description" content="' + escape(p.description) + '"></head>',
+              '<title>' +
+                escape(p.shortName) +
+                ' · Katalog produk</title><meta name="description" content="' +
+                escape(p.description) +
+                '"><meta property="og:site_name" content="' +
+                escape(p.shortName) +
+                '"><meta property="og:title" content="' +
+                escape(p.shortName) +
+                ' · ' +
+                escape(p.legalName || 'Katalog produk') +
+                '"><meta property="og:description" content="' +
+                escape(p.description) +
+                '"></head>',
             ),
         );
         return true;

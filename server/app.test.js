@@ -209,6 +209,12 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
     assert.equal(saved.body.revision, 1);
     assert.equal(saved.body.edits.length, 9);
     const publicCatalog = (await request(app, 'GET', '/api/catalog')).body;
+    // The public API adds review ratings on top of the stored catalog.
+    assert.ok(publicCatalog.edits.every((entry) => entry.rating === 0 && entry.reviewCount === 0));
+    for (const entry of publicCatalog.edits) {
+      delete entry.rating;
+      delete entry.reviewCount;
+    }
     assert.equal(publicCatalog.edits[0].baseName, 'Produk dari database');
     assert.equal(publicCatalog.edits[0].image, png);
     assert.equal(

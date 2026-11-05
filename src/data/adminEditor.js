@@ -210,7 +210,9 @@ export function buildVariants(draft, items = products) {
       grams: variant.sizeUnit === 'g' ? sizeValue : null,
       price: Number(variant.price),
       oldPrice: Number(variant.oldPrice) || 0,
-      rating: original.rating ?? 0,
+      // Ratings come from buyer reviews (sent by the server with each product).
+      rating: Number(draft.rating ?? original.rating) || 0,
+      reviewCount: Number(draft.reviewCount ?? original.reviewCount) || 0,
       sold: original.sold ?? '0',
       icon: original.icon || '📦',
       color: draft.color || original.color || 'sky',

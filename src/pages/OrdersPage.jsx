@@ -14,6 +14,8 @@ import ProductImage from '../components/shop/ProductImage';
 import './OrdersPage.css';
 import '../components/shop/OrderItem.css';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
+import { useShop } from '../state/useShop';
+import { products } from '../data/products';
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState('all');
@@ -34,6 +36,21 @@ export default function OrdersPage() {
     retry,
   } = useOrderSearch('own', query, filter);
   const [cancelTarget, setCancelTarget] = useState(null);
+  const shop = useShop();
+  const [reorderNotice, setReorderNotice] = useState(null);
+  // Put every item of a past personal order back in the personal cart in one tap;
+  // a store account is switched to its personal cart so the items are visible there.
+  const reorder = (order) => {
+    if (shop.shared?.enabled) shop.setCartMode('personal');
+    let added = 0;
+    const skipped = [];
+    for (const item of order.items) {
+      const product = products.find((entry) => entry.id === item.id);
+      if (product && shop.addItem(product, item.quantity, { personal: true }) === true) added += 1;
+      else skipped.push(orderItemPresentation(item).name || item.name);
+    }
+    setReorderNotice({ orderId: order.id, added, skipped });
+  };
   const visibleOrders = orders;
   const extraFilterActive = orderExtraFilters.some((item) => item.id === filter);
   const filterButton = (item) => (
@@ -307,6 +324,16 @@ export default function OrdersPage() {
                   <strong>{rupiah(order.total)}</strong>
                   <small>{order.codFixedTotal ? 'Gratis ongkir' : 'Termasuk ongkir'}</small>
                 </div>
+                {reorderNotice?.orderId === order.id && (
+                  <p className="orders-reorder-notice" role="status">
+                    {reorderNotice.added
+                      ? reorderNotice.added + ' barang dimasukkan ke keranjang. '
+                      : 'Belum ada barang yang bisa dimasukkan ke keranjang. '}
+                    {reorderNotice.skipped.length > 0 &&
+                      'Tidak tersedia atau stok kurang: ' + reorderNotice.skipped.join(', ') + '. '}
+                    {reorderNotice.added > 0 && <a href="#/keranjang">Buka keranjang</a>}
+                  </p>
+                )}
                 <div className="orders-card-actions">
                   <a
                     className="shop-primary"
@@ -315,6 +342,27 @@ export default function OrdersPage() {
                   >
                     Lihat detail <span aria-hidden="true">→</span>
                   </a>
+                  {!order.b2b &&
+                    ['completed', 'cancelled', 'expired'].includes(orderStatus(order)) && (
+                      <button
+                        type="button"
+                        className="bam-button-secondary"
+                        onClick={() => reorder(order)}
+                        aria-label={'Pesan ulang barang dari pesanan ' + order.id}
+                      >
+                        Pesan ulang
+                      </button>
+                    )}
+                  {orderStatus(order) === 'completed' &&
+                    !(order.b2b && shop.shared?.role === 'sales') && (
+                      <a
+                        className="bam-button-secondary"
+                        href={'#/pesanan/' + encodeURIComponent(order.id)}
+                        aria-label={'Beri ulasan untuk barang di pesanan ' + order.id}
+                      >
+                        Beri ulasan
+                      </a>
+                    )}
                   {orderStatus(order) === 'awaiting_payment' && (
                     <a
                       className="bam-button-secondary"

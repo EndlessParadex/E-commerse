@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ProductImage from './ProductImage';
+import StarRating from './StarRating';
 import { rupiah } from './shopPresentation';
 import './ProductCard.css';
 import { productVariants } from '../../data/products';
@@ -152,14 +153,14 @@ export default function ProductCard({
           </a>
         </h3>
         <div className="product-rating">
-          {!workflowUsesServer && (
-            <span
-              aria-label={
-                product.rating > 0 ? 'Rating ' + product.rating + ' dari 5' : 'Belum ada ulasan'
-              }
-            >
-              {product.rating > 0 ? `★ ${product.rating}` : 'Belum ada ulasan'}
-            </span>
+          {product.rating > 0 ? (
+            <StarRating
+              value={product.rating}
+              count={product.reviewCount}
+              className="product-card-stars"
+            />
+          ) : (
+            !workflowUsesServer && <span>Belum ada ulasan</span>
           )}
           {(workflowUsesServer
             ? groupSoldStockLabel(variants, shop.stockFor)

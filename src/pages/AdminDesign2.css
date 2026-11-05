@@ -731,3 +731,14 @@
     font-size: 0.78rem;
   }
 }
+/* Narrow dashboard column: keep the stock title on one line and move the
+   action below it instead of squeezing the text beside the button. */
+.admin-shell .admin-ops-inventory .admin-panel-heading {
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: 12px;
+}
+.admin-shell .admin-ops-inventory .admin-panel-heading > a {
+  grid-column: 1 / -1;
+  justify-content: center;
+  text-align: center;
+}

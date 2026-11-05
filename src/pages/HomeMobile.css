@@ -1,0 +1,46 @@
+/* Phone home: categories are one row of icons and supplier cards one column,
+   so products start sooner. Loaded after the other home styles. */
+@media (max-width: 600px) {
+  .home-landing .home-discovery-row.bam-compact-discovery .home-categories .home-category-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: none;
+    gap: 8px;
+  }
+  .home-landing .home-discovery-row.bam-compact-discovery .home-categories .home-category-card {
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 2px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    text-align: center;
+  }
+  .home-landing .home-discovery-row.bam-compact-discovery .home-categories .home-category-visual {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+  }
+  .home-landing .home-categories .home-category-copy strong {
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+  .home-landing
+    .home-discovery-row.bam-compact-discovery
+    .home-categories
+    .home-category-copy
+    > span,
+  .home-landing
+    .home-discovery-row.bam-compact-discovery
+    .home-categories
+    .home-category-subcategories,
+  .home-landing .home-discovery-row.bam-compact-discovery .home-categories .home-category-arrow {
+    display: none;
+  }
+  /* Supplier cards were squeezed into two narrow columns; one column reads cleanly. */
+  .home-landing .home-discovery-row.bam-compact-discovery .bam-suppliers .bam-supplier-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+}

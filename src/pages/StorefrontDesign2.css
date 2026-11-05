@@ -462,10 +462,17 @@
   font-size: 0.81rem;
   font-weight: 700;
 }
+/* Same action blue as the other buttons, and it follows the user's accent and dark mode. */
 .category-page .store-subcategory-nav a.is-current {
-  background: #1269e8;
-  color: #fff;
-  border-color: #1269e8;
+  background: var(--color-action);
+  color: var(--color-on-action);
+  border-color: var(--color-action);
+}
+@media (hover: hover) and (pointer: fine) {
+  .category-page .store-subcategory-nav a:not(.is-current):hover {
+    border-color: var(--color-border-info-strong);
+    color: var(--color-link);
+  }
 }
 .category-page .category-layout {
   grid-template-columns: 260px minmax(0, 1fr);

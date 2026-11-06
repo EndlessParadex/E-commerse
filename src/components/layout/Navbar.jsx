@@ -399,7 +399,7 @@ const Navbar = () => {
             )}
             {/* Kirim Ke dengan Pop-Up */}
             <div
-              className="deliver-to"
+              className={'deliver-to' + (user ? '' : ' is-guest')}
               ref={deliverRef}
               onKeyDown={(event) => {
                 if (event.key === 'Escape') {

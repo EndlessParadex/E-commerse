@@ -621,6 +621,41 @@
   .category-page .store-category-intro-symbol {
     display: none;
   }
+  /* Ponsel: produk harus terlihat secepat mungkin. Banner katalog menjadi satu judul ringkas;
+     jumlah hasil sudah ditampilkan di baris urutan, jadi tidak diulang di sini. */
+  .category-page .store-category-intro {
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+  }
+  .category-page .store-category-intro .section-eyebrow,
+  .category-page .store-category-intro p,
+  .category-page .store-category-intro-count {
+    display: none;
+  }
+  .category-page .store-category-intro h1 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+  .category-page .shop-breadcrumb {
+    margin-bottom: 8px;
+  }
+  /* Beranda: banner promo lebih rendah agar kategori dan produk terlihat di layar pertama. */
+  .home-landing .bam-promo-brand,
+  .home-landing .bam-promo-copy > p {
+    display: none;
+  }
+  .home-landing .bam-promo-slide {
+    padding: 16px 16px 12px;
+    gap: 12px;
+  }
+  .home-landing .bam-promo-copy h1 {
+    font-size: 1.6rem;
+    margin: 6px 0 10px;
+  }
+  .home-landing .bam-promo-product-monogram {
+    min-height: 84px;
+  }
 }
 @media (max-width: 360px) {
   .home-landing .store-featured-products .product-grid {

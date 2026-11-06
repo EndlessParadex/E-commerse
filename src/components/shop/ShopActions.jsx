@@ -79,198 +79,208 @@ export default function ShopActions({ onOpen }) {
 
   return (
     <div className="icon-group shop-actions" ref={rootRef}>
-      {['cart', 'notifications', 'account'].map((kind) => {
-        const isCart = kind === 'cart';
-        const isAccount = kind === 'account';
-        const count = isAccount ? 0 : isCart ? shop.quantity : shop.unreadCount;
-        const title = isAccount ? 'Akun saya' : isCart ? 'Keranjang' : 'Notifikasi';
-        const href = isAccount ? '#/akun' : isCart ? '#/keranjang' : '#/notifikasi';
-        const expanded = active === kind;
-        return (
-          <div
-            className="shop-hover-target"
-            data-kind={kind}
-            key={kind}
-            onPointerEnter={(event) => {
-              if (event.pointerType !== 'touch') open(kind);
-            }}
-            onPointerLeave={() => {
-              closeTimer.current = setTimeout(() => setActive(null), 140);
-            }}
-            onFocus={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) open(kind);
-            }}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) close();
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                close();
-                event.stopPropagation();
-              }
-            }}
-          >
-            <a
-              className={isAccount ? 'user-profile account-trigger' : 'action-icon shop-action'}
-              href={href}
-              aria-label={
-                isAccount
-                  ? user
-                    ? 'Akun saya, ' + user.name
-                    : 'Guest, masuk atau daftar'
-                  : isCart
-                    ? 'Keranjang, ' + count + ' barang'
-                    : 'Notifikasi, ' + count + ' belum dibaca'
-              }
-              aria-expanded={expanded}
-              aria-controls={'preview-' + kind}
-              onClick={close}
+      {['cart', 'notifications', 'account']
+        // Tamu tidak punya notifikasi akun; di mode server lonceng hanya membingungkan.
+        .filter((kind) => kind !== 'notifications' || user || !workflowUsesServer)
+        .map((kind) => {
+          const isCart = kind === 'cart';
+          const isAccount = kind === 'account';
+          const count = isAccount ? 0 : isCart ? shop.quantity : shop.unreadCount;
+          const title = isAccount ? 'Akun saya' : isCart ? 'Keranjang' : 'Notifikasi';
+          const href = isAccount ? '#/akun' : isCart ? '#/keranjang' : '#/notifikasi';
+          const expanded = active === kind;
+          return (
+            <div
+              className="shop-hover-target"
+              data-kind={kind}
+              key={kind}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== 'touch') open(kind);
+              }}
+              onPointerLeave={() => {
+                closeTimer.current = setTimeout(() => setActive(null), 140);
+              }}
+              onFocus={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) open(kind);
+              }}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) close();
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  close();
+                  event.stopPropagation();
+                }
+              }}
             >
-              {isAccount ? <AccountAvatar user={user} /> : <ActionIcon notification={!isCart} />}
-              {isAccount && (
-                <span className="account-trigger-name" title={user?.name || 'Guest'}>
-                  {user?.name || 'Guest'}
-                </span>
-              )}
-              {count > 0 && (
-                <span className="shop-badge" aria-hidden="true">
-                  {count > 99 ? '99+' : count}
-                </span>
-              )}
-            </a>
-            {expanded && (
-              <section
-                className={'shop-preview' + (isAccount ? ' shop-preview--account' : '')}
-                id={`preview-${kind}`}
-                aria-label={`Ringkasan ${title.toLowerCase()}`}
+              <a
+                className={isAccount ? 'user-profile account-trigger' : 'action-icon shop-action'}
+                href={href}
+                aria-label={
+                  isAccount
+                    ? user
+                      ? 'Akun saya, ' + user.name
+                      : 'Guest, masuk atau daftar'
+                    : isCart
+                      ? 'Keranjang, ' + count + ' barang'
+                      : 'Notifikasi, ' + count + ' belum dibaca'
+                }
+                aria-expanded={expanded}
+                aria-controls={'preview-' + kind}
+                onClick={close}
               >
-                <div className="shop-preview-inner">
-                  {!isAccount && (
-                    <header className="shop-preview-header">
-                      <h2>{title}</h2>
-                      <span>
-                        {count} {isCart ? 'barang' : 'belum dibaca'}
-                      </span>
-                    </header>
-                  )}
-                  {!isCart && !isAccount && shop.notifications.length > 0 && (
-                    <div className="preview-notification-toolbar">
-                      <button
-                        type="button"
-                        className="shop-text-button"
-                        disabled={shop.unreadCount === 0}
-                        onClick={() => shop.dispatch({ type: 'readAll' })}
-                      >
-                        Tandai semua sudah dibaca
-                      </button>
-                    </div>
-                  )}
-                  {isAccount ? (
-                    <div className={'account-preview-body' + (user ? ' is-signed-in' : '')}>
-                      {user ? (
-                        <div className="account-preview-identity">
-                          <AccountAvatar user={user} className="account-preview-avatar" />
-                          <div className="account-preview-info">
-                            <h3>Halo, {user.name}</h3>
-                            <p>{user.email}</p>
-                            <span className="account-preview-role">
-                              {user.role === 'admin' ? 'Admin BAM' : 'Akun BAM'}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <AccountAvatar user={user} className="account-preview-avatar" />
-                          <h3>Selamat datang di {companyProfile.shortName}.</h3>
-                          <p>Masuk atau buat akun untuk pengalaman belanja Anda.</p>
-                          <a className="shop-primary" href="#/login" onClick={close}>
-                            Masuk
-                          </a>
-                          <a className="account-secondary" href="#/daftar" onClick={close}>
-                            Daftar akun baru
-                          </a>
-                        </>
-                      )}
-                      <div className="account-preview-menu">
-                        <AccountMenu
-                          onNavigate={close}
-                          profileActive={window.location.hash === '#/akun'}
-                        />
+                {isAccount ? <AccountAvatar user={user} /> : <ActionIcon notification={!isCart} />}
+                {isAccount && (
+                  <span className="account-trigger-name" title={user?.name || 'Guest'}>
+                    {user?.name || 'Guest'}
+                  </span>
+                )}
+                {count > 0 && (
+                  <span className="shop-badge" aria-hidden="true">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                )}
+              </a>
+              {expanded && (
+                <section
+                  className={'shop-preview' + (isAccount ? ' shop-preview--account' : '')}
+                  id={`preview-${kind}`}
+                  aria-label={`Ringkasan ${title.toLowerCase()}`}
+                >
+                  <div className="shop-preview-inner">
+                    {!isAccount && (
+                      <header className="shop-preview-header">
+                        <h2>{title}</h2>
+                        <span>
+                          {count} {isCart ? 'barang' : 'belum dibaca'}
+                        </span>
+                      </header>
+                    )}
+                    {!isCart && !isAccount && shop.notifications.length > 0 && (
+                      <div className="preview-notification-toolbar">
+                        <button
+                          type="button"
+                          className="shop-text-button"
+                          disabled={shop.unreadCount === 0}
+                          onClick={() => shop.dispatch({ type: 'readAll' })}
+                        >
+                          Tandai semua sudah dibaca
+                        </button>
                       </div>
-                    </div>
-                  ) : isCart ? (
-                    <>
-                      {shop.cart.length === 0 ? (
-                        <p className="shop-preview-empty">Keranjang masih kosong.</p>
-                      ) : (
-                        <ul className="shop-preview-list">
-                          {shop.cart.slice(0, 4).map((item) => (
-                            <li key={item.id}>
-                              <div>
-                                <strong>{item.name}</strong>
-                                <p>
-                                  {item.quantity} × {rupiah(item.price)}
-                                </p>
-                              </div>
-                              <span>{rupiah(item.price * item.quantity)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {shop.cart.length > 4 && (
-                        <p className="shop-preview-more">+{shop.cart.length - 4} produk lainnya</p>
-                      )}
-                      {shop.cart.length > 0 && (
-                        <div className="shop-preview-total">
-                          <span>Subtotal</span>
-                          <strong>{rupiah(shop.subtotal)}</strong>
+                    )}
+                    {isAccount ? (
+                      <div className={'account-preview-body' + (user ? ' is-signed-in' : '')}>
+                        {user ? (
+                          <div className="account-preview-identity">
+                            <AccountAvatar user={user} className="account-preview-avatar" />
+                            <div className="account-preview-info">
+                              <h3>Halo, {user.name}</h3>
+                              <p>{user.email}</p>
+                              <span className="account-preview-role">
+                                {user.role === 'admin' ? 'Admin BAM' : 'Akun BAM'}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <AccountAvatar user={user} className="account-preview-avatar" />
+                            <h3>Selamat datang di {companyProfile.shortName}.</h3>
+                            <p>Masuk atau buat akun untuk pengalaman belanja Anda.</p>
+                            <a className="shop-primary" href="#/login" onClick={close}>
+                              Masuk
+                            </a>
+                            <a className="account-secondary" href="#/daftar" onClick={close}>
+                              Daftar akun baru
+                            </a>
+                          </>
+                        )}
+                        <div className="account-preview-menu">
+                          <AccountMenu
+                            onNavigate={close}
+                            profileActive={window.location.hash === '#/akun'}
+                          />
                         </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <p className="notification-preview-context">
-                        {workflowUsesServer
-                          ? 'Pembaruan pesanan akun Anda'
-                          : 'Pembaruan pesanan percobaan · Simulasi'}
-                      </p>
-                      {shop.notifications.length === 0 ? (
-                        <p className="shop-preview-empty">Belum ada notifikasi.</p>
-                      ) : (
-                        <ul className="shop-preview-list">
-                          {shop.notifications.slice(0, 3).map((item) => (
-                            <NotificationItem
-                              key={item.id}
-                              item={item}
-                              compact
-                              onRead={(id) => shop.dispatch({ type: 'read', id })}
-                              onNavigate={close}
-                              orderLinkStatus={shop.orderLinkStatus(item.orderId)}
-                            />
-                          ))}
-                        </ul>
-                      )}
-                      {shop.notifications.length > 3 && (
-                        <p className="shop-preview-more">
-                          +{shop.notifications.length - 3} notifikasi lainnya
+                      </div>
+                    ) : isCart ? (
+                      <>
+                        {shop.cart.length === 0 ? (
+                          <p className="shop-preview-empty">Keranjang masih kosong.</p>
+                        ) : (
+                          <ul className="shop-preview-list">
+                            {shop.cart.slice(0, 4).map((item) => (
+                              <li key={item.id}>
+                                <div>
+                                  <strong>{item.name}</strong>
+                                  <p>
+                                    {item.quantity} × {rupiah(item.price)}
+                                  </p>
+                                </div>
+                                <span>{rupiah(item.price * item.quantity)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {shop.cart.length > 4 && (
+                          <p className="shop-preview-more">
+                            +{shop.cart.length - 4} produk lainnya
+                          </p>
+                        )}
+                        {shop.cart.length > 0 && (
+                          <div className="shop-preview-total">
+                            <span>Subtotal</span>
+                            <strong>{rupiah(shop.subtotal)}</strong>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="notification-preview-context">
+                          {workflowUsesServer
+                            ? 'Pembaruan pesanan akun Anda'
+                            : 'Pembaruan pesanan percobaan · Simulasi'}
                         </p>
-                      )}
-                    </>
-                  )}
-                  {!isAccount && (
-                    <footer className="shop-preview-footer">
-                      <a className="shop-primary" href={href} onClick={close}>
-                        {isCart ? 'Lihat keranjang' : 'Lihat semua notifikasi'}{' '}
-                        <span aria-hidden="true">→</span>
-                      </a>
-                    </footer>
-                  )}
-                </div>
-              </section>
-            )}
-          </div>
-        );
-      })}
+                        {shop.notifications.length === 0 ? (
+                          <p className="shop-preview-empty">Belum ada notifikasi.</p>
+                        ) : (
+                          <ul className="shop-preview-list">
+                            {shop.notifications.slice(0, 3).map((item) => (
+                              <NotificationItem
+                                key={item.id}
+                                item={item}
+                                compact
+                                onRead={(id) => shop.dispatch({ type: 'read', id })}
+                                onNavigate={close}
+                                orderLinkStatus={shop.orderLinkStatus(item.orderId)}
+                              />
+                            ))}
+                          </ul>
+                        )}
+                        {shop.notifications.length > 3 && (
+                          <p className="shop-preview-more">
+                            +{shop.notifications.length - 3} notifikasi lainnya
+                          </p>
+                        )}
+                      </>
+                    )}
+                    {!isAccount && (
+                      <footer className="shop-preview-footer">
+                        <a className="shop-primary" href={href} onClick={close}>
+                          {isCart ? 'Lihat keranjang' : 'Lihat semua notifikasi'}{' '}
+                          <span aria-hidden="true">→</span>
+                        </a>
+                      </footer>
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+          );
+        })}
+      {!user && (
+        <a className="guest-auth-link" href="#/login">
+          Masuk
+        </a>
+      )}
     </div>
   );
 }

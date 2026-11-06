@@ -276,7 +276,20 @@
   }
   .product-rating {
     font-size: 0.75rem;
-    min-height: 32px;
+    min-height: 0;
+    margin: 6px 0 8px;
+  }
+  .product-price {
+    min-height: 0;
+    margin-bottom: 10px;
+  }
+  .product-price strong {
+    min-height: 0;
+  }
+  /* Target sentuh judul produk minimal 44px tanpa mengubah tampilan kartu. */
+  .product-card h3 a {
+    padding-block: 10px;
+    margin-block: -10px;
   }
   .product-price-amount {
     font-size: 1.0625rem;

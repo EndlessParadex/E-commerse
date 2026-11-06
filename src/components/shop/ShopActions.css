@@ -820,3 +820,38 @@
     animation: none;
   }
 }
+
+/* Ajakan masuk untuk tamu: hanya di ponsel; di desktop sudah ada panel akun. */
+.guest-auth-link {
+  display: none;
+}
+@media (max-width: 600px) {
+  .store-navigation .shop-actions .guest-auth-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--bam-ui-radius-control);
+    background: var(--color-action);
+    color: var(--color-on-action);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .store-navigation .shop-actions .guest-auth-link:hover {
+    background: var(--color-action-hover);
+  }
+  /* Label "Alamat pengiriman" untuk tamu tidak berguna dan menyesatkan; ajakan masuk menggantikannya. */
+  .store-navigation .deliver-to.is-guest {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .shop-breadcrumb > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

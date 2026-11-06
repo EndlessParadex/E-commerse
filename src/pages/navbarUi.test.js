@@ -122,6 +122,13 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     });
     for (const route of ['/keranjang', '/notifikasi', '/akun'])
       assert.ok(navigation.querySelector(`a[href="#${route}"]`));
+    const guestLogin = navigation.querySelector('a.guest-auth-link[href="#/login"]');
+    assert.ok(guestLogin, 'tamu melihat tombol Masuk di header');
+    assert.equal(guestLogin.textContent, 'Masuk');
+    assert.ok(
+      navigation.querySelector('.deliver-to.is-guest'),
+      'label alamat tamu bisa disembunyikan di ponsel',
+    );
     navigationHeight = 165.5;
     dom.dispatchEvent(new dom.Event('resize'));
     assert.equal(height(), '166px', 'a resized header reserves its new height');
@@ -150,6 +157,13 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     assert.equal(navigation.querySelector('.deliver-popup'), null);
     assert.equal(dom.document.body.style.overflow, '');
     assert.equal(dom.document.activeElement, delivery);
+    await render({ id: 'user-1', role: 'user', name: 'Pembeli Uji' });
+    assert.equal(
+      navigation.querySelector('.guest-auth-link'),
+      null,
+      'pengguna masuk tidak melihat tombol Masuk',
+    );
+    assert.equal(navigation.querySelector('.deliver-to.is-guest'), null);
     await render({
       id: 'buyer-one',
       name: 'Nama Pribadi',

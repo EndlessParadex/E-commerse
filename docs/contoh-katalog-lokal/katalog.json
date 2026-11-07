@@ -1,0 +1,46 @@
+{
+  "versi": 1,
+  "sumber": "CONTOH FORMAT. Nama, merek, dan harga di file ini fiktif.",
+  "pemasok": { "id": "pt-contoh", "nama": "PT Contoh Pemasok", "singkatan": "PTC", "warna": "sky" },
+  "kategori": {
+    "id": "snack",
+    "nama": "Snack & Makanan",
+    "ikon": "🍫",
+    "subkategori": [
+      { "id": "keripik", "nama": "Keripik & Snack" },
+      { "id": "biskuit", "nama": "Biskuit" }
+    ]
+  },
+  "produk": [
+    {
+      "id": "stik-contoh-bawang",
+      "nama": "Stik Contoh Bawang",
+      "merek": "Merek Contoh",
+      "subkategori": "keripik",
+      "warna": "mint",
+      "deskripsi": "Produk contoh untuk menunjukkan format katalog.json.",
+      "varian": [
+        {
+          "sku": "STIKCONTOH-20G-DUS60",
+          "ukuran": 20,
+          "satuan": "g",
+          "kemasan": "dus",
+          "isi": 60,
+          "packDalamDus": 6,
+          "harga": 100000,
+          "foto": []
+        },
+        {
+          "sku": "STIKCONTOH-70G-DUS20",
+          "ukuran": 70,
+          "satuan": "g",
+          "kemasan": "dus",
+          "isi": 20,
+          "packDalamDus": null,
+          "harga": 120000,
+          "foto": ["foto/stikcontoh-70g-dus20-01.jpg"]
+        }
+      ]
+    }
+  ]
+}

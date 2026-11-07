@@ -41,3 +41,6 @@ data/*.sqlite-*
 /build-error.txt
 /sharedcart-error.txt
 /test-log.txt
+
+# Data katalog real (harga distributor + foto) tidak boleh masuk repo publik.
+/katalog-lokal/

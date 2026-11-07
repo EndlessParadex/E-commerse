@@ -170,7 +170,7 @@ export default function ShopPage({ type }) {
                       <li className="cart-item" key={item.id}>
                         <div className="cart-product-row">
                           <MediaTag
-                            className={'cart-product-media ' + (cartProduct.color || '')}
+                            className="cart-product-media"
                             href={display.detailHref || undefined}
                             aria-label={
                               display.detailHref ? 'Lihat detail ' + item.name : undefined

@@ -74,13 +74,13 @@
   --catalog-border-brown: #e2c9af;
 }
 :root[data-background='sky'] {
-  --color-background: #f1f8ff;
+  --color-background: #e8f1fa;
 }
 :root[data-background='lavender'] {
-  --color-background: #f8f5ff;
+  --color-background: #f0ecfa;
 }
 :root[data-background='mint'] {
-  --color-background: #f0faf5;
+  --color-background: #e7f3ed;
 }
 :root[data-theme='dark'] {
   color-scheme: dark;

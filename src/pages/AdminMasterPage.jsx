@@ -152,6 +152,7 @@ function MasterForm({ type, initial, onClose, onSaved }) {
                   onChange={(src) => update('logo', src)}
                   onBusyChange={setUploading}
                   disabled={saving}
+                  keepTransparency
                 />
                 {errors.logo && (
                   <small className="admin-error" role="alert">

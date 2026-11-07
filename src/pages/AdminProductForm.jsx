@@ -8,10 +8,9 @@ import ProductImage from '../components/shop/ProductImage';
 import { rupiah } from '../components/shop/shopPresentation';
 import { brandsForSupplier } from '../data/catalogMasters';
 import useUnsavedChanges from '../state/useUnsavedChanges';
-import { productColorStyle } from '../data/catalogColors';
-import AdminColorPicker from '../components/admin/AdminColorPicker';
 import { packagingTypes, packagingLabel, packagingContents } from '../data/productPackaging';
-import { MAX_PRODUCT_PHOTOS, MAX_PRODUCT_PHOTO_BYTES } from '../data/productPhotos';
+import { MAX_PRODUCT_PHOTOS } from '../data/productPhotos';
+import { MAX_PRODUCT_UPLOAD_BYTES, shrinkProductPhoto } from '../data/photoCompression';
 
 export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate }) {
   const [initial] = useState(() => productDraft(groupId));
@@ -170,10 +169,10 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       files.some(
         (file) =>
           !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
-          file.size > MAX_PRODUCT_PHOTO_BYTES,
+          file.size > MAX_PRODUCT_UPLOAD_BYTES,
       )
     ) {
-      setPhotoError('Pilih JPG, PNG, atau WebP dengan ukuran maksimal 1 MB per foto.');
+      setPhotoError('Pilih JPG, PNG, atau WebP dengan ukuran maksimal 5 MB per foto.');
       return;
     }
     const request = ++photoRequest.current;
@@ -181,20 +180,25 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
     try {
       const photos = [];
       for (const file of files) {
-        const src = await new Promise((resolve, reject) => {
+        const original = await new Promise((resolve, reject) => {
           const reader = new window.FileReader();
           reader.onload = () => resolve(reader.result);
           reader.onerror = reject;
           reader.onabort = reject;
           reader.readAsDataURL(file);
         });
-        await new Promise((resolve, reject) => {
-          const photo = new window.Image();
-          photo.onload = resolve;
-          photo.onerror = reject;
-          photo.src = src;
+        // Large phone photos are resized here so the saved catalog stays light.
+        const src = await shrinkProductPhoto(original, {
+          ImageClass: window.Image,
+          documentRef: window.document,
         });
         if (request !== photoRequest.current) return;
+        if (!src) {
+          setPhotoError(
+            'Foto terlalu besar dan tidak dapat dikecilkan di browser ini. Kecilkan foto di bawah 1 MB lalu coba lagi.',
+          );
+          return;
+        }
         photos.push({ src, alt: '' });
       }
       if (request === photoRequest.current) updatePhotos([...draft.gallery, ...photos]);
@@ -464,11 +468,8 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                   setErrors({});
                 })}
                 {select('subcategoryId', 'Subkategori *', category?.children || [])}
-                <AdminColorPicker
-                  value={draft.color}
-                  onChange={(color) => update('color', color)}
-                  error={errors.color}
-                />
+                {/* Warna kartu tidak lagi ditampilkan: foto produk selalu berlatar putih.
+                    Nilai warna lama tetap tersimpan agar data dan API tidak berubah. */}
                 <div className="admin-field admin-full">
                   <label htmlFor="product-description">Deskripsi *</label>
                   <textarea
@@ -502,8 +503,8 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                 </small>
               </summary>
               <p>
-                Tambahkan hingga {MAX_PRODUCT_PHOTOS} foto. JPG, PNG, atau WebP, maksimal 1 MB per
-                foto. Foto digunakan pada semua ukuran dan kemasan.
+                Tambahkan hingga {MAX_PRODUCT_PHOTOS} foto. JPG, PNG, atau WebP, maksimal 5 MB per
+                foto; foto besar otomatis dikecilkan. Foto digunakan pada semua ukuran dan kemasan.
               </p>
               <div className="admin-photo-controls">
                 <label
@@ -682,7 +683,7 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
             aria-label="Pratinjau produk"
           >
             <h3>Pratinjau produk</h3>
-            <div className="admin-preview-image" style={productColorStyle(draft.color)}>
+            <div className="admin-preview-image">
               <ProductImage
                 product={{
                   name: draft.baseName || 'Produk baru',

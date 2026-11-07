@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import './PhotoUpload.css';
+import {
+  MAX_PHOTO_UPLOAD_BYTES,
+  SMALL_PHOTO_MAX_SIDE,
+  SMALL_PHOTO_TARGET_LENGTH,
+  shrinkPhoto,
+} from '../data/photoCompression';
 
 export default function PhotoUpload({
   id,
@@ -8,6 +14,8 @@ export default function PhotoUpload({
   disabled = false,
   onBusyChange,
   label = 'Unggah foto',
+  // Logos keep a transparent background; profile photos become JPEG.
+  keepTransparency = false,
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -26,9 +34,10 @@ export default function PhotoUpload({
     setError('');
     if (
       file &&
-      (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 1048576)
+      (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+        file.size > MAX_PHOTO_UPLOAD_BYTES)
     ) {
-      setError('Pilih JPG, PNG, atau WebP, maksimal 1 MB.');
+      setError('Pilih JPG, PNG, atau WebP, maksimal 5 MB.');
       return;
     }
     const current = ++request.current;
@@ -38,19 +47,26 @@ export default function PhotoUpload({
     try {
       let src = '';
       if (file) {
-        src = await new Promise((resolve, reject) => {
+        const original = await new Promise((resolve, reject) => {
           const reader = new window.FileReader();
           reader.onload = () => resolve(reader.result);
           reader.onerror = reader.onabort = () => reject(new Error('Foto tidak dapat dibaca.'));
           reader.readAsDataURL(file);
         });
-        await new Promise((resolve, reject) => {
-          const image = new window.Image();
-          image.onload = resolve;
-          image.onerror = () =>
-            reject(new Error('Foto tidak dapat dibaca. Pilih file gambar lain.'));
-          image.src = src;
+        // Phone photos are resized to 512 px here so the saved data stays small.
+        src = await shrinkPhoto(original, {
+          maxSide: SMALL_PHOTO_MAX_SIDE,
+          targetLength: SMALL_PHOTO_TARGET_LENGTH,
+          keepTransparency,
+          ImageClass: window.Image,
+          documentRef: window.document,
+        }).catch(() => {
+          throw new Error('Foto tidak dapat dibaca. Pilih file gambar lain.');
         });
+        if (!src)
+          throw new Error(
+            'Foto terlalu besar dan tidak dapat dikecilkan di browser ini. Kecilkan foto di bawah 1 MB lalu coba lagi.',
+          );
       }
       if (request.current === current) await onChange(src);
     } catch (failure) {
@@ -93,7 +109,7 @@ export default function PhotoUpload({
       >
         {value ? 'Ganti foto' : 'Pilih foto'}
       </button>
-      <p id={`${id}-help`}>JPG, PNG, atau WebP. Maksimal 1 MB.</p>
+      <p id={`${id}-help`}>JPG, PNG, atau WebP. Maksimal 5 MB; foto besar otomatis dikecilkan.</p>
       {value && (
         <button
           type="button"

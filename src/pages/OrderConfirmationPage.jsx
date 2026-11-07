@@ -165,7 +165,7 @@ export default function OrderConfirmationPage({ orderId }) {
               const display = orderItemPresentation(item);
               return (
                 <li key={item.id}>
-                  <div className={'confirmation-item-image ' + (display.product.color || '')}>
+                  <div className="confirmation-item-image">
                     <ProductImage product={display.product} variant="thumbnail" />
                   </div>
                   <div className="confirmation-item-copy">

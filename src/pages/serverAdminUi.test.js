@@ -87,23 +87,13 @@ test('akses admin dan form server: selama menyimpan terkunci; kegagalan memperta
       );
       input.dispatchEvent(new dom.Event('input', { bubbles: true }));
     });
-    const color = container.querySelector('.admin-color-picker');
-    assert.equal(color.querySelectorAll('.admin-color-option').length, 10);
-    await click(color.querySelector('summary'));
-    await click(color.querySelector('button[data-color-id="mint"]'));
-    assert.match(color.querySelector('summary').textContent, /Hijau/);
-    assert.equal(
-      color.querySelector('button[data-color-id="mint"]').getAttribute('aria-pressed'),
-      'true',
-    );
-    assert.match(
-      container.querySelector('.admin-preview-image').style.background,
-      /linear-gradient/,
-    );
+    assert.equal(container.querySelector('.admin-color-picker'), null);
+    assert.equal(container.querySelector('.admin-preview-image').style.background, '');
     await click(button('Simpan produk'));
     assert.ok(sent.edits.some((entry) => entry.baseName === 'Nama belum tersimpan'));
     const savedGroup = sent.edits.find((entry) => entry.baseName === 'Nama belum tersimpan');
-    assert.equal(savedGroup.color, 'mint');
+    // Warna lama tetap ikut tersimpan walau pemilihnya disembunyikan.
+    assert.ok(typeof savedGroup.color === 'string' && savedGroup.color.length > 0);
     assert.equal(container.querySelector('.admin-submit-lock').disabled, true);
     assert.ok(button('Menyimpan…'));
     await click(container.querySelector('nav a[href="#/admin"]'));
@@ -124,10 +114,8 @@ test('akses admin dan form server: selama menyimpan terkunci; kegagalan memperta
     });
     assert.equal(container.querySelector('.admin-editor'), null);
     assert.match(container.textContent, /berhasil disimpan ke database/);
-    assert.match(
-      container.querySelector('.admin-product-image').style.background,
-      /linear-gradient/,
-    );
+    // Daftar produk admin tidak lagi memberi gradasi warna di belakang foto.
+    assert.equal(container.querySelector('.admin-product-image').style.background, '');
     const deleteButton = container.querySelector(
       'button[aria-label="Hapus produk Nama belum tersimpan beserta semua SKU"]',
     );

@@ -80,3 +80,19 @@
     font-size: 2.6875rem;
   }
 }
+
+/* Foto produk asli (packshot berlatar putih) tampil di atas putih di semua tempat.
+   Wadah tanpa foto tetap memakai latar netralnya sendiri. */
+:is(
+  .admin-product-image,
+  .admin-preview-image,
+  .bam-catalog-card-image,
+  .bam-buyer-product-photo,
+  .cart-product-media,
+  .shared-item-photo,
+  .checkout-item-image,
+  .confirmation-item-image
+):has(img) {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--color-border, #e2e8f0);
+}

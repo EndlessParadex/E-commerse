@@ -118,11 +118,7 @@ function StoreProductCard({ entry, featured = false }) {
       className={'bam-buyer-product-card' + (featured ? ' is-promo' : '')}
       key={product.groupId || product.id}
     >
-      <a
-        className={'bam-buyer-product-photo color-' + (product.color || 'sky')}
-        href={href}
-        aria-label={'Lihat ' + name}
-      >
+      <a className="bam-buyer-product-photo" href={href} aria-label={'Lihat ' + name}>
         {discounted && <span className="bam-buyer-discount">−{discount}%</span>}
         <ProductImage product={preview} variant="promo" />
       </a>

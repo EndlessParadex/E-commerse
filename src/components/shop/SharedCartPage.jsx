@@ -564,9 +564,7 @@ export default function SharedCartPage({ adminView = false }) {
                                 }
                               >
                                 <div className="shared-item-identity">
-                                  <div
-                                    className={'shared-item-photo ' + (display.product.color || '')}
-                                  >
+                                  <div className="shared-item-photo">
                                     <ProductImage product={display.product} variant="thumbnail" />
                                   </div>
                                   <div className="shared-item-copy">

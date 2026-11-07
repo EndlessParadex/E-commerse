@@ -382,7 +382,7 @@ export default function CheckoutPage() {
             <ul className="checkout-items">
               {itemProducts.map(({ item, display }) => (
                 <li key={item.id}>
-                  <div className={'checkout-item-image ' + (display.product.color || '')}>
+                  <div className="checkout-item-image">
                     <ProductImage product={display.product} variant="thumbnail" />
                   </div>
                   <div className="checkout-item-copy">

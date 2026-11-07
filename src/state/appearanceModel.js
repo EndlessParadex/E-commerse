@@ -5,10 +5,10 @@ export const appearanceModes = [
   { id: 'system', label: 'Ikuti perangkat', description: 'Otomatis sesuai perangkat', icon: '◐' },
 ];
 export const appearanceBackgrounds = [
-  { id: 'default', label: 'Netral', light: '#f8fafc', dark: '#0e1726' },
-  { id: 'sky', label: 'Biru lembut', light: '#f1f8ff', dark: '#0b1d2a' },
-  { id: 'lavender', label: 'Lavender', light: '#f8f5ff', dark: '#1b152a' },
-  { id: 'mint', label: 'Hijau lembut', light: '#f0faf5', dark: '#0f211d' },
+  { id: 'default', label: 'Netral', light: '#eef2f6', dark: '#0e1726' },
+  { id: 'sky', label: 'Biru lembut', light: '#e8f1fa', dark: '#0b1d2a' },
+  { id: 'lavender', label: 'Lavender', light: '#f0ecfa', dark: '#1b152a' },
+  { id: 'mint', label: 'Hijau lembut', light: '#e7f3ed', dark: '#0f211d' },
 ];
 export const appearanceTextSizes = [
   { id: 'normal', label: 'Normal', description: 'Ukuran standar', scale: 1 },

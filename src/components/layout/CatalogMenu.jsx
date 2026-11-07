@@ -8,7 +8,7 @@ import {
   searchHref,
 } from '../../data/catalog';
 import { suppliers, supplierHref } from '../../data/suppliers';
-import { avatarColorStyle, productColorStyle } from '../../data/catalogColors';
+import { avatarColorStyle } from '../../data/catalogColors';
 import { productGallery } from '../../data/productGallery';
 import ProductImage from '../shop/ProductImage';
 import './CatalogMenu.css';
@@ -25,11 +25,7 @@ function CatalogMenuCard({ name, href, options, icon = '📦' }) {
     : { name, icon };
   return (
     <a href={href}>
-      <span
-        className="bam-catalog-card-image"
-        style={featured ? productColorStyle(featured.color) : undefined}
-        aria-hidden="true"
-      >
+      <span className="bam-catalog-card-image" aria-hidden="true">
         <ProductImage product={preview} variant="menu" />
       </span>
       <span className="bam-catalog-card-copy">

@@ -21,7 +21,6 @@ import ProductImage from '../components/shop/ProductImage';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import { paginateAdminList } from '../data/adminPagination';
 import { savedProductPhotos } from '../data/productPhotos';
-import { productColorStyle } from '../data/catalogColors';
 import { stockBreakdown } from '../data/stockPresentation';
 import {
   stockEditorTypes,
@@ -47,10 +46,7 @@ function StockProductIdentity({ product, variants }) {
   };
   return (
     <div className="workflow-stock-identity">
-      <div
-        className={'workflow-stock-photo' + (photo ? '' : ' is-placeholder')}
-        style={photo ? productColorStyle(source.color) : undefined}
-      >
+      <div className={'workflow-stock-photo' + (photo ? '' : ' is-placeholder')}>
         <ProductImage product={preview} variant="thumbnail" />
       </div>
       <div className="workflow-stock-name">

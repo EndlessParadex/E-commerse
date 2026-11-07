@@ -5,7 +5,7 @@
   --color-primary-light: #38bdf8;
   --color-primary-dark: #0284c7;
 
-  --color-background: #f8fafc; /* Putih keabu-abuan untuk background agar elegan dan tidak menyilaukan */
+  --color-background: #eef2f6; /* Abu kebiruan lembut: halaman tidak terlalu putih, kartu putih tetap menonjol */
   --color-surface: #ffffff; /* Putih murni untuk kotak/kartu produk */
 
   --color-text: #0f172a; /* Abu-abu sangat gelap untuk teks (lebih nyaman dibaca daripada hitam pekat) */

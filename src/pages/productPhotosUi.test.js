@@ -152,9 +152,9 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     assert.match(container.querySelector('[role="alert"]').textContent, /tidak dapat dibaca/);
     assert.equal(container.querySelectorAll('.admin-photo-item').length, 2);
     await upload([
-      new dom.File([new Uint8Array(1024 * 1024 + 1)], 'large.png', { type: 'image/png' }),
+      new dom.File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.png', { type: 'image/png' }),
     ]);
-    assert.match(container.querySelector('[role="alert"]').textContent, /maksimal 1 MB/);
+    assert.match(container.querySelector('[role="alert"]').textContent, /maksimal 5 MB/);
     await upload(Array.from({ length: 7 }, (_, index) => file(index + 3)));
     assert.match(container.querySelector('[role="alert"]').textContent, /Maksimal 8/);
     assert.equal(container.querySelectorAll('.admin-photo-item').length, 2);

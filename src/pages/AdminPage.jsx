@@ -30,7 +30,7 @@ import { brands as managedBrands } from '../data/catalogMasters';
 import AdminMasterPage from './AdminMasterPage';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { packagingLabel } from '../data/productPackaging';
-import { productColorStyle, supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
+import { supplierColorStyle, avatarColorStyle } from '../data/catalogColors';
 import AdminOrdersPage from './AdminOrdersPage';
 import AdminCompanyPage from './AdminCompanyPage';
 import CompanyBrand from '../components/layout/CompanyBrand';
@@ -115,10 +115,7 @@ const navigationGroups = [
 function ProductIdentity({ product }) {
   return (
     <div className="admin-product-identity">
-      <div
-        className={'admin-product-image ' + product.color}
-        style={productColorStyle(product.color)}
-      >
+      <div className="admin-product-image">
         <ProductImage product={product} variant="thumbnail" />
       </div>
       <div>

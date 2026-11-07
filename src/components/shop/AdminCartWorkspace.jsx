@@ -268,7 +268,7 @@ export default function AdminCartWorkspace({
                       return (
                         <li key={item.id} className="shared-item">
                           <div className="shared-item-identity">
-                            <div className={'shared-item-photo ' + (display.product.color || '')}>
+                            <div className="shared-item-photo">
                               <ProductImage product={display.product} variant="thumbnail" />
                             </div>
                             <div>

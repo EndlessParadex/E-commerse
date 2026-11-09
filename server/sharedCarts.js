@@ -416,6 +416,17 @@ export class SharedCartRepository {
           !this.db.prepare('SELECT 1 FROM cart_items WHERE cart_id=? LIMIT 1').get(cycle.id)
         )
           fail('Tambahkan barang sebelum meminta pemeriksaan Admin.', 409, 'empty_cart');
+        const known = new Set(this.products().map((product) => product.id));
+        const missing = this.db
+          .prepare('SELECT product_id FROM cart_items WHERE cart_id=?')
+          .all(cycle.id)
+          .filter((row) => !known.has(row.product_id));
+        if (missing.length)
+          fail(
+            'Ada barang yang sudah tidak tersedia di katalog. Hapus barang tersebut sebelum mengajukan ke Admin.',
+            409,
+            'unavailable_items',
+          );
         const last = this.db
           .prepare('SELECT action FROM cart_events WHERE cart_id=? ORDER BY revision DESC LIMIT 1')
           .get(cycle.id);

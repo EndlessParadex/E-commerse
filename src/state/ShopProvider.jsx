@@ -2,7 +2,7 @@ import { companyStorageKey } from '../data/companyStore.js';
 import { useContext, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { ShopContext } from './useShop';
 import { STORAGE_KEY, emptyShop, normalizeShop, shopReducer, cartTotals } from './shopModel';
-import { reviewCart, updateCartPrices } from '../data/cartValidation';
+import { availableCartItems, reviewCart, updateCartPrices } from '../data/cartValidation';
 import { packagingValues } from '../data/productPackaging';
 import { availableStock, cartStockLimit, reviewStock } from './frontendWorkflow';
 import useWorkflow from './useWorkflow';
@@ -236,7 +236,7 @@ function AccountScopedShop({ children, shared, storageKey, syncEnabled, cartMode
         shared,
         cartMode,
         setCartMode,
-        ...cartTotals(cart),
+        ...cartTotals(availableCartItems(cart)),
         cartReview: review,
         stockFor,
         orderLinkStatus: (id) =>

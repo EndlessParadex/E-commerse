@@ -79,7 +79,7 @@ export default function FastOrderPage() {
   }, []);
   const validRole = ['sales', 'buyer'].includes(shared?.role);
   const cart = shared?.cart;
-  const totals = fastOrderTotals(cart);
+  const totals = fastOrderTotals(cart, products);
   const matches = fastOrderGroups(products, cart?.items, query, Infinity);
   const rows = matches.slice(0, search.limit);
   const editable = Boolean(shared?.canEdit && cart?.status === 'open');

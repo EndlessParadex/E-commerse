@@ -53,8 +53,11 @@ export function fastOrderPackaging(product) {
   };
 }
 
-export function fastOrderTotals(cart) {
-  const items = Array.isArray(cart?.items) ? cart.items : [];
+// Totals of the lines that still exist in the catalog (removed SKUs are shown but not counted).
+export function fastOrderTotals(cart, catalog = null) {
+  const all = Array.isArray(cart?.items) ? cart.items : [];
+  const ids = catalog ? new Set(catalog.map((product) => product.id)) : null;
+  const items = ids ? all.filter((item) => ids.has(item.id)) : all;
   return {
     sku: items.length,
     packages: items.reduce((sum, item) => sum + item.quantity, 0),

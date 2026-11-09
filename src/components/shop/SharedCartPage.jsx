@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import ProductImage from './ProductImage';
 import { products } from '../../data/products';
+import { availableCartItems } from '../../data/cartValidation';
 import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
 import './SharedCartPage.css';
@@ -68,6 +69,9 @@ export function SharedCartBar() {
 export default function SharedCartPage({ adminView = false }) {
   const shop = useShop();
   const { shared } = shop;
+  const cartItems = shared?.cart?.items || [];
+  // SKUs removed from the catalog stay listed until deleted, but block the review request.
+  const unavailableLines = cartItems.length - availableCartItems(cartItems).length;
   const [query, setQuery] = useState('');
   const [storeId, setStoreId] = useState(shared.selection.storeId);
   const [date, setDate] = useState(shared.selection.date);
@@ -678,14 +682,27 @@ export default function SharedCartPage({ adminView = false }) {
                               memfinalisasi. Jika isi keranjang berubah, ajukan kembali.
                             </p>
                           ) : (
-                            <button
-                              type="button"
-                              className="shop-primary shared-request-review"
-                              disabled={!shared.canEdit || !cart.items.length}
-                              onClick={() => void shared.mutate('request_review')}
-                            >
-                              Ajukan keranjang ke Admin →
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                className="shop-primary shared-request-review"
+                                disabled={
+                                  !shared.canEdit || !cart.items.length || unavailableLines > 0
+                                }
+                                aria-describedby={
+                                  unavailableLines > 0 ? 'shared-request-blocked' : undefined
+                                }
+                                onClick={() => void shared.mutate('request_review')}
+                              >
+                                Ajukan keranjang ke Admin →
+                              </button>
+                              {unavailableLines > 0 && (
+                                <p className="shop-warning" id="shared-request-blocked">
+                                  Hapus {unavailableLines} barang yang sudah tidak tersedia sebelum
+                                  mengajukan ke Admin.
+                                </p>
+                              )}
+                            </>
                           )}
                           {shared.role === 'sales' && sharedDraftWhatsAppUrl(cart) && (
                             <a

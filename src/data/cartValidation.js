@@ -1,6 +1,12 @@
 import { products } from './products.js';
 import { packagingSnapshot, packagingValues, readPackagingSnapshot } from './productPackaging.js';
 
+// Lines whose SKU no longer exists stay visible until removed, but never count in totals.
+export function availableCartItems(cart, catalog = products) {
+  const ids = new Set(catalog.map((product) => product.id));
+  return (Array.isArray(cart) ? cart : []).filter((item) => ids.has(item.id));
+}
+
 export function reviewCart(cart, catalog = products) {
   const issues = cart.flatMap((item) => {
     const current = catalog.find((product) => product.id === item.id);

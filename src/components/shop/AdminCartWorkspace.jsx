@@ -2,6 +2,8 @@ import ProductImage from './ProductImage';
 import { products } from '../../data/products';
 import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
+import { availableCartItems } from '../../data/cartValidation';
+import { cartTotals } from '../../state/shopModel';
 import PackagingSummary from './PackagingSummary';
 import AdminCartProcessing from './AdminCartProcessing';
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
@@ -31,6 +33,8 @@ export default function AdminCartWorkspace({
   const chosenDate = fixedDate || date;
   const steps = ['Pilih toko', 'Kelola barang', 'Periksa', 'Finalisasi'];
   const stage = !cart ? 0 : cart.status === 'open' ? 1 : cart.status === 'locked' ? 2 : 3;
+  // Totals of this store's cart (not the Admin's own cart), without SKUs removed from the catalog.
+  const storeTotals = cartTotals(availableCartItems(cart?.items || []));
   return (
     <div
       id="shared-panel-cart"
@@ -200,7 +204,7 @@ export default function AdminCartWorkspace({
                     )}
                   </p>
                   <p className="shared-cart-overview">
-                    {cart.items.length} SKU · {shop.quantity} kemasan
+                    {cart.items.length} SKU · {storeTotals.quantity} kemasan
                     <span className={'shared-cart-status status-' + cart.status}>
                       {cart.status === 'open'
                         ? cart.reviewRequested
@@ -420,7 +424,7 @@ export default function AdminCartWorkspace({
                   </div>
                   <div>
                     <span>Kemasan</span>
-                    <strong>{shop.quantity}</strong>
+                    <strong>{storeTotals.quantity}</strong>
                   </div>
                   <div>
                     <span>Versi</span>
@@ -428,7 +432,7 @@ export default function AdminCartWorkspace({
                   </div>
                 </div>
                 <p>
-                  Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>
+                  Subtotal barang <strong>{rupiah(storeTotals.subtotal)}</strong>
                 </p>
                 <p>
                   {cart.status === 'finalized'

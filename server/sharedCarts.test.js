@@ -319,6 +319,15 @@ test('shared cart validates dates/quantities, preserves deleted SKUs, refreshes 
       (await sharedRequest(app, 'POST', url(first), 'buyer', change({ revision: 2 }))).body.error,
       'product_unavailable',
     );
+    const blocked = await sharedRequest(
+      app,
+      'POST',
+      url(first),
+      'buyer',
+      change({ revision: 2, action: 'request_review' }),
+    );
+    assert.equal(blocked.status, 409, 'a cart with removed SKUs cannot be sent to Admin');
+    assert.equal(blocked.body.error, 'unavailable_items');
     assert.equal(
       (
         await sharedRequest(

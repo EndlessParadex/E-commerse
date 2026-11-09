@@ -402,6 +402,21 @@ test('frontend server: impor stok, checkout yang responsnya terputus, pembatalan
     await click(button('Simpan perubahan'));
     assert.equal(api.workflow.get({ id: 'bob', role: 'user' }, bobOrder.id).payment.status, 'paid');
     await wait(() => button('Catat pengiriman'));
+    // Without drivers the dialog explains where to add them and cannot be saved.
+    const withDrivers = api.company.snapshot();
+    api.company.save({ ...withDrivers, profile: { ...withDrivers.profile, deliveryDrivers: '' } });
+    await mountAs('admin', '/admin/pesanan');
+    await wait(() => button('Catat pengiriman'));
+    await click(button('Catat pengiriman'));
+    assert.equal(button('Simpan perubahan').disabled, true);
+    assert.match(
+      container.querySelector('.bam-confirm-dialog').textContent,
+      /daftar sopir masih kosong/,
+    );
+    assert.ok(container.querySelector('.bam-confirm-dialog a[href="#/admin/perusahaan"]'));
+    api.company.save({ ...api.company.snapshot(), profile: withDrivers.profile });
+    await mountAs('admin', '/admin/pesanan');
+    await wait(() => button('Catat pengiriman'));
     await click(button('Catat pengiriman'));
     assert.deepEqual(
       [...container.querySelectorAll('#shipment-driver option')].map((option) => option.value),

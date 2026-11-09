@@ -16,6 +16,7 @@ import ConfirmDialog from '../components/shop/ConfirmDialog';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import { driverNames } from '../data/companyProfile';
 import { shortOrderNumber } from '../data/orderListPresentation';
+import { FOCUS_DRIVERS_KEY } from './AdminCompanyPage';
 import '../styles/workflow.css';
 
 // Store delivery dates are plain YYYY-MM-DD days; show them like other dates ("2 Nov 2026").
@@ -578,6 +579,10 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
                           : 'Catat pembayaran simulasi?'
           }
           confirmLabel={server ? 'Simpan perubahan' : 'Simpan status simulasi'}
+          // Without drivers the shipment cannot be recorded; say so instead of failing on save.
+          confirmDisabled={
+            server && target.action === 'ship' && !driverNames(company.profile).length
+          }
           onConfirm={confirm}
           onClose={() => setTarget(null)}
           error={error}
@@ -671,9 +676,22 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
                 </select>
               </label>
               {!driverNames(company.profile).length && (
-                <p>
-                  Belum ada sopir. Isi namanya di{' '}
-                  <a href="#/admin/perusahaan">Pengaturan perusahaan</a>.
+                <p className="shop-warning" role="status">
+                  Pengiriman belum bisa dicatat karena daftar sopir masih kosong. Tambahkan nama
+                  sopir di{' '}
+                  <a
+                    href="#/admin/perusahaan"
+                    onClick={() => {
+                      try {
+                        window.sessionStorage.setItem(FOCUS_DRIVERS_KEY, '1');
+                      } catch {
+                        // The link still opens the settings page without the focus hint.
+                      }
+                    }}
+                  >
+                    Pengaturan perusahaan → Sopir
+                  </a>
+                  , lalu buka lagi pesanan ini.
                 </p>
               )}
             </>

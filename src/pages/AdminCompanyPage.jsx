@@ -1,6 +1,6 @@
 import CommerceReadiness from './CommerceReadiness';
 import AdminDeliverySettings from './AdminDeliverySettings';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { workflowUsesServer } from '../data/adminStore';
 import useCompany from '../state/useCompany';
 import useUnsavedChanges from '../state/useUnsavedChanges';
@@ -9,9 +9,35 @@ import { companyProfileErrors } from '../data/companyProfile';
 import { saveCompany, refreshCompany } from '../data/companyStore';
 import './AdminCompanyPage.css';
 
+export const FOCUS_DRIVERS_KEY = 'bam.admin.focusDrivers';
+
 export default function AdminCompanyPage() {
   const company = useCompany();
   const [draft, setDraft] = useState(() => ({ ...company.profile }));
+
+  // "Catat pengiriman" links here when no drivers exist yet.
+  useEffect(() => {
+    let wanted = false;
+    try {
+      wanted = window.sessionStorage.getItem(FOCUS_DRIVERS_KEY) === '1';
+      window.sessionStorage.removeItem(FOCUS_DRIVERS_KEY);
+    } catch {
+      return;
+    }
+    if (!wanted) return;
+    // Wait until the section has rendered and the app has finished moving focus to the
+    // main content after the route change, then bring the drivers field into view.
+    let tries = 0;
+    const timer = setInterval(() => {
+      const input = document.getElementById('company-deliveryDrivers');
+      tries += 1;
+      if (!input && tries < 20) return;
+      clearInterval(timer);
+      input?.scrollIntoView({ block: 'center' });
+      input?.focus({ preventScroll: true });
+    }, 100);
+    return () => clearInterval(timer);
+  }, []);
   const [baseline, setBaseline] = useState(() => ({ ...company.profile }));
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');

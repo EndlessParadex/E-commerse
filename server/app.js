@@ -400,8 +400,17 @@ export function createApp({
     const requestId = randomUUID();
     let path = '';
     try {
-      refreshMailSettings();
       path = new URL(req.url, 'http://bam.local').pathname;
+      // Uptime monitors call this every minute: no session, no mail refresh, one cheap read.
+      if (path === '/api/health' && (req.method === 'GET' || req.method === 'HEAD')) {
+        try {
+          db.prepare('SELECT 1 FROM sqlite_schema LIMIT 1').get();
+          return json(res, 200, { status: 'ok' });
+        } catch {
+          return json(res, 503, { status: 'unavailable' });
+        }
+      }
+      refreshMailSettings();
       if (!path.startsWith('/api/')) {
         if (site.respond(req, res, path)) return;
         return sendError(res, 404, 'not_found');

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useShop } from '../../state/useShop';
 import ProductImage from './ProductImage';
 import { products } from '../../data/products';
-import { availableCartItems } from '../../data/cartValidation';
+import { cartCounts } from '../../data/cartValidation';
 import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
 import './SharedCartPage.css';
@@ -71,7 +71,8 @@ export default function SharedCartPage({ adminView = false }) {
   const { shared } = shop;
   const cartItems = shared?.cart?.items || [];
   // SKUs removed from the catalog stay listed until deleted, but block the review request.
-  const unavailableLines = cartItems.length - availableCartItems(cartItems).length;
+  const counts = cartCounts(cartItems);
+  const unavailableLines = counts.unavailable;
   const [query, setQuery] = useState('');
   const [storeId, setStoreId] = useState(shared.selection.storeId);
   const [date, setDate] = useState(shared.selection.date);
@@ -452,7 +453,7 @@ export default function SharedCartPage({ adminView = false }) {
                       )}
                     </div>
                     <p className="shared-cart-overview">
-                      {cart.items.length} SKU · {shop.quantity} kemasan
+                      {counts.lines} SKU · {counts.packages} kemasan
                       <span className={'shared-cart-status status-' + cart.status}>
                         {cart.status === 'open'
                           ? cart.reviewRequested
@@ -491,7 +492,8 @@ export default function SharedCartPage({ adminView = false }) {
               ) : (
                 <SharedStoreCartHeader
                   cart={cart}
-                  quantity={shop.quantity}
+                  lines={counts.lines}
+                  quantity={counts.packages}
                   frozen={frozen}
                   selectingStore={selectingStore}
                   onSwitchStore={() => setStoreModalOpen(true)}
@@ -669,7 +671,7 @@ export default function SharedCartPage({ adminView = false }) {
                     <aside className="shared-cart-summary">
                       <h2>Ringkasan keranjang</h2>
                       <p>
-                        {cart.items.length} SKU · {shop.quantity} kemasan
+                        {counts.lines} SKU · {counts.packages} kemasan
                       </p>
                       <p>
                         Subtotal barang <strong>{rupiah(shop.subtotal)}</strong>

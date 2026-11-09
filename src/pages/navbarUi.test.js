@@ -226,7 +226,7 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
         cart: {
           store: { storeName: 'Toko Nusantara' },
           date: '2026-11-12',
-          items: [{ id: 'sku', quantity: 2, price: 5000 }],
+          items: [{ id: 'snack-pedas', quantity: 2, price: 5000 }],
         },
       },
     );

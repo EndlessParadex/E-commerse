@@ -1,5 +1,6 @@
 import { nextStoreDelivery } from '../../data/b2bDeliverySchedule';
 import { products } from '../../data/products';
+import { cartCounts } from '../../data/cartValidation';
 import { storeBuyerSelections } from '../../data/storeBuyerSelections';
 import { productGallery } from '../../data/productGallery';
 import { rupiah } from './shopPresentation';
@@ -156,10 +157,8 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
   const schedule = store?.deliverySchedule;
   const period = cart?.store && store && cart.store.id === store.id ? cart.date : null;
   const deliveryDate = displayDate(period) || displayDate(nextStoreDelivery(schedule, wibToday()));
-  const packages = (cart?.items || []).reduce(
-    (total, item) => total + (Number(item.quantity) || 0),
-    0,
-  );
+  const counts = cartCounts(cart?.items);
+  const packages = counts.packages;
   const scheduleText = schedule
     ? `Setiap ${weekdays[schedule.weekday] || 'hari terjadwal'} · ${schedule.intervalWeeks === 2 ? 'dua mingguan' : 'mingguan'}`
     : 'Jadwal ditentukan Admin';
@@ -208,7 +207,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
             <div>
               <strong>{cart ? `${packages} kemasan` : 'Belum tersedia'}</strong>
               <span className="bam-buyer-cart-status">{status}</span>
-              {cart && <small>{cart.items.length} SKU</small>}
+              {cart && <small>{counts.lines} SKU</small>}
             </div>
           </div>
           <a

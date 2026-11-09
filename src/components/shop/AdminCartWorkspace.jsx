@@ -2,7 +2,7 @@ import ProductImage from './ProductImage';
 import { products } from '../../data/products';
 import { rupiah } from './shopPresentation';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
-import { availableCartItems } from '../../data/cartValidation';
+import { availableCartItems, cartCounts } from '../../data/cartValidation';
 import { cartTotals } from '../../state/shopModel';
 import PackagingSummary from './PackagingSummary';
 import AdminCartProcessing from './AdminCartProcessing';
@@ -204,7 +204,7 @@ export default function AdminCartWorkspace({
                     )}
                   </p>
                   <p className="shared-cart-overview">
-                    {cart.items.length} SKU · {storeTotals.quantity} kemasan
+                    {cartCounts(cart.items).lines} SKU · {storeTotals.quantity} kemasan
                     <span className={'shared-cart-status status-' + cart.status}>
                       {cart.status === 'open'
                         ? cart.reviewRequested

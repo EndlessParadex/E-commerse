@@ -111,8 +111,8 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
         date: '2026-10-26',
         status: 'open',
         items: [
-          { id: 'product-a', quantity: 2 },
-          { id: 'product-b', quantity: 3 },
+          { id: 'snack-pedas', quantity: 2 },
+          { id: 'skincare-glow', quantity: 3 },
         ],
       },
     });

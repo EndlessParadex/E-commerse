@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { availableCartItems } from './cartValidation.js';
+import { availableCartItems, cartCounts } from './cartValidation.js';
 import { cartTotals } from '../state/shopModel.js';
 import { fastOrderTotals } from './fastOrder.js';
 
@@ -27,4 +27,9 @@ test('Order Cepat menghitung total tanpa SKU yang sudah dihapus', () => {
   const totals = fastOrderTotals({ items: cart }, catalog);
   assert.equal(totals.sku, 2);
   assert.equal(totals.packages, 3);
+});
+
+test('jumlah SKU dan kemasan di header dan ringkasan memakai definisi yang sama', () => {
+  assert.deepEqual(cartCounts(cart, catalog), { lines: 2, packages: 3, unavailable: 1 });
+  assert.deepEqual(cartCounts(undefined, catalog), { lines: 0, packages: 0, unavailable: 0 });
 });

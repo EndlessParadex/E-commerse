@@ -10,6 +10,7 @@ import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
 import NavigationIcon from './NavigationIcon';
 import { productVariants } from '../../data/products';
+import { cartCounts } from '../../data/cartValidation';
 import { roleNavigation, roleNavigationActive } from '../../data/roleNavigation';
 
 const Navbar = () => {
@@ -72,7 +73,7 @@ const Navbar = () => {
   const b2bCart = shared?.status === 'ready' && ['sales', 'buyer', 'owner'].includes(shared.role);
   const activeB2BStore = shared?.cart?.store?.storeName || 'Pilih toko';
   const activeB2BDate = shared?.cart?.date || '';
-  const b2bPackages = shared?.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  const b2bPackages = cartCounts(shared?.cart?.items).packages;
   const navRole = b2bCart
     ? shared.role === 'owner'
       ? 'buyer'

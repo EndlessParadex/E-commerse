@@ -41,6 +41,7 @@ function HeaderIcon({ name }) {
 
 export default function SharedStoreCartHeader({
   cart,
+  lines,
   quantity,
   frozen,
   selectingStore,
@@ -119,7 +120,7 @@ export default function SharedStoreCartHeader({
           <div>
             <span className="shared-store-header-label">Isi Keranjang</span>
             <strong>
-              {cart.items.length} SKU · {quantity} kemasan
+              {lines} SKU · {quantity} kemasan
             </strong>
           </div>
         </div>

@@ -7,6 +7,16 @@ export function availableCartItems(cart, catalog = products) {
   return (Array.isArray(cart) ? cart : []).filter((item) => ids.has(item.id));
 }
 
+/** Counts shown for a cart: removed SKUs never count, but are reported so they can be removed. */
+export function cartCounts(cart, catalog = products) {
+  const available = availableCartItems(cart, catalog);
+  return {
+    lines: available.length,
+    packages: available.reduce((total, item) => total + item.quantity, 0),
+    unavailable: (Array.isArray(cart) ? cart.length : 0) - available.length,
+  };
+}
+
 export function reviewCart(cart, catalog = products) {
   const issues = cart.flatMap((item) => {
     const current = catalog.find((product) => product.id === item.id);

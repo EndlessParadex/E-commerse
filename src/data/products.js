@@ -1,3 +1,4 @@
+import { hasRealPhoto } from './productGallery.js';
 const baseProducts = [
   {
     id: 'snack-pedas',
@@ -269,10 +270,17 @@ export function productVariants(id) {
 }
 export function groupProducts(items) {
   const seen = new Set();
-  return items.filter((item) => {
+  const photographed = new Set(
+    items.filter((item) => hasRealPhoto(item)).map((item) => item.groupId || item.id),
+  );
+  const groups = items.filter((item) => {
     const key = item.groupId || item.id;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+  // Products with a real photo come first; the order inside each half is kept, so an explicit
+  // price sort applied afterwards still decides the final order.
+  const hasPhoto = (item) => photographed.has(item.groupId || item.id);
+  return [...groups.filter(hasPhoto), ...groups.filter((item) => !hasPhoto(item))];
 }

@@ -41,3 +41,8 @@ export function productGallery(product) {
     demo: true,
   }));
 }
+
+/** True when the product (or any SKU of its group) has a real uploaded photo. */
+export function hasRealPhoto(product) {
+  return Boolean(product) && productGallery(product).some((entry) => !entry.demo);
+}

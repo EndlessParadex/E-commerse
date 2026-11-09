@@ -32,3 +32,24 @@ test('home promo rail has a truthful fallback when no discount is configured', (
   assert.deepEqual(homePromotions([], 4).items, []);
   assert.deepEqual(homePromotions(null, 4).items, []);
 });
+
+test('produk berfoto tampil lebih dulu di daftar dan rekomendasi', async () => {
+  const { groupProducts } = await import('./products.js');
+  const photo = [{ src: 'data:image/png;base64,iVBORw0KGgo=', alt: '' }];
+  const items = [
+    { id: 'A-1', groupId: 'a', price: 10 },
+    { id: 'B-1', groupId: 'b', price: 20, gallery: photo },
+    { id: 'C-1', groupId: 'c', price: 30 },
+    { id: 'C-2', groupId: 'c', price: 35, gallery: photo },
+    { id: 'D-1', groupId: 'd', price: 40 },
+  ];
+  assert.deepEqual(
+    groupProducts(items).map((item) => item.groupId),
+    ['b', 'c', 'a', 'd'],
+    'groups with a photo on any SKU first, original order kept inside each half',
+  );
+  assert.deepEqual(
+    homePromotions(items, 4).items.map(({ product }) => product.groupId || product.id),
+    ['b', 'c', 'a', 'd'],
+  );
+});

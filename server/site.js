@@ -7,15 +7,18 @@ const escape = (value) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
+const imagePath = (id) => '/api/public/products/' + encodeURIComponent(id) + '/image';
+// The photo the public image route serves for one SKU: its own first photo, else the group's.
+const variantImageData = (draft, variant) =>
+  (variant.gallery ?? draft.gallery ?? [])[0]?.src || (variant.gallery ? '' : draft.image) || '';
 export function publicProduct(catalog, company, id, publicUrl = '') {
   const snapshot = catalog.snapshot(),
     draft = snapshot.edits.find((row) => row.variants.some((v) => v.id === id));
   if (!draft) return null;
   const variant = draft.variants.find((v) => v.id === id),
     profile = company.snapshot().profile;
-  const photos = variant.gallery ?? draft.gallery ?? [];
   const path = '/produk/' + encodeURIComponent(id),
-    image = '/api/public/products/' + encodeURIComponent(id) + '/image';
+    image = imagePath(id);
   return {
     id,
     name:
@@ -30,8 +33,17 @@ export function publicProduct(catalog, company, id, publicUrl = '') {
     company: profile.shortName,
     url: publicUrl ? new URL(path, publicUrl).href : path,
     image: publicUrl ? new URL(image, publicUrl).href : image,
-    imageData: photos[0]?.src || (variant.gallery ? '' : draft.image) || '',
+    imageData: variantImageData(draft, variant),
   };
+}
+const SERVABLE_IMAGE = /^data:image\/(?:png|jpeg|webp);base64,/;
+/** Absolute URL of the first product photo the public image route can serve, or ''. */
+export function homePreviewImage(catalog, publicUrl) {
+  for (const draft of catalog.snapshot().edits)
+    for (const variant of draft.variants)
+      if (SERVABLE_IMAGE.test(variantImageData(draft, variant)))
+        return new URL(imagePath(variant.id), publicUrl).href;
+  return '';
 }
 export function productHtml(meta, template) {
   const title = meta.name + ' | ' + meta.company,
@@ -241,6 +253,9 @@ export function createSite(
           return true;
         }
         const p = company.snapshot().profile;
+        // Link previews need an absolute image URL, so the photo is only named when the public
+        // address is configured. The first product with a servable photo stands for the shop.
+        const preview = publicUrl ? homePreviewImage(catalog, publicUrl) : '';
         send(
           req,
           res,
@@ -248,7 +263,7 @@ export function createSite(
           // The page title, description and link preview follow the company profile.
           html
             .replace(
-              /<title>[\s\S]*?<\/title>|<meta\s+(?:name="description"|property="og:(?:title|description|site_name)")[^>]*>/gi,
+              /<title>[\s\S]*?<\/title>|<meta\s+(?:name="(?:description|twitter:card)"|property="og:[a-z_:]+")[^>]*>/gi,
               '',
             )
             .replace(
@@ -265,7 +280,18 @@ export function createSite(
                 escape(p.legalName || 'Katalog produk') +
                 '"><meta property="og:description" content="' +
                 escape(p.description) +
-                '"></head>',
+                '"><meta property="og:type" content="website">' +
+                (publicUrl
+                  ? '<meta property="og:url" content="' +
+                    escape(new URL('/', publicUrl).href) +
+                    '">'
+                  : '') +
+                (preview
+                  ? '<meta property="og:image" content="' +
+                    escape(preview) +
+                    '"><meta name="twitter:card" content="summary_large_image">'
+                  : '') +
+                '</head>',
             ),
         );
         return true;

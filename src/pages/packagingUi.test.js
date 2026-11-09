@@ -271,7 +271,10 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     assert.equal(container.querySelector('.detail-package-price').textContent, 'Harga untuk 1 dus');
     await click(button('Beli sekarang'));
     assert.equal(container.querySelectorAll('.cart-item').length, 2);
-    assert.equal(container.querySelector('.cart-item .purchase-packaging').textContent, '2 pack');
+    assert.equal(
+      container.querySelector('.cart-item .purchase-packaging').textContent,
+      '2 pack · isi 6',
+    );
     assert.doesNotMatch(container.querySelector('.shop-list').textContent, /satuan| = /i);
     assert.match(container.querySelector('.cart-subtotal').textContent, /530.000/);
     await click(container.querySelector('a[href="#/checkout"]'));
@@ -279,7 +282,7 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
       [...container.querySelectorAll('.checkout-items .purchase-packaging')].map(
         (entry) => entry.textContent,
       ),
-      ['2 pack', '1 dus'],
+      ['2 pack · isi 6', '1 dus · isi 24'],
     );
     assert.doesNotMatch(container.querySelector('.checkout-items').textContent, /satuan| = /i);
     await fill('#checkout-name', 'Pembeli Kemasan');
@@ -300,7 +303,7 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
       [...container.querySelectorAll('.confirmation-items .purchase-packaging')].map(
         (entry) => entry.textContent,
       ),
-      ['2 pack', '1 dus'],
+      ['2 pack · isi 6', '1 dus · isi 24'],
     );
     const changed = api.catalog.snapshot();
     changed.edits
@@ -312,12 +315,12 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
       [...container.querySelectorAll('.orders-preview-packaging .purchase-packaging')].map(
         (entry) => entry.textContent,
       ),
-      ['2 pack', '1 dus'],
+      ['2 pack · isi 6', '1 dus · isi 24'],
     );
     await click(container.querySelector('.orders-card a[href^="#/pesanan/"]'));
     assert.equal(
       container.querySelectorAll('.confirmation-items .purchase-packaging')[1].textContent,
-      '1 dus',
+      '1 dus · isi 24',
     );
     assert.equal(
       orders.readOrder(order.id, dom.sessionStorage).items[1].details.packaging.packsPerBox,

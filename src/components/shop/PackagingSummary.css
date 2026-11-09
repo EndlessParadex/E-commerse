@@ -16,3 +16,8 @@
   color: var(--color-info-text);
   font-weight: 600;
 }
+
+.purchase-packaging-contents {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}

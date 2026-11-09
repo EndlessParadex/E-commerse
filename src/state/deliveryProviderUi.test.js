@@ -162,3 +162,73 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     globalThis.fetch = originalFetch;
   }
 });
+
+test('signing in fills the saved recipient and address without reloading the page', async () => {
+  const dom = new Window({ url: 'http://fixture.test/#/login' });
+  const originalFetch = globalThis.fetch;
+  Object.assign(globalThis, {
+    window: dom,
+    document: dom.document,
+    HTMLElement: dom.HTMLElement,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  });
+  Object.defineProperty(globalThis, 'navigator', { value: dom.navigator, configurable: true });
+  globalThis.fetch = async (path) => {
+    if (path === '/api/auth/me') return new Response('{}', { status: 401 });
+    throw new Error('Unexpected request: ' + path);
+  };
+  const vite = await createServer({
+    configFile: false,
+    resolve: { preserveSymlinks: true },
+    oxc: { jsx: { runtime: 'automatic' } },
+    optimizeDeps: { noDiscovery: true },
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+    appType: 'custom',
+    ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] },
+  });
+  let root, current;
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+  try {
+    const [{ default: Provider }, { DeliveryContext }] = await Promise.all([
+      vite.ssrLoadModule('/src/state/DeliveryProvider.jsx'),
+      vite.ssrLoadModule('/src/state/useDelivery.js'),
+    ]);
+    const { createRoot } = await import('react-dom/client');
+    const container = dom.document.createElement('div');
+    dom.document.body.append(container);
+    root = createRoot(container);
+    await act(async () => {
+      root.render(
+        createElement(
+          Provider,
+          null,
+          createElement(DeliveryContext.Consumer, null, (value) => {
+            current = value;
+            return null;
+          }),
+        ),
+      );
+      await settle();
+    });
+    assert.equal(current.user, null);
+    assert.equal(current.savedLocation, null);
+    // AuthPage calls setUser with the account returned by POST /api/auth/login.
+    await act(async () => {
+      current.setUser({
+        id: 'buyer',
+        name: 'Pembeli Uji',
+        address: 'Jalan Merdeka Nomor 10, Tanjung Pandan',
+        email: 'buyer@fixture.test',
+      });
+      await settle();
+    });
+    assert.deepEqual(current.savedLocation, {
+      namaToko: 'Pembeli Uji',
+      namaJalan: 'Jalan Merdeka Nomor 10, Tanjung Pandan',
+    });
+  } finally {
+    await act(async () => root?.unmount());
+    await vite.close();
+    globalThis.fetch = originalFetch;
+  }
+});

@@ -20,7 +20,13 @@ export default function DeliveryProvider({ children }) {
   const sessionGeneration = useRef(0);
   const setUser = useCallback((value) => {
     const next = typeof value === 'function' ? value(userRef.current) : value;
-    if ((next?.id || null) !== (userRef.current?.id || null)) sessionGeneration.current += 1;
+    if ((next?.id || null) !== (userRef.current?.id || null)) {
+      sessionGeneration.current += 1;
+      // A newly signed-in account brings its own recipient and address, so checkout is
+      // filled straight after login instead of only after the page is reloaded.
+      const location = next && normalizeDelivery({ namaToko: next.name, namaJalan: next.address });
+      if (location) setSavedLocation(location);
+    }
     userRef.current = next;
     setUserState(next);
   }, []);

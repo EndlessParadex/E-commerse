@@ -286,10 +286,15 @@
   .product-price strong {
     min-height: 0;
   }
-  /* Target sentuh judul produk minimal 44px tanpa mengubah tampilan kartu. */
-  .product-card h3 a {
-    padding-block: 10px;
-    margin-block: -10px;
+  /* Target sentuh judul produk minimal 44px tanpa mengubah tampilan kartu. The hit area
+     is an overlay on the link, so the two-line clamp never shows part of a third line. */
+  .product-card h3 {
+    position: relative;
+  }
+  .product-card h3 a::after {
+    content: '';
+    position: absolute;
+    inset: -10px 0;
   }
   .product-price-amount {
     font-size: 1.0625rem;

@@ -641,9 +641,19 @@
     margin-bottom: 8px;
   }
   /* Beranda: banner promo lebih rendah agar kategori dan produk terlihat di layar pertama. */
-  .home-landing .bam-promo-brand,
   .home-landing .bam-promo-copy > p {
     display: none;
+  }
+  /* The brand line is the page's h1: hidden on phones to save space, but kept for
+     screen readers and search engines. */
+  .home-landing .bam-promo-brand {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .home-landing .bam-promo-slide {
     padding: 16px 16px 12px;

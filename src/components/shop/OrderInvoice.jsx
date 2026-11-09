@@ -5,14 +5,13 @@ import { rupiah, dateLabel } from './shopPresentation';
 import { invoiceDiscount } from './invoiceDiscount';
 import './Commerce.css';
 import { shortOrderNumber } from '../../data/orderListPresentation';
+import { INVOICE_PAPER, printPageCss } from '../../data/printPaper';
 
 export default function OrderInvoice({ order }) {
   const company = useCompany();
   const [paperFormat, setPaperFormat] = useState('a4');
   const dotMatrix = paperFormat === 'dotMatrix';
-  const paper = dotMatrix
-    ? { size: '241.3mm 279.4mm', margin: '8mm 12.7mm' }
-    : { size: '210mm 297mm', margin: '16mm' };
+  const paper = dotMatrix ? INVOICE_PAPER.dotMatrix : INVOICE_PAPER.a4;
   // Use the seller snapshot saved with this order, not editable current store settings.
   const seller = order.seller || company.profile;
   const payment = order.payment || {};
@@ -220,7 +219,7 @@ export default function OrderInvoice({ order }) {
       {typeof document !== 'undefined' &&
         createPortal(
           <div className={'invoice-print-root invoice-print-root--' + paperFormat}>
-            <style>{`@media print { @page { size: ${paper.size}; margin: ${paper.margin}; } }`}</style>
+            <style>{printPageCss(paper)}</style>
             {invoice}
           </div>,
           document.body,

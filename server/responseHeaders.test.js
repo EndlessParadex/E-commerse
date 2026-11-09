@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { gunzipSync, brotliDecompressSync } from 'node:zlib';
 import { createSite } from './site.js';
 import { createApp } from './app.js';
+import { createHash } from 'node:crypto';
+import { allPrintPageCss, printPageCss, INVOICE_PAPER } from '../src/data/printPaper.js';
 
 test('public product HTML compresses without stale catalog caching and HEAD has no body', async () => {
   const app = createApp({
@@ -112,7 +114,23 @@ test('HTML and API errors receive frame protection; HSTS uses configured HTTPS, 
             end() {},
           },
         );
-        assert.match(headers['content-security-policy'], /frame-ancestors 'none'/);
+        const csp = headers['content-security-policy'];
+        assert.match(csp, /frame-ancestors 'none'/);
+        // Only the site itself may supply scripts, styles, fonts and requests.
+        assert.match(csp, /default-src 'self'/);
+        assert.match(csp, /script-src 'self'(;|$)/);
+        // Styles: the site's own files plus the exact hashes of the print @page rules.
+        const styleSrc = csp.match(/style-src ([^;]+)/)[1].split(' ');
+        assert.deepEqual(styleSrc.slice(0, 1), ["'self'"]);
+        assert.ok(styleSrc.slice(1).every((value) => /^'sha256-[A-Za-z0-9+/]+=*'$/.test(value)));
+        for (const css of allPrintPageCss())
+          assert.ok(
+            styleSrc.includes("'sha256-" + createHash('sha256').update(css).digest('base64') + "'"),
+            css,
+          );
+        assert.match(csp, /img-src 'self' data:(;|$)/);
+        assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval|googleapis|gstatic/);
+        assert.equal(csp.includes('upgrade-insecure-requests'), publicUrl.startsWith('https:'));
         assert.equal(headers['x-frame-options'], 'DENY');
         assert.equal(
           headers['strict-transport-security'],
@@ -124,4 +142,13 @@ test('HTML and API errors receive frame protection; HSTS uses configured HTTPS, 
       app.db.close();
     }
   }
+});
+
+test('print style hash matches what Chromium computes for the rendered invoice <style>', () => {
+  // Value reported by Chromium when it blocked the A4 invoice style before the hash was allowed.
+  assert.equal(
+    createHash('sha256').update(printPageCss(INVOICE_PAPER.a4)).digest('base64'),
+    '5uI/8p6dA0Nt/5mieKN/ZE5qH5/ZG95jtMdOPWMgTlc=',
+  );
+  assert.equal(allPrintPageCss().length, 4);
 });

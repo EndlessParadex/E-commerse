@@ -1,22 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { b2bPackingList, packingColumns } from '../../data/b2bPackingList';
+import { PACKING_PAPER, printPageCss } from '../../data/printPaper';
 import './Commerce.css';
 import './B2BPackingList.css';
 
-const formats = {
-  a4: { label: 'A4', size: '210mm 297mm', margin: '10mm' },
-  continuousHalf: {
-    label: 'Dot matrix · 9,5 × 5,5 inci',
-    size: '241.3mm 139.7mm',
-    margin: '8mm 12.7mm',
-  },
-  continuousFull: {
-    label: 'Dot matrix · 9,5 × 11 inci',
-    size: '241.3mm 279.4mm',
-    margin: '8mm 12.7mm',
-  },
-};
+const formats = PACKING_PAPER;
 export default function B2BPackingList({ order }) {
   const [format, setFormat] = useState('a4');
   const [printing, setPrinting] = useState(false);
@@ -144,7 +133,7 @@ export default function B2BPackingList({ order }) {
       {printing &&
         createPortal(
           <div className="invoice-print-root b2b-print-root">
-            <style>{`@media print { @page { size: ${paper.size}; margin: ${paper.margin}; } }`}</style>
+            <style>{printPageCss(paper)}</style>
             {content}
           </div>,
           window.document.body,

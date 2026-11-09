@@ -10,7 +10,7 @@ const ACCOUNTS = {
 };
 
 // A signed-out visitor gets 401 from the session check; that is expected, not an error.
-const expected = (text) => /status of 401|ERR_TUNNEL_CONNECTION_FAILED/.test(text);
+const expected = (text) => /status of 401/.test(text);
 
 function watchErrors(page) {
   const errors = [];

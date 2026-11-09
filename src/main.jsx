@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 
 // Import Design System kita
+import './styles/fonts.css';
 import './styles/global.css';
 
 createRoot(document.getElementById('root')).render(

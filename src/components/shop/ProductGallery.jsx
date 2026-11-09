@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { productGallery } from '../../data/productGallery';
 import ProductImage from './ProductImage';
 import './ProductGallery.css';
-import { productColorStyle } from '../../data/catalogColors';
 import { purchaseProductName } from '../../data/packagingPresentation';
 
 function GalleryMedia({ product, entry, thumbnail = false }) {
@@ -63,7 +62,8 @@ export default function ProductGallery({ product }) {
   const selected = entries[activeIndex];
   return (
     <section className="product-gallery" aria-label="Galeri gambar produk">
-      <div className={'detail-image ' + product.color} style={productColorStyle(product.color)}>
+      {/* Real photos are packshots on white; the colour gradient is only for placeholders. */}
+      <div className={'detail-image has-photo ' + product.color}>
         <GalleryMedia product={product} entry={selected} />
         {product.tag && <span className="detail-tag">{product.tag}</span>}
       </div>
@@ -91,10 +91,7 @@ export default function ProductGallery({ product }) {
                   track.scrollLeft = button.offsetLeft + button.offsetWidth - track.clientWidth;
               }}
             >
-              <span
-                className={'gallery-thumbnail-image ' + product.color}
-                style={productColorStyle(product.color)}
-              >
+              <span className={'gallery-thumbnail-image has-photo ' + product.color}>
                 <GalleryMedia product={product} entry={entry} thumbnail />
               </span>
             </button>

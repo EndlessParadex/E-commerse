@@ -201,3 +201,18 @@
     gap: 8px;
   }
 }
+
+/* Foto asli: latar putih dengan garis tipis, gradasi warna hanya untuk placeholder. */
+.product-gallery .detail-image.has-photo {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--color-border, #e2e8f0);
+}
+.product-gallery .detail-image.has-photo::after {
+  display: none;
+}
+.product-gallery .detail-image.has-photo .bam-product-media--detail {
+  padding: 12px;
+}
+.gallery-thumbnail .gallery-thumbnail-image.has-photo {
+  background: #fff;
+}

@@ -4,7 +4,6 @@ import StarRating from './StarRating';
 import { rupiah } from './shopPresentation';
 import './ProductCard.css';
 import { productVariants } from '../../data/products';
-import { productColorStyle } from '../../data/catalogColors';
 import { packagingValues } from '../../data/productPackaging';
 import { purchaseProductName } from '../../data/packagingPresentation';
 import { useShop } from '../../state/useShop';
@@ -119,12 +118,11 @@ export default function ProductCard({
           'product-image-wrap ' +
           (photo.demo ? 'is-placeholder' : (product.color || '') + ' has-photo')
         }
-        style={photo.demo ? undefined : productColorStyle(product.color)}
       >
-        {/* Without a photo the card stays neutral, so missing photos read as one quiet state. */}
+        {/* Without a photo the card stays neutral, so missing photos read as one quiet state.
+            Real product photos sit on plain white instead of the colour gradient. */}
         <a
           className={'product-image ' + (photo.demo ? 'is-placeholder' : product.color || '')}
-          style={photo.demo ? undefined : productColorStyle(product.color)}
           href={'#/produk/' + product.id}
           aria-label={'Lihat detail ' + productName}
         >

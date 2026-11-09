@@ -1,7 +1,10 @@
 const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 100;
 const validTime = (time) => Number.isFinite(time) && Math.abs(time) <= 8.64e15;
 import { companySnapshot } from '../data/companyStore.js';
-export const shortOrderId = (id) => String(id).replace(/^BAM-/i, '').slice(-8).toUpperCase();
+import { shortOrderNumber } from '../data/orderListPresentation.js';
+// Same short number as order lists and detail pages (e.g. BAM-36DA2D9A), so a buyer and Admin
+// read the same number for the same order.
+export const shortOrderId = (id) => shortOrderNumber(id);
 
 export const notificationKinds = {
   quoteReady: {
@@ -99,7 +102,7 @@ export const notificationKind = (kind) =>
 export const isOrderNotification = (item) =>
   Boolean(notificationKind(item?.kind) && validId(item.orderId));
 export function notificationMessage(kind, orderId) {
-  const number = '#' + shortOrderId(orderId);
+  const number = shortOrderId(orderId);
   return (
     {
       quoteReady: 'Toko telah menetapkan ongkir dan total akhir. Buka pesanan untuk menyetujui.',

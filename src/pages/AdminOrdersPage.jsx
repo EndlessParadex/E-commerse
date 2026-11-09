@@ -588,7 +588,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
           error={error}
         >
           <p>
-            Pesanan {target.order.id}.{' '}
+            Pesanan <span title={target.order.id}>{shortOrderNumber(target.order.id)}</span>.{' '}
             {target.action === 'approve_payment'
               ? 'Periksa alamat, stok, ongkir dan rekening toko. Pelanggan akan menerima total akhir untuk disetujui sebelum pembayaran dimulai.'
               : target.action === 'confirm_cod'

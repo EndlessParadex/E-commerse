@@ -31,7 +31,8 @@ test('pesan pesanan lama diringkas tanpa mengubah ID tautan dan status dibaca', 
     read: true,
   };
   const saved = normalizeShop({ notifications: [notification] }).notifications[0];
-  assert.equal(saved.message, 'Pesanan #B09725AE berhasil dibuat. Lihat detail pesanan Anda.');
+  // Same short number as the order list (BAM-71B010C8), not the end of the ID.
+  assert.equal(saved.message, 'Pesanan BAM-71B010C8 berhasil dibuat. Lihat detail pesanan Anda.');
   assert.equal(saved.orderId, order.id);
   assert.equal(saved.read, true);
 });

@@ -6,6 +6,7 @@ import useUnsavedChanges from '../state/useUnsavedChanges';
 import PaymentDetails from '../components/shop/PaymentDetails';
 import { paymentMethod } from '../state/paymentMethods';
 import '../styles/workflow.css';
+import { shortOrderNumber } from '../data/orderListPresentation';
 
 export default function PaymentPage({ orderId }) {
   const { order, failed, loading, server, detailError } = useOrderDetail(orderId);
@@ -72,7 +73,9 @@ export default function PaymentPage({ orderId }) {
       </a>
       <header className="shop-page-header">
         <h1>Pembayaran pesanan</h1>
-        <p className="workflow-order-id">{order.id}</p>
+        <p className="workflow-order-id" title={order.id}>
+          {shortOrderNumber(order.id)}
+        </p>
       </header>
       {error && (
         <p className="shop-warning" role="alert">

@@ -14,6 +14,7 @@ import '../components/shop/OrderItem.css';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import PaymentDetails from '../components/shop/PaymentDetails';
 import OrderReviews from '../components/shop/OrderReviews';
+import { shortOrderNumber } from '../data/orderListPresentation';
 
 export default function OrderConfirmationPage({ orderId }) {
   const { order, failed, loading, server, detailError } = useOrderDetail(orderId);
@@ -89,7 +90,8 @@ export default function OrderConfirmationPage({ orderId }) {
                           : 'Terima kasih, pesanan Anda diterima.'}
         </h1>
         <p>
-          Nomor pesanan <strong>{order.id}</strong> telah tercatat{' '}
+          Nomor pesanan <strong title={order.id}>{shortOrderNumber(order.id)}</strong> telah
+          tercatat{' '}
           {server
             ? order.b2b
               ? 'sebagai pesanan toko Anda.'

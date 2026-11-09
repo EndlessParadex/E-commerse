@@ -4,6 +4,7 @@ import useCompany from '../../state/useCompany';
 import { rupiah, dateLabel } from './shopPresentation';
 import { invoiceDiscount } from './invoiceDiscount';
 import './Commerce.css';
+import { shortOrderNumber } from '../../data/orderListPresentation';
 
 export default function OrderInvoice({ order }) {
   const company = useCompany();
@@ -58,7 +59,9 @@ export default function OrderInvoice({ order }) {
 
       <section className="invoice-reference" aria-label="Identitas pesanan">
         <span>Nomor pesanan</span>
-        <strong>{order.id}</strong>
+        <strong>{shortOrderNumber(order.id)}</strong>
+        {/* The full ID stays on the document for tracing in the system. */}
+        <small className="invoice-reference-full">ID lengkap: {order.id}</small>
       </section>
 
       <div className="invoice-details">

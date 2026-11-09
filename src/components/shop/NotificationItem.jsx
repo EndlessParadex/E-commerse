@@ -82,7 +82,7 @@ export default function NotificationItem({
         </div>
         <p>{item.message}</p>
         <div className="notification-meta">
-          {isOrderNotification(item) && <span>Pesanan #{shortOrderId(item.orderId)}</span>}
+          {isOrderNotification(item) && <span>Pesanan {shortOrderId(item.orderId)}</span>}
           <time dateTime={new Date(item.createdAt).toISOString()}>{dateLabel(item.createdAt)}</time>
         </div>
         <div className="notification-actions">

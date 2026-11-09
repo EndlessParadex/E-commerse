@@ -8,7 +8,8 @@ import { dirname, resolve } from 'node:path';
 import { createHash, randomBytes, randomUUID, scrypt as scryptCallback } from 'node:crypto';
 import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
-import { CatalogRepository, CatalogError, photo } from './catalog.js';
+import { CatalogRepository, CatalogError, photo, CATALOG_PHOTO_PATH } from './catalog.js';
+import { compressPublic, publicEncoding } from './publicCompression.js';
 import { CompanyRepository } from './company.js';
 import { WorkflowRepository } from './workflow.js';
 import {
@@ -49,6 +50,31 @@ const json = (res, status, body, headers = {}) => {
     ...headers,
   });
   res.end(JSON.stringify(body));
+};
+// The catalog is fetched on every page load; send it compressed and let the browser
+// revalidate with an ETag instead of downloading it again.
+let catalogBodyCache = null;
+const sendCatalogJson = (req, res, body) => {
+  const text = JSON.stringify(body);
+  const etag = '"' + createHash('sha256').update(text).digest('base64url').slice(0, 27) + '"';
+  const headers = {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-cache',
+    etag,
+    vary: 'Accept-Encoding',
+    'x-content-type-options': 'nosniff',
+  };
+  if (req.headers['if-none-match'] === etag) {
+    res.writeHead(304, headers);
+    return res.end();
+  }
+  const encoding = publicEncoding(req.headers['accept-encoding']);
+  if (catalogBodyCache?.etag !== etag) catalogBodyCache = { etag, encoded: new Map() };
+  if (encoding && !catalogBodyCache.encoded.has(encoding))
+    catalogBodyCache.encoded.set(encoding, compressPublic(text, encoding));
+  const payload = encoding ? catalogBodyCache.encoded.get(encoding) : text;
+  res.writeHead(200, { ...headers, ...(encoding ? { 'content-encoding': encoding } : {}) });
+  return res.end(payload);
 };
 const sendError = (res, status, code, errors, headers) =>
   json(res, status, { error: code, ...(errors ? { errors } : {}) }, headers);
@@ -377,6 +403,24 @@ export function createApp({
       if (!path.startsWith('/api/')) {
         if (site.respond(req, res, path)) return;
         return sendError(res, 404, 'not_found');
+      }
+      const catalogPhoto = req.method === 'GET' && CATALOG_PHOTO_PATH.exec(path);
+      if (catalogPhoto) {
+        const asset = catalog.photoFile(catalogPhoto[1]);
+        if (!asset) return sendError(res, 404, 'not_found');
+        const etag = '"' + asset.hash + '"';
+        // The URL contains the photo's own hash, so the content behind it never changes.
+        const headers = {
+          'cache-control': 'public, max-age=31536000, immutable',
+          etag,
+          'x-content-type-options': 'nosniff',
+        };
+        if (req.headers['if-none-match'] === etag) {
+          res.writeHead(304, headers);
+          return res.end();
+        }
+        res.writeHead(200, { ...headers, 'content-type': asset.contentType });
+        return res.end(asset.bytes);
       }
       const publicProductMatch = path.match(/^\/api\/public\/products\/([^/]+)(\/image)?$/);
       if (publicProductMatch && req.method === 'GET') {
@@ -834,9 +878,9 @@ export function createApp({
       }
       if (req.method === 'GET' && path === '/api/catalog') {
         // Ratings come only from buyer reviews, never from catalog sample data.
-        const snapshot = catalog.snapshot();
+        const snapshot = catalog.publicSnapshot();
         const ratings = reviews.summary();
-        return json(res, 200, {
+        return sendCatalogJson(req, res, {
           ...snapshot,
           edits: snapshot.edits.map((draft) => ({
             ...draft,
@@ -849,7 +893,11 @@ export function createApp({
         const user = currentUser(req);
         if (!user) return sendError(res, 401, 'unauthorized');
         if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
-        return json(res, 200, catalog.save(await readBody(req, 20 * 1024 * 1024)));
+        return json(
+          res,
+          200,
+          catalog.publicSnapshot(catalog.save(await readBody(req, 20 * 1024 * 1024))),
+        );
       }
       if (req.method === 'GET' && path === '/api/auth/me') {
         const user = currentUser(req);

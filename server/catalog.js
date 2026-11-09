@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { products } from '../src/data/products.js';
 import { productDraft, slug } from '../src/data/adminEditor.js';
 import { masterSnapshot } from '../src/data/catalogMasters.js';
@@ -63,6 +64,64 @@ function entries(value, maximum, label, allowEmpty = false) {
   });
   return value;
 }
+// Photos stay stored as data URLs. Public responses replace them with content-addressed
+// URLs so browsers download each photo once and cache it, instead of receiving every photo
+// inside the catalog JSON on each visit.
+const PHOTO_DATA = /^data:(image\/(png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
+const PHOTO_EXTENSION = { png: 'png', jpeg: 'jpg', webp: 'webp' };
+export const CATALOG_PHOTO_PATH = /^\/api\/catalog\/photos\/([a-f0-9]{64})\.(jpg|png|webp)$/;
+
+// Apply `map` to every photo field of a catalog snapshot or admin save payload.
+export function mapCatalogPhotos(value, map) {
+  if (!value || typeof value !== 'object') return value;
+  const each = (entry, fields) =>
+    entry && typeof entry === 'object'
+      ? Object.fromEntries(
+          Object.entries(entry).map(([key, item]) => [key, fields[key] ? fields[key](item) : item]),
+        )
+      : entry;
+  const one = (item) => (typeof item === 'string' && item ? map(item) : item);
+  const gallery = (items) =>
+    Array.isArray(items) ? items.map((entry) => each(entry, { src: one })) : items;
+  const result = { ...value };
+  if (value.masters && typeof value.masters === 'object')
+    result.masters = {
+      ...value.masters,
+      suppliers: Array.isArray(value.masters.suppliers)
+        ? value.masters.suppliers.map((entry) => each(entry, { logo: one }))
+        : value.masters.suppliers,
+      brands: Array.isArray(value.masters.brands)
+        ? value.masters.brands.map((entry) => each(entry, { logo: one }))
+        : value.masters.brands,
+    };
+  if (Array.isArray(value.edits))
+    result.edits = value.edits.map((draft) =>
+      each(draft, {
+        image: one,
+        gallery,
+        variants: (variants) =>
+          Array.isArray(variants)
+            ? variants.map((variant) => each(variant, { gallery }))
+            : variants,
+      }),
+    );
+  return result;
+}
+
+function photoAsset(dataUrl) {
+  const match = PHOTO_DATA.exec(dataUrl);
+  if (!match) return null;
+  const bytes = Buffer.from(match[3], 'base64');
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  return {
+    hash,
+    contentType: match[1],
+    bytes,
+    dataUrl,
+    path: `/api/catalog/photos/${hash}.${PHOTO_EXTENSION[match[2]]}`,
+  };
+}
+
 export function normalizeCatalog(input, current = null) {
   try {
     if (input?.version !== 1 || !input.masters) fail('Format katalog tidak valid.');
@@ -482,6 +541,33 @@ export class CatalogRepository {
       });
     });
   }
+  // Index of the current catalog photos, rebuilt only when the catalog revision changes.
+  photoIndex(snapshot = null) {
+    const revision = snapshot
+      ? snapshot.revision
+      : this.db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision;
+    if (this.photoCache?.revision === revision) return this.photoCache;
+    const byHash = new Map();
+    const byData = new Map();
+    mapCatalogPhotos(snapshot || this.snapshot(), (value) => {
+      const asset = byData.get(value) || photoAsset(value);
+      if (asset) {
+        byData.set(value, asset);
+        byHash.set(asset.hash, asset);
+      }
+      return value;
+    });
+    this.photoCache = { revision, byHash, byData };
+    return this.photoCache;
+  }
+  // Catalog for browsers: photos become cacheable URLs instead of inline base64.
+  publicSnapshot(snapshot = this.snapshot()) {
+    const { byData } = this.photoIndex(snapshot);
+    return mapCatalogPhotos(snapshot, (value) => byData.get(value)?.path ?? value);
+  }
+  photoFile(hash) {
+    return this.photoIndex().byHash.get(hash) || null;
+  }
   save(input) {
     const db = this.db;
     db.exec('BEGIN IMMEDIATE');
@@ -493,7 +579,21 @@ export class CatalogRepository {
           409,
           'catalog_conflict',
         );
-      const next = normalizeCatalog(input, current);
+      // The admin form sends back the photo URLs it received; map them to the stored data.
+      const { byHash } = this.photoIndex(current);
+      const resolved = mapCatalogPhotos(input, (value) => {
+        const match = CATALOG_PHOTO_PATH.exec(value);
+        if (!match) return value;
+        const asset = byHash.get(match[1]);
+        if (!asset)
+          throw new CatalogError(
+            'Foto lama tidak ditemukan di katalog. Muat ulang halaman lalu simpan lagi.',
+            409,
+            'photo_missing',
+          );
+        return asset.dataUrl;
+      });
+      const next = normalizeCatalog(resolved, current);
       this.write(next);
       this.afterWrite?.();
       db.prepare('UPDATE catalog_meta SET revision=revision+1 WHERE id=1').run();

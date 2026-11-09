@@ -1,6 +1,13 @@
 export const MAX_PRODUCT_PHOTOS = 8;
 export const MAX_PRODUCT_PHOTO_BYTES = 1024 * 1024;
 export const MAX_PRODUCT_PHOTO_LENGTH = 1400000;
+// Saved catalog photos arrive from the server as cacheable URLs; new uploads are data URLs.
+export const CATALOG_PHOTO_URL = /^\/api\/catalog\/photos\/[a-f0-9]{64}\.(jpg|png|webp)$/;
+const PHOTO_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+export const isProductPhotoSource = (value) =>
+  typeof value === 'string' &&
+  value.length <= MAX_PRODUCT_PHOTO_LENGTH &&
+  (CATALOG_PHOTO_URL.test(value) || PHOTO_DATA_URL.test(value));
 
 // Keep real photos only; the storefront's demo images never become saved uploads.
 export function savedProductPhotos(product) {
@@ -30,9 +37,7 @@ export function galleryError(value) {
     value.some(
       (entry) =>
         !entry ||
-        typeof entry.src !== 'string' ||
-        entry.src.length > MAX_PRODUCT_PHOTO_LENGTH ||
-        !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(entry.src) ||
+        !isProductPhotoSource(entry.src) ||
         (entry.alt !== undefined && (typeof entry.alt !== 'string' || entry.alt.length > 160)),
     )
   ) {

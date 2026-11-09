@@ -10,7 +10,7 @@ import {
   packagingLabel,
   variantKey,
 } from './productPackaging.js';
-import { savedProductPhotos, galleryError, MAX_PRODUCT_PHOTO_LENGTH } from './productPhotos.js';
+import { savedProductPhotos, galleryError, isProductPhotoSource } from './productPhotos.js';
 
 export const CATALOG_STORAGE_KEY = 'bam.admin.catalog.v1';
 export const slug = (value) =>
@@ -109,11 +109,7 @@ export function validateDraft(draft, items = products) {
     errors.subcategoryId = 'Pilih subkategori.';
   if (!draft.description.trim() || draft.description.length > 3000)
     errors.description = 'Isi deskripsi produk, maksimal 3.000 karakter.';
-  if (
-    draft.image &&
-    (draft.image.length > MAX_PRODUCT_PHOTO_LENGTH ||
-      !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(draft.image))
-  )
+  if (draft.image && !isProductPhotoSource(draft.image))
     errors.image = 'Gunakan foto JPG, PNG, atau WebP, maksimal 1 MB.';
   if (draft.gallery !== undefined && galleryError(draft.gallery))
     errors.gallery = galleryError(draft.gallery);

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
+import { gunzipSync } from 'node:zlib';
 import { mkdtempSync, unlinkSync, rmdirSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -37,6 +38,33 @@ async function request(app, method, url, body, cookie = '', extra = {}) {
   return result;
 }
 const cookieOf = (response) => response.headers['set-cookie'].split(';')[0];
+// For binary or compressed responses that are not plain JSON.
+async function rawRequest(app, url, extra = {}) {
+  const req = Readable.from([]);
+  req.method = 'GET';
+  req.url = url;
+  req.headers = { host: 'bam.test', ...extra };
+  let result;
+  const res = {
+    writeHead(status, headers) {
+      result = { status, headers };
+    },
+    end(value) {
+      result.body = value === undefined ? Buffer.alloc(0) : Buffer.from(value);
+    },
+  };
+  await app.handler(req, res);
+  return result;
+}
+const pngBytes = () => Buffer.from(png.split(',')[1], 'base64');
+async function assertCatalogPhoto(app, url) {
+  assert.match(url, /^\/api\/catalog\/photos\/[a-f0-9]{64}\.png$/);
+  const photo = await rawRequest(app, url);
+  assert.equal(photo.status, 200);
+  assert.equal(photo.headers['content-type'], 'image/png');
+  assert.match(photo.headers['cache-control'], /immutable/);
+  assert.ok(photo.body.equals(pngBytes()), 'the photo URL serves the stored photo');
+}
 async function adminCookie(app) {
   app.db
     .prepare(
@@ -216,7 +244,7 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
       delete entry.reviewCount;
     }
     assert.equal(publicCatalog.edits[0].baseName, 'Produk dari database');
-    assert.equal(publicCatalog.edits[0].image, png);
+    await assertCatalogPhoto(app, publicCatalog.edits[0].image);
     assert.equal(
       publicCatalog.masters.categories.find((entry) => entry.id === 'category-test').icon,
       '🥔',
@@ -261,7 +289,7 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
       mutate(invalid);
       const rejected = await request(app, 'PUT', '/api/admin/catalog', invalid, cookie);
       assert.equal(rejected.status, 422, JSON.stringify(rejected.body));
-      assert.deepEqual(app.catalog.snapshot(), publicCatalog);
+      assert.deepEqual(app.catalog.publicSnapshot(), publicCatalog);
     }
     // A database failure midway through writing must restore all catalog tables.
     app.db.exec(
@@ -271,7 +299,57 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
       (await request(app, 'PUT', '/api/admin/catalog', publicCatalog, cookie)).status,
       500,
     );
-    assert.deepEqual(app.catalog.snapshot(), publicCatalog);
+    assert.deepEqual(app.catalog.publicSnapshot(), publicCatalog);
+  } finally {
+    app.db.close();
+  }
+});
+
+test('katalog publik: foto sebagai URL ber-cache, JSON terkompresi dengan ETag, simpan ulang memakai URL', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  try {
+    const cookie = await adminCookie(app);
+    const next = app.catalog.snapshot();
+    next.edits[0].image = png;
+    next.edits[0].gallery = [{ src: png, alt: 'Depan' }];
+    next.masters.brands[0].logo = png;
+    assert.equal((await request(app, 'PUT', '/api/admin/catalog', next, cookie)).status, 200);
+    const plain = await request(app, 'GET', '/api/catalog');
+    const body = plain.body;
+    assert.ok(!JSON.stringify(body).includes('data:image'), 'no inline photos are sent');
+    await assertCatalogPhoto(app, body.edits[0].image);
+    await assertCatalogPhoto(app, body.edits[0].gallery[0].src);
+    await assertCatalogPhoto(app, body.masters.brands[0].logo);
+    assert.equal(plain.headers['cache-control'], 'no-cache');
+    assert.ok(plain.headers.etag);
+    const zipped = await rawRequest(app, '/api/catalog', { 'accept-encoding': 'gzip' });
+    assert.equal(zipped.headers['content-encoding'], 'gzip');
+    assert.deepEqual(JSON.parse(gunzipSync(zipped.body)), body);
+    const again = await rawRequest(app, '/api/catalog', { 'if-none-match': plain.headers.etag });
+    assert.equal(again.status, 304);
+    assert.equal(again.body.length, 0);
+    // The admin form sends the photo URLs back unchanged; the stored photos stay the same.
+    body.edits[0].variants[0].price = '18500';
+    for (const entry of body.edits) {
+      delete entry.rating;
+      delete entry.reviewCount;
+    }
+    const resaved = await request(app, 'PUT', '/api/admin/catalog', body, cookie);
+    assert.equal(resaved.status, 200, JSON.stringify(resaved.body));
+    assert.equal(app.catalog.snapshot().edits[0].image, png);
+    assert.equal(app.catalog.snapshot().edits[0].gallery[0].src, png);
+    assert.equal(app.catalog.snapshot().masters.brands[0].logo, png);
+    // A photo URL that is not part of the catalog is refused without changing anything.
+    const unknown = structuredClone(resaved.body);
+    unknown.edits[0].image = '/api/catalog/photos/' + 'a'.repeat(64) + '.png';
+    const refused = await request(app, 'PUT', '/api/admin/catalog', unknown, cookie);
+    assert.equal(refused.status, 409);
+    assert.equal(refused.body.error, 'photo_missing');
+    assert.equal(app.catalog.snapshot().edits[0].image, png);
+    assert.equal(
+      (await rawRequest(app, '/api/catalog/photos/' + 'b'.repeat(64) + '.png')).status,
+      404,
+    );
   } finally {
     app.db.close();
   }
@@ -295,7 +373,7 @@ test('katalog dan foto tetap ada setelah database dibuka kembali', async () => {
     app = createApp({ dbPath: path });
     const publicCatalog = await request(app, 'GET', '/api/catalog');
     assert.equal(publicCatalog.body.revision, 1);
-    assert.equal(publicCatalog.body.edits[0].image, png);
+    await assertCatalogPhoto(app, publicCatalog.body.edits[0].image);
     assert.equal(publicCatalog.body.edits[0].variants[0].price, '19000');
     assert.equal(publicCatalog.body.edits[0].color, 'sky');
     assert.equal(publicCatalog.body.masters.suppliers[0].color, 'rose');

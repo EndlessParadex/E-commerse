@@ -29,7 +29,8 @@
     "format:check": "prettier --check . --ignore-unknown",
     "verify": "npm run format:check && npm run lint -- --deny-warnings && npm test && npm run build && npm audit --audit-level=high",
     "hooks:install": "git config core.hooksPath .githooks",
-    "verify:quick": "npm run format:check && npm run lint -- --deny-warnings"
+    "verify:quick": "npm run format:check && npm run lint -- --deny-warnings",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "nodemailer": "10.2.1",
@@ -39,6 +40,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",

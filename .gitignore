@@ -44,3 +44,7 @@ data/*.sqlite-*
 
 # Data katalog real (harga distributor + foto) tidak boleh masuk repo publik.
 /katalog-lokal/
+
+# Playwright
+/test-results/
+/playwright-report/

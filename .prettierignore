@@ -6,3 +6,5 @@ dist-ssr/
 .bam-code-backups/
 package-lock.json
 *.svg
+test-results/
+playwright-report/

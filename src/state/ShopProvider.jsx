@@ -12,6 +12,7 @@ import { DeliveryContext } from './useDelivery';
 import { clearCompletedCheckoutRequest, serverStock } from './serverWorkflow';
 import useSharedCart from './useSharedCart';
 import { MAX_ITEM_QUANTITY } from '../data/orderLimits.js';
+import { usePersonalCartSync } from './personalCartSync.js';
 
 function loadShop(key) {
   try {
@@ -75,6 +76,7 @@ export default function ShopProvider({ children }) {
       key={storageKey}
       shared={shared}
       storageKey={storageKey}
+      syncEnabled={workflowUsesServer && Boolean(delivery?.user?.id)}
       cartMode={canChooseCart ? cartMode : 'personal'}
       setCartMode={setCartMode}
     >
@@ -85,7 +87,7 @@ export default function ShopProvider({ children }) {
 
 // Remount the reducer whenever the signed-in account changes. Without a keyed
 // boundary, the previous user's private cart could be written under another ID.
-function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode }) {
+function AccountScopedShop({ children, shared, storageKey, syncEnabled, cartMode, setCartMode }) {
   const [state, rawDispatch] = useReducer(shopReducer, storageKey, loadShop);
   const storeCartActive = shared.enabled && cartMode === 'store';
   const cart = storeCartActive ? shared.cart?.items || [] : state.cart;
@@ -93,6 +95,18 @@ function AccountScopedShop({ children, shared, storageKey, cartMode, setCartMode
   useLayoutEffect(() => {
     stateRef.current = state;
   }, [state]);
+  // The personal cart and favourites follow the account across devices.
+  usePersonalCartSync({
+    enabled: syncEnabled,
+    storageKey,
+    stateRef,
+    state,
+    replace: (value) => {
+      const action = { type: 'replaceSaved', ...value };
+      stateRef.current = shopReducer(stateRef.current, action);
+      rawDispatch(action);
+    },
+  });
   const workflow = useWorkflow();
   const stockWorkflow = useWorkflow('inventory');
   const [storageError, setStorageError] = useState(false);

@@ -39,6 +39,7 @@ import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
 import { OrderDelivery } from './orderDelivery.js';
 import { DeliveryScheduleRepository } from './deliverySchedules.js';
 import { ReviewRepository } from './reviews.js';
+import { PersonalCartRepository } from './personalCarts.js';
 
 const scrypt = promisify(scryptCallback);
 const digest = (token) => createHash('sha256').update(token).digest('hex');
@@ -278,6 +279,7 @@ export function createApp({
   const sharedCarts = new SharedCartRepository(db, catalog, b2bStores, now, b2bCutoff);
   const b2bFinalization = new B2BFinalizationRepository(db, sharedCarts, workflow, messages);
   const reviews = new ReviewRepository(db, workflow, now);
+  const personalCarts = new PersonalCartRepository(db, now);
   let site = createSite(catalog, company, {
     publicUrl: identity.publicUrl?.href || '',
     indexHtml: siteIndexHtml,
@@ -1059,6 +1061,24 @@ export function createApp({
           : await phoneVerification.confirm(actor, body, clientIp(req));
         return json(res, 200, result);
       }
+      if (path === '/api/cart') {
+        const actor = currentUser(req);
+        if (!actor) return sendError(res, 401, 'unauthorized');
+        if (req.method === 'GET') return json(res, 200, personalCarts.read(actor.id));
+        if (req.method !== 'PUT') return sendError(res, 405, 'method_not_allowed');
+        try {
+          return json(res, 200, personalCarts.save(actor.id, await readBody(req, 200000)));
+        } catch (error) {
+          // A newer cart from another device wins; the client replaces its copy with it.
+          if (error?.code === 'cart_conflict')
+            return json(res, 409, {
+              error: 'cart_conflict',
+              errors: { form: error.message },
+              current: error.current,
+            });
+          throw error;
+        }
+      }
       if (req.method === 'PUT' && path === '/api/profile/phone/whatsapp-notifications') {
         const actor = currentUser(req);
         if (!actor) return sendError(res, 401, 'unauthorized');
@@ -1174,6 +1194,7 @@ export function createApp({
     sharedCarts,
     b2bFinalization,
     reviews,
+    personalCarts,
     refreshMailSettings,
   };
 }

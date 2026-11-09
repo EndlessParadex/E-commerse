@@ -192,6 +192,11 @@ export function shopReducer(state, action) {
     }
     case 'clearCart':
       return { ...state, cart: [] };
+    case 'replaceSaved': {
+      // The account's cart and favourites from the server (another device may have changed them).
+      const saved = normalizeShop({ cart: action.cart, favoriteIds: action.favoriteIds });
+      return { ...state, cart: saved.cart, favoriteIds: saved.favoriteIds };
+    }
     case 'toggleFavorite': {
       if (!validId(action.id)) return state;
       const favoriteIds = state.favoriteIds.includes(action.id)

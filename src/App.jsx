@@ -194,10 +194,7 @@ function App() {
       <WorkflowProvider>
         <ShopProvider>
           <AppearanceProvider>
-            {!isAdmin && <Navbar />}
-            {!isAdmin && !isAccountRoute && !fastOrderRoute && route !== '/keranjang' && (
-              <SharedCartBar />
-            )}
+            {/* First focus stop on every page, before the header and its search. */}
             <a
               className="skip-to-content"
               href="#main-content"
@@ -208,6 +205,10 @@ function App() {
             >
               Lewati ke isi halaman
             </a>
+            {!isAdmin && <Navbar />}
+            {!isAdmin && !isAccountRoute && !fastOrderRoute && route !== '/keranjang' && (
+              <SharedCartBar />
+            )}
             <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
               <Suspense
                 fallback={

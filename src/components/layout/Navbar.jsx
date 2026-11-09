@@ -106,6 +106,14 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const matchingProducts = filterProducts({ query: searchQuery }).slice(0, 8);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  // Returns the product route; callers (event handlers) navigate to it.
+  const openSuggestion = (product) => {
+    setSearchQuery(product.name);
+    setShowSearchSuggestions(false);
+    setActiveSuggestion(-1);
+    return `/produk/${product.id}`;
+  };
   const formatPrice = (value) =>
     new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -294,30 +302,76 @@ const Navbar = () => {
             <input
               type="text"
               value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setActiveSuggestion(-1);
+              }}
               onFocus={() => setShowSearchSuggestions(true)}
               placeholder={
                 b2bCart ? 'Cari produk atau SKU...' : `Cari di ${companyProfile.shortName}.`
               }
               aria-label="Cari produk"
+              // Combobox: arrow keys move through suggestions, Enter opens the highlighted one,
+              // Tab leaves the search instead of stepping through every suggestion.
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={showSearchSuggestions && matchingProducts.length > 0}
+              aria-controls="search-suggestion-list"
+              aria-activedescendant={
+                showSearchSuggestions && activeSuggestion >= 0
+                  ? 'search-suggestion-' + activeSuggestion
+                  : undefined
+              }
               onKeyDown={(event) => {
-                if (event.key === 'Escape') setShowSearchSuggestions(false);
+                const count = matchingProducts.length;
+                if (event.key === 'Escape') {
+                  setShowSearchSuggestions(false);
+                  setActiveSuggestion(-1);
+                } else if (event.key === 'Tab') {
+                  setShowSearchSuggestions(false);
+                  setActiveSuggestion(-1);
+                } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && count) {
+                  event.preventDefault();
+                  setShowSearchSuggestions(true);
+                  setActiveSuggestion((current) =>
+                    event.key === 'ArrowDown'
+                      ? (current + 1) % count
+                      : current <= 0
+                        ? count - 1
+                        : current - 1,
+                  );
+                } else if (event.key === 'Enter' && showSearchSuggestions) {
+                  const product = matchingProducts[activeSuggestion];
+                  if (!product) return;
+                  event.preventDefault();
+                  window.location.assign('#' + openSuggestion(product));
+                }
               }}
             />
 
             {showSearchSuggestions && (
-              <div className="search-suggestions" aria-label="Saran pencarian">
-                <div className="search-suggestion-list">
-                  {matchingProducts.map((product) => (
+              <div className="search-suggestions">
+                <div
+                  className="search-suggestion-list"
+                  id="search-suggestion-list"
+                  role="listbox"
+                  aria-label="Saran pencarian"
+                >
+                  {matchingProducts.map((product, index) => (
                     <button
                       type="button"
-                      className="search-suggestion"
+                      id={'search-suggestion-' + index}
+                      role="option"
+                      aria-selected={index === activeSuggestion}
+                      tabIndex={-1}
+                      className={
+                        'search-suggestion' + (index === activeSuggestion ? ' is-active' : '')
+                      }
                       key={product.id}
                       onMouseDown={(event) => event.preventDefault()}
+                      onMouseEnter={() => setActiveSuggestion(index)}
                       onClick={() => {
-                        setSearchQuery(product.name);
-                        setShowSearchSuggestions(false);
-                        window.location.hash = `/produk/${product.id}`;
+                        window.location.hash = openSuggestion(product);
                       }}
                     >
                       <svg

@@ -92,6 +92,36 @@ test('navbar: jarak konten mengikuti perubahan tinggi, menu tetap berfungsi, dan
     assert.equal(height(), '129px');
     const navigation = container.querySelector('.store-navigation');
     assert.ok(navigation.querySelector('.navbar [aria-label="Cari produk"]'));
+    const search = navigation.querySelector('.navbar [aria-label="Cari produk"]');
+    assert.equal(search.getAttribute('role'), 'combobox');
+    await act(async () => {
+      search.dispatchEvent(new dom.FocusEvent('focusin', { bubbles: true }));
+      search.focus();
+      await settle();
+    });
+    const options = [...navigation.querySelectorAll('#search-suggestion-list [role="option"]')];
+    assert.ok(options.length > 0, 'focusing search lists suggestions');
+    assert.ok(
+      options.every((option) => option.tabIndex === -1),
+      'suggestions are not separate Tab stops',
+    );
+    const key = (name) =>
+      act(async () => {
+        search.dispatchEvent(new dom.KeyboardEvent('keydown', { key: name, bubbles: true }));
+        await settle();
+      });
+    await key('ArrowDown');
+    assert.equal(search.getAttribute('aria-activedescendant'), 'search-suggestion-0');
+    assert.equal(options[0].getAttribute('aria-selected'), 'true');
+    await key('ArrowUp');
+    assert.equal(
+      search.getAttribute('aria-activedescendant'),
+      'search-suggestion-' + (options.length - 1),
+      'ArrowUp from the first suggestion wraps to the last',
+    );
+    await key('Escape');
+    assert.equal(navigation.querySelector('#search-suggestion-list'), null);
+    assert.equal(search.hasAttribute('aria-activedescendant'), false);
     assert.ok(navigation.querySelector('.secondary-navbar[aria-label="Navigasi belanja"]'));
     const bottom = navigation.querySelector('.mobile-bottom-navigation');
     assert.ok(bottom, 'mobile navigation is present for responsive CSS');

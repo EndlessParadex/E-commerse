@@ -439,7 +439,8 @@
   font-size: 1rem;
 }
 
-.search-suggestion:hover {
+.search-suggestion:hover,
+.search-suggestion.is-active {
   background: var(--color-surface-soft);
 }
 

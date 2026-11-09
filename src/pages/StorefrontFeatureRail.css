@@ -343,11 +343,13 @@
 .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  /* Rows follow the number of entries: one category or supplier no longer reserves an
+     empty second row. */
+  grid-auto-rows: minmax(72px, auto);
+  align-content: start;
   gap: 10px;
   margin: 0;
   padding: 0;
-  flex: 1;
 }
 .home-landing .home-discovery-row.bam-compact-discovery .home-category-grid > li,
 .home-landing .home-discovery-row.bam-compact-discovery .bam-supplier-grid > li {

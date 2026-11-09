@@ -230,6 +230,8 @@
 }
 .auth-switch {
   font-size: 0.875rem;
+  /* 25 px lines so the two stacked links' 24 px targets do not overlap. */
+  line-height: 1.8;
   text-align: center;
   margin-top: 24px;
   color: var(--color-text-muted);
@@ -238,6 +240,8 @@
   font-weight: 600;
   color: var(--color-link);
   margin-left: 4px;
+  /* Inline padding grows the 24 px tap target without changing the line height. */
+  padding-block: 4px;
 }
 .auth-page button:focus-visible,
 .auth-page a:focus-visible {

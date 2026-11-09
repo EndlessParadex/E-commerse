@@ -529,6 +529,14 @@
 .shop-breadcrumb > [aria-hidden='true'] {
   flex-shrink: 0;
 }
+/* Breadcrumb links reach a 24 px target (WCAG 2.5.8) without moving the row: the padding
+   grows the target and the negative margin gives the space back. Phones use 44 px below. */
+@media (min-width: 601px) {
+  .shop-breadcrumb > a {
+    padding-block: 2px;
+    margin-block: -2px;
+  }
+}
 .shop-page-header {
   margin-bottom: 24px;
 }

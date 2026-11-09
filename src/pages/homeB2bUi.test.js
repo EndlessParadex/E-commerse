@@ -172,6 +172,18 @@ test('role home: Sales sees only assigned stores, buyer sees its store and serve
       'original price is visible',
     );
     assert.ok(container.querySelector('.bam-buyer-promo-hero'));
+    assert.match(
+      container.querySelector('.bam-buyer-promo-eyebrow').textContent,
+      /PENAWARAN UNTUK TOKO/,
+      'the promo wording only appears because this catalog has discounted products',
+    );
+    assert.equal(
+      [...container.querySelectorAll('.bam-buyer-promo-copy a')].some((link) =>
+        /promo/i.test(link.textContent),
+      ),
+      false,
+      'the catalog link does not promise a promo list',
+    );
     assert.equal(container.querySelectorAll('.bam-buyer-store-summary').length, 0);
     assert.equal(container.querySelectorAll('.bam-buyer-primary-card').length, 0);
     assert.equal(

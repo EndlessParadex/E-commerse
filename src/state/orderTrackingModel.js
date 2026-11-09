@@ -1,5 +1,5 @@
 export const ORDER_STAGES = [
-  { id: 'processing', label: 'Diproses', description: 'Pesanan sedang disiapkan oleh toko.' },
+  { id: 'processing', label: 'Diproses', description: 'Pesanan sedang disiapkan oleh BAM.' },
   {
     id: 'shipped',
     label: 'Dikirim',

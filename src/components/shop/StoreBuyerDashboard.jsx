@@ -175,7 +175,7 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
     { title: 'Jadwal pengiriman', href: '#/akun/kalender', icon: 'calendar' },
     { title: 'Pesanan toko', href: '#/pesanan', icon: 'orders' },
     { title: 'Katalog produk', href: '#/cari?q=', icon: 'catalog' },
-    { title: 'Promo & penawaran', href: '#/cari?q=', icon: 'tag' },
+    ...(promos.length ? [{ title: 'Promo & penawaran', href: '#/cari?q=', icon: 'tag' }] : []),
     { title: 'Pengaturan akun', href: '#/akun', icon: 'settings' },
   ];
 
@@ -282,13 +282,20 @@ export default function StoreBuyerDashboard({ shared, onCartMode }) {
       <main className="bam-buyer-storefront-main">
         <section className="bam-buyer-promo-hero" aria-labelledby="bam-buyer-promo-title">
           <div className="bam-buyer-promo-copy">
-            <span className="bam-buyer-promo-eyebrow">PENAWARAN UNTUK TOKO</span>
+            {/* Only promise promotions when the catalog has discounted products. */}
+            <span className="bam-buyer-promo-eyebrow">
+              {promos.length ? 'PENAWARAN UNTUK TOKO' : 'KATALOG UNTUK TOKO'}
+            </span>
             <h2 id="bam-buyer-promo-title">
               {promos.length ? 'Harga khusus untuk tokomu' : 'Temukan kebutuhan tokomu'}
             </h2>
-            <p>Temukan promo dan harga dari katalog pemasok BAM.</p>
+            <p>
+              {promos.length
+                ? 'Beberapa produk sedang memakai harga khusus di katalog pemasok BAM.'
+                : 'Pilih produk, ukuran, dan kemasan yang dibutuhkan tokomu dari katalog pemasok BAM.'}
+            </p>
             <a href="#/cari?q=">
-              Lihat semua promo <StoreIcon name="arrow" size={19} />
+              Lihat katalog <StoreIcon name="arrow" size={19} />
             </a>
           </div>
           <div className="bam-buyer-promo-art" aria-hidden="true">

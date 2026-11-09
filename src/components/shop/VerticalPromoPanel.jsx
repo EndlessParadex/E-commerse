@@ -19,8 +19,8 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
       <header className="bam-vertical-promos-heading">
         <div>
           <span className="bam-vertical-promos-kicker">
-            {personal
-              ? 'Pilihan hemat untuk belanjamu'
+            {personal && discountedCount
+              ? 'Harga khusus untuk belanjamu'
               : discountedCount
                 ? 'Harga khusus di katalog'
                 : 'Pilihan dari katalog BAM'}

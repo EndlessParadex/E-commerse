@@ -56,11 +56,11 @@ export default function OrderTracking({ status = 'processing', server = false, r
     <section className="order-tracking confirmation-card" aria-labelledby="order-tracking-title">
       <div className="order-tracking-heading">
         <h2 id="order-tracking-title">Status pesanan</h2>
-        <span className="order-tracking-badge">{server ? 'Status toko' : 'Simulasi'}</span>
+        <span className="order-tracking-badge">{server ? 'Dari BAM' : 'Simulasi'}</span>
       </div>
       <p className="order-tracking-note">
         {server
-          ? 'Status diperbarui oleh toko. Pesanan diantar langsung oleh sopir BAM.'
+          ? 'Status diperbarui oleh Admin BAM. Pesanan diantar langsung oleh sopir BAM.'
           : 'Pratinjau frontend, bukan informasi pengiriman nyata. Belum terhubung ke toko atau kurir.'}
       </p>
       <p className="order-tracking-summary" role="status">

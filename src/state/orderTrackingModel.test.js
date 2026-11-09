@@ -21,3 +21,8 @@ test('shipped and completed previews have exactly one current stage', () => {
 test('unknown status safely falls back to processing', () => {
   assert.equal(trackingSteps('unknown')[0].state, 'current');
 });
+
+test('stage descriptions name BAM, not "toko", as the one preparing the order', async () => {
+  const { ORDER_STAGES } = await import('./orderTrackingModel.js');
+  assert.ok(ORDER_STAGES.every((stage) => !/\btoko\b/i.test(stage.description)));
+});

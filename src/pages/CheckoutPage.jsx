@@ -471,7 +471,7 @@ export default function CheckoutPage() {
                 <h2 id="payment-title">Metode pembayaran</h2>
                 <p>
                   {codOnly
-                    ? 'Metode pembayaran toko hanya COD.'
+                    ? 'Pembayaran hanya COD (bayar di tempat).'
                     : 'Pilih layanan yang ingin digunakan.'}
                 </p>
               </div>

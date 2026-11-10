@@ -162,8 +162,8 @@ export default function CheckoutPage() {
             ? 'Periksa kotak masuk dan folder spam.'
             : 'Layanan email toko belum diaktifkan; hubungi pengelola toko.'}
         </p>
-        <a className="shop-primary" href="#/akun">
-          Buka akun saya
+        <a className="shop-primary" href="#/akun/keamanan">
+          Buka Keamanan akun
         </a>
       </div>
     );

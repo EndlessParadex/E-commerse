@@ -14,6 +14,7 @@ import { initializeCatalog, catalogUsesServer, workflowUsesServer } from '../../
 import useCompany from '../../state/useCompany';
 import NotificationsPanel from './NotificationsPanel';
 import SharedCartPage from './SharedCartPage';
+import { useDelivery } from '../../state/useDelivery';
 
 export default function ShopPage({ type }) {
   const shop = useShop();
@@ -22,6 +23,14 @@ export default function ShopPage({ type }) {
   const freeShipping =
     workflowUsesServer && company.commerce?.version === 31 && company.commerce?.codOnly === true;
   const isCart = type === 'cart';
+  // Checkout refuses unverified accounts; say so here, before the buyer reaches that wall.
+  const { user } = useDelivery();
+  const needsVerification =
+    isCart &&
+    workflowUsesServer &&
+    company.commerce?.version === 31 &&
+    Boolean(user) &&
+    !user.emailVerified;
   const [cancelOpen, setCancelOpen] = useState(false);
   // The last removed cart line can be put back for a few seconds.
   const [removed, setRemoved] = useState(null);
@@ -302,6 +311,12 @@ export default function ShopPage({ type }) {
                 ? 'Ongkir gratis untuk semua pesanan.'
                 : 'Ongkos kirim dihitung saat checkout.'}
             </p>
+            {needsVerification && (
+              <p className="shop-warning cart-verify-notice" role="status">
+                Email akun belum dikonfirmasi, jadi pesanan belum bisa dibuat. Barang di keranjang
+                tetap tersimpan. <a href="#/akun/keamanan">Konfirmasi email</a>
+              </p>
+            )}
             {shop.cartReview.ready && !catalogError ? (
               <a className="shop-primary" href="#/checkout">
                 Lanjut ke checkout <span aria-hidden="true">→</span>

@@ -111,3 +111,64 @@ test('admin: daftar pesanan terbuka', async ({ page }) => {
   await expectNoHorizontalScroll(page);
   expect(errors).toEqual([]);
 });
+
+test('akun baru: daftar, disetujui Admin, lalu diperingatkan soal email di keranjang', async ({
+  page,
+  browser,
+}, testInfo) => {
+  const errors = watchErrors(page);
+  // Unique per run and per retry: the server rejects a repeated email or phone number.
+  const stamp = String(Date.now()).slice(-9);
+  const email = `baru.${testInfo.project.name}.${stamp}@bam.test`;
+  const newPassword = 'Uji-Baru@2026';
+
+  await page.goto('/#/daftar');
+  const form = page.locator('main form');
+  await form.locator('[name="name"]').fill('Pembeli Baru Uji');
+  await form.locator('[name="phone"]').fill('0812' + stamp.slice(-8));
+  await form.locator('[name="address"]').fill('Jl. Uji Coba No. 1, Tanjung Pandan');
+  await form.locator('[name="email"]').fill(email);
+  await form.locator('[name="password"]').fill(newPassword);
+  await form.locator('[name="confirmPassword"]').fill(newPassword);
+  await page.getByRole('button', { name: 'Daftar akun' }).click();
+  await expect(page.locator('main')).toContainText('perlu persetujuan Admin');
+
+  // Admin approves the registration in a separate browser session.
+  const adminContext = await browser.newContext();
+  const admin = await adminContext.newPage();
+  await login(admin, ACCOUNTS.admin);
+  await admin.goto('/#/admin/persetujuan');
+  await admin
+    .locator('li, tr, article', { hasText: email })
+    .last()
+    .getByRole('button', { name: 'Setujui' })
+    .click();
+  const dialog = admin.locator('dialog[open]');
+  await dialog.locator('#approval-password').fill(PASSWORD);
+  await dialog.getByRole('button', { name: 'Setujui akun' }).click();
+  await expect(admin.locator('main')).toContainText('Akun disetujui');
+  await adminContext.close();
+
+  // The buyer can sign in and fill a cart, but must be told before checkout.
+  await page.goto('/#/login');
+  await page.locator('input[name="email"]').fill(email);
+  await page.locator('input[name="password"]').fill(newPassword);
+  await page.locator('input[name="password"]').press('Enter');
+  await expect(page).not.toHaveURL(/#\/login/);
+  await page.goto('/#/kategori/snack');
+  await page.locator('.product-card h3 a').first().click();
+  await page
+    .getByRole('button', { name: /Tambah ke keranjang/ })
+    .first()
+    .click();
+  await page.goto('/#/keranjang');
+  const notice = page.locator('.cart-verify-notice');
+  await expect(notice).toContainText('Email akun belum dikonfirmasi');
+  await expectNoHorizontalScroll(page);
+  await notice.getByRole('link', { name: 'Konfirmasi email' }).click();
+  await expect(page).toHaveURL(/#\/akun\/keamanan/);
+  // Phone and desktop both land on the screen that holds the confirmation control.
+  await expect(page.locator('main')).toContainText('Email belum dikonfirmasi');
+  await expect(page.getByRole('button', { name: 'Kirim tautan konfirmasi email' })).toBeVisible();
+  expect(errors).toEqual([]);
+});

@@ -282,3 +282,8 @@
   outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
+/* The link must not rely on colour alone inside the warning. */
+.cart-verify-notice a {
+  font-weight: 600;
+  text-decoration: underline;
+}

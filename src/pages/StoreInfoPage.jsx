@@ -10,7 +10,7 @@ const pages = {
     intro: 'Temukan produk, ukuran, dan harga dalam satu katalog.',
     sections: [
       {
-        title: 'CV. Belitung Arta Mandiri',
+        title: 'CV. Belitung Artha Mandiri',
         text: 'BAM menyajikan katalog produk yang dapat dijelajahi berdasarkan kategori, PT pemasok, dan merek. Setiap pilihan ukuran memiliki harga tersendiri agar pembeli dapat memilih sesuai kebutuhan.',
       },
       {
@@ -132,7 +132,7 @@ export default function StoreInfoPage({ page }) {
         title: entry.title.replace('BAM', companyProfile.shortName),
         intro: entry.intro.replace('BAM', companyProfile.shortName),
         sections: entry.sections.map((section) => ({
-          title: section.title.replace('CV. Belitung Arta Mandiri', companyProfile.legalName),
+          title: section.title.replace('CV. Belitung Artha Mandiri', companyProfile.legalName),
           text: section.text.replaceAll('BAM', companyProfile.shortName),
         })),
       },

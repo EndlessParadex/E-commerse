@@ -1,6 +1,6 @@
 export const demoCompanyProfile = Object.freeze({
   shortName: 'BAM',
-  legalName: 'CV. Belitung Arta Mandiri',
+  legalName: 'CV. Belitung Artha Mandiri',
   description: 'Katalog produk dari berbagai pemasok, dengan pilihan ukuran dan harga yang jelas.',
   address: '',
   email: '',

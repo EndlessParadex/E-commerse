@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createApp } from './app.js';
 import { invoiceFilename, renderInvoicePdf } from './invoicePdf.js';
 import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
+import { orderUpdateNotes } from './orderDelivery.js';
 
 const admin = { id: 'operator', role: 'admin' },
   buyer = { id: 'buyer', role: 'user' };
@@ -272,7 +273,38 @@ test('reviewed transfer: invoice waits for the final total, then a paid invoice 
   });
   await app.delivery.flush();
   assert.equal(whatsapp.at(-1).type, 'update');
-  assert.match(whatsapp.at(-1).parameters[2], /RESI-1/);
+  assert.equal(
+    whatsapp.at(-1).parameters[2],
+    'Pesanan telah dikirim melalui Kurir toko dengan nomor resi RESI-1.',
+  );
+});
+
+test('WhatsApp status notes are formal, single-line, and omit an empty reason', () => {
+  const order = {
+    total: 141000,
+    shipping: { driverName: 'Budi' },
+    payment: { proof: { reason: 'Nominal tidak sesuai' } },
+    cancellationReason: '  ',
+  };
+  const notes = Object.fromEntries(
+    Object.entries(orderUpdateNotes).map(([kind, write]) => [kind, write(order)]),
+  );
+  assert.deepEqual(notes, {
+    quoteReady: 'Total akhir Rp 141.000 menunggu persetujuan Bapak/Ibu.',
+    paymentReminder: 'Batas waktu pesanan ini segera berakhir. Mohon segera ditindaklanjuti.',
+    proofRejected: 'Bukti pembayaran perlu diperbaiki. Alasan: Nominal tidak sesuai',
+    orderShipped: 'Pesanan sedang dalam pengantaran oleh sopir kami, Budi.',
+    orderCompleted: 'Pesanan telah selesai. Terima kasih atas kepercayaan Bapak/Ibu.',
+    orderCancelled: 'Pesanan dibatalkan.',
+    paymentExpired: 'Batas waktu pembayaran telah berakhir.',
+    quoteExpired: 'Batas waktu persetujuan total telah berakhir.',
+  });
+  // Meta rejects line breaks in template values and the sender cuts values at 200 characters.
+  for (const text of Object.values(notes)) assert.match(text, /^[^\r\n]{1,200}$/);
+  assert.equal(
+    orderUpdateNotes.orderCancelled({ cancellationReason: 'Stok habis' }),
+    'Pesanan dibatalkan. Alasan: Stok habis',
+  );
 });
 
 test('a queued invoice is not sent after its order is cancelled', async () => {

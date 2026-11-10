@@ -11,20 +11,27 @@ const invoiceStage = (order, kind) => {
     : '';
 };
 // Events that already deliver an invoice do not also send a separate update.
-const updates = {
-  quoteReady: (order) => 'Total akhir ' + money(order.total) + ' siap Anda setujui.',
-  paymentReminder: () => 'Batas waktu pesanan segera berakhir.',
+// One sentence per event for the WhatsApp order_update template ({{3}}). The template greets
+// the buyer as "Bapak/Ibu", so these stay formal. Meta allows no line breaks in a value.
+const withReason = (text, reason) => {
+  const detail = String(reason || '').trim();
+  return detail ? `${text} Alasan: ${detail}` : text;
+};
+export const orderUpdateNotes = {
+  quoteReady: (order) => 'Total akhir ' + money(order.total) + ' menunggu persetujuan Bapak/Ibu.',
+  paymentReminder: () => 'Batas waktu pesanan ini segera berakhir. Mohon segera ditindaklanjuti.',
   proofRejected: (order) =>
-    'Bukti pembayaran perlu diperbaiki. ' + (order.payment.proof?.reason || ''),
+    withReason('Bukti pembayaran perlu diperbaiki.', order.payment.proof?.reason),
   orderShipped: (order) =>
     order.shipping.driverName
-      ? `Pesanan sedang diantar oleh sopir ${order.shipping.driverName}.`
-      : `Pesanan dikirim dengan ${order.shipping.courier}, nomor resi ${order.shipping.trackingNumber}.`,
-  orderCompleted: () => 'Pesanan telah selesai.',
-  orderCancelled: (order) => 'Pesanan dibatalkan. ' + (order.cancellationReason || ''),
-  paymentExpired: () => 'Batas pembayaran berakhir.',
-  quoteExpired: () => 'Batas persetujuan total berakhir.',
+      ? `Pesanan sedang dalam pengantaran oleh sopir kami, ${order.shipping.driverName}.`
+      : `Pesanan telah dikirim melalui ${order.shipping.courier} dengan nomor resi ${order.shipping.trackingNumber}.`,
+  orderCompleted: () => 'Pesanan telah selesai. Terima kasih atas kepercayaan Bapak/Ibu.',
+  orderCancelled: (order) => withReason('Pesanan dibatalkan.', order.cancellationReason),
+  paymentExpired: () => 'Batas waktu pembayaran telah berakhir.',
+  quoteExpired: () => 'Batas waktu persetujuan total telah berakhir.',
 };
+const updates = orderUpdateNotes;
 const money = (value) => 'Rp ' + value.toLocaleString('id-ID');
 
 export class OrderDelivery {

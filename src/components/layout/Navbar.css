@@ -475,6 +475,16 @@
   font-size: 0.875rem;
 }
 
+/* Label above the list when an empty search box shows the buyer's earlier orders. */
+.search-suggestion-heading {
+  margin: 14px 20px 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
 .search-tip {
   display: flex;
   align-items: center;

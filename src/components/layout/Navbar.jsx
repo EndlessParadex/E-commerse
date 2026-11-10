@@ -11,6 +11,8 @@ import CatalogMenu from './CatalogMenu';
 import NavigationIcon from './NavigationIcon';
 import { productVariants } from '../../data/products';
 import { cartCounts } from '../../data/cartValidation';
+import { previouslyOrdered } from '../../data/purchaseHistory';
+import useWorkflow from '../../state/useWorkflow';
 import { roleNavigation, roleNavigationActive } from '../../data/roleNavigation';
 
 const Navbar = () => {
@@ -106,7 +108,13 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
-  const matchingProducts = filterProducts({ query: searchQuery }).slice(0, 8);
+  // An empty search box offers what this buyer ordered before; typing switches to search.
+  const workflow = useWorkflow();
+  const orderedBefore = searchQuery.trim() ? [] : previouslyOrdered(workflow.orders);
+  const showingHistory = orderedBefore.length > 0;
+  const matchingProducts = showingHistory
+    ? orderedBefore
+    : filterProducts({ query: searchQuery }).slice(0, 8);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   // Returns the product route; callers (event handlers) navigate to it.
   const openSuggestion = (product) => {
@@ -352,11 +360,16 @@ const Navbar = () => {
 
             {showSearchSuggestions && (
               <div className="search-suggestions">
+                {showingHistory && (
+                  <p className="search-suggestion-heading" aria-hidden="true">
+                    Pernah Anda pesan
+                  </p>
+                )}
                 <div
                   className="search-suggestion-list"
                   id="search-suggestion-list"
                   role="listbox"
-                  aria-label="Saran pencarian"
+                  aria-label={showingHistory ? 'Pernah Anda pesan' : 'Saran pencarian'}
                 >
                   {matchingProducts.map((product, index) => (
                     <button
@@ -391,13 +404,25 @@ const Navbar = () => {
                         <path d="m20 20-4-4" />
                       </svg>
                       <span className="suggestion-product">
-                        <span>{highlightQuery(product.baseName || product.name)}</span>
-                        <small>
-                          {product.category} · Mulai{' '}
-                          {formatPrice(
-                            Math.min(...productVariants(product.id).map((item) => item.price)),
-                          )}
-                        </small>
+                        {showingHistory ? (
+                          <>
+                            {/* The exact SKU last ordered, with its own price. */}
+                            <span>{product.name}</span>
+                            <small>
+                              {product.category} · {formatPrice(product.price)}
+                            </small>
+                          </>
+                        ) : (
+                          <>
+                            <span>{highlightQuery(product.baseName || product.name)}</span>
+                            <small>
+                              {product.category} · Mulai{' '}
+                              {formatPrice(
+                                Math.min(...productVariants(product.id).map((item) => item.price)),
+                              )}
+                            </small>
+                          </>
+                        )}
                       </span>
                     </button>
                   ))}

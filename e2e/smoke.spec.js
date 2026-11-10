@@ -59,6 +59,10 @@ test('tamu: beranda, katalog, dan produk tampil tanpa error', async ({ page }) =
   await expect(page).toHaveURL(/#\/produk\//);
   await expect(page.locator('h1')).toBeVisible();
   await expectNoHorizontalScroll(page);
+  // A visitor has no order history, so the empty search box shows plain suggestions.
+  await page.getByRole('combobox', { name: 'Cari produk' }).click();
+  await expect(page.locator('#search-suggestion-list')).toBeVisible();
+  await expect(page.locator('.search-suggestion-heading')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -79,6 +83,20 @@ test('pembeli pribadi: tambah ke keranjang lalu buat pesanan COD', async ({ page
   await submit.click();
   await expect(page.locator('main')).toContainText(/BAM-[0-9A-F]{8}/);
   await expectNoHorizontalScroll(page);
+
+  // The empty search box now offers what was just ordered; typing returns to normal search.
+  await page.goto('/');
+  const search = page.getByRole('combobox', { name: 'Cari produk' });
+  await search.click();
+  await expect(page.locator('.search-suggestion-heading')).toHaveText('Pernah Anda pesan');
+  const offered = page.getByRole('listbox', { name: 'Pernah Anda pesan' }).getByRole('option');
+  await expect(offered.first()).toBeVisible();
+  await search.press('ArrowDown');
+  await search.press('Enter');
+  await expect(page).toHaveURL(/#\/produk\//);
+  await page.goto('/');
+  await search.fill('a');
+  await expect(page.locator('.search-suggestion-heading')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { invoiceDiscount } from '../src/components/shop/invoiceDiscount.js';
+import { shortOrderNumber } from '../src/data/orderListPresentation.js';
 
 const rupiah = (value) => 'Rp ' + value.toLocaleString('id-ID');
 // Built-in PDF fonts cover Latin-1 only. Replace the rest so emoji cannot corrupt a line.
@@ -84,7 +85,10 @@ export function renderInvoicePdf(order) {
     const doc = new PDFDocument({
       size: 'A4',
       margin: left,
-      info: { Title: 'Faktur pesanan ' + safe(order.id), Author: safe(order.seller?.shortName) },
+      info: {
+        Title: 'Faktur pesanan ' + safe(shortOrderNumber(order.id)),
+        Author: safe(order.seller?.shortName),
+      },
     });
     const chunks = [];
     doc.on('data', (chunk) => chunks.push(chunk));
@@ -127,7 +131,16 @@ export function renderInvoicePdf(order) {
     doc.moveTo(left, doc.y).lineTo(right, doc.y).lineWidth(1.5).stroke().lineWidth(0.75);
     doc.y += 10;
     doc.font('Helvetica').fontSize(9).text('Nomor pesanan', left);
-    doc.font('Helvetica-Bold').fontSize(11).text(safe(order.id));
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(11)
+      .text(safe(shortOrderNumber(order.id)));
+    // The full ID stays on the document for support and audit, as on the website invoice.
+    if (shortOrderNumber(order.id) !== String(order.id))
+      doc
+        .font('Helvetica')
+        .fontSize(7)
+        .text('ID lengkap: ' + safe(order.id));
     doc.y += 10;
 
     const blockTop = doc.y;

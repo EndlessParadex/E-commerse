@@ -178,9 +178,12 @@ test('fixed-total COD order: invoice goes to email and consented WhatsApp once',
   assert.equal(invoice.attachments[0].content.subarray(0, 5).toString(), '%PDF-');
   assert.equal(whatsapp.length, 1);
   assert.equal(whatsapp[0].phone, phone);
+  // The message shows the same short number as the website, never the long internal ID.
+  assert.match(order.id, /^BAM-[0-9A-F]{8}-/);
+  assert.equal(invoice.subject.endsWith('Faktur pesanan ' + order.id.slice(0, 12)), true);
   assert.deepEqual(whatsapp[0].parameters, [
     'Pembeli fixture',
-    order.id,
+    order.id.slice(0, 12),
     'Rp ' + order.total.toLocaleString('id-ID'),
     'Bayar saat barang diterima',
   ]);

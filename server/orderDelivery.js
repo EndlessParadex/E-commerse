@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { logUnexpectedError } from './errorLogging.js';
 import { invoiceFilename, invoicePaymentStatus, renderInvoicePdf } from './invoicePdf.js';
+import { shortOrderNumber } from '../src/data/orderListPresentation.js';
 
 const finalized = (order) => order.commerceVersion !== 31 || order.shipping?.quoted === true;
 const invoiceStage = (order, kind) => {
@@ -125,10 +126,12 @@ export class OrderDelivery {
   }
   async send(row, order, user) {
     const name = order.b2b?.storeName || order.recipient;
+    // Buyers see the short number everywhere on the site; messages must show the same one.
+    const number = shortOrderNumber(order.id);
     if (row.channel === 'update_whatsapp')
       return this.sender.sendUpdate({
         phone: this.phones.contact(row.recipient_id).phone,
-        parameters: [name, order.id, updates[row.kind](order)],
+        parameters: [name, number, updates[row.kind](order)],
       });
     const pdf = await renderInvoicePdf(order),
       filename = invoiceFilename(order),
@@ -138,12 +141,12 @@ export class OrderDelivery {
         phone: this.phones.contact(row.recipient_id).phone,
         pdf,
         filename,
-        parameters: [name, order.id, money(order.total), status],
+        parameters: [name, number, money(order.total), status],
       });
     const shortName = this.company.snapshot().profile.shortName;
     return this.identity.mailer.send({
       to: user.email,
-      subject: `${shortName} · Faktur pesanan ${order.id}`,
+      subject: `${shortName} · Faktur pesanan ${number}`,
       text: [
         'Faktur pesanan terlampir.',
         order.id,

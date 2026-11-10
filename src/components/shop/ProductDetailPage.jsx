@@ -6,6 +6,7 @@ import { categoryBy, categoryHref } from '../../data/catalog';
 import { suppliers } from '../../data/suppliers';
 import { productDescriptions } from '../../data/productDescriptions';
 import { useShop } from '../../state/useShop';
+import UnitPrice from './UnitPrice';
 import './ProductDetailPage.css';
 import ProductGallery from './ProductGallery';
 import ProductPurchasePanel from './ProductPurchasePanel';
@@ -240,7 +241,10 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
                   </>
                 )}
               </div>
-              <p className="detail-package-price">Harga untuk {purchasePackagingLabel(product)}</p>
+              <p className="detail-package-price">
+                Harga untuk {purchasePackagingLabel(product)}
+                <UnitPrice packaging={product} price={product.price} />
+              </p>
               <div className="detail-divider" />
               <div
                 className="detail-selection"

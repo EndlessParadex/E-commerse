@@ -1091,3 +1091,7 @@
     padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
   }
 }
+/* Keep "Rp 6.400 / satuan" together when the line wraps on narrow phones. */
+.detail-package-price .unit-price {
+  white-space: nowrap;
+}

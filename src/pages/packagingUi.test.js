@@ -202,8 +202,8 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
       'Keripik Singkong Balado 180g · 1 pack',
     );
     assert.equal(
-      container.querySelector('.detail-package-price').textContent,
-      'Harga untuk 1 pack',
+      container.querySelector('.detail-package-price').textContent.replace(/\u00a0/g, ' '),
+      'Harga untuk 1 pack · Rp 15.000 / satuan',
     );
     assert.deepEqual(
       [...container.querySelectorAll('input[name="product-packaging"]')].map(
@@ -268,7 +268,11 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     await click(button('Tambah ke keranjang'));
     await click(container.querySelector('input[name="product-packaging"][value="UI-DUS-180"]'));
     assert.match(container.querySelector('.detail-price').textContent, /350.000/);
-    assert.equal(container.querySelector('.detail-package-price').textContent, 'Harga untuk 1 dus');
+    // The dus price does not divide evenly by its contents, so the value is marked as rounded.
+    assert.equal(
+      container.querySelector('.detail-package-price').textContent.replace(/\u00a0/g, ' '),
+      'Harga untuk 1 dus · ≈ Rp 14.583 / satuan',
+    );
     await click(button('Beli sekarang'));
     assert.equal(container.querySelectorAll('.cart-item').length, 2);
     assert.equal(

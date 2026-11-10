@@ -7,6 +7,18 @@ export function purchasePackagingLabel(variant, quantity = 1) {
   return `${quantity} ${packagingType === 'satuan' ? 'buah' : packagingType}`;
 }
 
+/**
+ * Price of one satuan inside a pack, box, dus or renceng, so buyers can compare packages.
+ * Returns null for satuan lines (the price already is per satuan) and for unusable input.
+ * `exact` is false when the package price does not divide evenly and the value is rounded.
+ */
+export function unitPrice(variant, price) {
+  const { unitsPerPackage } = packagingValues(variant || {});
+  const amount = Number(price);
+  if (!(unitsPerPackage > 1) || !Number.isFinite(amount) || amount <= 0) return null;
+  return { value: Math.round(amount / unitsPerPackage), exact: amount % unitsPerPackage === 0 };
+}
+
 function choiceContents(variant, variants) {
   const value = packagingValues(variant);
   const alternatives = variants.filter(

@@ -1,0 +1,35 @@
+# /etc/systemd/system/bam.service
+# Satu proses saja: SQLite hanya mengizinkan satu penulis. Jangan menjalankan dua salinan.
+[Unit]
+Description=BAM e-commerce (Node.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bam
+Group=bam
+WorkingDirectory=/opt/bam/app
+EnvironmentFile=/etc/bam/bam.env
+ExecStart=/usr/bin/node server/index.js
+Restart=always
+RestartSec=3
+# Server menunggu sampai 30 detik agar pesanan dan email yang sedang diproses selesai.
+TimeoutStopSec=35
+MemoryMax=1G
+
+# Batasi apa yang bisa disentuh proses bila suatu saat ada celah.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/bam
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

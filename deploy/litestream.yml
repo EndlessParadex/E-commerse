@@ -1,0 +1,18 @@
+# /etc/litestream.yml — replikasi terus-menerus database BAM ke bucket di luar server.
+# Format Litestream v0.5 (satu `replica` per database). Kunci akses dibaca dari lingkungan:
+# isi LITESTREAM_ACCESS_KEY_ID dan LITESTREAM_SECRET_ACCESS_KEY di /etc/litestream.env
+# (chmod 600) dan hubungkan lewat drop-in systemd (docs/DEPLOY-PRODUKSI.md, langkah 7).
+# Contoh di bawah untuk Cloudflare R2; untuk penyedia S3 lain ganti endpoint dan region.
+#
+# Litestream TIDAK menyalin berkas kunci email (company.sqlite.mail-key) maupun
+# /etc/bam/bam.env. Simpan keduanya terpisah (docs/DEPLOY-PRODUKSI.md, langkah 7).
+dbs:
+  - path: /var/lib/bam/company.sqlite
+    replica:
+      type: s3
+      bucket: bam-backup
+      path: company
+      endpoint: https://ACCOUNT_ID.r2.cloudflarestorage.com
+      region: auto
+      access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+      secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}

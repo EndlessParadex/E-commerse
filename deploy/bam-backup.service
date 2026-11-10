@@ -1,0 +1,19 @@
+# /etc/systemd/system/bam-backup.service
+# Cadangan harian terverifikasi (lapisan kedua di samping Litestream). Dipicu bam-backup.timer.
+[Unit]
+Description=BAM daily verified backup
+
+[Service]
+Type=oneshot
+User=bam
+Group=bam
+WorkingDirectory=/opt/bam/app
+EnvironmentFile=/etc/bam/bam.env
+ExecStart=/bin/sh /opt/bam/app/deploy/backup-harian.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Membaca database WAL perlu menulis berkas -shm di folder database.
+ReadWritePaths=/var/backups/bam /var/lib/bam
+UMask=0077

@@ -1,0 +1,14 @@
+# /etc/cloudflared/config.yml — Cloudflare Tunnel untuk BAM (docs/DEPLOY-TUNNEL.md).
+# cloudflared membuka koneksi KELUAR ke Cloudflare; tidak ada port yang dibuka di router
+# atau firewall. Ganti <TUNNEL-UUID> dengan ID dari `cloudflared tunnel create bam` dan
+# toko.example.com dengan domain Anda, lalu periksa:
+#   cloudflared tunnel --config /etc/cloudflared/config.yml ingress validate
+tunnel: <TUNNEL-UUID>
+credentials-file: /etc/cloudflared/<TUNNEL-UUID>.json
+
+ingress:
+  # Port harus sama dengan PORT di /etc/bam/bam.env.
+  - hostname: toko.example.com
+    service: http://127.0.0.1:3001
+  # Wajib ada: aturan penutup untuk nama host lain.
+  - service: http_status:404

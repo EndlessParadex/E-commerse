@@ -8,6 +8,9 @@ Pembeli → Cloudflare (DNS, CDN, WAF, TLS) → Caddy (TLS asal, batas ukuran) �
                                                                              └ SQLite (WAL) → Litestream → bucket S3/R2
 ```
 
+Untuk uji coba di komputer sendiri, atau VPS tanpa Caddy, lihat
+[DEPLOY-TUNNEL.md](./DEPLOY-TUNNEL.md).
+
 **Satu proses saja.** SQLite hanya mengizinkan satu penulis. Menjalankan dua salinan server pada
 database yang sama membuat keduanya saling mengunci. Untuk beban lebih besar, perbesar server
 (CPU/RAM), jangan menambah proses.

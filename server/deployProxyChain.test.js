@@ -47,3 +47,19 @@ test('deploy files keep the pieces that make that chain work', () => {
   // One writer only: the service must start exactly one server process.
   assert.equal(read('../deploy/bam.service').match(/^ExecStart=/gm).length, 1);
 });
+
+test('Cloudflare Tunnel chain: cloudflared on this machine, no Caddy', () => {
+  // visitor -> Cloudflare -> cloudflared (127.0.0.1) -> Node. Cloudflare sets X-Forwarded-For
+  // to the visitor, or appends the visitor to whatever the visitor sent.
+  const clientIp = clientIpResolver(trusted);
+  const visitor = '203.0.113.7';
+  assert.equal(clientIp(request('127.0.0.1', visitor)), visitor);
+  // A visitor who sends a fake X-Forwarded-For still resolves to the address Cloudflare saw.
+  assert.equal(clientIp(request('127.0.0.1', `10.9.9.9, ${visitor}`)), visitor);
+
+  const tunnel = read('../deploy/cloudflared-config.yml');
+  const port = envExample.match(/^PORT=(\d+)$/m)[1];
+  assert.match(tunnel, new RegExp(`^\\s*service: http://127\\.0\\.0\\.1:${port}$`, 'm'));
+  // cloudflared refuses a config whose ingress list does not end in a catch-all rule.
+  assert.match(tunnel.trimEnd(), /- service: http_status:404$/);
+});

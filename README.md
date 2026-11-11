@@ -38,6 +38,7 @@ Server mengirim Brotli atau gzip untuk aset JS/CSS/SVG dan HTML publik ketika br
 - [Keamanan backend](docs/KEAMANAN-BACKEND.md)
 - [Backup dan pemulihan](docs/BACKUP-DAN-PEMULIHAN.md)
 - [Deploy produksi (server, Cloudflare, cadangan)](docs/DEPLOY-PRODUKSI.md)
+- [Deploy lewat Cloudflare Tunnel (komputer sendiri atau VPS)](docs/DEPLOY-TUNNEL.md)
 - [WhatsApp pesanan dan faktur otomatis](docs/WHATSAPP-DAN-FAKTUR.md)
 - [Roadmap dan status fitur](docs/B2B-ROADMAP.md)
 - [Catatan versi dan panduan lama](docs/README-HISTORY.md)

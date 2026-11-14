@@ -116,3 +116,56 @@ test('home page link preview names the shop photo with absolute URLs and no dupl
     local.db.close();
   }
 });
+test('web app manifest follows the company profile, and every icon it names is shipped and served', async () => {
+  const { createSite, appManifest } = await import('./site.js');
+  const { existsSync, readFileSync } = await import('node:fs');
+  const profile = {
+    shortName: 'Toko Uji',
+    legalName: 'CV. Toko Uji Sejahtera',
+    description: 'Katalog uji.',
+  };
+  const site = createSite(null, { snapshot: () => ({ profile }) }, { dist: 'public' });
+  const get = (path) => {
+    let result;
+    const handled = site.respond(
+      { method: 'GET', headers: {} },
+      {
+        writeHead: (status, headers) => (result = { status, headers }),
+        end: (body) => (result.body = body),
+      },
+      path,
+    );
+    return handled ? result : null;
+  };
+  const response = get('/manifest.webmanifest');
+  assert.equal(response.status, 200);
+  assert.match(response.headers['content-type'], /^application\/manifest\+json/);
+  // The name can change in Admin → Perusahaan, so the browser must not keep an old copy.
+  assert.equal(response.headers['cache-control'], 'no-cache');
+  const manifest = JSON.parse(String(response.body));
+  assert.deepEqual(manifest, appManifest(profile));
+  assert.equal(manifest.name, 'CV. Toko Uji Sejahtera');
+  assert.equal(manifest.short_name, 'Toko Uji');
+  assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.start_url, '/');
+  // Chrome offers "Install app" only with 192 and 512 px icons; Android crops the maskable one.
+  assert.deepEqual(manifest.icons.map((icon) => icon.sizes).sort(), [
+    '192x192',
+    '512x512',
+    '512x512',
+  ]);
+  assert.ok(manifest.icons.some((icon) => icon.purpose === 'maskable'));
+  for (const icon of [...manifest.icons.map((item) => item.src), '/apple-touch-icon.png']) {
+    assert.ok(existsSync('public' + icon), icon + ' harus ada di public/');
+    const served = get(icon);
+    assert.equal(served.status, 200);
+    assert.equal(served.headers['content-type'], 'image/png');
+    // PNG signature, so a renamed SVG or an empty file cannot pass.
+    assert.equal(Buffer.from(served.body).subarray(1, 4).toString(), 'PNG');
+  }
+  assert.equal(appManifest({ shortName: 'Toko Anda', legalName: '' }).name, 'Toko Anda');
+  assert.equal(get('/icon-999.png'), null);
+  const page = readFileSync('index.html', 'utf8');
+  assert.match(page, /<link rel="manifest" href="\/manifest\.webmanifest" \/>/);
+  assert.match(page, /<link rel="apple-touch-icon" href="\/apple-touch-icon\.png" \/>/);
+});

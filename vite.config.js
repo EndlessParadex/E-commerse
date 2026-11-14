@@ -24,6 +24,12 @@ export default defineConfig({
   },
   server: {
     strictPort: true,
-    proxy: { '/api': { target: 'http://127.0.0.1:3001', changeOrigin: false, xfwd: true } },
+    // The manifest carries the company name, so the Node server writes it in development too.
+    proxy: Object.fromEntries(
+      ['/api', '/manifest.webmanifest'].map((path) => [
+        path,
+        { target: 'http://127.0.0.1:3001', changeOrigin: false, xfwd: true },
+      ]),
+    ),
   },
 });

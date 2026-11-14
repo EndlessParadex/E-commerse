@@ -45,6 +45,33 @@ export function homePreviewImage(catalog, publicUrl) {
         return new URL(imagePath(variant.id), publicUrl).href;
   return '';
 }
+// Icons shipped with the build. The install prompt needs 192 and 512 px PNGs; the maskable one
+// keeps the mark inside the safe zone so Android can crop it to any shape.
+const APP_ICONS = [
+  { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+  { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+  { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+];
+const ROOT_FILES = new Set([
+  '/favicon.svg',
+  '/apple-touch-icon.png',
+  ...APP_ICONS.map((icon) => icon.src),
+]);
+/** Web app manifest: lets a phone install the shop to its home screen under the company name. */
+export function appManifest(profile) {
+  return {
+    name: profile.legalName || profile.shortName,
+    short_name: profile.shortName,
+    description: profile.description,
+    lang: 'id',
+    start_url: '/',
+    scope: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#0b2b51',
+    icons: APP_ICONS,
+  };
+}
 export function productHtml(meta, template) {
   const title = meta.name + ' | ' + meta.company,
     description = meta.description.replace(/\s+/g, ' ').slice(0, 170),
@@ -173,7 +200,17 @@ export function createSite(
         );
         return true;
       }
-      if (path.startsWith('/assets/') || path === '/favicon.svg') {
+      if (path === '/manifest.webmanifest') {
+        send(
+          req,
+          res,
+          200,
+          JSON.stringify(appManifest(company.snapshot().profile)),
+          'application/manifest+json; charset=utf-8',
+        );
+        return true;
+      }
+      if (path.startsWith('/assets/') || ROOT_FILES.has(path)) {
         let target;
         try {
           target = resolve(dist, '.' + decodeURIComponent(path));

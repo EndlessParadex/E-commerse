@@ -52,6 +52,12 @@ test('tamu: beranda, katalog, dan produk tampil tanpa error', async ({ page }) =
   await page.goto('/');
   await expect(page.locator('h1')).toHaveCount(1);
   await expectNoHorizontalScroll(page);
+  // Installable on a phone: the page names a manifest the browser can load, with its icons.
+  const manifestUrl = await page.locator('link[rel="manifest"]').getAttribute('href');
+  const manifest = await (await page.request.get(manifestUrl)).json();
+  expect(manifest.display).toBe('standalone');
+  expect(manifest.short_name).toBeTruthy();
+  for (const icon of manifest.icons) expect((await page.request.get(icon.src)).status()).toBe(200);
   await page.goto('/#/kategori/snack');
   await expect(page.locator('.product-card').first()).toBeVisible();
   await expectNoHorizontalScroll(page);

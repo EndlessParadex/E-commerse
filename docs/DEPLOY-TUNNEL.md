@@ -44,6 +44,16 @@ Pindah ke VPS begitu pesanan sungguhan rutin masuk. Berkas `deploy/` yang sama d
 Pasang **Ubuntu Server 24.04 LTS** dan centang "Install OpenSSH server". Di halaman admin router,
 kunci alamat komputer ini (DHCP reservation), misalnya `192.168.1.50`.
 
+Pasang dengan kabel jaringan tersambung. Bila pemasangan dilakukan tanpa kabel, kartu jaringan
+tidak ikut diatur dan `ip -br a` menampilkan semuanya `DOWN`. Perbaiki dengan (ganti `eno1`
+dengan nama kartu di `ip -br link`):
+
+```bash
+sudo netplan set ethernets.eno1.dhcp4=true
+sudo netplan set ethernets.eno1.optional=true
+sudo netplan apply
+```
+
 ```bash
 sudo timedatectl set-timezone Asia/Jakarta
 sudo apt update && sudo apt upgrade -y
@@ -78,8 +88,13 @@ Pasang Node.js 24 dari [NodeSource](https://github.com/nodesource/distributions)
 sudo adduser --system --group --home /opt/bam bam
 sudo mkdir -p /opt/bam/app /var/lib/bam /var/backups/bam /etc/bam
 sudo chown -R bam:bam /opt/bam /var/lib/bam /var/backups/bam
+sudo chmod 755 /opt/bam
 sudo chmod 700 /var/lib/bam /var/backups/bam
 ```
+
+`chmod 755 /opt/bam` diperlukan di Ubuntu 24.04: folder pengguna sistem dibuat tertutup, sehingga
+`cd /opt/bam/app` di langkah berikutnya ditolak. Folder itu hanya berisi kode aplikasi; rahasia
+ada di `/etc/bam` dan `/var/lib/bam`, yang tetap tertutup.
 
 ## 3. Aplikasi
 

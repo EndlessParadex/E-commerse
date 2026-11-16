@@ -196,3 +196,38 @@ test('akun baru: daftar, disetujui Admin, lalu diperingatkan soal email di keran
   await expect(page.getByRole('button', { name: 'Kirim tautan konfirmasi email' })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('admin: foto produk baru tersimpan ke database', async ({ page }) => {
+  const errors = watchErrors(page);
+  await login(page, ACCOUNTS.admin);
+  await page.goto('/#/admin/produk');
+  await page
+    .getByRole('button', { name: /^Edit / })
+    .first()
+    .click();
+  const count = page.locator('.admin-photo-count');
+  const before = Number((await count.innerText()).split('/')[0]);
+  // A different picture on each run and retry, so the upload is always a new photo.
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 64;
+    const context = canvas.getContext('2d');
+    context.fillStyle = `hsl(${Math.floor(Math.random() * 360)} 70% 50%)`;
+    context.fillRect(0, 0, 64, 64);
+    context.fillStyle = '#fff';
+    context.fillText(String(Date.now()), 2, 32);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  await page.getByLabel('Tambah foto produk').setInputFiles({
+    name: 'uji.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(photo, 'base64'),
+  });
+  await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
+  await page.getByRole('button', { name: 'Simpan produk' }).click();
+  // The server answers with photo URLs, not the uploaded data; the form must accept that.
+  await expect(page.locator('main')).toContainText('Produk berhasil disimpan ke database');
+  await expect(page.locator('.admin-form-alert')).toHaveCount(0);
+  await expectNoHorizontalScroll(page);
+  expect(errors).toEqual([]);
+});

@@ -161,6 +161,9 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     await click(container.querySelector('button[aria-label="Jadikan foto 2 sebagai foto utama"]'));
     assert.equal(container.querySelector('.admin-form-preview img').src, sources[1]);
     await click(button('Simpan produk'));
+    // Confirming the saved photos hashes them (Web Crypto), which finishes after this turn.
+    for (let turn = 0; turn < 100 && saved < 1; turn++)
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
     assert.equal(saved, 1);
     await store.initializeCatalog(transport);
     await renderForm('reloaded');

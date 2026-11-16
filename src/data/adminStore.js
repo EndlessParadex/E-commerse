@@ -21,7 +21,7 @@ import {
   validMasterSnapshot,
 } from './catalogMasters.js';
 import { packagingValues } from './productPackaging.js';
-import { draftProductPhotos } from './productPhotos.js';
+import { draftProductPhotos, photoIdentity } from './productPhotos.js';
 
 let revision = 0;
 let edits = [];
@@ -279,27 +279,30 @@ async function persistServer(masters, nextEdits, result) {
         storageError:
           'Server membalas informasi kemasan yang berbeda dari isian. Hasil penyimpanan perlu diperiksa; isian form tetap tersedia. Pastikan server terbaru sudah dijalankan ulang, salin isian yang diperlukan, lalu muat ulang halaman dan periksa produk sebelum menyimpan kembali.',
       };
-    const photosSaved = nextEdits.every((draft) =>
-      draft.variants.every((variant) => {
-        const savedDraft = payload.edits?.find((entry) => entry.groupId === draft.groupId);
+    // The server answers with photo URLs (content hashes), never the uploaded data URLs, so
+    // compare by what each photo will be called once saved.
+    const identities = (photos) => Promise.all(photos.map((photo) => photoIdentity(photo.src)));
+    let photosSaved = true;
+    for (const draft of nextEdits) {
+      const savedDraft = payload.edits?.find((entry) => entry.groupId === draft.groupId);
+      for (const variant of draft.variants) {
         const savedVariant = savedDraft?.variants?.find((entry) => entry.id === variant.id);
-        return (
-          savedVariant &&
-          JSON.stringify(draftProductPhotos(draft, variant).map((photo) => photo.src)) ===
-            JSON.stringify(draftProductPhotos(savedDraft, savedVariant).map((photo) => photo.src))
-        );
-      }),
-    );
+        photosSaved &&=
+          Boolean(savedVariant) &&
+          JSON.stringify(await identities(draftProductPhotos(draft, variant))) ===
+            JSON.stringify(await identities(draftProductPhotos(savedDraft, savedVariant)));
+      }
+    }
     if (!photosSaved)
       return {
         storageError:
           'Server membalas foto produk yang berbeda dari isian. Hasil penyimpanan perlu diperiksa; isian form tetap tersedia. Jalankan ulang server terbaru dan periksa produk sebelum menyimpan kembali.',
       };
-    const brandPhotosSaved = masters.brands.every(
-      (brand) =>
-        (brand.logo || '') ===
-        (payload.masters?.brands?.find((entry) => entry.id === brand.id)?.logo || ''),
-    );
+    let brandPhotosSaved = true;
+    for (const brand of masters.brands) {
+      const saved = payload.masters?.brands?.find((entry) => entry.id === brand.id)?.logo;
+      brandPhotosSaved &&= (await photoIdentity(brand.logo)) === (await photoIdentity(saved));
+    }
     if (!brandPhotosSaved)
       return {
         storageError:

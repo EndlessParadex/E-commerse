@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createApp } from '../../server/app.js';
 import { products } from './products.js';
 import { productDraft, buildVariants, validateDraft } from './adminEditor.js';
-import { draftProductPhotos } from './productPhotos.js';
+import { draftProductPhotos, photoIdentity } from './productPhotos.js';
 import { initializeCatalog, saveProduct } from './adminStore.js';
 
 const png =
@@ -111,4 +111,49 @@ test('balasan yang kehilangan foto tambahan tidak dianggap berhasil dan tidak me
   } finally {
     app.db.close();
   }
+});
+
+test('foto baru tersimpan lewat balasan server yang sebenarnya (foto dibalas sebagai URL)', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  // Same shape as the HTTP routes: the browser never receives data URLs back.
+  const transport = async (_url, options = {}) =>
+    new Response(
+      JSON.stringify(
+        app.catalog.publicSnapshot(
+          options.method === 'PUT' ? app.catalog.save(JSON.parse(options.body)) : undefined,
+        ),
+      ),
+    );
+  try {
+    await initializeCatalog(transport);
+    const draft = productDraft('snack-pedas');
+    draft.image = png;
+    draft.gallery = [
+      { src: png, alt: '' },
+      { src: second, alt: '' },
+    ];
+    const result = await saveProduct(draft);
+    assert.equal(result.storageError, undefined);
+    assert.equal(result.groupId, 'snack-pedas');
+    const saved = productDraft('snack-pedas').gallery.map((photo) => photo.src);
+    assert.equal(saved.length, 2);
+    assert.ok(saved.every((src) => /^\/api\/catalog\/photos\/[a-f0-9]{64}\.png$/.test(src)));
+    assert.deepEqual(saved, [await photoIdentity(png), await photoIdentity(second)]);
+    // Saving again with the URLs the server returned (no new upload) still works.
+    assert.equal((await saveProduct(productDraft('snack-pedas'))).storageError, undefined);
+  } finally {
+    app.db.close();
+  }
+});
+
+test('identitas foto: data URL menjadi alamat berisi hash, alamat lama dan kosong tidak diubah', async () => {
+  const identity = await photoIdentity(png);
+  assert.match(identity, /^\/api\/catalog\/photos\/[a-f0-9]{64}\.png$/);
+  assert.equal(await photoIdentity(identity), identity);
+  assert.equal(await photoIdentity(''), '');
+  assert.match(
+    await photoIdentity('data:image/jpeg;base64,/9j/4AAQ'),
+    /^\/api\/catalog\/photos\/[a-f0-9]{64}\.jpg$/,
+  );
+  assert.notEqual(await photoIdentity(second), identity);
 });

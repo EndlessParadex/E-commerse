@@ -4,6 +4,21 @@ export const MAX_PRODUCT_PHOTO_LENGTH = 1400000;
 // Saved catalog photos arrive from the server as cacheable URLs; new uploads are data URLs.
 export const CATALOG_PHOTO_URL = /^\/api\/catalog\/photos\/[a-f0-9]{64}\.(jpg|png|webp)$/;
 const PHOTO_DATA_URL = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+const PHOTO_PARTS = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
+const PHOTO_EXTENSION = { png: 'png', jpeg: 'jpg', webp: 'webp' };
+/**
+ * The address the server gives a photo: a new upload (data URL) becomes
+ * /api/catalog/photos/<sha256>.<ext>, exactly as server/catalog.js names it. Lets the admin
+ * form confirm that the photo it sent is the photo the server saved.
+ */
+export async function photoIdentity(src) {
+  const match = typeof src === 'string' ? PHOTO_PARTS.exec(src) : null;
+  if (!match) return src || '';
+  const bytes = Uint8Array.from(atob(match[2]), (character) => character.charCodeAt(0));
+  const digest = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', bytes));
+  const hash = Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `/api/catalog/photos/${hash}.${PHOTO_EXTENSION[match[1]]}`;
+}
 export const isProductPhotoSource = (value) =>
   typeof value === 'string' &&
   value.length <= MAX_PRODUCT_PHOTO_LENGTH &&

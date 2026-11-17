@@ -10,7 +10,13 @@ import { brandsForSupplier } from '../data/catalogMasters';
 import useUnsavedChanges from '../state/useUnsavedChanges';
 import { packagingTypes, packagingLabel, packagingContents } from '../data/productPackaging';
 import { MAX_PRODUCT_PHOTOS } from '../data/productPhotos';
-import { MAX_PRODUCT_UPLOAD_BYTES, shrinkProductPhoto } from '../data/photoCompression';
+import {
+  MAX_PRODUCT_UPLOAD_BYTES,
+  PRODUCT_PHOTO_MAX_SIDE,
+  cropPhoto,
+  shrinkProductPhoto,
+} from '../data/photoCompression';
+import PhotoCropDialog from '../components/PhotoCropDialog';
 
 export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate }) {
   const [initial] = useState(() => productDraft(groupId));
@@ -19,6 +25,9 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
   const [storageError, setStorageError] = useState('');
   const [photoError, setPhotoError] = useState('');
   const [uploading, setUploading] = useState(false);
+  // { src, index }: index null adds the photo, a number replaces that photo.
+  const [cropTarget, setCropTarget] = useState(null);
+  const [cropError, setCropError] = useState('');
   const [saving, setSaving] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
   const pendingInvalidFocus = useRef(false);
@@ -187,6 +196,19 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
           reader.onabort = reject;
           reader.readAsDataURL(file);
         });
+        // One photo at a time is framed first, from the full-size original.
+        if (files.length === 1) {
+          await new Promise((resolve, reject) => {
+            const image = new window.Image();
+            image.onload = resolve;
+            image.onerror = reject;
+            image.src = original;
+          });
+          if (request !== photoRequest.current) return;
+          setCropError('');
+          setCropTarget({ src: original, index: null });
+          return;
+        }
         // Large phone photos are resized here so the saved catalog stays light.
         const src = await shrinkProductPhoto(original, {
           ImageClass: window.Image,
@@ -209,9 +231,42 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       if (request === photoRequest.current) setUploading(false);
     }
   };
+  const applyCrop = async (area) => {
+    const target = cropTarget;
+    const request = ++photoRequest.current;
+    setUploading(true);
+    setCropError('');
+    try {
+      const framed = await cropPhoto(target.src, area, {
+        maxSide: PRODUCT_PHOTO_MAX_SIDE,
+        ImageClass: window.Image,
+        documentRef: window.document,
+      });
+      const src = await shrinkProductPhoto(framed, {
+        ImageClass: window.Image,
+        documentRef: window.document,
+      });
+      if (request !== photoRequest.current) return;
+      if (!src) {
+        setCropError('Foto terlalu besar untuk browser ini. Perbesar sedikit lalu coba lagi.');
+        return;
+      }
+      const gallery =
+        target.index === null
+          ? [...draft.gallery, { src, alt: '' }]
+          : draft.gallery.map((photo, row) => (row === target.index ? { ...photo, src } : photo));
+      updatePhotos(gallery);
+      setCropTarget(null);
+    } catch {
+      if (request === photoRequest.current)
+        setCropError('Foto tidak dapat diproses. Pilih file gambar lain.');
+    } finally {
+      if (request === photoRequest.current) setUploading(false);
+    }
+  };
   const submit = async (event) => {
     event.preventDefault();
-    if (savePending.current || uploading) return;
+    if (savePending.current || uploading || cropTarget) return;
     savePending.current = true;
     setSaving(true);
     setStorageError('');
@@ -566,6 +621,18 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                         )}
                         <button
                           type="button"
+                          className="admin-text-button"
+                          disabled={uploading}
+                          aria-label={`Atur posisi foto ${index + 1}`}
+                          onClick={() => {
+                            setCropError('');
+                            setCropTarget({ src: photo.src, index });
+                          }}
+                        >
+                          Atur
+                        </button>
+                        <button
+                          type="button"
                           className="admin-text-button admin-photo-remove"
                           disabled={uploading}
                           aria-label={`Hapus foto ${index + 1}`}
@@ -582,8 +649,24 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
               )}
               {!!draft.gallery.length && (
                 <p className="admin-form-hint">
-                  Foto pertama menjadi foto utama; ubah urutan untuk mengganti foto utama.
+                  Foto pertama menjadi foto utama; ubah urutan untuk mengganti foto utama. Pilih
+                  satu foto sekaligus untuk langsung mengatur posisinya, atau tekan Atur.
                 </p>
+              )}
+              {cropTarget && (
+                <PhotoCropDialog
+                  src={cropTarget.src}
+                  title={
+                    cropTarget.index === null
+                      ? 'Atur foto produk'
+                      : `Atur posisi foto ${cropTarget.index + 1}`
+                  }
+                  fit="contain"
+                  busy={uploading}
+                  error={cropError}
+                  onCancel={() => setCropTarget(null)}
+                  onApply={applyCrop}
+                />
               )}
             </details>
             <section className="admin-form-section admin-variants-section">

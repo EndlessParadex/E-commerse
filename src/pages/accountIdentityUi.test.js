@@ -357,7 +357,22 @@ test('account website: buyer security summary, admin password settings, registra
     await upload(
       new dom.File([Buffer.from(png.split(',')[1], 'base64')], 'profil.png', { type: 'image/png' }),
     );
+    // Choosing a photo opens the cropper first; nothing is saved until "Pakai foto".
+    await wait(() =>
+      dom.document.querySelector('.photo-crop-dialog .shop-primary:not([disabled])'),
+    );
+    assert.equal(requests.filter((x) => x.path === '/api/profile/photo').length, 0);
+    assert.ok(dom.document.querySelector('.photo-crop-frame--circle'), 'round avatar guide');
+    await act(async () => {
+      dom.document.querySelector('.photo-crop-dialog .shop-primary').click();
+      await settle();
+    });
     await wait(() => container.querySelector('.account-trigger img'));
+    assert.equal(
+      dom.document.querySelector('.photo-crop-dialog'),
+      null,
+      'cropper closes after saving',
+    );
     assert.equal(container.querySelector('.account-trigger img').getAttribute('src'), png);
     assert.equal(container.querySelector('.account-page-avatar img').getAttribute('src'), png);
     assert.equal(container.querySelector('.account-avatar-large img').getAttribute('src'), png);

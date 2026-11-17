@@ -393,6 +393,7 @@ export default function AccountPage({ section = null }) {
                         <PhotoUpload
                           id="account-photo"
                           label="Foto profil"
+                          crop={{ fit: 'cover', shape: 'circle' }}
                           value={user.avatar || ''}
                           disabled={saving}
                           onBusyChange={setPhotoBusy}

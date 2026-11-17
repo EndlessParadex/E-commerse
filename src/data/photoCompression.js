@@ -1,4 +1,5 @@
 import { MAX_PRODUCT_PHOTO_BYTES } from './productPhotos.js';
+import { drawRect, outputSide } from './photoCrop.js';
 
 // Admin and buyers may pick a phone photo up to 5 MB; it is shrunk in the browser before
 // saving. Saved photos stay small because photos and logos travel inside the catalog and
@@ -83,3 +84,37 @@ export async function shrinkPhoto(
 
 /** Product photos: up to 1200 px, JPEG on white. */
 export const shrinkProductPhoto = (dataUrl, options = {}) => shrinkPhoto(dataUrl, options);
+
+/**
+ * Cut the square chosen in the crop dialog out of a photo. Returns a data URL (JPEG on white,
+ * or PNG when `keepTransparency` and the photo has transparency), then pass it to shrinkPhoto
+ * for the size limits. Without a canvas (very old browsers, tests) the photo is kept whole.
+ */
+export async function cropPhoto(
+  dataUrl,
+  crop,
+  {
+    maxSide = PRODUCT_PHOTO_MAX_SIDE,
+    keepTransparency = false,
+    ImageClass = globalThis.Image,
+    documentRef = globalThis.document,
+  } = {},
+) {
+  const image = await loadImage(dataUrl, ImageClass);
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const canvas = documentRef?.createElement?.('canvas');
+  const context = canvas?.getContext?.('2d');
+  if (!context || !width || !height) return dataUrl;
+  const side = outputSide(crop, width, height, maxSide);
+  canvas.width = canvas.height = side;
+  const transparent = keepTransparency && /^data:image\/(png|webp)/.test(dataUrl);
+  if (!transparent) {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, side, side);
+  }
+  context.imageSmoothingQuality = 'high';
+  const rect = drawRect(crop, width, height, side);
+  context.drawImage(image, rect.x, rect.y, rect.width, rect.height);
+  return transparent ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
+}

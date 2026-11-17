@@ -153,6 +153,7 @@ function MasterForm({ type, initial, onClose, onSaved }) {
                   onBusyChange={setUploading}
                   disabled={saving}
                   keepTransparency
+                  crop={{ fit: 'contain' }}
                 />
                 {errors.logo && (
                   <small className="admin-error" role="alert">

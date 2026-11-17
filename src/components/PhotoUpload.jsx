@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import './PhotoUpload.css';
+import PhotoCropDialog from './PhotoCropDialog';
 import {
   MAX_PHOTO_UPLOAD_BYTES,
   SMALL_PHOTO_MAX_SIDE,
   SMALL_PHOTO_TARGET_LENGTH,
+  cropPhoto,
   shrinkPhoto,
 } from '../data/photoCompression';
 
@@ -16,9 +18,13 @@ export default function PhotoUpload({
   label = 'Unggah foto',
   // Logos keep a transparent background; profile photos become JPEG.
   keepTransparency = false,
+  // { fit: 'cover' | 'contain', shape: 'square' | 'circle' } opens the cropper after choosing.
+  crop = null,
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [cropping, setCropping] = useState('');
+  const [cropError, setCropError] = useState('');
   const request = useRef(0);
   const pending = useRef(false);
   const input = useRef(null);
@@ -29,37 +35,37 @@ export default function PhotoUpload({
     [],
   );
 
-  const change = async (file, remove = false) => {
-    if (pending.current || disabled || (!file && !remove)) return;
-    setError('');
-    if (
-      file &&
-      (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
-        file.size > MAX_PHOTO_UPLOAD_BYTES)
-    ) {
-      setError('Pilih JPG, PNG, atau WebP, maksimal 5 MB.');
-      return;
-    }
+  const readFile = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new window.FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reader.onabort = () => reject(new Error('Foto tidak dapat dibaca.'));
+      reader.readAsDataURL(file);
+    });
+  const imageOptions = {
+    keepTransparency,
+    ImageClass: window.Image,
+    documentRef: window.document,
+  };
+
+  // `source` is a data URL, or '' to remove the photo. `area` is the cropper's choice.
+  // Returns '' when saved, else the error message.
+  const save = async (source, area = null) => {
     const current = ++request.current;
     pending.current = true;
     setBusy(true);
     onBusyChange?.(true);
     try {
       let src = '';
-      if (file) {
-        const original = await new Promise((resolve, reject) => {
-          const reader = new window.FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reader.onabort = () => reject(new Error('Foto tidak dapat dibaca.'));
-          reader.readAsDataURL(file);
-        });
+      if (source) {
+        const framed = area
+          ? await cropPhoto(source, area, { maxSide: SMALL_PHOTO_MAX_SIDE, ...imageOptions })
+          : source;
         // Phone photos are resized to 512 px here so the saved data stays small.
-        src = await shrinkPhoto(original, {
+        src = await shrinkPhoto(framed, {
           maxSide: SMALL_PHOTO_MAX_SIDE,
           targetLength: SMALL_PHOTO_TARGET_LENGTH,
-          keepTransparency,
-          ImageClass: window.Image,
-          documentRef: window.document,
+          ...imageOptions,
         }).catch(() => {
           throw new Error('Foto tidak dapat dibaca. Pilih file gambar lain.');
         });
@@ -69,8 +75,11 @@ export default function PhotoUpload({
           );
       }
       if (request.current === current) await onChange(src);
+      return '';
     } catch (failure) {
-      if (request.current === current) setError(failure.message || 'Foto belum dapat disimpan.');
+      const message = failure.message || 'Foto belum dapat disimpan.';
+      if (request.current === current) setError(message);
+      return message;
     } finally {
       if (request.current === current) {
         pending.current = false;
@@ -78,6 +87,35 @@ export default function PhotoUpload({
         onBusyChange?.(false);
       }
     }
+  };
+
+  const change = async (file, remove = false) => {
+    if (pending.current || disabled || (!file && !remove)) return;
+    setError('');
+    if (remove) {
+      await save('');
+      return;
+    }
+    if (
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+      file.size > MAX_PHOTO_UPLOAD_BYTES
+    ) {
+      setError('Pilih JPG, PNG, atau WebP, maksimal 5 MB.');
+      return;
+    }
+    let original;
+    try {
+      original = await readFile(file);
+    } catch (failure) {
+      setError(failure.message);
+      return;
+    }
+    if (!crop) {
+      await save(original);
+      return;
+    }
+    setCropError('');
+    setCropping(original);
   };
 
   return (
@@ -120,7 +158,27 @@ export default function PhotoUpload({
           Hapus foto
         </button>
       )}
-      {busy && <p role="status">Memproses foto…</p>}
+      {busy && !cropping && <p role="status">Memproses foto…</p>}
+      {cropping && (
+        <PhotoCropDialog
+          src={cropping}
+          title={`Atur ${label.toLocaleLowerCase('id')}`}
+          fit={crop.fit}
+          shape={crop.shape}
+          busy={busy}
+          error={cropError}
+          onCancel={() => setCropping('')}
+          onApply={async (area) => {
+            setCropError('');
+            const failure = await save(cropping, area);
+            if (failure) setCropError(failure);
+            else {
+              setError('');
+              setCropping('');
+            }
+          }}
+        />
+      )}
       {error && (
         <p className="photo-upload-error" id={`${id}-error`} role="alert">
           {error}

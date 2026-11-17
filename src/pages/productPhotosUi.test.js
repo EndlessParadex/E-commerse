@@ -160,11 +160,14 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     assert.equal(container.querySelectorAll('.admin-photo-item').length, 2);
     await click(container.querySelector('button[aria-label="Jadikan foto 2 sebagai foto utama"]'));
     assert.equal(container.querySelector('.admin-form-preview img').src, sources[1]);
+    // Confirming the saved photos hashes them (Web Crypto), which finishes after the click.
+    const waitForSaves = async (count) => {
+      for (let turn = 0; turn < 200 && saved < count; turn++)
+        await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
+      assert.equal(saved, count);
+    };
     await click(button('Simpan produk'));
-    // Confirming the saved photos hashes them (Web Crypto), which finishes after this turn.
-    for (let turn = 0; turn < 100 && saved < 1; turn++)
-      await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
-    assert.equal(saved, 1);
+    await waitForSaves(1);
     await store.initializeCatalog(transport);
     await renderForm('reloaded');
     assert.equal(container.querySelectorAll('.admin-photo-item').length, 2);
@@ -196,7 +199,7 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     await click(container.querySelector('button[aria-label="Hapus foto 1"]'));
     assert.equal(container.querySelector('.admin-form-preview img').src, sources[0]);
     await click(button('Simpan produk'));
-    assert.equal(saved, 2);
+    await waitForSaves(2);
     await store.initializeCatalog(transport);
     product = catalog.products.find((entry) => entry.id === 'snack-pedas');
     await act(async () => root.render(createElement(Gallery, { product })));
@@ -207,7 +210,7 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     await renderForm('clear');
     await click(container.querySelector('button[aria-label="Hapus foto 1"]'));
     await click(button('Simpan produk'));
-    assert.equal(saved, 3);
+    await waitForSaves(3);
     await store.initializeCatalog(transport);
     product = catalog.products.find((entry) => entry.id === 'snack-pedas');
     assert.equal(product.image, '');

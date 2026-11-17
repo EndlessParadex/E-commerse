@@ -223,11 +223,82 @@ test('admin: foto produk baru tersimpan ke database', async ({ page }) => {
     mimeType: 'image/png',
     buffer: Buffer.from(photo, 'base64'),
   });
+  // One photo at a time opens the cropper; zoom in, then use it.
+  const cropper = page.locator('dialog.photo-crop-dialog[open]');
+  await expect(cropper).toBeVisible();
+  await expect(count).toHaveText(new RegExp(`^${before}/`));
+  await cropper.getByRole('slider', { name: 'Perbesar' }).fill('2');
+  await cropper.getByRole('button', { name: 'Pakai foto' }).click();
+  await expect(cropper).toHaveCount(0);
+  await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
+  // An existing photo can be re-framed without adding a new one.
+  await page.getByRole('button', { name: 'Atur posisi foto 1' }).click();
+  await cropper.getByRole('button', { name: 'Pakai foto' }).click();
+  await expect(cropper).toHaveCount(0);
   await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
   await page.getByRole('button', { name: 'Simpan produk' }).click();
   // The server answers with photo URLs, not the uploaded data; the form must accept that.
   await expect(page.locator('main')).toContainText('Produk berhasil disimpan ke database');
   await expect(page.locator('.admin-form-alert')).toHaveCount(0);
   await expectNoHorizontalScroll(page);
+  expect(errors).toEqual([]);
+});
+
+test('foto profil: geser dan perbesar sebelum disimpan, hasilnya persegi sesuai pilihan', async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await login(page, ACCOUNTS.pribadi);
+  await page.goto('/#/akun/profil');
+  // 400 × 200: left half red, right half blue. Centred "cover" shows half of each.
+  const picture = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 200;
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#ff0000';
+    context.fillRect(0, 0, 200, 200);
+    context.fillStyle = '#0000ff';
+    context.fillRect(200, 0, 200, 200);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#account-photo').setInputFiles({
+    name: 'profil.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(picture, 'base64'),
+  });
+  const cropper = page.locator('dialog.photo-crop-dialog[open]');
+  await expect(cropper).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  const frame = cropper.locator('.photo-crop-frame');
+  await expect(frame.locator('img')).toBeVisible();
+  const zoom = cropper.getByRole('slider', { name: 'Perbesar' });
+  await zoom.fill('1.5');
+  await expect(zoom).toHaveValue('1.5');
+  // Drag far to the right: the left (red) part of the photo moves into the frame.
+  const box = await frame.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 2, box.y + box.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await cropper.getByRole('button', { name: 'Pakai foto' }).click();
+  await expect(cropper).toHaveCount(0);
+  await expect(page.locator('main')).toContainText('Foto profil berhasil disimpan');
+  const saved = page.locator('.account-avatar-large img');
+  await expect(saved).toBeVisible();
+  const result = await saved.evaluate(async (image) => {
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+    const corner = context.getImageData(canvas.width - 4, canvas.height / 2, 1, 1).data;
+    return { width: image.naturalWidth, height: image.naturalHeight, corner: [...corner] };
+  });
+  expect(result.width).toBe(result.height);
+  // Even the right edge of the saved square is red: the blue half was moved out.
+  expect(result.corner[0]).toBeGreaterThan(200);
+  expect(result.corner[2]).toBeLessThan(60);
   expect(errors).toEqual([]);
 });

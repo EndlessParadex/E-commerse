@@ -283,6 +283,13 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       input.dispatchEvent(new dom.Event('change', { bubbles: true }));
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
+    // The brand photo opens the cropper (whole photo shown) before it is used.
+    assert.equal(container.querySelector('.admin-brand-photo-preview'), null);
+    await act(async () => {
+      dom.document.querySelector('.photo-crop-dialog .shop-primary').click();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    assert.equal(dom.document.querySelector('.photo-crop-dialog'), null);
     assert.equal(
       container.querySelector('.admin-brand-photo-preview').getAttribute('src'),
       brandPhoto,

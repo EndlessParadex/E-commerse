@@ -17,7 +17,15 @@ import { useAppearance } from '../../state/useAppearance';
 import './AppearanceSettings.css';
 
 function HexControl({ title, value, fallback, onSave, disabled = false }) {
-  const [draft, setDraft] = useState(value || fallback);
+  const current = value || fallback;
+  const [draft, setDraft] = useState(current);
+  // Follow changes made elsewhere (picker, preset, reset) without remounting: a new
+  // <input type="color"> would close the browser's colour picker mid-drag.
+  const [shown, setShown] = useState(current);
+  if (shown !== current) {
+    setShown(current);
+    setDraft(current);
+  }
   const valid = Boolean(normalizeHex(draft));
   return (
     <div className="appearance-hex-control">
@@ -26,12 +34,9 @@ function HexControl({ title, value, fallback, onSave, disabled = false }) {
         <input
           type="color"
           aria-label={'Pilih ' + title.toLowerCase()}
-          value={value || fallback}
+          value={current}
           disabled={disabled}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            onSave(event.target.value);
-          }}
+          onChange={(event) => onSave(event.target.value)}
         />
         <input
           type="text"
@@ -43,7 +48,7 @@ function HexControl({ title, value, fallback, onSave, disabled = false }) {
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => {
             if (valid) onSave(draft);
-            else setDraft(value || fallback);
+            else setDraft(current);
           }}
         />
       </span>
@@ -157,14 +162,12 @@ export default function AppearanceSettings() {
             <p>Setelan di bawah mengikuti akun yang sedang masuk.</p>
             <div className="appearance-custom-colors">
               <HexControl
-                key={'accent-' + advanced.accentHex}
                 title="Warna aksen"
                 value={advanced.accentHex}
                 fallback="#0369a1"
                 onSave={(value) => setAdvanced({ accentHex: value })}
               />
               <HexControl
-                key={'background-' + advanced.backgroundHex}
                 title="Warna latar"
                 value={advanced.backgroundHex}
                 fallback={dark ? '#151e32' : '#eef6ff'}

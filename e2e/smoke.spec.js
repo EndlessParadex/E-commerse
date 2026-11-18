@@ -302,3 +302,19 @@ test('foto profil: geser dan perbesar sebelum disimpan, hasilnya persegi sesuai 
   expect(result.corner[2]).toBeLessThan(60);
   expect(errors).toEqual([]);
 });
+
+test('tampilan: pemilih warna tetap terbuka selama warna digeser', async ({ page }) => {
+  const errors = watchErrors(page);
+  await login(page, ACCOUNTS.pribadi);
+  await page.goto('/#/akun/tampilan');
+  await page.locator('.appearance-studio-tabs button').last().click();
+  const picker = page.getByLabel('Pilih warna aksen');
+  await expect(picker).toBeVisible();
+  // Each step is an input event, like dragging inside the browser's colour picker.
+  const handle = await picker.elementHandle();
+  for (const hex of ['#6f73fb', '#5a5ff0', '#4b50e6']) await picker.fill(hex);
+  expect(await handle.evaluate((element) => element.isConnected)).toBe(true);
+  await expect(page.getByLabel('Warna aksen (HEX)')).toHaveValue('#4b50e6');
+  await expectNoHorizontalScroll(page);
+  expect(errors).toEqual([]);
+});

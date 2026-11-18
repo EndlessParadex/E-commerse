@@ -378,10 +378,32 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     });
     assert.ok(container.querySelector('input[aria-label="Warna aksen (HEX)"]'));
     assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 4);
+    // Dragging inside the browser's colour picker fires many input events. The picker
+    // closes if its <input> is replaced, so every change must keep the same element.
+    const picker = container.querySelector('input[aria-label="Pilih warna aksen"]');
+    for (const hex of ['#6f73fb', '#5a5ff0', '#4b50e6']) {
+      await act(async () => {
+        // The prototype setter, as a browser does; React ignores a plain property write.
+        Object.getOwnPropertyDescriptor(dom.HTMLInputElement.prototype, 'value').set.call(
+          picker,
+          hex,
+        );
+        picker.dispatchEvent(new dom.Event('input', { bubbles: true }));
+        await settle();
+      });
+    }
+    assert.equal(
+      container.querySelector('input[aria-label="Pilih warna aksen"]'),
+      picker,
+      'the open colour picker keeps its element while the colour changes',
+    );
+    assert.equal(container.querySelector('input[aria-label="Warna aksen (HEX)"]').value, '#4b50e6');
     await act(async () => {
       container.querySelector('.appearance-reset').click();
       await settle();
     });
+    // A change from elsewhere (reset, preset) still updates the HEX text.
+    assert.equal(container.querySelector('input[aria-label="Warna aksen (HEX)"]').value, '#0369a1');
     assert.equal(current().mode, 'light');
     assert.equal(page.style.getPropertyValue('--color-action'), '');
     assert.equal(container.querySelector('.appearance-reset').disabled, true);

@@ -19,40 +19,55 @@
 .checkout-fields .address-area-row {
   gap: 15px;
 }
+/* Same box as the text inputs beside it. The site-wide select theme (themes.css) draws the
+   menu and its arrow; only size and alignment are set here, so both stay consistent. */
 .address-area select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
+  height: 46px;
+  padding: 0 14px;
   border: 1px solid var(--color-input-border, #cbd5e1);
   border-radius: 9px;
-  background: var(--color-surface, #fff);
+  background-color: var(--color-surface, #fff);
   color: var(--color-text, #0f172a);
   font: inherit;
-  white-space: nowrap;
+  font-size: 1rem;
+  line-height: 1.3;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+.address-area select::picker-icon {
+  margin-inline-start: auto;
+}
+/* The open list is at least as wide as the field it belongs to. */
+@supports (appearance: base-select) {
+  .address-area select:not([multiple]):not([size])::picker(select) {
+    min-width: anchor-size(width);
+  }
+}
+.address-area select:focus {
+  outline: 0;
+  border-color: var(--color-focus, #0ea5e9);
+  box-shadow: 0 0 0 3px #0ea5e91a;
 }
 .address-area select:focus-visible {
-  outline: 3px solid var(--color-focus, #2563eb);
-  outline-offset: 1px;
+  box-shadow: 0 0 0 3px #0ea5e94d;
+}
+.address-area select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 .address-area select[aria-invalid='true'] {
-  border-color: var(--color-danger-text, #b91c1c);
+  border-color: var(--color-danger-bright, #dc2626);
 }
 .address-area-summary {
-  margin: 0 0 18px;
   overflow-wrap: anywhere;
-}
-.checkout-fields .address-area-summary {
-  margin-bottom: 0;
 }
 /* Match the neighbouring inputs on larger screens; phones keep 16px so iOS does not zoom. */
 @media (min-width: 761px) {
-  .account-field .address-area select,
   .account-field select,
   .checkout-field select {
-    min-height: 46px;
-    padding: 0 14px;
     font-size: 0.875rem;
   }
 }

@@ -150,15 +150,15 @@ export default function BelitungAddressFields({
               {errors.desa}
             </p>
           )}
+          <p className={'address-area-summary ' + hintClass} aria-live="polite">
+            {village
+              ? preview
+                ? `Alamat tersimpan sebagai: ${preview}`
+                : `Kec. ${districtLabel(village.districtCode)}, ${village.regency}, Kepulauan Bangka Belitung`
+              : 'Pengiriman hanya untuk Pulau Belitung (Kab. Belitung dan Kab. Belitung Timur).'}
+          </p>
         </div>
       </div>
-      <p className={'address-area-summary ' + hintClass} aria-live="polite">
-        {village
-          ? preview
-            ? `Alamat tersimpan sebagai: ${preview}`
-            : `Kec. ${districtLabel(village.districtCode)}, ${village.regency}, Kepulauan Bangka Belitung`
-          : 'Pengiriman hanya untuk Pulau Belitung (Kab. Belitung dan Kab. Belitung Timur).'}
-      </p>
     </div>
   );
 }

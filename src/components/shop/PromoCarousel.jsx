@@ -1,7 +1,7 @@
 import useCompany from '../../state/useCompany';
 import CompanyBrand from '../layout/CompanyBrand';
-import { useEffect, useState } from 'react';
-import { promoSlides } from '../../data/promoSlides';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { bannerState, homeSlides, loadBanners, subscribeBanners } from '../../data/homeBanners';
 import './PromoCarousel.css';
 import ProductImage, { ProductPlaceholderIcon } from './ProductImage';
 import { productVariants } from '../../data/products';
@@ -34,9 +34,16 @@ function Arrow({ back = false }) {
   );
 }
 
-export default function PromoCarousel({ catalog, categoryList } = {}) {
+export default function PromoCarousel({ catalog, categoryList, preview } = {}) {
   const { profile: companyProfile } = useCompany();
-  const slides = promoSlides(catalog, categoryList);
+  const banners = useSyncExternalStore(subscribeBanners, bannerState, bannerState);
+  // `preview` (admin editor) shows exactly the given slides, without loading saved banners.
+  const slides = preview || homeSlides(catalog, categoryList, banners);
+  // The admin preview sits inside a page that has its own heading.
+  const BrandHeading = preview ? 'p' : 'h1';
+  useEffect(() => {
+    if (!preview && !bannerState().loaded) loadBanners();
+  }, [preview]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -71,7 +78,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
   const currentIndex = index % slides.length;
   const slide = slides[currentIndex];
   // Give uploaded photos the spotlight, while retaining the actual featured SKUs.
-  const featured = [...slide.featured].sort(
+  const featured = [...(slide.featured || [])].sort(
     (a, b) => Number(Boolean(firstPhoto(b))) - Number(Boolean(firstPhoto(a))),
   );
   const titleLines = slide.title.split('\n');
@@ -96,10 +103,10 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
       >
         <div className="bam-promo-copy">
           {/* One fixed page heading says what the store is; slide titles change below it. */}
-          <h1 className="bam-promo-brand">
+          <BrandHeading className="bam-promo-brand">
             <CompanyBrand />
             <span>Grosir kebutuhan toko dari {companyProfile.legalName}</span>
-          </h1>
+          </BrandHeading>
           <span className="bam-promo-eyebrow">
             <span aria-hidden="true" />
             {slide.category}
@@ -123,8 +130,17 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
             </a>
           </div>
         </div>
-        <div className={'bam-promo-showcase' + (!slide.featured.length ? ' is-empty' : '')}>
-          {featured.length > 0 ? (
+        <div
+          className={
+            'bam-promo-showcase' +
+            (slide.image ? ' has-poster' : !featured.length ? ' is-empty' : '')
+          }
+        >
+          {slide.image ? (
+            <a className="bam-promo-poster" href={slide.href} tabIndex={-1}>
+              <img src={slide.image} alt={slide.imageAlt} decoding="async" />
+            </a>
+          ) : featured.length > 0 ? (
             <>
               <div className={'bam-promo-products' + (featured.length === 1 ? ' is-single' : '')}>
                 {featured.map((product, i) => {

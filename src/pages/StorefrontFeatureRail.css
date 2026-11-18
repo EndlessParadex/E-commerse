@@ -833,3 +833,90 @@
     transition: none;
   }
 }
+
+/* Banner colour themes chosen in Admin → Banner beranda. Blue (snack) is the default above;
+   the others replace the hero colours on that banner only, in light and in dark mode. */
+.home-landing .home-feature-rail .bam-promo--beauty {
+  --feature-hero-start: #fde7ef;
+  --feature-hero-end: #fff7fa;
+  --feature-hero-accent: #b02c5a;
+  --feature-hero-border: #f3c6d6;
+  --feature-orbit-border: #f1c3d4;
+  --feature-footer-bg: #fbe3ece8;
+  --feature-footer-border: #efc3d3;
+  --feature-arrow-ink: #9b2852;
+  --feature-arrow-border: #efc3d3;
+  --feature-dot-ink: #cf86a3;
+}
+.home-landing .home-feature-rail .bam-promo--spice {
+  --feature-hero-start: #ffeedb;
+  --feature-hero-end: #fff9f2;
+  --feature-hero-accent: #a84a0b;
+  --feature-hero-border: #f5d0a8;
+  --feature-orbit-border: #f3cba1;
+  --feature-footer-bg: #ffe9d2e8;
+  --feature-footer-border: #f1caa0;
+  --feature-arrow-ink: #8f400a;
+  --feature-arrow-border: #f1caa0;
+  --feature-dot-ink: #d29a63;
+}
+.home-landing .home-feature-rail .bam-promo--home {
+  --feature-hero-start: #ddf4e9;
+  --feature-hero-end: #f4fbf7;
+  --feature-hero-accent: #0d6e4b;
+  --feature-hero-border: #b9e0cc;
+  --feature-orbit-border: #b5dcc8;
+  --feature-footer-bg: #d6efe3e8;
+  --feature-footer-border: #b5dcc8;
+  --feature-arrow-ink: #0b5e40;
+  --feature-arrow-border: #b5dcc8;
+  --feature-dot-ink: #74b597;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--beauty {
+  --feature-hero-start: #2a1220;
+  --feature-hero-end: #4a2238;
+  --feature-hero-accent: #ffb6d0;
+  --feature-hero-border: #6d3b54;
+  --feature-orbit-border: #ffd6e524;
+  --feature-footer-bg: #1f0c17bb;
+  --feature-footer-border: #ffd6e524;
+  --feature-arrow-bg: #4a2238;
+  --feature-arrow-ink: #fff3f8;
+  --feature-arrow-border: #b06f8d66;
+  --feature-dot-ink: #c48aa4;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--spice {
+  --feature-hero-start: #2a1608;
+  --feature-hero-end: #4a2a12;
+  --feature-hero-accent: #ffc58f;
+  --feature-hero-border: #6e4a2a;
+  --feature-orbit-border: #ffe2c624;
+  --feature-footer-bg: #1f1006bb;
+  --feature-footer-border: #ffe2c624;
+  --feature-arrow-bg: #4a2a12;
+  --feature-arrow-ink: #fff6ee;
+  --feature-arrow-border: #b0835866;
+  --feature-dot-ink: #c49a72;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--home {
+  --feature-hero-start: #0b2219;
+  --feature-hero-end: #173d2e;
+  --feature-hero-accent: #9ee6c3;
+  --feature-hero-border: #3c6352;
+  --feature-orbit-border: #d2f5e424;
+  --feature-footer-bg: #06170fbb;
+  --feature-footer-border: #d2f5e424;
+  --feature-arrow-bg: #173d2e;
+  --feature-arrow-ink: #f0fff7;
+  --feature-arrow-border: #6fa38b66;
+  --feature-dot-ink: #7fb59b;
+}
+
+/* Admin preview: the same home classes, but one full-width banner. */
+.admin-banner-preview .home-landing {
+  margin: 0;
+  padding: 0;
+}
+.admin-banner-preview .home-feature-rail {
+  display: block;
+}

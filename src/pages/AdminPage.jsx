@@ -6,6 +6,7 @@ import AdminAccountsPage from './AdminAccountsPage';
 import AdminApprovalsPage from './AdminApprovalsPage';
 import AdminB2BStoresPage from './AdminB2BStoresPage';
 import AdminReviewsPage from './AdminReviewsPage';
+import AdminBannersPage from './AdminBannersPage';
 import AdminDeliveriesPage from './AdminDeliveriesPage';
 import SharedCartPage from '../components/shop/SharedCartPage';
 import { suppliers } from '../data/suppliers';
@@ -90,6 +91,7 @@ const navigationGroups = [
       { view: 'brands', label: 'Merek', href: '#/admin/merek' },
       { view: 'categories', label: 'Kategori', href: '#/admin/kategori' },
       { view: 'reviews', label: 'Ulasan pembeli', href: '#/admin/ulasan' },
+      { view: 'banners', label: 'Banner beranda', href: '#/admin/banner' },
     ],
   },
   {
@@ -209,7 +211,7 @@ export default function AdminPage({ view = 'overview' }) {
   // Storage notes matter only while data can be lost; database-backed pages go straight to the work.
   const previewStorage = workflowView
     ? !workflowUsesServer
-    : !b2bView && !ownerSettingsView && !catalogUsesServer;
+    : !b2bView && !ownerSettingsView && view !== 'banners' && !catalogUsesServer;
   const areaLabel =
     view === 'overview'
       ? 'Dashboard'
@@ -229,6 +231,7 @@ export default function AdminPage({ view = 'overview' }) {
     brands: 'Kelola merek dan perusahaan pemasok yang terhubung.',
     categories: 'Susun kategori dan subkategori katalog toko.',
     reviews: 'Baca ulasan pembeli dan sembunyikan ulasan yang tidak pantas.',
+    banners: 'Atur banner di bagian atas beranda: teks, tujuan, gambar, dan jadwal tampil.',
     deliveries: 'Pesanan per sopir per hari, siap dicetak untuk pengantaran.',
     stock: workflowUsesServer
       ? 'Periksa dan perbarui stok setiap ukuran produk.'
@@ -244,6 +247,7 @@ export default function AdminPage({ view = 'overview' }) {
     brands: 'Merek',
     categories: 'Kategori & subkategori',
     reviews: 'Ulasan pembeli',
+    banners: 'Banner beranda',
     deliveries: 'Daftar antar sopir',
     orders: 'Pesanan toko',
     stock: 'Stok produk',
@@ -500,6 +504,8 @@ export default function AdminPage({ view = 'overview' }) {
           <AdminDeliveriesPage />
         ) : view === 'reviews' ? (
           <AdminReviewsPage />
+        ) : view === 'banners' ? (
+          <AdminBannersPage />
         ) : view === 'sharedCarts' ? (
           <SharedCartPage key={delivery?.user?.id} adminView />
         ) : view === 'b2bStores' ? (

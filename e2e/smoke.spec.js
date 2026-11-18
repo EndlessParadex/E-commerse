@@ -299,6 +299,74 @@ test('admin: foto produk baru tersimpan ke database', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('admin: banner beranda bisa ditambah dengan gambar, tampil di beranda, disembunyikan, dan dihapus', async ({
+  page,
+}, testInfo) => {
+  const errors = watchErrors(page);
+  const label = `Promo uji ${testInfo.project.name} ${Date.now().toString(36)}`;
+  await login(page, ACCOUNTS.admin);
+  await page.goto('/#/admin/banner');
+  await expect(page.getByRole('heading', { name: 'Banner beranda', level: 2 })).toBeVisible();
+  const copy = page.getByRole('button', { name: 'Salin banner otomatis' });
+  if (await copy.isVisible()) await copy.click();
+  await page.getByRole('button', { name: '+ Tambah banner' }).click();
+
+  await page.getByLabel('Label kecil (opsional)').fill(label);
+  await page.getByLabel('Judul *').fill('Promo akhir tahun\nuntuk tokomu');
+  await page.getByLabel('Teks tombol *').fill('Lihat promo');
+  await page.getByLabel('Tombol menuju').selectOption('catalog');
+  await page.getByText('Jingga').click();
+  await page.getByText('Gambar / poster').click();
+  // A picture is required for a picture banner.
+  await page.getByRole('button', { name: 'Tambah banner' }).last().click();
+  await expect(page.getByText('Unggah gambar banner.')).toBeVisible();
+  const photo = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 200;
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#f97316';
+    context.fillRect(0, 0, 300, 200);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  await page.getByLabel('Pilih gambar banner').setInputFiles({
+    name: 'promo.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(photo, 'base64'),
+  });
+  const cropper = page.locator('dialog.photo-crop-dialog[open]');
+  await cropper.getByRole('button', { name: 'Pakai foto' }).click();
+  await expect(cropper).toHaveCount(0);
+  await expect(page.locator('.admin-banner-preview .bam-promo-poster img')).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: 'Tambah banner' }).last().click();
+  await expect(page.getByText('Banner ditambahkan.')).toBeVisible();
+  const row = page.locator('.admin-banner-row', { hasText: 'Promo akhir tahun' });
+  await expect(row).toContainText('Tampil');
+
+  // On the home page, among the banners.
+  await page.goto('/#/');
+  const dot = page.getByRole('button', { name: 'Tampilkan pilihan ' + label });
+  await dot.click();
+  await expect(page.locator('.bam-promo')).toHaveClass(/bam-promo--spice/);
+  await expect(page.locator('.bam-promo-title')).toContainText('Promo akhir tahun');
+  await expect(page.locator('.bam-promo-poster img')).toBeVisible();
+  await expect(page.locator('.bam-promo-cta')).toHaveAttribute('href', '#/cari?q=');
+
+  // Hidden: gone from the home page. Deleted: gone from the list.
+  await page.goto('/#/admin/banner');
+  await row.getByRole('button', { name: 'Sembunyikan' }).click();
+  await expect(row).toContainText('Disembunyikan');
+  await page.goto('/#/');
+  await expect(page.locator('.bam-promo')).toBeVisible();
+  await expect(dot).toHaveCount(0);
+  await page.goto('/#/admin/banner');
+  await row.getByRole('button', { name: 'Hapus' }).click();
+  await page.locator('dialog[open]').getByRole('button', { name: 'Hapus banner' }).click();
+  await expect(row).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('foto profil: geser dan perbesar sebelum disimpan, hasilnya persegi sesuai pilihan', async ({
   page,
 }) => {

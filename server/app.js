@@ -23,6 +23,7 @@ import { logUnexpectedError } from './errorLogging.js';
 import { PasswordQueue, accountRateKey } from './authSecurity.js';
 import { clientIpResolver } from './clientIp.js';
 import { PhoneRecovery, temporaryPassword } from './phoneRecovery.js';
+import { BannerRepository, BANNER_PHOTO_PATH } from './banners.js';
 import { composeAddress, validateArea } from '../src/data/belitungRegions.js';
 import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
@@ -323,6 +324,7 @@ export function createApp({
     queue: passwordQueue,
     hashPassword,
   });
+  const banners = new BannerRepository(db, { now });
   const phoneRecovery = new PhoneRecovery(db, {
     phones: phoneVerification,
     identity,
@@ -510,9 +512,12 @@ export function createApp({
         if (site.respond(req, res, path)) return;
         return sendError(res, 404, 'not_found');
       }
+      const bannerPhoto = req.method === 'GET' && BANNER_PHOTO_PATH.exec(path);
       const catalogPhoto = req.method === 'GET' && CATALOG_PHOTO_PATH.exec(path);
-      if (catalogPhoto) {
-        const asset = catalog.photoFile(catalogPhoto[1]);
+      if (catalogPhoto || bannerPhoto) {
+        const asset = bannerPhoto
+          ? banners.photo(bannerPhoto[1])
+          : catalog.photoFile(catalogPhoto[1]);
         if (!asset) return sendError(res, 404, 'not_found');
         const etag = '"' + asset.hash + '"';
         // The URL contains the photo's own hash, so the content behind it never changes.
@@ -987,6 +992,15 @@ export function createApp({
       }
       if (req.method === 'GET' && path === '/api/company')
         return json(res, 200, company.snapshot());
+      if (req.method === 'GET' && path === '/api/home/banners')
+        return json(res, 200, banners.public(), { 'cache-control': 'no-cache' });
+      if (path === '/api/admin/banners' && (req.method === 'GET' || req.method === 'PUT')) {
+        const user = currentUser(req);
+        if (!user) return sendError(res, 401, 'unauthorized');
+        if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (req.method === 'GET') return json(res, 200, banners.admin());
+        return json(res, 200, banners.save(await readBody(req, 20 * 1024 * 1024), user));
+      }
       if (path === '/api/admin/company' && req.method === 'PUT') {
         const user = currentUser(req);
         if (!user) return sendError(res, 401, 'unauthorized');
@@ -1321,6 +1335,7 @@ export function createApp({
     handler,
     db,
     catalog,
+    banners,
     company,
     workflow,
     identity,

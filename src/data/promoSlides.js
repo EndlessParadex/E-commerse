@@ -2,7 +2,6 @@ import { companySnapshot } from './companyStore.js';
 import { products, groupProducts } from './products.js';
 import { categories } from './catalog.js';
 
-const themes = { snack: 'snack', beauty: 'beauty', bumbu: 'spice', rumah: 'home' };
 const copy = {
   snack: {
     title: 'Stok camilan,\ntoko makin lengkap.',
@@ -38,7 +37,8 @@ export function promoSlides(catalog = products, categoryList = categories) {
     return [
       {
         id: category.id,
-        theme: themes[category.id] || 'snack',
+        // Automatic banners keep the store's blue; colour themes are chosen per saved banner.
+        theme: 'snack',
         category: category.name,
         label: `PILIHAN DARI KATALOG ${profile.shortName.toUpperCase()}`,
         title: copy[category.id]?.title || `Temukan produk\n${category.name}.`,

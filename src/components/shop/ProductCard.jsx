@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ProductImage from './ProductImage';
 import StarRating from './StarRating';
-import { rupiah } from './shopPresentation';
+import { PRICE_LOCKED, hasPrice, rupiah } from './shopPresentation';
 import './ProductCard.css';
 import { productVariants } from '../../data/products';
 import { packagingValues } from '../../data/productPackaging';
@@ -47,7 +47,8 @@ export default function ProductCard({
   const minimumPrice = hasVariants
     ? Math.min(...variants.map((item) => item.price))
     : product.price;
-  const priceLabel = rupiah(minimumPrice);
+  const priceShown = hasPrice(product.price);
+  const priceLabel = priceShown ? rupiah(minimumPrice) : PRICE_LOCKED;
   const photo = productGallery(product)[0];
   const preview = { ...product, image: photo.src, imageAlt: photo.alt };
   useEffect(() => {
@@ -64,7 +65,8 @@ export default function ProductCard({
       window.location.assign('#/keranjang');
       return;
     }
-    if (hasVariants) {
+    // Visitors (no prices) are sent to the product, where the sign-in prompt appears.
+    if (hasVariants || !hasPrice(product.price)) {
       window.location.assign('#/produk/' + product.id);
       return;
     }
@@ -97,7 +99,10 @@ export default function ProductCard({
   };
 
   const discounted =
-    !hasVariants && Number.isFinite(product.oldPrice) && product.oldPrice > product.price;
+    priceShown &&
+    !hasVariants &&
+    Number.isFinite(product.oldPrice) &&
+    product.oldPrice > product.price;
   const badge = hasVariants
     ? `${variants.length} varian`
     : showDiscount && discounted
@@ -173,9 +178,14 @@ export default function ProductCard({
             </>
           )}
         </div>
-        <div className={'product-price' + (priceLabel.length > 14 ? ' is-long-price' : '')}>
+        <div
+          className={
+            'product-price' +
+            (!priceShown ? ' is-locked-price' : priceLabel.length > 14 ? ' is-long-price' : '')
+          }
+        >
           <strong>
-            {hasVariants && <span className="product-price-prefix">Mulai </span>}
+            {hasVariants && priceShown && <span className="product-price-prefix">Mulai </span>}
             <span className="product-price-amount">{priceLabel}</span>
           </strong>
           {discounted && <del>{rupiah(product.oldPrice)}</del>}

@@ -62,9 +62,10 @@ const sendCatalogJson = (req, res, body) => {
   const etag = '"' + createHash('sha256').update(text).digest('base64url').slice(0, 27) + '"';
   const headers = {
     'content-type': 'application/json; charset=utf-8',
-    'cache-control': 'no-cache',
+    // The body depends on the session (visitors get no prices): never shared between users.
+    'cache-control': 'private, no-cache',
     etag,
-    vary: 'Accept-Encoding',
+    vary: 'Accept-Encoding, Cookie',
     'x-content-type-options': 'nosniff',
   };
   if (req.headers['if-none-match'] === etag) {
@@ -72,10 +73,15 @@ const sendCatalogJson = (req, res, body) => {
     return res.end();
   }
   const encoding = publicEncoding(req.headers['accept-encoding']);
-  if (catalogBodyCache?.etag !== etag) catalogBodyCache = { etag, encoded: new Map() };
-  if (encoding && !catalogBodyCache.encoded.has(encoding))
-    catalogBodyCache.encoded.set(encoding, compressPublic(text, encoding));
-  const payload = encoding ? catalogBodyCache.encoded.get(encoding) : text;
+  // Two current bodies (with and without prices); keep both compressed.
+  catalogBodyCache ??= new Map();
+  if (!catalogBodyCache.has(etag)) {
+    if (catalogBodyCache.size >= 2) catalogBodyCache.delete(catalogBodyCache.keys().next().value);
+    catalogBodyCache.set(etag, new Map());
+  }
+  const encoded = catalogBodyCache.get(etag);
+  if (encoding && !encoded.has(encoding)) encoded.set(encoding, compressPublic(text, encoding));
+  const payload = encoding ? encoded.get(encoding) : text;
   res.writeHead(200, { ...headers, ...(encoding ? { 'content-encoding': encoding } : {}) });
   return res.end(payload);
 };
@@ -991,10 +997,22 @@ export function createApp({
         // Ratings come only from buyer reviews, never from catalog sample data.
         const snapshot = catalog.publicSnapshot();
         const ratings = reviews.summary();
+        // Prices are for signed-in (approved) accounts only; visitors get names and photos.
+        const pricesHidden = !currentUser(req);
         return sendCatalogJson(req, res, {
           ...snapshot,
+          ...(pricesHidden ? { pricesHidden: true } : {}),
           edits: snapshot.edits.map((draft) => ({
             ...draft,
+            ...(pricesHidden
+              ? {
+                  variants: draft.variants.map((variant) => ({
+                    ...variant,
+                    price: null,
+                    oldPrice: null,
+                  })),
+                }
+              : {}),
             rating: ratings[draft.groupId]?.average || 0,
             reviewCount: ratings[draft.groupId]?.count || 0,
           })),

@@ -1,7 +1,7 @@
 import { products } from '../../data/products';
 import { homePromotions } from '../../data/homePromotions';
 import { productGallery } from '../../data/productGallery';
-import { rupiah } from './shopPresentation';
+import { PRICE_LOCKED, hasPrice, rupiah } from './shopPresentation';
 import ProductImage from './ProductImage';
 import './VerticalPromoPanel.css';
 
@@ -63,8 +63,14 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
                     {product.sizeLabel || 'Pilihan kemasan tersedia'}
                   </p>
                   <div className="bam-vertical-promo-prices">
-                    <strong>{rupiah(product.price)}</strong>
-                    {discounted && <del>{rupiah(product.oldPrice)}</del>}
+                    {hasPrice(product.price) ? (
+                      <>
+                        <strong>{rupiah(product.price)}</strong>
+                        {discounted && <del>{rupiah(product.oldPrice)}</del>}
+                      </>
+                    ) : (
+                      <strong className="is-locked-price">{PRICE_LOCKED}</strong>
+                    )}
                   </div>
                 </div>
                 {discounted && (

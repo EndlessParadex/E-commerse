@@ -29,6 +29,8 @@ const CustomerDirectoryPage = lazy(() => import('./pages/CustomerDirectoryPage')
 const AccountRecoveryPage = lazy(() => import('./pages/AccountRecoveryPage'));
 import { subscribeCatalog, catalogRevision, initializeCatalog } from './data/adminStore';
 import AdminAccess from './components/account/AdminAccess';
+import GuestGate from './components/account/GuestGate';
+import CatalogAccess from './components/account/CatalogAccess';
 import StoreFooter from './components/layout/StoreFooter';
 import StoreInfoPage from './pages/StoreInfoPage';
 import PaymentPage from './pages/PaymentPage';
@@ -210,87 +212,96 @@ function App() {
               <SharedCartBar />
             )}
             <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
-              <Suspense
-                fallback={
-                  <div className="shop-page" role="status">
-                    Memuat halaman…
-                  </div>
-                }
-              >
-                {isAdmin ? (
-                  <Suspense fallback={<div role="status">Memuat ruang admin…</div>}>
-                    <AdminAccess>
-                      <AdminPage view={adminView} />
-                    </AdminAccess>
-                  </Suspense>
-                ) : route === '/pelanggan' ? (
-                  <Suspense
-                    fallback={
-                      <div className="shop-page" role="status">
-                        Memuat daftar pembeli…
-                      </div>
-                    }
-                  >
-                    <CustomerDirectoryPage />
-                  </Suspense>
-                ) : recoveryMatch ? (
-                  <AccountRecoveryPage
-                    mode={recoveryMatch[1]}
-                    route={route}
-                    key={recoveryMatch[1]}
-                  />
-                ) : infoPage ? (
-                  <StoreInfoPage page={infoPage} />
-                ) : route === '/pesanan' ? (
-                  <OrdersPage />
-                ) : route === '/keranjang' ? (
-                  <ShopPage type="cart" />
-                ) : fastOrderRoute ? (
-                  <FastOrderPage />
-                ) : route === '/checkout' ? (
-                  <CheckoutPage />
-                ) : route === '/notifikasi' ? (
-                  <ShopPage type="notifications" />
-                ) : route === '/favorit' ? (
-                  <FavoritesPage />
-                ) : isAccountRoute ? (
-                  <AccountPage key={route} section={accountSection} />
-                ) : route === '/login' ? (
-                  <AuthPage key="login" mode="login" />
-                ) : route === '/daftar' ? (
-                  <AuthPage key="register" mode="register" />
-                ) : paymentMatch ? (
-                  <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} />
-                ) : orderMatch ? (
-                  <OrderConfirmationPage orderId={decodeId(orderMatch[1])} key={orderMatch[1]} />
-                ) : productMatch ? (
-                  <ProductDetailPage
-                    productId={decodeId(productMatch[1])}
-                    returnTo={productReturnTo}
-                    key={productMatch[1]}
-                  />
-                ) : catalog && catalog.kind !== 'invalid' ? (
-                  <Home key={catalogNavigationKey(route)} catalog={catalog} />
-                ) : route === '/' ? (
-                  <Home />
-                ) : (
-                  <section className="shop-page not-found-page">
-                    <p className="not-found-code" aria-hidden="true">
-                      404
-                    </p>
-                    <h1>Halaman tidak ditemukan</h1>
-                    <p>Tautan mungkin salah ketik atau halamannya sudah dipindahkan.</p>
-                    <div className="not-found-actions">
-                      <a className="shop-primary" href="#/">
-                        Kembali ke beranda
-                      </a>
-                      <a className="not-found-secondary" href="#/cari?q=">
-                        Lihat katalog
-                      </a>
+              <CatalogAccess>
+                <Suspense
+                  fallback={
+                    <div className="shop-page" role="status">
+                      Memuat halaman…
                     </div>
-                  </section>
-                )}
-              </Suspense>
+                  }
+                >
+                  {isAdmin ? (
+                    <Suspense fallback={<div role="status">Memuat ruang admin…</div>}>
+                      <AdminAccess>
+                        <AdminPage view={adminView} />
+                      </AdminAccess>
+                    </Suspense>
+                  ) : (
+                    <GuestGate route={route}>
+                      {route === '/pelanggan' ? (
+                        <Suspense
+                          fallback={
+                            <div className="shop-page" role="status">
+                              Memuat daftar pembeli…
+                            </div>
+                          }
+                        >
+                          <CustomerDirectoryPage />
+                        </Suspense>
+                      ) : recoveryMatch ? (
+                        <AccountRecoveryPage
+                          mode={recoveryMatch[1]}
+                          route={route}
+                          key={recoveryMatch[1]}
+                        />
+                      ) : infoPage ? (
+                        <StoreInfoPage page={infoPage} />
+                      ) : route === '/pesanan' ? (
+                        <OrdersPage />
+                      ) : route === '/keranjang' ? (
+                        <ShopPage type="cart" />
+                      ) : fastOrderRoute ? (
+                        <FastOrderPage />
+                      ) : route === '/checkout' ? (
+                        <CheckoutPage />
+                      ) : route === '/notifikasi' ? (
+                        <ShopPage type="notifications" />
+                      ) : route === '/favorit' ? (
+                        <FavoritesPage />
+                      ) : isAccountRoute ? (
+                        <AccountPage key={route} section={accountSection} />
+                      ) : route === '/login' ? (
+                        <AuthPage key="login" mode="login" />
+                      ) : route === '/daftar' ? (
+                        <AuthPage key="register" mode="register" />
+                      ) : paymentMatch ? (
+                        <PaymentPage orderId={decodeId(paymentMatch[1])} key={paymentMatch[1]} />
+                      ) : orderMatch ? (
+                        <OrderConfirmationPage
+                          orderId={decodeId(orderMatch[1])}
+                          key={orderMatch[1]}
+                        />
+                      ) : productMatch ? (
+                        <ProductDetailPage
+                          productId={decodeId(productMatch[1])}
+                          returnTo={productReturnTo}
+                          key={productMatch[1]}
+                        />
+                      ) : catalog && catalog.kind !== 'invalid' ? (
+                        <Home key={catalogNavigationKey(route)} catalog={catalog} />
+                      ) : route === '/' ? (
+                        <Home />
+                      ) : (
+                        <section className="shop-page not-found-page">
+                          <p className="not-found-code" aria-hidden="true">
+                            404
+                          </p>
+                          <h1>Halaman tidak ditemukan</h1>
+                          <p>Tautan mungkin salah ketik atau halamannya sudah dipindahkan.</p>
+                          <div className="not-found-actions">
+                            <a className="shop-primary" href="#/">
+                              Kembali ke beranda
+                            </a>
+                            <a className="not-found-secondary" href="#/cari?q=">
+                              Lihat katalog
+                            </a>
+                          </div>
+                        </section>
+                      )}
+                    </GuestGate>
+                  )}
+                </Suspense>
+              </CatalogAccess>
             </main>
             {!isAdmin && <StoreFooter />}
           </AppearanceProvider>

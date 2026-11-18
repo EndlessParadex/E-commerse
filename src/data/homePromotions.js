@@ -14,10 +14,12 @@ export function homePromotions(catalog, limit = 4) {
     catalog.filter((item) => item && hasRealPhoto(item)).map((item) => item.groupId || item.id),
   );
   for (const item of catalog) {
-    if (!item || !Number.isFinite(item.price) || item.price < 0) continue;
+    // Visitors get no prices (price null): still recommend the product, never as a discount.
+    const priced = Number.isFinite(item?.price);
+    if (!item || (priced && item.price < 0) || (!priced && item.price !== null)) continue;
     const key = item.groupId || item.id;
     const oldPrice = item.oldPrice;
-    const discounted = Number.isFinite(oldPrice) && oldPrice > item.price;
+    const discounted = priced && Number.isFinite(oldPrice) && oldPrice > item.price;
     const discount = discounted ? Math.floor(((oldPrice - item.price) * 100) / oldPrice) : 0;
     const entry = { product: item, discounted, discount };
     const previous = groups.get(key);

@@ -321,3 +321,44 @@
   gap: 10px;
   margin-top: 12px;
 }
+.auth-forgot {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+.auth-forgot a {
+  font-weight: 600;
+}
+/* Sign-up sits right under the sign-in button, as a full-width outlined button. */
+.auth-register-cta {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+.auth-register-cta p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+.auth-register-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border: 1.5px solid var(--color-link);
+  border-radius: 10px;
+  color: var(--color-link);
+  background: var(--color-surface);
+  font-weight: 700;
+  text-decoration: none;
+}
+.auth-register-button:hover {
+  background: var(--color-surface-hover);
+}
+.auth-register-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

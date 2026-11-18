@@ -7,6 +7,7 @@ import ProductImage, { ProductPlaceholderIcon } from './ProductImage';
 import { productVariants } from '../../data/products';
 import { packagingOptionLabel } from '../../data/packagingPresentation';
 import { productGallery } from '../../data/productGallery';
+import { PRICE_LOCKED, hasPrice } from './shopPresentation';
 const rupiah = (value) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -130,7 +131,8 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                   const variants = productVariants(product.id);
                   const name = product.baseName || product.name;
                   const packaging = packagingOptionLabel(product, variants);
-                  const discounted = product.oldPrice > product.price;
+                  const priceShown = hasPrice(product.price);
+                  const discounted = priceShown && product.oldPrice > product.price;
                   const saving = discounted
                     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
                     : 0;
@@ -143,7 +145,7 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                       }
                       href={`#/produk/${encodeURIComponent(product.id)}`}
                       key={product.id}
-                      aria-label={`Lihat ${name}${product.sizeLabel ? ', ' + product.sizeLabel : ''}, ${packaging}, ${rupiah(product.price)}`}
+                      aria-label={`Lihat ${name}${product.sizeLabel ? ', ' + product.sizeLabel : ''}, ${packaging}, ${priceShown ? rupiah(product.price) : PRICE_LOCKED}`}
                     >
                       <div className={'bam-promo-product-visual' + (photo ? ' has-photo' : '')}>
                         {i === 0 && (
@@ -191,14 +193,18 @@ export default function PromoCarousel({ catalog, categoryList } = {}) {
                           <div className="bam-promo-old-price">
                             {discounted && <del>{rupiah(product.oldPrice)}</del>}
                           </div>
-                          <span
-                            className={
-                              'bam-promo-price' + (product.price >= 10_000_000 ? ' is-long' : '')
-                            }
-                          >
-                            <span>Rp</span>
-                            <strong>{priceNumber(product.price)}</strong>
-                          </span>
+                          {priceShown ? (
+                            <span
+                              className={
+                                'bam-promo-price' + (product.price >= 10_000_000 ? ' is-long' : '')
+                              }
+                            >
+                              <span>Rp</span>
+                              <strong>{priceNumber(product.price)}</strong>
+                            </span>
+                          ) : (
+                            <span className="bam-promo-price is-locked">{PRICE_LOCKED}</span>
+                          )}
                         </div>
                         <span className="bam-promo-product-link">
                           <span>Lihat produk</span>

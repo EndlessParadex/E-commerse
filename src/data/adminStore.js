@@ -59,6 +59,9 @@ const announce = () => {
   revision += 1;
   listeners.forEach((listener) => listener());
 };
+let hiddenPrices = false;
+/** True while the catalog came without prices (visitor not signed in). */
+export const pricesHidden = () => hiddenPrices;
 function applyServerCatalog(value) {
   if (
     value?.version !== 1 ||
@@ -93,7 +96,14 @@ function applyServerCatalog(value) {
       throw new Error('Invalid server master data');
     applyMasters(value.masters);
     value.edits.forEach((draft) => {
-      if (Object.keys(validateDraft(draft)).length) throw new Error('Invalid server product');
+      // Visitors receive no prices: validate the rest of the product with a stand-in price.
+      const checked = value.pricesHidden
+        ? {
+            ...draft,
+            variants: draft.variants.map((variant) => ({ ...variant, price: '1', oldPrice: '' })),
+          }
+        : draft;
+      if (Object.keys(validateDraft(checked)).length) throw new Error('Invalid server product');
       applyDraft(draft);
     });
   } catch (error) {
@@ -105,6 +115,7 @@ function applyServerCatalog(value) {
   }
   if (value.company) applyCompany(value.company);
   edits = clone(value.edits);
+  hiddenPrices = value.pricesHidden === true;
   serverRevision = value.revision;
   const variants = value.edits.flatMap((draft) => draft.variants);
   serverSupportsPackaging =
@@ -214,6 +225,11 @@ async function loadServerCatalog(request) {
   );
 }
 async function persistServer(masters, nextEdits, result) {
+  // A catalog loaded without prices (before signing in) must never be saved back.
+  if (hiddenPrices)
+    return {
+      storageError: 'Harga katalog belum dimuat. Muat ulang halaman, lalu ulangi perubahan.',
+    };
   if (!serverSupportsBrandPhotos && masters.brands.some((brand) => brand.logo))
     return {
       storageError:

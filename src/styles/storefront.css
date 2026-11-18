@@ -324,3 +324,14 @@
   color: var(--color-link);
   font-weight: 700;
 }
+
+/* Visitors see this instead of a price; smaller and calmer than a real price. */
+.product-price.is-locked-price .product-price-amount,
+.bam-promo-price.is-locked,
+.bam-vertical-promo-prices .is-locked-price {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  white-space: normal;
+}

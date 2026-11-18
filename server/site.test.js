@@ -32,6 +32,9 @@ test('public product URLs serve product HTML and metadata without JS, with canon
     assert.equal(response.status, 200);
     assert.match(response.body, /<h1>Keripik Singkong Balado 180g<\/h1>/);
     assert.match(response.body, /application\/ld\+json/);
+    // The page is public: no price, in the text or in the structured data (18000 in the seed).
+    assert.doesNotMatch(response.body, /18\.000|"price"|Offer/);
+    assert.match(response.body, /Masuk atau daftar akun untuk melihat harga/);
     assert.match(response.body, /https:\/\/shop.fixture.test\/produk\/snack-pedas/);
     assert.doesNotMatch(response.body, /untrusted.example/);
     assert.match(response.body, /<meta property="og:title"/);

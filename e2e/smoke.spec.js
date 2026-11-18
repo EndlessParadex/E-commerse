@@ -47,7 +47,9 @@ async function login(page, email) {
   await expect(page).not.toHaveURL(/#\/login/);
 }
 
-test('tamu: beranda, katalog, dan produk tampil tanpa error', async ({ page }) => {
+test('tamu: beranda tanpa harga, isi toko meminta masuk/daftar, lalu kembali ke produk setelah masuk', async ({
+  page,
+}) => {
   const errors = watchErrors(page);
   await page.goto('/');
   await expect(page.locator('h1')).toHaveCount(1);
@@ -58,17 +60,50 @@ test('tamu: beranda, katalog, dan produk tampil tanpa error', async ({ page }) =
   expect(manifest.display).toBe('standalone');
   expect(manifest.short_name).toBeTruthy();
   for (const icon of manifest.icons) expect((await page.request.get(icon.src)).status()).toBe(200);
-  await page.goto('/#/kategori/snack');
-  await expect(page.locator('.product-card').first()).toBeVisible();
-  await expectNoHorizontalScroll(page);
-  await page.locator('.product-card h3 a').first().click();
-  await expect(page).toHaveURL(/#\/produk\//);
-  await expect(page.locator('h1')).toBeVisible();
-  await expectNoHorizontalScroll(page);
-  // A visitor has no order history, so the empty search box shows plain suggestions.
+
+  // No prices for visitors: not on the page, and not from the API either.
+  await expect(page.getByText('Masuk untuk lihat harga').first()).toBeVisible();
+  await expect(page.locator('main')).not.toContainText(/Rp\s?\d/);
+  const catalog = await (await page.request.get('/api/catalog')).json();
+  expect(catalog.pricesHidden).toBe(true);
+  expect(catalog.edits.flatMap((draft) => draft.variants).every((v) => v.price === null)).toBe(
+    true,
+  );
+  // The search box suggests products, without prices.
   await page.getByRole('combobox', { name: 'Cari produk' }).click();
   await expect(page.locator('#search-suggestion-list')).toBeVisible();
-  await expect(page.locator('.search-suggestion-heading')).toHaveCount(0);
+  await expect(page.locator('#search-suggestion-list')).not.toContainText(/Rp\s?\d/);
+  await page.keyboard.press('Escape');
+
+  // Anything past the home page asks to sign in; the prompt can be closed.
+  await page.goto('/#/kategori/snack');
+  const prompt = page.getByRole('dialog', { name: 'Masuk untuk melihat produk dan harga' });
+  await expect(prompt).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await prompt.getByRole('button', { name: /Nanti saja/ }).click();
+  await expect(prompt).toHaveCount(0);
+  await expect(page).toHaveURL(/#\/$/);
+
+  // A product from the home page: prompt, sign in, and land back on that product with prices.
+  const product = page.locator('main a[href^="#/produk/"]:visible').first();
+  const href = await product.getAttribute('href');
+  await product.click();
+  await expect(prompt).toBeVisible();
+  await prompt.getByRole('link', { name: 'Masuk' }).click();
+  await expect(page).toHaveURL(/#\/login$/);
+  // "Daftar akun baru" sits right under the sign-in button.
+  const signIn = page.locator('main form').getByRole('button', { name: 'Masuk' });
+  const register = page.getByRole('link', { name: 'Daftar akun baru' });
+  await expect(register).toBeVisible();
+  expect((await register.boundingBox()).y).toBeGreaterThan((await signIn.boundingBox()).y);
+  await expectTappable(register);
+  await page.locator('input[name="email"]').fill(ACCOUNTS.pribadi);
+  await page.locator('input[name="password"]').fill(PASSWORD);
+  await page.locator('input[name="password"]').press('Enter');
+  await expect(page).toHaveURL(new RegExp(href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
+  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator('main')).toContainText(/Rp\s?\d/);
+  await expectNoHorizontalScroll(page);
   expect(errors).toEqual([]);
 });
 

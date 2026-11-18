@@ -14,6 +14,7 @@ import { cartCounts } from '../../data/cartValidation';
 import { previouslyOrdered } from '../../data/purchaseHistory';
 import useWorkflow from '../../state/useWorkflow';
 import { roleNavigation, roleNavigationActive } from '../../data/roleNavigation';
+import { PRICE_LOCKED, hasPrice } from '../shop/shopPresentation';
 
 const Navbar = () => {
   const { profile: companyProfile } = useCompany();
@@ -122,11 +123,13 @@ const Navbar = () => {
     return `/produk/${product.id}`;
   };
   const formatPrice = (value) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
-    }).format(value);
+    !hasPrice(value)
+      ? PRICE_LOCKED
+      : new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          maximumFractionDigits: 0,
+        }).format(value);
   const highlightQuery = (name) => {
     const query = searchQuery.trim();
     if (!query) return name;
@@ -414,9 +417,13 @@ const Navbar = () => {
                           <>
                             <span>{highlightQuery(product.baseName || product.name)}</span>
                             <small>
-                              {product.category} · Mulai{' '}
+                              {product.category} · {hasPrice(product.price) ? 'Mulai ' : ''}
                               {formatPrice(
-                                Math.min(...productVariants(product.id).map((item) => item.price)),
+                                hasPrice(product.price)
+                                  ? Math.min(
+                                      ...productVariants(product.id).map((item) => item.price),
+                                    )
+                                  : null,
                               )}
                             </small>
                           </>

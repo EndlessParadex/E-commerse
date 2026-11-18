@@ -29,7 +29,6 @@ export function publicProduct(catalog, company, id, publicUrl = '') {
       (packagingValues(variant).packagingType === 'satuan' ? '' : ' · ' + packagingLabel(variant)),
     brand: draft.brand,
     description: draft.description || profile.description,
-    price: Number(variant.price),
     company: profile.shortName,
     url: publicUrl ? new URL(path, publicUrl).href : path,
     image: publicUrl ? new URL(image, publicUrl).href : image,
@@ -83,7 +82,7 @@ export function productHtml(meta, template) {
       sku: meta.id,
       brand: { '@type': 'Brand', name: meta.brand },
       ...(meta.imageData ? { image: meta.image } : {}),
-      offers: { '@type': 'Offer', priceCurrency: 'IDR', price: meta.price, url: meta.url },
+      // No offer/price: prices are shown only to signed-in accounts.
     })
       .replace(/</g, '\\u003c')
       .replace(/>/g, '\\u003e')
@@ -121,9 +120,7 @@ export function productHtml(meta, template) {
       : '') +
     '<p>' +
     escape(meta.description) +
-    '</p><p>Rp ' +
-    meta.price.toLocaleString('id-ID') +
-    '</p><p>Ketersediaan, kemasan, dan ongkir diperiksa saat memesan.</p><a href="/#/produk/' +
+    '</p><p>Masuk atau daftar akun untuk melihat harga.</p><p>Ketersediaan, kemasan, dan ongkir diperiksa saat memesan.</p><a href="/#/produk/' +
     encodeURIComponent(meta.id) +
     '">Lihat pilihan dan pesan</a></article>';
   return template

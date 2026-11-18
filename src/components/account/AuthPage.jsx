@@ -4,6 +4,7 @@ import { ActionIcon } from '../shop/ShopIcon';
 import { validateAuth } from './authValidation';
 import { useDelivery } from '../../state/useDelivery';
 import BelitungAddressFields from './BelitungAddressFields';
+import { takeReturnRoute } from './guestAccess';
 import './AuthPage.css';
 
 function EyeIcon({ visible }) {
@@ -120,7 +121,7 @@ export default function AuthPage({ mode }) {
           ? '/admin'
           : payload.user.canViewCustomers
             ? '/pelanggan'
-            : '/';
+            : takeReturnRoute() || '/';
     } catch {
       setNotice('Belum dapat terhubung ke layanan akun. Periksa koneksi lalu coba lagi.');
     } finally {
@@ -369,20 +370,26 @@ export default function AuthPage({ mode }) {
               <button className="shop-primary auth-submit" type="submit" disabled={busy}>
                 {busy ? 'Mohon tunggu…' : isRegister ? 'Daftar akun' : 'Masuk'}
               </button>
+              {!isRegister && (
+                <p className="auth-forgot">
+                  <a href="#/forgot-password">Lupa kata sandi?</a>
+                </p>
+              )}
             </form>
           )}
-          <p className="auth-switch">
-            {!isRegister && (
-              <>
-                <a href="#/forgot-password">Lupa kata sandi?</a>
-                <br />
-              </>
-            )}
-            {isRegister ? 'Sudah punya akun?' : 'Belum punya akun?'}{' '}
-            <a href={isRegister ? '#/login' : '#/daftar'}>
-              {isRegister ? 'Masuk' : 'Daftar sekarang'}
-            </a>
-          </p>
+          {!isRegister && (
+            <div className="auth-register-cta">
+              <p>Belum punya akun?</p>
+              <a className="auth-register-button" href="#/daftar">
+                Daftar akun baru
+              </a>
+            </div>
+          )}
+          {isRegister && (
+            <p className="auth-switch">
+              Sudah punya akun? <a href="#/login">Masuk</a>
+            </p>
+          )}
         </section>
       </div>
     </div>

@@ -204,7 +204,8 @@ export function buildVariants(draft, items = products) {
       sizeLabel,
       ...packaging,
       grams: variant.sizeUnit === 'g' ? sizeValue : null,
-      price: Number(variant.price),
+      // null when the visitor is not signed in (the server sends no prices).
+      price: variant.price === null ? null : Number(variant.price),
       oldPrice: Number(variant.oldPrice) || 0,
       // Ratings come from buyer reviews (sent by the server with each product).
       rating: Number(draft.rating ?? original.rating) || 0,

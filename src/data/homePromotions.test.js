@@ -53,3 +53,18 @@ test('produk berfoto tampil lebih dulu di daftar dan rekomendasi', async () => {
     ['b', 'c', 'a', 'd'],
   );
 });
+
+test('visitors without prices still get recommendations, none marked as a discount', () => {
+  const hidden = [
+    { id: 'a', groupId: 'a', price: null, oldPrice: 0 },
+    { id: 'b', groupId: 'b', price: null, oldPrice: 0 },
+    { id: 'c', groupId: 'c', price: undefined },
+  ];
+  const result = homePromotions(hidden, 4);
+  assert.deepEqual(
+    result.items.map((entry) => entry.product.id),
+    ['a', 'b'],
+  );
+  assert.equal(result.discountedCount, 0);
+  assert.ok(result.items.every((entry) => !entry.discounted));
+});

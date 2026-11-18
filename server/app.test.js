@@ -211,7 +211,7 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
   const app = createApp({ dbPath: ':memory:' });
   try {
     const cookie = await adminCookie(app);
-    const initial = (await request(app, 'GET', '/api/catalog')).body;
+    const initial = (await request(app, 'GET', '/api/catalog', undefined, cookie)).body;
     assert.equal(initial.edits.length, 8);
     assert.equal(app.db.prepare('SELECT COUNT(*) AS n FROM catalog_variants').get().n, 25);
     const candidate = structuredClone(initial);
@@ -251,7 +251,7 @@ test('katalog relasional: simpan valid, tolak SKU/harga/relasi salah dan konflik
     assert.equal(saved.status, 200);
     assert.equal(saved.body.revision, 1);
     assert.equal(saved.body.edits.length, 9);
-    const publicCatalog = (await request(app, 'GET', '/api/catalog')).body;
+    const publicCatalog = (await request(app, 'GET', '/api/catalog', undefined, cookie)).body;
     // The public API adds review ratings on top of the stored catalog.
     assert.ok(publicCatalog.edits.every((entry) => entry.rating === 0 && entry.reviewCount === 0));
     for (const entry of publicCatalog.edits) {
@@ -329,18 +329,22 @@ test('katalog publik: foto sebagai URL ber-cache, JSON terkompresi dengan ETag, 
     next.edits[0].gallery = [{ src: png, alt: 'Depan' }];
     next.masters.brands[0].logo = png;
     assert.equal((await request(app, 'PUT', '/api/admin/catalog', next, cookie)).status, 200);
-    const plain = await request(app, 'GET', '/api/catalog');
+    const plain = await request(app, 'GET', '/api/catalog', undefined, cookie);
     const body = plain.body;
     assert.ok(!JSON.stringify(body).includes('data:image'), 'no inline photos are sent');
     await assertCatalogPhoto(app, body.edits[0].image);
     await assertCatalogPhoto(app, body.edits[0].gallery[0].src);
     await assertCatalogPhoto(app, body.masters.brands[0].logo);
-    assert.equal(plain.headers['cache-control'], 'no-cache');
+    assert.equal(plain.headers['cache-control'], 'private, no-cache');
+    assert.match(plain.headers.vary, /Cookie/);
     assert.ok(plain.headers.etag);
-    const zipped = await rawRequest(app, '/api/catalog', { 'accept-encoding': 'gzip' });
+    const zipped = await rawRequest(app, '/api/catalog', { 'accept-encoding': 'gzip', cookie });
     assert.equal(zipped.headers['content-encoding'], 'gzip');
     assert.deepEqual(JSON.parse(gunzipSync(zipped.body)), body);
-    const again = await rawRequest(app, '/api/catalog', { 'if-none-match': plain.headers.etag });
+    const again = await rawRequest(app, '/api/catalog', {
+      'if-none-match': plain.headers.etag,
+      cookie,
+    });
     assert.equal(again.status, 304);
     assert.equal(again.body.length, 0);
     // The admin form sends the photo URLs back unchanged; the stored photos stay the same.
@@ -386,7 +390,7 @@ test('katalog dan foto tetap ada setelah database dibuka kembali', async () => {
     assert.equal((await request(app, 'PUT', '/api/admin/catalog', next, cookie)).status, 200);
     app.db.close();
     app = createApp({ dbPath: path });
-    const publicCatalog = await request(app, 'GET', '/api/catalog');
+    const publicCatalog = await request(app, 'GET', '/api/catalog', undefined, cookie);
     assert.equal(publicCatalog.body.revision, 1);
     await assertCatalogPhoto(app, publicCatalog.body.edits[0].image);
     assert.equal(publicCatalog.body.edits[0].variants[0].price, '19000');
@@ -555,6 +559,33 @@ test('public HTTPS app origin enables Secure session cookies even without NODE_E
     // Session cookies are issued only after a successful login/verification.
     // This test checks that the origin-specific safety policy is enabled.
     assert.equal(response.headers?.['set-cookie']?.includes('Secure') ?? true, true);
+  } finally {
+    app.db.close();
+  }
+});
+
+test('pengunjung tanpa akun melihat katalog tanpa harga; harga hanya untuk akun yang masuk', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  try {
+    const cookie = await adminCookie(app);
+    const guest = await request(app, 'GET', '/api/catalog');
+    assert.equal(guest.status, 200);
+    assert.equal(guest.body.pricesHidden, true);
+    const variants = guest.body.edits.flatMap((draft) => draft.variants);
+    assert.ok(variants.length > 0);
+    assert.ok(variants.every((variant) => variant.price === null && variant.oldPrice === null));
+    // Names and photos stay visible for the home page.
+    assert.ok(guest.body.edits.every((draft) => draft.baseName));
+    const signedIn = await request(app, 'GET', '/api/catalog', undefined, cookie);
+    assert.equal(signedIn.body.pricesHidden, undefined);
+    assert.ok(
+      signedIn.body.edits.flatMap((draft) => draft.variants).every((v) => Number(v.price) > 0),
+    );
+    // The two answers never share a cache entry.
+    assert.notEqual(guest.headers.etag, signedIn.headers.etag);
+    const stale = await rawRequest(app, '/api/catalog', { 'if-none-match': signedIn.headers.etag });
+    assert.equal(stale.status, 200);
+    assert.equal(JSON.parse(stale.body).pricesHidden, true);
   } finally {
     app.db.close();
   }

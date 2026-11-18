@@ -9,7 +9,7 @@ import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
 };
-const fields = `u.id,u.name,u.email,u.address,u.role,u.created_at AS createdAt,
+const fields = `u.id,u.name,COALESCE(u.email,'') AS email,u.address,u.role,u.created_at AS createdAt,
   COALESCE(v.role,'') AS customerRole,
   COALESCE(a.revision,0) AS revision,a.disabled_at AS disabledAt,
   COALESCE(a.reason,'') AS reason,COALESCE(approval.status,'approved') AS approvalStatus,
@@ -76,7 +76,7 @@ export class AccountRepository {
     return {
       id: row.id,
       name: row.name,
-      email: row.email,
+      email: row.email || '',
       address: row.address,
       role: row.owner ? 'owner' : row.role,
       customerRole: row.customerRole,
@@ -90,6 +90,7 @@ export class AccountRepository {
       emailVerifiedAt: row.emailVerifiedAt ?? null,
       phone: row.phone || '',
       phoneVerified: row.phoneVerifiedAt != null,
+      contactVerified: Boolean(row.verified) || row.phoneVerifiedAt != null,
       phoneVerifiedAt: row.phoneVerifiedAt ?? null,
       orderCount: row.orderCount,
       linkedStores,
@@ -100,6 +101,8 @@ export class AccountRepository {
       canReactivate: !protectedReason && row.disabledAt != null,
       canDelete: !deleteBlockedReason,
       canSetCustomerAccess: !protectedReason,
+      canResetPassword:
+        !protectedReason && row.disabledAt == null && row.approvalStatus === 'approved',
     };
   }
   get(id, actor) {
@@ -125,7 +128,7 @@ export class AccountRepository {
     if (query) {
       const normalizedPhone = normalizeWhatsApp(query);
       where.push(
-        "(instr(lower(u.name||' '||u.email||' '||COALESCE(p.phone,'')),?)>0" +
+        "(instr(lower(u.name||' '||COALESCE(u.email,'')||' '||COALESCE(p.phone,'')),?)>0" +
           (normalizedPhone ? ' OR p.phone=?' : '') +
           ')',
       );
@@ -186,7 +189,7 @@ export class AccountRepository {
     if (query) {
       const phoneQuery = normalizeWhatsApp(query);
       where.push(
-        "(instr(lower(u.name||' '||u.email||' '||COALESCE(p.phone,'')),?)>0" +
+        "(instr(lower(u.name||' '||COALESCE(u.email,'')||' '||COALESCE(p.phone,'')),?)>0" +
           (phoneQuery ? ' OR p.phone=?' : '') +
           ')',
       );
@@ -223,7 +226,7 @@ export class AccountRepository {
     const actualPage = Math.min(page, pages);
     const users = this.db
       .prepare(
-        `SELECT u.id,u.name,u.email,u.address,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,u.address,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,
           s.verified_at AS verifiedAt,p.phone,p.verified_at AS phoneVerifiedAt,
           a.decided_at AS decidedAt,manager.name AS decidedByName,
           (SELECT reason FROM account_management_audit audit WHERE audit.target_id=u.id AND audit.actor_id=a.decided_by
@@ -237,7 +240,7 @@ export class AccountRepository {
       .map((row) => ({
         id: row.id,
         name: row.name,
-        email: row.email,
+        email: row.email || '',
         address: row.address,
         phone: row.phone || '',
         phoneVerified: row.phoneVerifiedAt != null,
@@ -292,7 +295,7 @@ export class AccountRepository {
         ok: true,
         message:
           next === 'approved'
-            ? 'Akun disetujui. Pelanggan kini dapat masuk; email tetap harus dikonfirmasi sebelum memesan.'
+            ? 'Akun disetujui. Pelanggan kini dapat masuk; nomor WhatsApp atau email harus dikonfirmasi sebelum memesan.'
             : 'Pendaftaran ditolak. Akun tidak dapat masuk.',
         status: next,
       };
@@ -301,12 +304,12 @@ export class AccountRepository {
       throw error;
     }
   }
-  change(actor, id, body) {
+  change(actor, id, body, { passwordHash } = {}) {
     this.requireOwner(actor);
     const action = body?.action,
       reason = typeof body?.reason === 'string' ? body.reason.trim() : '';
     if (
-      !['disable', 'reactivate', 'delete', 'customer-access'].includes(action) ||
+      !['disable', 'reactivate', 'delete', 'customer-access', 'reset-password'].includes(action) ||
       !Number.isSafeInteger(body?.revision) ||
       reason.length < 5 ||
       reason.length > 300
@@ -324,12 +327,26 @@ export class AccountRepository {
           409,
           'account_conflict',
         );
-      if (action === 'customer-access') {
+      if (action === 'reset-password') {
+        if (!passwordHash) fail('Kata sandi sementara belum dibuat. Coba lagi.');
+        if (!target.active)
+          fail('Aktifkan atau setujui akun terlebih dahulu sebelum mengatur ulang kata sandi.');
+        this.db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(passwordHash, id);
+        this.db.prepare('DELETE FROM phone_reset_challenges WHERE user_id=?').run(id);
+        this.revoke(id, target.email);
+        this.db
+          .prepare(
+            'INSERT INTO auth_account_state(user_id,credential_revision) VALUES(?,1) ON CONFLICT(user_id) DO UPDATE SET credential_revision=credential_revision+1',
+          )
+          .run(id);
+      } else if (action === 'customer-access') {
         const role = body.customerRole;
         if (typeof role !== 'string' || !Object.hasOwn(customerRoles, role))
           fail('Pilih Ketua, Wakil, Staf terpercaya, atau tanpa akses daftar pembeli.');
-        if (role && (!target.active || !target.emailVerified))
-          fail('Akun harus aktif dan emailnya dikonfirmasi sebelum diberi akses daftar pembeli.');
+        if (role && (!target.active || !target.contactVerified))
+          fail(
+            'Akun harus aktif dan email atau nomor WhatsApp-nya dikonfirmasi sebelum diberi akses daftar pembeli.',
+          );
         if (role === target.customerRole)
           fail('Izin akun belum berubah. Pilih izin baru atau tutup dialog.');
         if (role) {
@@ -350,11 +367,18 @@ export class AccountRepository {
       } else if (action === 'delete') {
         if (target.deleteBlockedReason)
           fail(target.deleteBlockedReason, 409, 'account_has_history');
+        // Confirm by typing the account's email, or its phone number when it has no email.
+        const typed = typeof body.confirmEmail === 'string' ? body.confirmEmail.trim() : '';
         if (
-          typeof body.confirmEmail !== 'string' ||
-          body.confirmEmail.trim().toLowerCase() !== target.email.toLowerCase()
+          target.email
+            ? typed.toLowerCase() !== target.email.toLowerCase()
+            : !target.phone || normalizeWhatsApp(typed) !== target.phone
         )
-          fail('Ketik alamat email akun yang akan dihapus untuk mengonfirmasi.');
+          fail(
+            target.email
+              ? 'Ketik alamat email akun yang akan dihapus untuk mengonfirmasi.'
+              : 'Ketik nomor HP akun yang akan dihapus untuk mengonfirmasi.',
+          );
         this.revoke(id, target.email);
         this.db.prepare('DELETE FROM auth_account_state WHERE user_id=?').run(id);
         this.db.prepare('DELETE FROM store_email_test_limits WHERE user_id=?').run(id);
@@ -400,15 +424,17 @@ export class AccountRepository {
       return {
         ok: true,
         message:
-          action === 'customer-access'
-            ? body.customerRole
-              ? 'Akses melihat daftar pembeli diberikan. Rekan dapat memuat ulang halaman atau masuk kembali untuk melihat menunya.'
-              : 'Akses daftar pembeli dicabut. Akun tetap dapat digunakan untuk berbelanja.'
-            : action === 'delete'
-              ? 'Akun berhasil dihapus.'
-              : action === 'disable'
-                ? 'Akun dinonaktifkan dan sesi lamanya diakhiri.'
-                : 'Akun diaktifkan kembali. Pemilik akun dapat masuk dengan kata sandinya.',
+          action === 'reset-password'
+            ? 'Kata sandi sementara dibuat dan semua sesi lama akun diakhiri. Berikan kata sandi ini langsung kepada pemilik akun; ia dapat menggantinya di Akun saya → Keamanan.'
+            : action === 'customer-access'
+              ? body.customerRole
+                ? 'Akses melihat daftar pembeli diberikan. Rekan dapat memuat ulang halaman atau masuk kembali untuk melihat menunya.'
+                : 'Akses daftar pembeli dicabut. Akun tetap dapat digunakan untuk berbelanja.'
+              : action === 'delete'
+                ? 'Akun berhasil dihapus.'
+                : action === 'disable'
+                  ? 'Akun dinonaktifkan dan sesi lamanya diakhiri.'
+                  : 'Akun diaktifkan kembali. Pemilik akun dapat masuk dengan kata sandinya.',
         user: action === 'delete' ? null : this.get(id, actor),
       };
     } catch (error) {
@@ -441,7 +467,7 @@ export class AccountRepository {
     const where = ["u.role='user'", 'o.user_id IS NULL', 'v.user_id IS NULL'];
     const args = [];
     if (query) {
-      where.push("instr(lower(u.name||' '||u.email),?)>0");
+      where.push("instr(lower(u.name||' '||COALESCE(u.email,'')),?)>0");
       args.push(query);
     }
     if (status !== 'all')
@@ -455,7 +481,7 @@ export class AccountRepository {
     const pageSize = 25;
     const users = this.db
       .prepare(
-        `SELECT u.id,u.name,u.email,u.created_at AS createdAt,
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,u.created_at AS createdAt,
       a.disabled_at AS disabledAt,s.verified_at AS verifiedAt ${joins}${filter}
       ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?`,
       )
@@ -463,7 +489,7 @@ export class AccountRepository {
       .map((row) => ({
         id: row.id,
         name: row.name,
-        email: row.email,
+        email: row.email || '',
         createdAt: row.createdAt,
         active: row.disabledAt == null && accountIsApproved(this.db, row.id),
         emailVerified: row.verifiedAt != null,

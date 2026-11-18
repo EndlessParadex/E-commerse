@@ -33,6 +33,7 @@ export default function AccountEmailStatus() {
             ...current,
             emailVerified: data.user.emailVerified === true,
             emailVerifiedAt: data.user.emailVerifiedAt ?? null,
+            orderReady: data.user.orderReady === true,
           }
         : current,
     );
@@ -58,6 +59,14 @@ export default function AccountEmailStatus() {
       if (active.current) setBusy(false);
     }
   };
+  if (!user.email)
+    return (
+      <div className="account-email-status">
+        <p className="account-profile-help">
+          Tidak memakai email. Pesanan cukup dengan nomor WhatsApp yang sudah dikonfirmasi.
+        </p>
+      </div>
+    );
   return (
     <div className="account-email-status">
       <ContactStatus channel="Email" verified={user.emailVerified} at={user.emailVerifiedAt} />

@@ -7,6 +7,7 @@ import ConfirmDialog from '../components/shop/ConfirmDialog';
 import './AdminAccountsPage.css';
 import { customerRoles } from '../data/customerRoles';
 import ContactStatus from '../components/account/ContactStatus';
+import { normalizeWhatsApp } from '../state/whatsappModel.js';
 
 const roles = { owner: 'Pemilik toko', admin: 'Admin', user: 'Pembeli' };
 const actions = {
@@ -14,6 +15,7 @@ const actions = {
   reactivate: 'Aktifkan kembali',
   delete: 'Hapus akun',
   'customer-access': 'Atur akses daftar pembeli',
+  'reset-password': 'Buat kata sandi sementara',
 };
 export default function AdminAccountsPage() {
   const { user } = useDelivery(),
@@ -28,6 +30,8 @@ export default function AdminAccountsPage() {
     [loading, setLoading] = useState(true),
     [loadError, setLoadError] = useState(''),
     [notice, setNotice] = useState(''),
+    [issued, setIssued] = useState(null),
+    [copied, setCopied] = useState(false),
     [target, setTarget] = useState(null),
     [reason, setReason] = useState(''),
     [currentPassword, setCurrentPassword] = useState(''),
@@ -113,9 +117,15 @@ export default function AdminAccountsPage() {
     }
     if (
       target.action === 'delete' &&
-      confirmEmail.trim().toLowerCase() !== target.account.email.toLowerCase()
+      (target.account.email
+        ? confirmEmail.trim().toLowerCase() !== target.account.email.toLowerCase()
+        : normalizeWhatsApp(confirmEmail) !== target.account.phone)
     ) {
-      setActionError('Ketik alamat email akun yang akan dihapus untuk mengonfirmasi.');
+      setActionError(
+        target.account.email
+          ? 'Ketik alamat email akun yang akan dihapus untuk mengonfirmasi.'
+          : 'Ketik nomor HP akun yang akan dihapus untuk mengonfirmasi.',
+      );
       return;
     }
     pending.current = true;
@@ -135,6 +145,12 @@ export default function AdminAccountsPage() {
       if (!active.current) return;
       setTarget(null);
       setNotice(result.message);
+      setCopied(false);
+      setIssued(
+        result.temporaryPassword
+          ? { name: target.account.name, password: result.temporaryPassword }
+          : null,
+      );
       reload();
     } catch (error) {
       if (active.current)
@@ -174,16 +190,16 @@ export default function AdminAccountsPage() {
       <div className="accounts-content">
         <p className="accounts-explanation">
           <strong>Aktif</strong> berarti akun bisa masuk setelah disetujui. Pendaftaran baru
-          diperiksa Admin atau Pemilik pada menu Persetujuan akun. Pembeli perlu mengonfirmasi email
-          sebelum memesan. Pengelolaan akun hanya oleh Pemilik. Status kontak terkonfirmasi
-          membuktikan penerimaan tautan atau kode pada waktu konfirmasi, bukan jaminan kontak akan
-          selalu aktif.
+          diperiksa Admin atau Pemilik pada menu Persetujuan akun. Pembeli perlu mengonfirmasi nomor
+          WhatsApp atau email sebelum memesan. Pengelolaan akun hanya oleh Pemilik. Status kontak
+          terkonfirmasi membuktikan penerimaan tautan atau kode pada waktu konfirmasi, bukan jaminan
+          kontak akan selalu aktif.
         </p>
         <div className="accounts-team-help">
           <details>
             <summary>Cara menambahkan Ketua, Wakil, atau staf</summary>
             <ol>
-              <li>Minta rekan mendaftar dan mengonfirmasi emailnya.</li>
+              <li>Minta rekan mendaftar dan mengonfirmasi nomor WhatsApp atau emailnya.</li>
               <li>
                 Cari namanya di bawah, lalu pilih <strong>Atur akses</strong>.
               </li>
@@ -277,6 +293,36 @@ export default function AdminAccountsPage() {
             {notice}
           </p>
         )}
+        {issued && (
+          <div
+            className="accounts-temporary-password"
+            role="region"
+            aria-label="Kata sandi sementara"
+          >
+            <p>
+              Kata sandi sementara untuk <strong>{issued.name}</strong>. Hanya ditampilkan sekali;
+              salin sekarang dan berikan langsung kepada pemilik akun.
+            </p>
+            <code>{issued.password}</code>
+            <div className="accounts-row-actions">
+              <button
+                className="admin-secondary"
+                type="button"
+                onClick={() =>
+                  navigator.clipboard
+                    ?.writeText(issued.password)
+                    .then(() => active.current && setCopied(true))
+                    .catch(() => {})
+                }
+              >
+                {copied ? 'Tersalin' : 'Salin'}
+              </button>
+              <button className="admin-text-button" type="button" onClick={() => setIssued(null)}>
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
         {data && (
           <>
             <div className="accounts-table-wrap">
@@ -296,7 +342,7 @@ export default function AdminAccountsPage() {
                     <tr key={account.id} data-account-id={account.id}>
                       <td data-label="Akun">
                         <strong>{account.name}</strong>
-                        <span className="accounts-secondary">{account.email}</span>
+                        <span className="accounts-secondary">{account.email || 'Tanpa email'}</span>
                         {account.phone && (
                           <span className="accounts-secondary">{account.phone}</span>
                         )}
@@ -387,6 +433,16 @@ export default function AdminAccountsPage() {
                                 Atur akses
                               </button>
                             )}
+                          {account.canResetPassword && (
+                            <button
+                              className="admin-text-button"
+                              type="button"
+                              disabled={busy || loading}
+                              onClick={() => open(account, 'reset-password')}
+                            >
+                              Reset sandi
+                            </button>
+                          )}
                           {account.canDisable && (
                             <button
                               className="admin-text-button"
@@ -479,16 +535,18 @@ export default function AdminAccountsPage() {
           <p>
             <strong>{target.account.name}</strong>
             <br />
-            {target.account.email}
+            {target.account.email || target.account.phone}
           </p>
           <p>
             {target.action === 'customer-access'
               ? 'Ketua, Wakil, dan staf dapat melihat daftar pembeli. Mereka menggunakan akun dan kata sandinya sendiri. Izin ini tidak memberi akses mengubah atau menghapus akun.'
-              : target.action === 'delete'
-                ? 'Akun ini akan dihapus permanen dan tidak dapat dipulihkan melalui website.'
-                : target.action === 'disable'
-                  ? 'Akses akun dihentikan dan sesi lama diakhiri. Pesanan serta stok tetap dikelola seperti sebelumnya.'
-                  : 'Akun dapat masuk kembali. Sesi dan tautan pemulihan lama tetap tidak berlaku.'}
+              : target.action === 'reset-password'
+                ? 'Kata sandi akun diganti dengan kata sandi acak yang ditampilkan sekali setelah ini. Semua sesi lama akun diakhiri. Pakai hanya jika pemilik akun meminta dan identitasnya sudah Anda pastikan.'
+                : target.action === 'delete'
+                  ? 'Akun ini akan dihapus permanen dan tidak dapat dipulihkan melalui website.'
+                  : target.action === 'disable'
+                    ? 'Akses akun dihentikan dan sesi lama diakhiri. Pesanan serta stok tetap dikelola seperti sebelumnya.'
+                    : 'Akun dapat masuk kembali. Sesi dan tautan pemulihan lama tetap tidak berlaku.'}
           </p>
           <div className="accounts-action-fields">
             {target.action === 'customer-access' && (
@@ -506,7 +564,8 @@ export default function AdminAccountsPage() {
                       key={value}
                       value={value}
                       disabled={
-                        Boolean(value) && (!target.account.active || !target.account.emailVerified)
+                        Boolean(value) &&
+                        (!target.account.active || !target.account.contactVerified)
                       }
                     >
                       {label}
@@ -514,9 +573,9 @@ export default function AdminAccountsPage() {
                   ))}
                 </select>
                 <p id="account-customer-help" className="accounts-secondary">
-                  {target.account.active && target.account.emailVerified
+                  {target.account.active && target.account.contactVerified
                     ? 'Ketiga peran memiliki akses melihat yang sama. Pilih Tanpa akses untuk mencabut izin.'
-                    : 'Akun harus aktif dan emailnya dikonfirmasi sebelum diberi izin. Izin yang sudah ada tetap dapat dicabut.'}
+                    : 'Akun harus aktif dan email atau nomor WhatsApp-nya dikonfirmasi sebelum diberi izin. Izin yang sudah ada tetap dapat dicabut.'}
                 </p>
               </>
             )}
@@ -532,10 +591,14 @@ export default function AdminAccountsPage() {
             />
             {target.action === 'delete' && (
               <>
-                <label htmlFor="account-confirm-email">Ketik email akun yang akan dihapus</label>
+                <label htmlFor="account-confirm-email">
+                  {target.account.email
+                    ? 'Ketik email akun yang akan dihapus'
+                    : 'Ketik nomor HP akun yang akan dihapus'}
+                </label>
                 <input
                   id="account-confirm-email"
-                  type="email"
+                  type={target.account.email ? 'email' : 'tel'}
                   autoComplete="off"
                   value={confirmEmail}
                   onChange={(event) => setConfirmEmail(event.target.value)}

@@ -152,18 +152,19 @@ export default function CheckoutPage() {
       </div>
     );
 
-  if (live && user && !user.emailVerified)
+  if (live && user && !(user.orderReady ?? user.emailVerified))
     return (
       <div className="checkout-page">
-        <h1>Konfirmasi email sebelum memesan</h1>
+        <h1>Konfirmasi nomor WhatsApp sebelum memesan</h1>
         <p>
-          Barang tetap tersedia di keranjang. Buka Keamanan akun untuk mengirim tautan verifikasi.{' '}
-          {company.commerce.emailReady
-            ? 'Periksa kotak masuk dan folder spam.'
-            : 'Layanan email toko belum diaktifkan; hubungi pengelola toko.'}
+          Barang tetap tersedia di keranjang. Buka Profil akun, lalu kirim kode ke nomor WhatsApp
+          Anda dan masukkan kodenya.
+          {user.email && !user.emailVerified && company.commerce.emailReady
+            ? ' Atau konfirmasi email lewat tautan di Keamanan akun.'
+            : ''}
         </p>
-        <a className="shop-primary" href="#/akun/keamanan">
-          Buka Keamanan akun
+        <a className="shop-primary" href="#/akun/profil">
+          Buka Profil akun
         </a>
       </div>
     );

@@ -285,3 +285,39 @@
   min-height: 100px;
   line-height: 1.6;
 }
+/* Recovery method: two equal choices, the selected one filled. */
+.auth-method-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin: 4px 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+}
+.auth-method-switch button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-method-switch button.is-selected {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px #0f172a1f;
+}
+.auth-method-switch button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.whatsapp-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}

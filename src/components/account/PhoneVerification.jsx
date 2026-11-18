@@ -27,6 +27,7 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
             phoneRevision: value.phoneRevision,
             phoneVerified: value.phoneVerified === true,
             phoneVerifiedAt: value.phoneVerifiedAt ?? null,
+            orderReady: value.phoneVerified === true || current.emailVerified === true,
             whatsappNotifications: value.whatsappNotifications === true,
           }
         : current,
@@ -46,6 +47,7 @@ export default function PhoneVerification({ disabled, draftChanged, onBusyChange
                 phoneRevision: value.phoneRevision,
                 phoneVerified: value.phoneVerified === true,
                 phoneVerifiedAt: value.phoneVerifiedAt ?? null,
+                orderReady: value.phoneVerified === true || current.emailVerified === true,
                 whatsappNotifications: value.whatsappNotifications === true,
               }
             : current,

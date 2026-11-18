@@ -14,6 +14,13 @@ export async function verifyPassword(password, encoded) {
   return valid && matches;
 }
 
+/**
+ * Throttling key for a known account. Email used to be required; accounts registered without
+ * one are keyed by id so they never share a bucket with each other.
+ */
+export const accountRateKey = (user) =>
+  user?.email ? String(user.email).toLowerCase() : 'account:' + user?.id;
+
 const DEFAULT_LIMITS = Object.freeze({
   loginIp: 60,
   loginPair: 10,

@@ -182,7 +182,7 @@ export default function CustomerDirectoryPage() {
                       <tr key={account.id} data-customer-id={account.id}>
                         <td data-label="Pembeli">
                           <strong>{account.name}</strong>
-                          <span>{account.email}</span>
+                          <span>{account.email || 'Tanpa email'}</span>
                         </td>
                         <td data-label="Status akun">
                           <span

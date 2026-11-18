@@ -110,6 +110,7 @@ export class OrderMessages {
       let skipReason = '';
       if (!order) skipReason = 'order_missing';
       else if (!user) skipReason = 'recipient_missing';
+      else if (!user.email) skipReason = 'no_email';
       else if (order.b2b && !this.b2bCanRead?.({ id: row.recipient_id }, order.b2b.storeId))
         skipReason = 'store_access_changed';
       else if (row.admin && !accountIsActive(this.db, row.recipient_id))

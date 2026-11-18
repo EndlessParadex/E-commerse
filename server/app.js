@@ -20,8 +20,9 @@ import {
 } from './authSecurity.js';
 import { reservationPolicyFromEnv } from './securityPolicy.js';
 import { logUnexpectedError } from './errorLogging.js';
-import { PasswordQueue } from './authSecurity.js';
+import { PasswordQueue, accountRateKey } from './authSecurity.js';
 import { clientIpResolver } from './clientIp.js';
+import { PhoneRecovery, temporaryPassword } from './phoneRecovery.js';
 import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
@@ -115,6 +116,7 @@ function authFields(body, registration) {
       : typeof body?.email === 'string'
         ? body.email.trim()
         : '';
+  // Registration: email is optional (the phone number is the required login).
   const email = (
     registration ? (typeof body?.email === 'string' ? body.email.trim() : '') : rawLogin
   ).toLowerCase();
@@ -125,9 +127,11 @@ function authFields(body, registration) {
   const errors = {};
   if (registration && (name.length < 2 || name.length > 100))
     errors.name = 'Nama harus berisi 2–100 karakter.';
-  if (registration || !phone) {
+  if (registration ? email : !phone) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
-      errors.email = registration ? 'Email tidak valid.' : 'Email atau nomor HP tidak valid.';
+      errors.email = registration
+        ? 'Email tidak valid. Kosongkan jika tidak memakai email.'
+        : 'Email atau nomor HP tidak valid.';
   }
   if (registration && !phone)
     errors.phone = 'Isi nomor HP Indonesia yang valid, misalnya 081234567890.';
@@ -142,10 +146,43 @@ export async function hashPassword(password) {
   const key = await scrypt(password, salt, 64);
   return `${salt.toString('hex')}:${Buffer.from(key).toString('hex')}`;
 }
+/**
+ * Databases created before email became optional have `email NOT NULL`. SQLite cannot drop a
+ * NOT NULL constraint in place, so the table is rebuilt (sqlite.org/lang_altertable.html,
+ * "Making Other Kinds Of Table Schema Changes"). Foreign keys stay off only for the rebuild;
+ * other tables keep referring to "users" by name and still point at the same ids.
+ */
+export function makeEmailOptional(db) {
+  const column = db
+    .prepare('PRAGMA table_info(users)')
+    .all()
+    .find((entry) => entry.name === 'email');
+  if (!column?.notnull) return false;
+  db.exec('PRAGMA foreign_keys=OFF');
+  try {
+    db.exec('BEGIN IMMEDIATE');
+    db.exec(`CREATE TABLE users_email_optional (id TEXT PRIMARY KEY, name TEXT NOT NULL,
+      email TEXT UNIQUE COLLATE NOCASE, address TEXT NOT NULL, password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user');
+    INSERT INTO users_email_optional(id,name,email,address,password_hash,created_at,role)
+      SELECT id,name,email,address,password_hash,created_at,role FROM users;
+    DROP TABLE users;
+    ALTER TABLE users_email_optional RENAME TO users;`);
+    if (db.prepare('PRAGMA foreign_key_check').all().length)
+      throw new Error('Migrasi akun dibatalkan: referensi akun tidak konsisten.');
+    db.exec('COMMIT');
+  } catch (error) {
+    if (db.isTransaction) db.exec('ROLLBACK');
+    throw error;
+  } finally {
+    db.exec('PRAGMA foreign_keys=ON');
+  }
+  return true;
+}
 const userView = (user) => ({
   id: user.id,
   name: user.name,
-  email: user.email,
+  email: user.email || '',
   address: user.address,
   role: user.role || 'user',
 });
@@ -177,7 +214,7 @@ export function createApp({
   if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);
   db.exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
-    CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE COLLATE NOCASE, address TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE COLLATE NOCASE, address TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);`);
   db.exec(`CREATE TABLE IF NOT EXISTS user_store_names (
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -198,6 +235,7 @@ export function createApp({
       .some((entry) => entry.name === 'role')
   )
     db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
+  makeEmailOptional(db);
   const company = new CompanyRepository(db, installMode);
   const catalog = new CatalogRepository(db, {
     seedDemo: company.snapshot().mode === 'demo',
@@ -246,6 +284,15 @@ export function createApp({
     queue: passwordQueue,
     hashPassword,
   });
+  const phoneRecovery = new PhoneRecovery(db, {
+    phones: phoneVerification,
+    identity,
+    phoneDirectory,
+    queue: passwordQueue,
+    hashPassword,
+    now,
+    logger,
+  });
   const delivery = new OrderDelivery(db, {
     identity,
     company,
@@ -264,6 +311,8 @@ export function createApp({
         ?.store_name || '',
     ...phoneVerification.contact(user.id),
     emailVerified: identity.verified(user.id),
+    // Ordering needs one confirmed contact: the email or the WhatsApp number.
+    orderReady: identity.contactVerified(user.id),
     emailVerifiedAt:
       db.prepare('SELECT verified_at FROM auth_account_state WHERE user_id=?').get(user.id)
         ?.verified_at ?? null,
@@ -339,12 +388,12 @@ export function createApp({
       );
     const stored = db.prepare('SELECT password_hash FROM users WHERE id=?').get(owner.id);
     const matches = await passwordQueue.run(ip, async () => {
-      const delay = limiter.loginDelay(ip, owner.email);
+      const delay = limiter.loginDelay(ip, accountRateKey(owner));
       if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
       return passwordCheck(value, stored.password_hash);
     });
     if (!matches) {
-      const allowed = limiter.take('login', ip, owner.email);
+      const allowed = limiter.take('login', ip, accountRateKey(owner));
       throw new CatalogError(
         'Kata sandi akun pemilik tidak sesuai. Periksa kembali atau coba beberapa saat lagi.',
         allowed ? 401 : 429,
@@ -367,12 +416,12 @@ export function createApp({
     if (stored?.role !== 'admin')
       throw new CatalogError('Akses pengelola berubah.', 403, 'forbidden');
     const matches = await passwordQueue.run(ip, async () => {
-      const delay = limiter.loginDelay(ip, actor.email);
+      const delay = limiter.loginDelay(ip, accountRateKey(actor));
       if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
       return passwordCheck(value, stored.password_hash);
     });
     if (!matches) {
-      const allowed = limiter.take('login', ip, actor.email);
+      const allowed = limiter.take('login', ip, accountRateKey(actor));
       throw new CatalogError(
         'Kata sandi pengelola tidak sesuai.',
         allowed ? 401 : 429,
@@ -694,6 +743,17 @@ export function createApp({
         if (req.method === 'POST' && accountMatch[1]) {
           const body = await readBody(req, 12000);
           await confirmOwnerPassword(owner, body?.currentPassword, clientIp(req));
+          if (body?.action === 'reset-password') {
+            // Hash outside the account transaction; show the new password to the owner once.
+            const temporary = temporaryPassword();
+            const passwordHash = await passwordQueue.run(clientIp(req), () =>
+              hashPassword(temporary),
+            );
+            const result = accounts.change(owner, decodeURIComponent(accountMatch[1]), body, {
+              passwordHash,
+            });
+            return json(res, 200, { ...result, temporaryPassword: temporary });
+          }
           return json(res, 200, accounts.change(owner, decodeURIComponent(accountMatch[1]), body));
         }
         return sendError(res, 405, 'method_not_allowed');
@@ -921,6 +981,8 @@ export function createApp({
           profilePhone: true,
           contactVerification: true,
           phoneVerificationReady: phoneVerification.ready,
+          phoneRecovery: true,
+          optionalEmail: true,
           emailReady: identity.ready,
           newRegistrationsRequireVerification: true,
           registrationUsesOriginalPassword: true,
@@ -940,10 +1002,6 @@ export function createApp({
         const user = currentUser(req);
         if (['/api/auth/verification/request', '/api/auth/change-password'].includes(path) && !user)
           return sendError(res, 401, 'unauthorized');
-        if (path === '/api/auth/change-password' && user.role !== 'admin')
-          return sendError(res, 403, 'forbidden', {
-            form: 'Pengaturan kata sandi di halaman akun hanya tersedia untuk admin.',
-          });
         const body = await readBody(req);
         const ip = clientIp(req);
         const result =
@@ -968,6 +1026,12 @@ export function createApp({
           result,
         );
       }
+      if (req.method === 'POST' && path === '/api/auth/forgot-phone') {
+        const body = await readBody(req);
+        return json(res, 202, await phoneRecovery.request(body?.phone, clientIp(req)));
+      }
+      if (req.method === 'POST' && path === '/api/auth/reset-phone')
+        return json(res, 200, await phoneRecovery.confirm(await readBody(req), clientIp(req)));
       if (req.method === 'POST' && path === '/api/auth/register') {
         const fields = authFields(await readBody(req), true);
         if (Object.keys(fields.errors).length)
@@ -983,7 +1047,7 @@ export function createApp({
           : db.prepare('SELECT * FROM users WHERE email=?').get(fields.email);
         const storedHashValid = validPasswordHash(user?.password_hash);
         // Email and phone aliases for a known account share the same throttling budget.
-        const rateKey = user ? user.email.toLowerCase() : fields.loginKey;
+        const rateKey = user ? accountRateKey(user) : fields.loginKey;
         const ip = clientIp(req);
         const matches = await passwordQueue.run(ip, async () => {
           // Slow a source after repeated failures; a correct password still works.
@@ -1020,7 +1084,7 @@ export function createApp({
           });
         if (!accountIsApproved(db, user.id))
           return sendError(res, 403, 'approval_required', {
-            form: 'Akun belum dapat masuk karena persetujuan pengelola masih diperlukan. Jika Anda sudah mendaftar, periksa email verifikasi dan hubungi Admin atau Pemilik toko untuk bantuan.',
+            form: 'Akun belum dapat masuk karena persetujuan pengelola masih diperlukan. Hubungi Admin atau Pemilik toko bila perlu bantuan.',
           });
         limiter.clearLoginPair(ip, rateKey);
         return json(res, 200, { user: publicUser(user) }, sessionHeaders(user.id));
@@ -1045,7 +1109,7 @@ export function createApp({
           return json(res, 200, {
             users: db
               .prepare(
-                'SELECT id,name,email,address,role,created_at AS createdAt FROM users ORDER BY created_at DESC',
+                "SELECT id,name,COALESCE(email,'') AS email,address,role,created_at AS createdAt FROM users ORDER BY created_at DESC",
               )
               .all(),
           });

@@ -19,7 +19,7 @@ function Assignment({ account, regions, busy, onAssign }) {
     >
       <div>
         <strong>{account.name}</strong>
-        <small>{account.email}</small>
+        <small>{account.email || 'Tanpa email'}</small>
         <small>Wilayah saat ini: {account.regionName || 'Belum ditetapkan'}</small>
       </div>
       <div className="admin-field">

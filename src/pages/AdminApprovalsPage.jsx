@@ -55,7 +55,7 @@ function RegistrationDetails({ account, titleRef, onClose }) {
       <dl>
         <div>
           <dt>Email</dt>
-          <dd>{account.email}</dd>
+          <dd>{account.email || 'Tidak diisi'}</dd>
         </div>
         <div>
           <dt>Nomor HP</dt>
@@ -85,7 +85,11 @@ function RegistrationDetails({ account, titleRef, onClose }) {
         <div>
           <dt>Verifikasi email</dt>
           <dd>
-            {account.emailVerified ? 'Terkonfirmasi' : 'Belum dikonfirmasi'}
+            {!account.email
+              ? 'Tanpa email'
+              : account.emailVerified
+                ? 'Terkonfirmasi'
+                : 'Belum dikonfirmasi'}
             {account.emailVerifiedAt != null && <small>{dateLabel(account.emailVerifiedAt)}</small>}
           </dd>
         </div>
@@ -426,7 +430,7 @@ export default function AdminApprovalsPage() {
                   <tr key={account.id} data-approval-id={account.id}>
                     <td data-label="Pendaftar">
                       <strong>{account.name}</strong>
-                      <span className="accounts-secondary">{account.email}</span>
+                      <span className="accounts-secondary">{account.email || 'Tanpa email'}</span>
                       <span className="accounts-secondary">
                         Daftar{' '}
                         <time dateTime={account.createdAt}>{dateLabel(account.createdAt)}</time>
@@ -575,7 +579,7 @@ export default function AdminApprovalsPage() {
           <p>
             <strong>{target.account.name}</strong>
             <br />
-            {target.account.email}
+            {target.account.email || target.account.phone}
           </p>
           <StatusBadge status={target.account.approvalStatus} />
           <p className="approval-confirm-help">

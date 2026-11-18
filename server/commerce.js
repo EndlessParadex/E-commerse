@@ -19,9 +19,9 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
     'CREATE TABLE IF NOT EXISTS checkout_limits(bucket TEXT PRIMARY KEY,attempts INTEGER NOT NULL,expires_at INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS payment_proofs(id TEXT PRIMARY KEY,order_id TEXT NOT NULL REFERENCES orders(id),mime TEXT NOT NULL,bytes BLOB NOT NULL,created_at INTEGER NOT NULL);',
   );
   w.validateCheckout = (user, body, payment) => {
-    if (!identity.verified(user.id))
+    if (!identity.contactVerified(user.id))
       fail(
-        'Konfirmasi email akun sebelum membuat pesanan. Buka Akun saya → Keamanan.',
+        'Konfirmasi nomor WhatsApp atau email akun sebelum membuat pesanan. Buka Akun saya → Profil.',
         403,
         'email_verification_required',
       );
@@ -180,9 +180,9 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
     if (action === 'accept_quote') {
       if (user.id !== order.userId)
         fail('Hanya pemilik pesanan yang dapat menyetujui total.', 403, 'forbidden');
-      if (!identity.verified(user.id))
+      if (!identity.contactVerified(user.id))
         fail(
-          'Konfirmasi email akun sebelum menyetujui penawaran.',
+          'Konfirmasi nomor WhatsApp atau email akun sebelum menyetujui penawaran.',
           403,
           'email_verification_required',
         );

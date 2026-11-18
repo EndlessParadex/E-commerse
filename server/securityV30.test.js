@@ -618,7 +618,7 @@ test('existing verification requires current password; reset tokens reject wrong
   }
 });
 
-test('password settings require admin access and reject forged roles without changing buyer credentials or sessions', async () => {
+test('every account may change its own password; forged role or user id fields change nothing else', async () => {
   const { app } = await fixture();
   try {
     const body = {
@@ -627,33 +627,29 @@ test('password settings require admin access and reject forged roles without cha
       role: 'admin',
       userId: admin.id,
     };
+    const adminBefore = app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(admin.id);
     const before = app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(alice.id);
     assert.equal((await request(app, 'POST', '/api/auth/change-password', body)).status, 401);
-    const blocked = await request(app, 'POST', '/api/auth/change-password', body, alice);
-    assert.equal(blocked.status, 403);
-    assert.match(blocked.body.errors.form, /hanya tersedia untuk admin/);
-    assert.equal((await request(app, 'POST', '/api/auth/change-password', {}, alice)).status, 403);
-    await assert.rejects(
-      app.identity.changePassword(
-        { ...alice, role: 'admin' },
-        password,
-        body.password,
-        '192.0.2.1',
-      ),
-      (error) => error.status === 403,
-    );
-    assert.equal(
+    assert.equal((await request(app, 'POST', '/api/auth/change-password', {}, alice)).status, 422);
+    const changed = await request(app, 'POST', '/api/auth/change-password', body, alice);
+    assert.equal(changed.status, 200);
+    assert.notEqual(
       app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(alice.id).password_hash,
       before.password_hash,
     );
-    assert.equal((await request(app, 'GET', '/api/auth/me', undefined, alice)).status, 200);
+    assert.equal(
+      app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(admin.id).password_hash,
+      adminBefore.password_hash,
+    );
+    assert.equal(app.db.prepare('SELECT role FROM users WHERE id=?').get(alice.id).role, 'user');
+    assert.equal((await request(app, 'GET', '/api/auth/me', undefined, alice)).status, 401);
     assert.equal((await request(app, 'GET', '/api/auth/me', undefined, admin)).status, 200);
   } finally {
     app.db.close();
   }
 });
 
-test('revoking admin access during a password change prevents the write and leaves sessions intact', async () => {
+test('a password changed elsewhere during a password change prevents the write and leaves sessions intact', async () => {
   let entered, release;
   const started = new Promise((resolve) => (entered = resolve)),
     gate = new Promise((resolve) => (release = resolve));
@@ -666,7 +662,6 @@ test('revoking admin access during a password change prevents the write and leav
   });
   let pending;
   try {
-    const before = app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(admin.id);
     pending = request(
       app,
       'POST',
@@ -675,12 +670,13 @@ test('revoking admin access during a password change prevents the write and leav
       admin,
     );
     await started;
-    app.db.prepare("UPDATE users SET role='user' WHERE id=?").run(admin.id);
+    const elsewhere = await hashPassword('changed-elsewhere-2026');
+    app.db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(elsewhere, admin.id);
     release();
-    assert.equal((await pending).status, 403);
+    assert.equal((await pending).status, 409);
     assert.equal(
       app.db.prepare('SELECT password_hash FROM users WHERE id=?').get(admin.id).password_hash,
-      before.password_hash,
+      elsewhere,
     );
     assert.equal((await request(app, 'GET', '/api/auth/me', undefined, admin)).status, 200);
   } finally {

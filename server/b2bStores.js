@@ -189,7 +189,7 @@ export class B2BStoreRepository {
     return (
       this.db
         .prepare(
-          `SELECT u.id,u.name,u.email,
+          `SELECT u.id,u.name,COALESCE(u.email,'') AS email,
       CASE WHEN access.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'
       THEN 1 ELSE 0 END AS active
       FROM b2b_store_owners link JOIN users u ON u.id=link.user_id
@@ -383,7 +383,7 @@ export class B2BStoreRepository {
   details(actor, storeId) {
     this.requireStaff(actor);
     const store = this.store(storeId);
-    const accountFields = `u.id,u.name,u.email,
+    const accountFields = `u.id,u.name,COALESCE(u.email,'') AS email,
       CASE WHEN access.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved'
       THEN 1 ELSE 0 END AS active`;
     const joins = `JOIN users u ON u.id=link.user_id
@@ -428,13 +428,13 @@ export class B2BStoreRepository {
       AND COALESCE(approval.status,'approved')='approved'
       AND NOT EXISTS(SELECT 1 FROM b2b_sales_agents a WHERE a.user_id=u.id)
       ${ownerFilter}
-      AND instr(lower(u.name||' '||u.email),?)>0`;
+      AND instr(lower(u.name||' '||COALESCE(u.email,'')),?)>0`;
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from).get(query).n;
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const page = Math.min(requestedPage, pages);
     const users = this.db
       .prepare(
-        `SELECT u.id,u.name,u.email,
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,
       (SELECT COUNT(*) FROM b2b_store_members m WHERE m.user_id=u.id) AS memberStores,
       (SELECT COUNT(*) FROM b2b_store_owners o WHERE o.user_id=u.id) AS ownedStores,
       CASE WHEN EXISTS(SELECT 1 FROM auth_account_state v WHERE v.user_id=u.id AND v.verified_at IS NOT NULL)
@@ -606,7 +606,7 @@ export class B2BStoreRepository {
     this.requireStaff(actor);
     return this.db
       .prepare(
-        `SELECT u.id,u.name,u.email,COUNT(a.store_id) AS assignedStores
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,COUNT(a.store_id) AS assignedStores
       FROM b2b_sales_agents s JOIN users u ON u.id=s.user_id
       LEFT JOIN account_access access ON access.user_id=u.id
       LEFT JOIN account_approvals approval ON approval.user_id=u.id

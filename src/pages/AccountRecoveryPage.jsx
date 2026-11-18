@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { accountApi } from '../components/account/accountApi';
 import { useDelivery } from '../state/useDelivery';
+import WhatsAppRecovery from '../components/account/WhatsAppRecovery';
 import '../components/account/AuthPage.css';
 
 export default function AccountRecoveryPage({ mode, route }) {
@@ -28,7 +29,8 @@ function AccountRecoveryForm({ mode, route }) {
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [done, setDone] = useState(false),
-    [ready, setReady] = useState(null);
+    [ready, setReady] = useState(null),
+    [method, setMethod] = useState('whatsapp');
   const pending = useRef(false),
     active = useRef(true),
     generation = useRef(0);
@@ -140,14 +142,37 @@ function AccountRecoveryForm({ mode, route }) {
         </h1>
         <p>
           {forgot
-            ? 'Masukkan email akun untuk meminta petunjuk pemulihan.'
+            ? 'Pilih cara memulihkan akun: kode lewat WhatsApp, atau tautan lewat email bila akun Anda memakai email.'
             : verify
               ? token
                 ? 'Masukkan kata sandi akun untuk memastikan tautan ini milik Anda. Verifikasi email dilakukan sekali; persetujuan Admin atau Pemilik adalah langkah terpisah.'
                 : 'Konfirmasi email melalui tautan yang dikirim ke kotak masuk Anda. Persetujuan Admin atau Pemilik adalah langkah terpisah.'
               : 'Tentukan kata sandi baru. Tautan hanya dapat digunakan sekali.'}
         </p>
-        {ready === false && (
+        {forgot && (
+          <div className="auth-method-switch" role="group" aria-label="Cara pemulihan">
+            {[
+              ['whatsapp', 'WhatsApp'],
+              ['email', 'Email'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={method === value}
+                className={method === value ? 'is-selected' : ''}
+                onClick={() => {
+                  setMethod(value);
+                  setError('');
+                  setMessage('');
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {forgot && method === 'whatsapp' && <WhatsAppRecovery />}
+        {ready === false && !(forgot && method === 'whatsapp') && (
           <p className="shop-warning" role="status">
             Layanan email toko belum diaktifkan. Hubungi pengelola toko untuk bantuan.
           </p>
@@ -217,7 +242,7 @@ function AccountRecoveryForm({ mode, route }) {
             )}
           </div>
         )}
-        {!done && (forgot || token) && (
+        {!done && ((forgot && method === 'email') || (!forgot && token)) && (
           <form onSubmit={submit}>
             <fieldset disabled={busy || (forgot && ready !== true)}>
               {forgot ? (

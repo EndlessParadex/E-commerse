@@ -268,6 +268,8 @@ export class EmailSettingsRepository {
     const runtime = this.runtime();
     if (runtime.source !== 'website' || runtime.revision !== revision)
       fail('Simpan pengaturan terbaru sebelum mengirim email uji.', 409, 'settings_conflict');
+    if (!this.db.prepare('SELECT email FROM users WHERE id=?').get(user.id)?.email)
+      fail('Akun pemilik belum memiliki alamat email untuk menerima email uji.', 409, 'no_email');
     this.db.exec('BEGIN IMMEDIATE');
     try {
       if (!isStoreOwner(this.db, user))

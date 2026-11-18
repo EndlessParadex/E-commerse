@@ -43,6 +43,7 @@ export default function AuthPage({ mode }) {
   const [notice, setNotice] = useState('');
   const [registrationSent, setRegistrationSent] = useState(false);
   const [registrationEmailReady, setRegistrationEmailReady] = useState(false);
+  const [registeredWithEmail, setRegisteredWithEmail] = useState(false);
   const [resendNotice, setResendNotice] = useState('');
   const [resending, setResending] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -81,7 +82,7 @@ export default function AuthPage({ mode }) {
         body: JSON.stringify({
           name: values.name,
           address: values.address,
-          email: values.email,
+          email: values.email.trim(),
           ...(isRegister ? { phone: values.phone } : {}),
           password: values.password,
         }),
@@ -99,8 +100,11 @@ export default function AuthPage({ mode }) {
       }
       if (isRegister && !payload.user) {
         setValues((current) => ({ ...current, password: '', confirmPassword: '' }));
-        setNotice(payload.message || 'Periksa email untuk melanjutkan pendaftaran.');
+        setNotice(
+          payload.message || 'Pendaftaran diterima. Tunggu persetujuan Admin atau Pemilik.',
+        );
         setRegistrationEmailReady(payload.emailReady === true);
+        setRegisteredWithEmail(payload.withEmail !== false && Boolean(values.email.trim()));
         setResendNotice('');
         setRegistrationSent(true);
         return;
@@ -147,11 +151,11 @@ export default function AuthPage({ mode }) {
     }
   };
 
-  const field = (name, label, type, autoComplete, placeholder) => {
+  const field = (name, label, type, autoComplete, placeholder, { optional = false, help } = {}) => {
     const isPassword = type === 'password';
     const hint = isRegister && name === 'password';
     const describedBy =
-      [hint ? 'password-hint' : '', errors[name] ? `${name}-error` : '']
+      [hint ? 'password-hint' : '', help ? `${name}-help` : '', errors[name] ? `${name}-error` : '']
         .filter(Boolean)
         .join(' ') || undefined;
     return (
@@ -167,7 +171,7 @@ export default function AuthPage({ mode }) {
             onChange={update}
             autoComplete={autoComplete}
             placeholder={placeholder}
-            required
+            required={!optional}
             aria-invalid={Boolean(errors[name])}
             aria-describedby={describedBy}
             maxLength={isPassword ? 128 : name === 'name' ? 100 : name === 'phone' ? 40 : 254}
@@ -190,6 +194,11 @@ export default function AuthPage({ mode }) {
         {hint && (
           <p className="auth-hint" id="password-hint">
             Minimal 8 karakter.
+          </p>
+        )}
+        {help && (
+          <p className="auth-hint" id={`${name}-help`}>
+            {help}
           </p>
         )}
         {errors[name] && (
@@ -244,22 +253,30 @@ export default function AuthPage({ mode }) {
               <p className="auth-submit-notice" role="status">
                 {notice}
               </p>
-              <ol>
-                <li>
-                  {registrationEmailReady
-                    ? 'Periksa kotak masuk atau spam. Tautan verifikasi dikirim otomatis jika akun baru berhasil dibuat.'
-                    : 'Pengiriman email belum tersedia. Hubungi pengelola toko untuk bantuan verifikasi.'}
-                </li>
-                <li>
-                  Admin atau Pemilik akan memeriksa pendaftaran Anda. Verifikasi email dapat
-                  dilakukan sambil menunggu.
-                </li>
-                <li>
-                  Setelah disetujui, masuk memakai kata sandi pendaftaran. Email harus terverifikasi
-                  sebelum memesan.
-                </li>
-              </ol>
-              {registrationEmailReady && (
+              {registeredWithEmail ? (
+                <ol>
+                  <li>
+                    {registrationEmailReady
+                      ? 'Periksa kotak masuk atau spam. Tautan verifikasi dikirim otomatis jika akun baru berhasil dibuat.'
+                      : 'Pengiriman email belum tersedia. Anda tetap dapat memakai nomor WhatsApp.'}
+                  </li>
+                  <li>Admin atau Pemilik akan memeriksa pendaftaran Anda.</li>
+                  <li>
+                    Setelah disetujui, masuk dengan email atau nomor HP. Sebelum memesan, konfirmasi
+                    email atau nomor WhatsApp.
+                  </li>
+                </ol>
+              ) : (
+                <ol>
+                  <li>Admin atau Pemilik akan memeriksa pendaftaran Anda.</li>
+                  <li>Setelah disetujui, masuk dengan nomor HP dan kata sandi.</li>
+                  <li>
+                    Buka Akun saya → Profil, lalu konfirmasi nomor WhatsApp dengan kode yang
+                    dikirim. Setelah itu Anda dapat memesan.
+                  </li>
+                </ol>
+              )}
+              {registrationEmailReady && registeredWithEmail && (
                 <div className="auth-registration-help">
                   <p>
                     Belum ada email? Tunggu beberapa menit, periksa spam, lalu gunakan tombol
@@ -288,13 +305,16 @@ export default function AuthPage({ mode }) {
                   setResendNotice('');
                 }}
               >
-                Daftar dengan email lain
+                Ubah data pendaftaran
               </button>
             </div>
           ) : (
             <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy}>
               {isRegister && field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
-              {isRegister && field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890')}
+              {isRegister &&
+                field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890', {
+                  help: 'Dipakai untuk masuk dan untuk konfirmasi pesanan lewat WhatsApp.',
+                })}
               {isRegister && (
                 <div className="auth-field">
                   <label htmlFor="auth-address">Alamat lengkap</label>
@@ -326,10 +346,16 @@ export default function AuthPage({ mode }) {
               )}
               {field(
                 'email',
-                isRegister ? 'Email' : 'Email atau Nomor HP',
+                isRegister ? 'Email (opsional)' : 'Email atau Nomor HP',
                 isRegister ? 'email' : 'text',
                 isRegister ? 'email' : 'username',
                 isRegister ? 'nama@contoh.com' : 'nama@contoh.com atau 081234567890',
+                isRegister
+                  ? {
+                      optional: true,
+                      help: 'Boleh dikosongkan. Tanpa email, masuk dan pemulihan kata sandi memakai nomor HP.',
+                    }
+                  : {},
               )}
               {field(
                 'password',

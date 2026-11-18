@@ -72,9 +72,13 @@ test('login accepts phone aliases but rejects incomplete Indonesian numbers', ()
     assert.ok(validateAuth({ ...valid, email }, 'login').email);
 });
 
-test('new registration requires a valid phone and still requires email', () => {
+test('new registration requires a valid phone; email is optional but checked when filled', () => {
   assert.ok(validateAuth({ ...valid, phone: '' }, 'register').phone);
   assert.ok(validateAuth({ ...valid, phone: '0812' }, 'register').phone);
   assert.deepEqual(validateAuth({ ...valid, phone: '+6281234567890' }, 'register'), {});
-  assert.ok(validateAuth({ ...valid, email: '' }, 'register').email);
+  assert.deepEqual(validateAuth({ ...valid, email: '' }, 'register'), {});
+  assert.deepEqual(validateAuth({ ...valid, email: '   ' }, 'register'), {});
+  assert.ok(validateAuth({ ...valid, email: 'bukan-email' }, 'register').email);
+  // Login still needs an email or a phone number.
+  assert.ok(validateAuth({ ...valid, email: '' }, 'login').email);
 });

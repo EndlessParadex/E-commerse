@@ -116,13 +116,13 @@ export class DeliveryScheduleRepository {
     const from = `FROM users u LEFT JOIN account_access a ON a.user_id=u.id
       LEFT JOIN account_approvals approval ON approval.user_id=u.id
       LEFT JOIN delivery_region_memberships m ON m.user_id=u.id LEFT JOIN delivery_regions r ON r.id=m.region_id
-      WHERE u.role='user' AND a.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved' AND instr(lower(u.name||' '||u.email),?)>0`;
+      WHERE u.role='user' AND a.disabled_at IS NULL AND COALESCE(approval.status,'approved')='approved' AND instr(lower(u.name||' '||COALESCE(u.email,'')),?)>0`;
     const total = this.db.prepare('SELECT COUNT(*) AS n ' + from).get(q).n;
     const pages = Math.max(1, Math.ceil(total / 25));
     const actual = Math.min(page, pages);
     const accounts = this.db
       .prepare(
-        `SELECT u.id,u.name,u.email,m.region_id AS regionId,r.name AS regionName,COALESCE(m.revision,0) AS revision ${from} ORDER BY u.name,u.id LIMIT 25 OFFSET ?`,
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,m.region_id AS regionId,r.name AS regionName,COALESCE(m.revision,0) AS revision ${from} ORDER BY u.name,u.id LIMIT 25 OFFSET ?`,
       )
       .all(q, (actual - 1) * 25);
     return { accounts, total, page: actual, pages };

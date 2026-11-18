@@ -120,6 +120,7 @@ export class OrderDelivery {
     if (order.b2b && !this.b2bCanRead?.({ id: row.recipient_id }, order.b2b.storeId))
       return 'store_access_changed';
     if (row.channel === 'invoice_email') {
+      if (!user.email) return 'no_email';
       if (!this.identity.verified(row.recipient_id)) return 'email_unverified';
     } else if (!this.whatsappAllowed(row.recipient_id)) return 'whatsapp_not_allowed';
     if (row.kind.startsWith('invoice_') && ['cancelled', 'expired'].includes(order.status))

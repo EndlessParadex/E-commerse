@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv } from 'node:crypto';
 import { CatalogError } from './catalog.js';
 import { logUnexpectedError } from './errorLogging.js';
+import { accountRateKey } from './authSecurity.js';
 import { accountIsActive, accountApprovalStatus, approvalSchema } from './accountAccess.js';
 
 const fail = (message, status = 400, code = 'invalid_token') => {
@@ -103,6 +104,15 @@ export class IdentityRepository {
         ?.verified_at != null
     );
   }
+  /** True when the account has a confirmed email OR a confirmed WhatsApp number. */
+  contactVerified(id) {
+    return (
+      this.verified(id) ||
+      this.db
+        .prepare('SELECT 1 FROM user_contact_phones WHERE user_id=? AND verified_at IS NOT NULL')
+        .get(id) != null
+    );
+  }
   requireEmail() {
     if (!this.ready)
       fail(
@@ -167,35 +177,39 @@ export class IdentityRepository {
       .run(hash, this.encrypt(message), time);
   }
   async register(fields, ip) {
-    if (!this.limiter.take('register', ip, fields.email)) return this.registrationMessage();
+    const email = fields.email || null;
+    if (!this.limiter.take('register', ip, email || fields.phone))
+      return this.registrationMessage(email);
     const encoded = await this.queue.run(ip, () => this.hashPassword(fields.password));
     try {
       this.transaction(() => {
         this.cleanup();
-        let user = this.db.prepare('SELECT id FROM users WHERE email=?').get(fields.email);
-        if (!user) {
-          user = { id: randomUUID() };
+        const existing = email && this.db.prepare('SELECT id FROM users WHERE email=?').get(email);
+        if (existing) {
+          if (this.ready) this.issue('reset', email, existing);
+          return;
+        }
+        const user = { id: randomUUID() };
+        this.db
+          .prepare("INSERT INTO users VALUES(?,?,?,?,?,?,'user')")
+          .run(
+            user.id,
+            fields.name,
+            email,
+            fields.address,
+            encoded,
+            new Date(this.now()).toISOString(),
+          );
+        this.db
+          .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
+          .run(user.id);
+        if (fields.phone && this.phoneDirectory) {
+          this.phoneDirectory.claim(user.id, fields.phone);
           this.db
-            .prepare("INSERT INTO users VALUES(?,?,?,?,?,?,'user')")
-            .run(
-              user.id,
-              fields.name,
-              fields.email,
-              fields.address,
-              encoded,
-              new Date(this.now()).toISOString(),
-            );
-          this.db
-            .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
-            .run(user.id);
-          if (fields.phone && this.phoneDirectory) {
-            this.phoneDirectory.claim(user.id, fields.phone);
-            this.db
-              .prepare('INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)')
-              .run(user.id, fields.phone, randomUUID());
-          }
-          if (this.ready) this.issue('verify', fields.email, user);
-        } else if (this.ready) this.issue('reset', fields.email, user);
+            .prepare('INSERT INTO user_contact_phones(user_id,phone,revision) VALUES(?,?,?)')
+            .run(user.id, fields.phone, randomUUID());
+        }
+        if (email && this.ready) this.issue('verify', email, user);
       });
     } catch (error) {
       // Registration has always been generic, including already-registered email.
@@ -203,15 +217,20 @@ export class IdentityRepository {
       // both the new user and phone claim if the phone is unavailable.
       if (error?.code !== 'phone_unavailable') throw error;
     }
-    return this.registrationMessage();
+    return this.registrationMessage(email);
   }
-  registrationMessage() {
+  // The message depends only on what was submitted, never on whether an account was created.
+  registrationMessage(email = 'legacy') {
     return {
       ...generic,
-      message: this.ready
-        ? 'Permintaan diterima. Jika akun baru berhasil dibuat, email verifikasi otomatis disiapkan. Periksa kotak masuk atau spam sambil menunggu persetujuan Admin atau Pemilik.'
-        : 'Permintaan diterima. Akun baru perlu persetujuan Admin atau Pemilik. Pengiriman verifikasi email belum tersedia; hubungi pengelola toko.',
+      message:
+        email && this.ready
+          ? 'Permintaan diterima. Jika akun baru berhasil dibuat, email verifikasi otomatis disiapkan. Periksa kotak masuk atau spam sambil menunggu persetujuan Admin atau Pemilik.'
+          : email
+            ? 'Permintaan diterima. Akun baru perlu persetujuan Admin atau Pemilik. Pengiriman verifikasi email belum tersedia; setelah masuk, konfirmasi nomor WhatsApp sebelum memesan.'
+            : 'Permintaan diterima. Akun baru perlu persetujuan Admin atau Pemilik. Setelah disetujui, masuk dengan nomor HP dan kata sandi, lalu konfirmasi nomor WhatsApp di Akun saya sebelum memesan.',
       emailReady: this.ready,
+      withEmail: Boolean(email),
     };
   }
   async resendRegistrationVerification(value, ip) {
@@ -241,6 +260,12 @@ export class IdentityRepository {
     return generic;
   }
   requestVerification(user, ip) {
+    if (!user.email)
+      fail(
+        'Akun ini tidak memakai email. Konfirmasi nomor WhatsApp di Akun saya.',
+        409,
+        'no_email',
+      );
     this.requireEmail();
     if (!this.limiter.take('email', ip, user.email)) return generic;
     this.transaction(() => {
@@ -349,9 +374,9 @@ export class IdentityRepository {
     this.db.prepare('DELETE FROM auth_tokens WHERE user_id=?').run(id);
   }
   async changePassword(user, currentPassword, password, ip) {
-    const stored = this.db.prepare('SELECT password_hash,role FROM users WHERE id=?').get(user.id);
-    if (stored?.role !== 'admin')
-      fail('Pengaturan kata sandi di halaman akun hanya tersedia untuk admin.', 403, 'forbidden');
+    // Every account may change its own password: a temporary password set by the store owner
+    // must not stay known to the owner.
+    const stored = this.db.prepare('SELECT password_hash FROM users WHERE id=?').get(user.id);
     if (
       !validPassword(password) ||
       typeof currentPassword !== 'string' ||
@@ -367,17 +392,13 @@ export class IdentityRepository {
       stored &&
       (await this.queue.run(ip, () => this.passwordCheck(currentPassword, stored.password_hash)));
     if (!matches) {
-      this.limiter.take('login', ip, user.email);
+      this.limiter.take('login', ip, accountRateKey(user));
       fail('Kata sandi saat ini tidak sesuai.', 401, 'invalid_credentials');
     }
     const encoded = await this.queue.run(ip, () => this.hashPassword(password));
     this.transaction(() => {
-      const latest = this.db
-        .prepare('SELECT password_hash,role FROM users WHERE id=?')
-        .get(user.id);
-      if (latest?.role !== 'admin')
-        fail('Pengaturan kata sandi di halaman akun hanya tersedia untuk admin.', 403, 'forbidden');
-      if (latest.password_hash !== stored.password_hash)
+      const latest = this.db.prepare('SELECT password_hash FROM users WHERE id=?').get(user.id);
+      if (!latest || latest.password_hash !== stored.password_hash)
         fail('Kredensial sudah berubah. Masuk kembali.', 409, 'credential_changed');
       this.setPassword(user.id, encoded);
     });

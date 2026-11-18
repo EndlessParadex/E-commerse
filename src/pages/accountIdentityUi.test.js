@@ -125,6 +125,17 @@ test('account website: buyer security summary, admin password settings, registra
       });
       await wait(check);
     };
+    // "Lupa kata sandi" opens on WhatsApp; the email form is one tap away.
+    const openEmailRecovery = async () => {
+      await route('/forgot-password', () => container.querySelector('.auth-method-switch'));
+      await act(async () => {
+        [...container.querySelectorAll('.auth-method-switch button')]
+          .find((button) => button.textContent === 'Email')
+          .click();
+        await settle();
+      });
+      await wait(() => container.querySelector('#recovery-email'));
+    };
     const mailToken = () => api.testMailbox.at(-1).text.match(/token=([A-Za-z0-9_-]+)/)[1];
     await act(async () => {
       root.render(createElement(App));
@@ -151,7 +162,7 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(cookie, '');
     assert.match(container.textContent, /Admin atau Pemilik akan memeriksa pendaftaran/);
     assert.ok(container.querySelector('.auth-registration-help button'));
-    assert.match(container.textContent, /Verifikasi email dapat dilakukan sambil menunggu/);
+    assert.match(container.textContent, /Admin atau Pemilik akan memeriksa pendaftaran Anda/);
     const pendingCustomer = api.db
       .prepare('SELECT id FROM users WHERE email=?')
       .get('website@fixture.test');
@@ -385,11 +396,9 @@ test('account website: buyer security summary, admin password settings, registra
       /Email sudah dikonfirmasi/,
     );
     const buyerSecurity = container.querySelector('#account-panel-security');
-    assert.ok(buyerSecurity.querySelector('[aria-label="Informasi kata sandi"]'));
-    assert.match(buyerSecurity.textContent, /Kata sandi tidak ditampilkan/);
-    assert.equal(buyerSecurity.querySelector('form'), null);
-    assert.equal(buyerSecurity.querySelector('input[type=password]'), null);
-    assert.equal(buyerSecurity.querySelector('a[href="#/forgot-password"]'), null);
+    // Buyers change their own password too (e.g. after a temporary one from the owner).
+    assert.ok(buyerSecurity.querySelector('form input[autocomplete="current-password"]'));
+    assert.ok(buyerSecurity.querySelector('a[href="#/forgot-password"]'));
     assert.equal(requests.filter((x) => x.path === '/api/auth/change-password').length, 0);
 
     // Reload the account after granting the fixture admin access; a buyer never gets the form.
@@ -454,7 +463,7 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(api.db.prepare('SELECT COUNT(*) AS n FROM sessions').get().n, 0);
     // Several resend paths were exercised above; keep the real per-hour email limit in place.
     time += 3600001;
-    await route('/forgot-password', () => container.querySelector('#recovery-email'));
+    await openEmailRecovery();
     await wait(() => !container.querySelector('fieldset').disabled);
     await fill('#recovery-email', 'website@fixture.test');
     await submit('.auth-card form');
@@ -496,7 +505,7 @@ test('account website: buyer security summary, admin password settings, registra
     await wait(() => container.querySelector('#verification-email'));
     assert.equal(container.querySelector('#recovery-password'), null);
     emailReady = false;
-    await route('/forgot-password', () => container.querySelector('#recovery-email'));
+    await openEmailRecovery();
     await wait(() => container.textContent.includes('Layanan email toko belum diaktifkan'));
     assert.equal(container.querySelector('.auth-card fieldset').disabled, true);
   } finally {

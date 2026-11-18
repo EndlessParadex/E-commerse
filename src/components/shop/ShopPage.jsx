@@ -30,7 +30,7 @@ export default function ShopPage({ type }) {
     workflowUsesServer &&
     company.commerce?.version === 31 &&
     Boolean(user) &&
-    !user.emailVerified;
+    !(user.orderReady ?? user.emailVerified);
   const [cancelOpen, setCancelOpen] = useState(false);
   // The last removed cart line can be put back for a few seconds.
   const [removed, setRemoved] = useState(null);
@@ -313,8 +313,8 @@ export default function ShopPage({ type }) {
             </p>
             {needsVerification && (
               <p className="shop-warning cart-verify-notice" role="status">
-                Email akun belum dikonfirmasi, jadi pesanan belum bisa dibuat. Barang di keranjang
-                tetap tersimpan. <a href="#/akun/keamanan">Konfirmasi email</a>
+                Nomor WhatsApp atau email akun belum dikonfirmasi, jadi pesanan belum bisa dibuat.
+                Barang di keranjang tetap tersimpan. <a href="#/akun/profil">Konfirmasi sekarang</a>
               </p>
             )}
             {shop.cartReview.ready && !catalogError ? (

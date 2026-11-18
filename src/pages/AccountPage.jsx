@@ -335,15 +335,28 @@ export default function AccountPage({ section = null }) {
                     <p>Kelola informasi akun, alamat pengiriman, dan pengaturan keamanan.</p>
                     <div className="account-premium-badges">
                       <span className="account-premium-badge is-active">Akun aktif</span>
-                      <span
-                        className={
-                          'account-premium-badge ' +
-                          (user.emailVerified ? 'is-verified' : 'is-pending')
-                        }
-                      >
-                        <AccountCenterIcon name="mail" size={15} />
-                        {user.emailVerified ? 'Email terverifikasi' : 'Email belum terverifikasi'}
-                      </span>
+                      {user.email ? (
+                        <span
+                          className={
+                            'account-premium-badge ' +
+                            (user.emailVerified ? 'is-verified' : 'is-pending')
+                          }
+                        >
+                          <AccountCenterIcon name="mail" size={15} />
+                          {user.emailVerified ? 'Email terverifikasi' : 'Email belum terverifikasi'}
+                        </span>
+                      ) : (
+                        <span
+                          className={
+                            'account-premium-badge ' +
+                            (user.phoneVerified ? 'is-verified' : 'is-pending')
+                          }
+                        >
+                          {user.phoneVerified
+                            ? 'WhatsApp terverifikasi'
+                            : 'WhatsApp belum terverifikasi'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,7 +432,7 @@ export default function AccountPage({ section = null }) {
                           <div>
                             <dt>Email</dt>
                             <dd>
-                              {user.email}
+                              {user.email || 'Tidak diisi'}
                               <AccountEmailStatus key={user.id} />
                             </dd>
                           </div>
@@ -502,7 +515,11 @@ export default function AccountPage({ section = null }) {
                         <div>
                           <strong>Verifikasi email</strong>
                           <small>
-                            {user.emailVerified ? 'Sudah terverifikasi' : 'Belum terverifikasi'}
+                            {!user.email
+                              ? 'Tidak memakai email'
+                              : user.emailVerified
+                                ? 'Sudah terverifikasi'
+                                : 'Belum terverifikasi'}
                           </small>
                         </div>
                         <button type="button" onClick={() => openSection('security')}>
@@ -515,11 +532,7 @@ export default function AccountPage({ section = null }) {
                         </span>
                         <div>
                           <strong>Kata sandi</strong>
-                          <small>
-                            {user.role === 'admin'
-                              ? 'Dapat diubah pada pengaturan keamanan'
-                              : 'Hubungi Admin untuk bantuan akun'}
-                          </small>
+                          <small>Dapat diubah pada pengaturan keamanan</small>
                         </div>
                         <button type="button" onClick={() => openSection('security')}>
                           Lihat

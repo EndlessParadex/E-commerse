@@ -175,7 +175,7 @@ export default function ShopActions({ onOpen }) {
                             <AccountAvatar user={user} className="account-preview-avatar" />
                             <div className="account-preview-info">
                               <h3>Halo, {user.name}</h3>
-                              <p>{user.email}</p>
+                              <p>{user.email || user.phone}</p>
                               <span className="account-preview-role">
                                 {user.role === 'admin' ? 'Admin BAM' : 'Akun BAM'}
                               </span>

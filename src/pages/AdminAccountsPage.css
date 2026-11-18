@@ -369,3 +369,24 @@
 .accounts-store-links > span {
   color: var(--color-text-muted);
 }
+.accounts-temporary-password {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-warning-border, #f59e0b);
+  border-radius: 12px;
+  background: var(--color-warning-soft, #fffbeb);
+}
+.accounts-temporary-password p {
+  margin: 0;
+}
+.accounts-temporary-password code {
+  justify-self: start;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-surface, #fff);
+  font-size: 1.125rem;
+  letter-spacing: 0.06em;
+  user-select: all;
+}

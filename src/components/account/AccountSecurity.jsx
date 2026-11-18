@@ -6,7 +6,7 @@ import { approveNextRoute } from '../../state/routeGuards';
 
 export default function AccountSecurity() {
   const { user, setUser } = useDelivery();
-  const canChangePassword = user.role === 'admin';
+  const hasEmail = Boolean(user.email);
   const [ready, setReady] = useState(false),
     [values, setValues] = useState({ currentPassword: '', password: '', confirm: '' }),
     [message, setMessage] = useState(''),
@@ -15,7 +15,7 @@ export default function AccountSecurity() {
   const pending = useRef(false),
     active = useRef(true);
   useUnsavedChanges(
-    canChangePassword && Boolean(values.currentPassword || values.password || values.confirm),
+    Boolean(values.currentPassword || values.password || values.confirm),
     undefined,
     busy,
   );
@@ -48,7 +48,7 @@ export default function AccountSecurity() {
   };
   const submit = async (event) => {
     event.preventDefault();
-    if (!canChangePassword || pending.current) return;
+    if (pending.current) return;
     setError('');
     setMessage('');
     if (
@@ -84,87 +84,84 @@ export default function AccountSecurity() {
       <div className="account-panel-heading">
         <h2>Keamanan akun</h2>
         <p>
-          {canChangePassword
-            ? 'Konfirmasi email dan kelola kata sandi akun admin Anda.'
-            : 'Lihat status keamanan dan konfirmasi email akun Anda.'}
+          {hasEmail
+            ? 'Konfirmasi email dan kelola kata sandi akun Anda.'
+            : 'Kelola kata sandi akun Anda. Akun ini masuk dengan nomor HP.'}
         </p>
       </div>
-      <div className="account-security-email">
-        <strong>{user.email}</strong>
-        <p className="account-security-email-status">
-          {user.emailVerified ? 'Email sudah dikonfirmasi.' : 'Email belum dikonfirmasi.'}
-        </p>
-        {!user.emailVerified && (
-          <button
-            type="button"
-            className="bam-button-secondary"
-            disabled={busy || !ready}
-            onClick={resend}
-          >
-            Kirim tautan konfirmasi email
-          </button>
-        )}
-        {!ready && (
-          <p className="account-security-help">
-            {canChangePassword
-              ? 'Layanan email toko belum diaktifkan. Lengkapi pengaturan email untuk mengaktifkan verifikasi dan pemulihan akun.'
-              : 'Konfirmasi email belum tersedia. Hubungi admin toko untuk bantuan.'}
+      {hasEmail ? (
+        <div className="account-security-email">
+          <strong>{user.email}</strong>
+          <p className="account-security-email-status">
+            {user.emailVerified ? 'Email sudah dikonfirmasi.' : 'Email belum dikonfirmasi.'}
           </p>
-        )}
-      </div>
-      {canChangePassword ? (
-        <form onSubmit={submit} className="account-address-form account-security-form">
-          <fieldset disabled={busy}>
-            <legend>Ubah kata sandi</legend>
-            {[
-              ['currentPassword', 'Kata sandi saat ini', 'current-password'],
-              ['password', 'Kata sandi baru', 'new-password'],
-              ['confirm', 'Konfirmasi kata sandi baru', 'new-password'],
-            ].map(([field, label, autoComplete]) => (
-              <div className="account-field" key={field}>
-                <label htmlFor={'security-' + field}>{label}</label>
-                <input
-                  id={'security-' + field}
-                  type="password"
-                  value={values[field]}
-                  maxLength={128}
-                  autoComplete={autoComplete}
-                  required
-                  onChange={(event) =>
-                    setValues((current) => ({ ...current, [field]: event.target.value }))
-                  }
-                />
-              </div>
-            ))}
-            <p className="account-security-help">
-              Setelah perubahan berhasil, semua sesi lama diakhiri. Anda perlu masuk kembali.
-            </p>
-            <button type="submit" className="shop-primary">
-              {busy ? 'Menyimpan…' : 'Ubah kata sandi'}
+          {!user.emailVerified && (
+            <button
+              type="button"
+              className="bam-button-secondary"
+              disabled={busy || !ready}
+              onClick={resend}
+            >
+              Kirim tautan konfirmasi email
             </button>
-          </fieldset>
-        </form>
+          )}
+          {!ready && !user.emailVerified && (
+            <p className="account-security-help">
+              {user.role === 'admin'
+                ? 'Layanan email toko belum diaktifkan. Lengkapi pengaturan email untuk mengaktifkan verifikasi dan pemulihan akun.'
+                : 'Konfirmasi email belum tersedia. Konfirmasi nomor WhatsApp di Profil untuk dapat memesan.'}
+            </p>
+          )}
+        </div>
       ) : (
-        <section className="account-security-summary" aria-label="Informasi kata sandi">
-          <h3>Kata sandi</h3>
-          <p>Kata sandi tidak ditampilkan.</p>
+        <div className="account-security-email">
+          <strong>Tanpa email</strong>
           <p className="account-security-help">
-            Pengaturan kata sandi di halaman ini hanya tersedia untuk admin. Hubungi admin toko jika
-            memerlukan bantuan akun.
+            Lupa kata sandi dipulihkan lewat kode WhatsApp ke nomor yang sudah dikonfirmasi di
+            Profil.
           </p>
-        </section>
+        </div>
       )}
+      <form onSubmit={submit} className="account-address-form account-security-form">
+        <fieldset disabled={busy}>
+          <legend>Ubah kata sandi</legend>
+          {[
+            ['currentPassword', 'Kata sandi saat ini', 'current-password'],
+            ['password', 'Kata sandi baru', 'new-password'],
+            ['confirm', 'Konfirmasi kata sandi baru', 'new-password'],
+          ].map(([field, label, autoComplete]) => (
+            <div className="account-field" key={field}>
+              <label htmlFor={'security-' + field}>{label}</label>
+              <input
+                id={'security-' + field}
+                type="password"
+                value={values[field]}
+                maxLength={128}
+                autoComplete={autoComplete}
+                required
+                onChange={(event) =>
+                  setValues((current) => ({ ...current, [field]: event.target.value }))
+                }
+              />
+            </div>
+          ))}
+          <p className="account-security-help">
+            Setelah perubahan berhasil, semua sesi lama diakhiri. Anda perlu masuk kembali.
+          </p>
+          <button type="submit" className="shop-primary">
+            {busy ? 'Menyimpan…' : 'Ubah kata sandi'}
+          </button>
+        </fieldset>
+      </form>
       {error && (
         <p className="account-error" role="alert">
           {error}
         </p>
       )}
       {message && <p role="status">{message}</p>}
-      {canChangePassword && (
-        <p>
-          <a href="#/forgot-password">Lupa kata sandi?</a>
-        </p>
-      )}
+      <p>
+        <a href="#/forgot-password">Lupa kata sandi?</a>
+      </p>
     </div>
   );
 }

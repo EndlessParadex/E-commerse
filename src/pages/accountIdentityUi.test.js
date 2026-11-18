@@ -105,9 +105,13 @@ test('account website: buyer security summary, admin password settings, registra
         const proto =
           e.tagName === 'TEXTAREA'
             ? dom.HTMLTextAreaElement.prototype
-            : dom.HTMLInputElement.prototype;
+            : e.tagName === 'SELECT'
+              ? dom.HTMLSelectElement.prototype
+              : dom.HTMLInputElement.prototype;
         Object.getOwnPropertyDescriptor(proto, 'value').set.call(e, value);
-        e.dispatchEvent(new dom.Event('input', { bubbles: true }));
+        e.dispatchEvent(
+          new dom.Event(e.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }),
+        );
         await settle();
       });
     const submit = async (selector) =>
@@ -146,7 +150,8 @@ test('account website: buyer security summary, admin password settings, registra
     await fill('#auth-name', 'Pembeli Website');
     await fill('#auth-phone', '081234560014');
     await fill('#auth-email', 'website@fixture.test');
-    await fill('#auth-address', 'Alamat pengujian website lengkap');
+    await fill('#auth-jalan', 'Alamat pengujian website lengkap');
+    await fill('#auth-desa', '19.02.01.1001');
     await fill('#auth-password', 'registration-password');
     await fill('#auth-confirmPassword', 'registration-password');
     await submit('.auth-card form');

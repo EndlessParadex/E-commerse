@@ -290,7 +290,8 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     );
     assert.doesNotMatch(container.querySelector('.checkout-items').textContent, /satuan| = /i);
     await fill('#checkout-name', 'Pembeli Kemasan');
-    await fill('#checkout-address', 'Alamat lengkap pengujian kemasan');
+    await fill('#checkout-jalan', 'Alamat lengkap pengujian kemasan');
+    await fill('#checkout-desa', '19.02.01.1001');
     await act(async () => {
       const changed = new Promise((resolve) =>
         dom.addEventListener('hashchange', resolve, { once: true }),

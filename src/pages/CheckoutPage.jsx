@@ -3,7 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import PackagingSummary from '../components/shop/PackagingSummary';
 import DeliveryPlan from '../components/account/DeliveryPlan';
 import { cartItemPresentation } from '../data/cartItemPresentation';
-import { validateDelivery } from '../state/deliveryModel';
+import {
+  formAddress,
+  shippingForm,
+  usesLegacyAddress,
+  validateShipping,
+} from '../state/deliveryModel';
+import BelitungAddressFields from '../components/account/BelitungAddressFields';
 import { useDelivery } from '../state/useDelivery';
 import { ORDER_NOTE_MAX_LENGTH } from '../state/orderModel';
 import { placePreviewOrder } from '../state/frontendWorkflow';
@@ -21,7 +27,8 @@ import { createServerOrder } from '../state/serverWorkflow';
 import { shippingOptions } from '../data/shippingOptions';
 import './CheckoutPage.css';
 
-const emptyForm = { namaToko: '', namaJalan: '' };
+// Old accounts may keep their free-text address until they edit it (allowLegacy).
+const check = (form) => validateShipping(form, { allowLegacy: true });
 
 export default function CheckoutPage() {
   const shop = useShop();
@@ -29,17 +36,28 @@ export default function CheckoutPage() {
   const live = workflowUsesServer && company.commerce?.version === 31;
   const codOnly = live && company.commerce?.codOnly === true;
   const { savedLocation, user, authLoading } = useDelivery();
-  const [form, setForm] = useState(() => savedLocation || emptyForm);
+  const [form, setForm] = useState(() => shippingForm(savedLocation));
   const [addressEditing, setAddressEditing] = useState(
-    () => Object.keys(validateDelivery(savedLocation || emptyForm)).length > 0,
+    () => Object.keys(check(shippingForm(savedLocation))).length > 0,
   );
   const nameRef = useRef(null);
-  const addressRef = useRef(null);
+  const streetRef = useRef(null);
+  const villageRef = useRef(null);
+  const focusAddressError = (nextErrors) =>
+    window.requestAnimationFrame(() =>
+      (nextErrors.namaToko
+        ? nameRef.current
+        : nextErrors.jalan
+          ? streetRef.current
+          : villageRef.current
+      )?.focus(),
+    );
   const submitErrorRef = useRef(null);
   const [edited, setEdited] = useState(false);
   const [shippingId, setShippingId] = useState('regular');
   const [paymentId, setPaymentId] = useState('cod');
   const [errors, setErrors] = useState({});
+  const addressInvalid = Boolean(errors.namaToko || errors.jalan || errors.desa);
   const [submitError, setSubmitError] = useState('');
   const [orderNote, setOrderNote] = useState('');
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -56,7 +74,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (savedLocation && !edited) {
       // oxlint-disable-next-line react/set-state-in-effect
-      setForm(savedLocation);
+      setForm(shippingForm(savedLocation));
     }
   }, [savedLocation, edited]);
 
@@ -179,14 +197,11 @@ export default function CheckoutPage() {
   const submit = async (event) => {
     event.preventDefault();
     if (submitLock.current) return;
-    const nextErrors = validateDelivery(form);
+    const nextErrors = check(form);
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
-      if (nextErrors.namaToko || nextErrors.namaJalan) setAddressEditing(true);
-      window.requestAnimationFrame(() => {
-        const field = nextErrors.namaToko ? nameRef.current : addressRef.current;
-        field?.focus();
-      });
+      setAddressEditing(true);
+      focusAddressError(nextErrors);
       return;
     }
     submitLock.current = true;
@@ -205,7 +220,8 @@ export default function CheckoutPage() {
       const input = {
         cart: shop.cart,
         recipient: form.namaToko,
-        address: form.namaJalan,
+        address: formAddress(form),
+        ...(usesLegacyAddress(form) ? {} : { street: form.jalan, villageCode: form.desa }),
         shipping,
         payment,
         note: orderNote,
@@ -288,21 +304,19 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 className="checkout-address-edit"
-                aria-expanded={addressEditing || Boolean(errors.namaToko || errors.namaJalan)}
+                aria-expanded={addressEditing || addressInvalid}
                 aria-controls="checkout-address-fields"
                 onClick={() => {
                   if (addressEditing) {
-                    const nextErrors = validateDelivery(form);
+                    const nextErrors = check(form);
                     setErrors((current) => ({
                       ...current,
                       namaToko: nextErrors.namaToko,
-                      namaJalan: nextErrors.namaJalan,
+                      jalan: nextErrors.jalan,
+                      desa: nextErrors.desa,
                     }));
                     if (!Object.keys(nextErrors).length) setAddressEditing(false);
-                    else
-                      window.requestAnimationFrame(() =>
-                        (nextErrors.namaToko ? nameRef.current : addressRef.current)?.focus(),
-                      );
+                    else focusAddressError(nextErrors);
                   } else {
                     setAddressEditing(true);
                     window.requestAnimationFrame(() => nameRef.current?.focus());
@@ -314,12 +328,18 @@ export default function CheckoutPage() {
             </div>
             <div className="checkout-address-preview">
               <strong>{form.namaToko.trim() || 'Nama penerima belum diisi'}</strong>
-              <p>{form.namaJalan.trim() || 'Lengkapi alamat pengiriman.'}</p>
+              <p>{formAddress(form) || 'Lengkapi alamat pengiriman.'}</p>
+              {usesLegacyAddress(form) && (
+                <p className="checkout-legacy-address">
+                  Alamat ini belum memakai pilihan kelurahan/desa. Pesanan tetap bisa dibuat; pilih
+                  Ubah untuk melengkapinya.
+                </p>
+              )}
             </div>
             <div
               className="checkout-fields"
               id="checkout-address-fields"
-              hidden={!addressEditing && !errors.namaToko && !errors.namaJalan}
+              hidden={!addressEditing && !addressInvalid}
             >
               <div className="checkout-field">
                 <label htmlFor="checkout-name">Nama penerima</label>
@@ -341,26 +361,20 @@ export default function CheckoutPage() {
                   </p>
                 )}
               </div>
-              <div className="checkout-field">
-                <label htmlFor="checkout-address">Alamat lengkap</label>
-                <textarea
-                  id="checkout-address"
-                  ref={addressRef}
-                  rows={4}
-                  maxLength={500}
-                  autoComplete="shipping street-address"
-                  value={form.namaJalan}
-                  onChange={(event) => updateField('namaJalan', event.target.value)}
-                  aria-invalid={Boolean(errors.namaJalan)}
-                  aria-describedby={errors.namaJalan ? 'checkout-address-error' : undefined}
-                  placeholder="Nama jalan, nomor rumah, kecamatan, kota, dan kode pos"
-                />
-                {errors.namaJalan && (
-                  <p id="checkout-address-error" className="checkout-error">
-                    {errors.namaJalan}
-                  </p>
-                )}
-              </div>
+              <BelitungAddressFields
+                idPrefix="checkout"
+                value={form}
+                errors={errors}
+                disabled={busy}
+                onChange={updateField}
+                streetRef={streetRef}
+                villageRef={villageRef}
+                classes={{
+                  field: 'checkout-field',
+                  error: 'checkout-error',
+                  hint: 'checkout-hint',
+                }}
+              />
             </div>
           </section>
 

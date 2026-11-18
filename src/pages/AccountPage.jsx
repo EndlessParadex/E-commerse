@@ -1,6 +1,12 @@
 import useCompany from '../state/useCompany';
 import { useEffect, useRef, useState } from 'react';
-import { validateDelivery } from '../state/deliveryModel';
+import {
+  accountDelivery,
+  shippingForm,
+  usesLegacyAddress,
+  validateShipping,
+} from '../state/deliveryModel';
+import BelitungAddressFields from '../components/account/BelitungAddressFields';
 import { useDelivery } from '../state/useDelivery';
 import AccountMenu from '../components/account/AccountMenu';
 import AccountCenterIcon from '../components/account/AccountCenterIcon';
@@ -29,17 +35,18 @@ const tabs = [
   { id: 'appearance', label: 'Tampilan', icon: 'appearance', description: 'Pengaturan visual' },
 ];
 
+const formFor = (account) => ({
+  ...shippingForm(accountDelivery(account)),
+  storeName: account?.storeName || '',
+});
+
 export default function AccountPage({ section = null }) {
   const { profile: companyProfile } = useCompany();
   const { user, savedLocation, saveLocation, saveAvatar, authLoading, authError } = useDelivery();
   const [photoNotice, setPhotoNotice] = useState('');
   const [photoBusy, setPhotoBusy] = useState(false);
   const [activeTab, setActiveTab] = useState(section || 'profile');
-  const [values, setValues] = useState(() =>
-    user
-      ? { namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' }
-      : { namaToko: '', namaJalan: '', storeName: '' },
-  );
+  const [values, setValues] = useState(() => formFor(user));
   const [edited, setEdited] = useState(false);
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
@@ -51,7 +58,7 @@ export default function AccountPage({ section = null }) {
   useEffect(() => {
     if (user && !edited) {
       // oxlint-disable-next-line react/set-state-in-effect
-      setValues({ namaToko: user.name, namaJalan: user.address, storeName: user.storeName || '' });
+      setValues(formFor(user));
     }
   }, [user, edited]);
 
@@ -96,7 +103,7 @@ export default function AccountPage({ section = null }) {
   const save = async (event) => {
     event.preventDefault();
     if (pending.current || photoBusy) return;
-    const nextErrors = validateDelivery(values);
+    const nextErrors = validateShipping(values);
     const storeName = values.storeName.trim();
     if (storeName.length > 100 || (storeName.length > 0 && storeName.length < 2))
       nextErrors.storeName = 'Nama toko harus kosong atau berisi 2–100 karakter.';
@@ -109,7 +116,9 @@ export default function AccountPage({ section = null }) {
             ? 'account-store-name'
             : nextErrors.namaToko
               ? 'account-name'
-              : 'account-address',
+              : nextErrors.jalan
+                ? 'account-jalan'
+                : 'account-desa',
         )
         ?.focus();
       return;
@@ -599,25 +608,24 @@ export default function AccountPage({ section = null }) {
                       </p>
                     )}
                   </div>
-                  <div className="account-field">
-                    <label htmlFor="account-address">Alamat lengkap</label>
-                    <textarea
-                      id="account-address"
-                      disabled={saving}
-                      rows={4}
-                      maxLength={500}
-                      autoComplete="street-address"
-                      value={values.namaJalan}
-                      onChange={(event) => update('namaJalan', event.target.value)}
-                      aria-invalid={Boolean(errors.namaJalan)}
-                      aria-describedby={errors.namaJalan ? 'account-address-error' : undefined}
-                    />
-                    {errors.namaJalan && (
-                      <p className="account-error" id="account-address-error">
-                        {errors.namaJalan}
-                      </p>
-                    )}
-                  </div>
+                  {usesLegacyAddress(values) && (
+                    <p className="account-notice" role="note">
+                      Alamat lama: {values.legacy}. Isi nama jalan dan pilih kelurahan/desa untuk
+                      memperbaruinya.
+                    </p>
+                  )}
+                  <BelitungAddressFields
+                    idPrefix="account"
+                    value={values}
+                    errors={errors}
+                    disabled={saving}
+                    onChange={update}
+                    classes={{
+                      field: 'account-field',
+                      error: 'account-error',
+                      hint: 'account-profile-help',
+                    }}
+                  />
                   {notice && (
                     <p
                       className={

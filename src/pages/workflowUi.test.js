@@ -177,7 +177,8 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
   const checkout = async () => {
     await click(container.querySelector('a[href="#/checkout"]'));
     await fill('#checkout-name', 'Pembeli Uji');
-    await fill('#checkout-address', 'Alamat pengujian frontend lengkap');
+    await fill('#checkout-jalan', 'Alamat pengujian frontend lengkap');
+    await fill('#checkout-desa', '19.02.01.1001');
     await click(
       [...container.querySelectorAll('.payment-group-options button')].find((element) =>
         element.textContent.endsWith('Virtual Account'),
@@ -466,7 +467,8 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
       await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
     await click(container.querySelector('#account-tab-address'));
     await fill('#account-name', 'Nama baru');
-    await fill('#account-address', 'Alamat baru untuk pengujian');
+    await fill('#account-jalan', 'Alamat baru untuk pengujian');
+    await fill('#account-desa', '19.02.01.1001');
     dom.confirm = () => false;
     await navigate('/cari?q=balado');
     assert.equal(dom.location.hash, '#/akun');
@@ -504,7 +506,11 @@ test('frontend: stok bersama, pembayaran ulang, admin pesanan/resi, kedaluwarsa,
               role: 'admin',
               name: 'Nama baru',
               email: 'qa@example.test',
-              address: 'Alamat baru untuk pengujian',
+              // The server composes the line from the street and the chosen kelurahan.
+              address:
+                'Alamat baru untuk pengujian, Kel. Kota, Kec. Tanjungpandan, Kab. Belitung, Kepulauan Bangka Belitung',
+              street: 'Alamat baru untuk pengujian',
+              villageCode: '19.02.01.1001',
             },
           }),
         ),

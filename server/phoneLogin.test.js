@@ -33,7 +33,8 @@ const signup = (email, phone) => ({
   email,
   phone,
   password,
-  address: 'Jalan Contoh No. 5, Palembang, Sumatera Selatan',
+  street: 'Jalan Contoh No. 5, Palembang, Sumatera Selatan',
+  villageCode: '19.02.01.1001',
 });
 const approved = (app, email) => {
   const row = app.db.prepare('SELECT id FROM users WHERE email=?').get(email);
@@ -48,7 +49,8 @@ test('phone login shares password, approval rules and cookies with normal email 
     const noPhone = await request(app, '/api/auth/register', {
       name: 'No Phone',
       email: 'missing@fixture.test',
-      address: 'Jalan Contoh No. 5, Palembang',
+      street: 'Jalan Contoh No. 5, Palembang',
+      villageCode: '19.02.01.1001',
       password,
     });
     assert.equal(noPhone.status, 422);

@@ -49,7 +49,8 @@ const signup = (phone, email) => ({
   phone,
   ...(email === undefined ? {} : { email }),
   password,
-  address: 'Jalan Contoh No. 5, Tanjung Pandan, Belitung',
+  street: 'Jalan Contoh No. 5, Tanjung Pandan, Belitung',
+  villageCode: '19.02.01.1001',
 });
 const userByPhone = (app, phone) =>
   app.db

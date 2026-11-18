@@ -1,4 +1,4 @@
-import { validateDelivery } from '../../state/deliveryModel.js';
+import { validateArea } from '../../data/belitungRegions.js';
 import { normalizeWhatsApp } from '../../state/whatsappModel.js';
 
 export function validateAuth(values, mode) {
@@ -7,10 +7,7 @@ export function validateAuth(values, mode) {
   if (isRegister && values.name.trim().length < 2)
     errors.name = 'Masukkan nama minimal 2 karakter.';
   if (isRegister && values.name.trim().length > 100) errors.name = 'Nama maksimal 100 karakter.';
-  if (isRegister) {
-    const deliveryErrors = validateDelivery({ namaToko: values.name, namaJalan: values.address });
-    if (deliveryErrors.namaJalan) errors.address = deliveryErrors.namaJalan;
-  }
+  if (isRegister) Object.assign(errors, validateArea({ jalan: values.jalan, desa: values.desa }));
   const loginText = typeof values.email === 'string' ? values.email.trim() : '';
   const isPhoneLogin = !isRegister && Boolean(normalizeWhatsApp(loginText));
   // Registration: email is optional, but must be valid when filled in.

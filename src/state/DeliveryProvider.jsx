@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DeliveryContext } from './useDelivery';
-import { normalizeDelivery, readDelivery, writeDelivery } from './deliveryModel';
+import { accountDelivery, normalizeDelivery, readDelivery, writeDelivery } from './deliveryModel';
+import { composeAddress } from '../data/belitungRegions';
 import { requestLogout } from '../components/account/accountSession';
 import { normalizeWhatsApp } from './whatsappModel';
 
@@ -24,7 +25,7 @@ export default function DeliveryProvider({ children }) {
       sessionGeneration.current += 1;
       // A newly signed-in account brings its own recipient and address, so checkout is
       // filled straight after login instead of only after the page is reloaded.
-      const location = next && normalizeDelivery({ namaToko: next.name, namaJalan: next.address });
+      const location = accountDelivery(next);
       if (location) setSavedLocation(location);
     }
     userRef.current = next;
@@ -47,9 +48,7 @@ export default function DeliveryProvider({ children }) {
       .then((payload) => {
         if (!active || !payload?.user) return;
         setUser(payload.user);
-        setSavedLocation(
-          normalizeDelivery({ namaToko: payload.user.name, namaJalan: payload.user.address }),
-        );
+        setSavedLocation(accountDelivery(payload.user));
       })
       .catch(() => {
         if (active)
@@ -66,8 +65,14 @@ export default function DeliveryProvider({ children }) {
   const saveLocation = async (value) => {
     const actor = userRef.current;
     const generation = sessionGeneration.current;
-    const normalized = normalizeDelivery(value);
-    if (!normalized) return { ok: false, persisted: false };
+    // Saved addresses are always street + desa/kelurahan on Pulau Belitung.
+    const normalized = normalizeDelivery({
+      namaToko: value?.namaToko,
+      namaJalan: composeAddress(value?.jalan, value?.desa),
+      jalan: value?.jalan,
+      desa: value?.desa,
+    });
+    if (!normalized?.desa) return { ok: false, persisted: false };
     let persisted = false;
     if (actor) {
       try {
@@ -82,7 +87,8 @@ export default function DeliveryProvider({ children }) {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             name: normalized.namaToko,
-            address: normalized.namaJalan,
+            street: normalized.jalan,
+            villageCode: normalized.desa,
             storeName,
           }),
         });

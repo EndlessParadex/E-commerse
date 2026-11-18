@@ -4,7 +4,8 @@ import { validateAuth } from './authValidation.js';
 
 const valid = {
   name: 'Pengguna Contoh',
-  address: 'Jalan Contoh nomor 10, Tangerang, Banten 15810',
+  jalan: 'Jalan Contoh nomor 10',
+  desa: '19.02.01.1001',
   email: 'demo@example.com',
   phone: '081234567890',
   password: 'contoh1234',
@@ -58,10 +59,15 @@ test('login tidak menerapkan ulang batas minimum pendaftaran pada akun lama', ()
   assert.ok(validateAuth({ ...valid, password: 'x'.repeat(129) }, 'login').password);
 });
 
-test('alamat wajib pada pendaftaran tetapi tidak wajib pada login', () => {
-  for (const address of ['', '  ', 'Jl. A', 'x'.repeat(501)]) {
-    assert.ok(validateAuth({ ...valid, address }, 'register').address);
-    assert.deepEqual(validateAuth({ ...valid, address }, 'login'), {});
+test('alamat Belitung wajib pada pendaftaran tetapi tidak wajib pada login', () => {
+  for (const jalan of ['', '  ', 'Jl.', 'x'.repeat(201)]) {
+    assert.ok(validateAuth({ ...valid, jalan }, 'register').jalan);
+    assert.deepEqual(validateAuth({ ...valid, jalan }, 'login'), {});
+  }
+  // Only desa/kelurahan codes on Pulau Belitung are accepted.
+  for (const desa of ['', '31.71.01.1001', 'Tanjungpandan']) {
+    assert.ok(validateAuth({ ...valid, desa }, 'register').desa);
+    assert.deepEqual(validateAuth({ ...valid, desa }, 'login'), {});
   }
 });
 

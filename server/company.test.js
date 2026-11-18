@@ -157,7 +157,8 @@ test('admin saja dapat menyimpan; konflik, origin, logo palsu dan field tidak va
       email: 'user@test.id',
       phone: '081234560006',
       password: 'test-password',
-      address: 'Alamat pelanggan lengkap',
+      street: 'Alamat pelanggan lengkap',
+      villageCode: '19.02.01.1001',
       role: 'admin',
     });
     assert.equal(registration.status, 202);
@@ -165,7 +166,8 @@ test('admin saja dapat menyimpan; konflik, origin, logo palsu dan field tidak va
       name: 'Pelanggan',
       email: 'user@test.id',
       password: 'test-password',
-      address: 'Alamat pelanggan lengkap',
+      street: 'Alamat pelanggan lengkap',
+      villageCode: '19.02.01.1001',
       role: 'admin',
     });
     assert.equal(verified.body.user.role, 'user');

@@ -203,6 +203,10 @@ export class IdentityRepository {
         this.db
           .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
           .run(user.id);
+        if (fields.villageCode)
+          this.db
+            .prepare('INSERT INTO user_addresses(user_id,street,village_code) VALUES(?,?,?)')
+            .run(user.id, fields.street, fields.villageCode);
         if (fields.phone && this.phoneDirectory) {
           this.phoneDirectory.claim(user.id, fields.phone);
           this.db

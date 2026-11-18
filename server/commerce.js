@@ -2,6 +2,7 @@ import { CatalogError, photo } from './catalog.js';
 import { createHash } from 'node:crypto';
 import { livePaymentMethods } from '../src/state/paymentMethods.js';
 import { withNotificationEvent } from '../src/state/orderNotifications.js';
+import { composeAddress, validateArea } from '../src/data/belitungRegions.js';
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
 };
@@ -18,6 +19,24 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
   db.exec(
     'CREATE TABLE IF NOT EXISTS checkout_limits(bucket TEXT PRIMARY KEY,attempts INTEGER NOT NULL,expires_at INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS payment_proofs(id TEXT PRIMARY KEY,order_id TEXT NOT NULL REFERENCES orders(id),mime TEXT NOT NULL,bytes BLOB NOT NULL,created_at INTEGER NOT NULL);',
   );
+  // New and edited addresses are on Pulau Belitung (street + desa/kelurahan). An account that has
+  // never chosen a desa may still order with its old free-text line until it edits the address.
+  w.resolveAddress = (user, body) => {
+    if (body?.villageCode !== undefined) {
+      const errors = validateArea({ jalan: body.street, desa: body.villageCode });
+      if (errors.desa || errors.jalan) fail(errors.desa || errors.jalan, 422, 'validation_error');
+      return {
+        address: composeAddress(body.street, body.villageCode),
+        villageCode: body.villageCode,
+      };
+    }
+    if (db.prepare('SELECT 1 FROM user_addresses WHERE user_id=?').get(user.id))
+      fail('Pilih kelurahan atau desa tujuan pengiriman.', 422, 'validation_error');
+    const address = typeof body?.address === 'string' ? body.address.trim() : '';
+    if (address.length < 10 || address.length > 500)
+      fail('Alamat harus berisi 10–500 karakter.', 422, 'validation_error');
+    return { address };
+  };
   w.validateCheckout = (user, body, payment) => {
     if (!identity.contactVerified(user.id))
       fail(

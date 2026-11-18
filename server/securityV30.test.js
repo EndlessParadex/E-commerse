@@ -309,7 +309,8 @@ test('unconfigured email stores an unverified account without pretending deliver
     assert.equal((await request(app, 'GET', '/api/auth/features')).body.emailReady, false);
     const response = await request(app, 'POST', '/api/auth/register', {
       name: 'Fixture New',
-      address: 'Alamat fixture lengkap',
+      street: 'Alamat fixture lengkap',
+      villageCode: '19.02.01.1001',
       email: 'new@fixture.test',
       phone: '081234560010',
       password,
@@ -325,7 +326,12 @@ test('unconfigured email stores an unverified account without pretending deliver
 test('registration is generic; verification requires ownership token and password; reset is single-use and revokes sessions', async () => {
   const { app, sent } = await fixture();
   try {
-    const fields = { name: 'Pendaftar fixture', address: 'Alamat fixture lengkap', password };
+    const fields = {
+      name: 'Pendaftar fixture',
+      street: 'Alamat fixture lengkap',
+      villageCode: '19.02.01.1001',
+      password,
+    };
     const known = await request(app, 'POST', '/api/auth/register', {
       ...fields,
       email: alice.id + '@fixture.test',
@@ -448,7 +454,12 @@ test('independent customers behind a trusted proxy have independent registration
     authLimits: { registrationIp: 1 },
   });
   try {
-    const fields = { name: 'Fixture customer', address: 'Alamat pengujian lengkap', password };
+    const fields = {
+      name: 'Fixture customer',
+      street: 'Alamat pengujian lengkap',
+      villageCode: '19.02.01.1001',
+      password,
+    };
     for (const [ip, email] of [
       ['198.51.100.1', 'one@fixture.test'],
       ['198.51.100.2', 'two@fixture.test'],
@@ -488,7 +499,8 @@ test('registration retains the original password; repeat registration cannot ove
   try {
     const fields = {
       name: 'Recipient',
-      address: 'Alamat penerima lengkap',
+      street: 'Alamat penerima lengkap',
+      villageCode: '19.02.01.1001',
       email: 'recipient@fixture.test',
       phone: '081234560013',
       password: 'registration-original-password',

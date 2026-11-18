@@ -117,7 +117,8 @@ test('account contact phones are private, persist, validate, and never grant aut
       '/api/profile',
       {
         name: 'Nama Terbaru',
-        address: 'Alamat baru yang lengkap',
+        street: 'Alamat baru yang lengkap',
+        villageCode: '19.02.01.1001',
         phone: '081298765432',
       },
       'first',

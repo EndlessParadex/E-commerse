@@ -59,7 +59,8 @@ test('nama toko pelanggan tersimpan terpisah, dapat dikosongkan, tidak mengubah 
       '/api/profile',
       {
         name: 'Nama buyer-one',
-        address: 'Jl. Pelanggan 123, Kota Pengujian',
+        street: 'Jl. Pelanggan 123, Kota Pengujian',
+        villageCode: '19.02.01.1001',
         storeName: '  Toko Endless  ',
       },
       'buyer-one',
@@ -67,7 +68,11 @@ test('nama toko pelanggan tersimpan terpisah, dapat dikosongkan, tidak mengubah 
     assert.equal(changed.status, 200);
     assert.equal(changed.body.user.storeName, 'Toko Endless');
     assert.equal(changed.body.user.name, 'Nama buyer-one');
-    assert.equal(changed.body.user.address, 'Jl. Pelanggan 123, Kota Pengujian');
+    assert.equal(
+      changed.body.user.address,
+      'Jl. Pelanggan 123, Kota Pengujian, Kel. Kota, Kec. Tanjungpandan, Kab. Belitung, Kepulauan Bangka Belitung',
+    );
+    assert.equal(changed.body.user.villageCode, '19.02.01.1001');
     assert.equal(
       (await request('GET', '/api/auth/me', undefined, 'buyer-one')).body.user.storeName,
       'Toko Endless',
@@ -82,7 +87,8 @@ test('nama toko pelanggan tersimpan terpisah, dapat dikosongkan, tidak mengubah 
         '/api/profile',
         {
           name: 'Ganti Nama',
-          address: 'Alamat yang cukup panjang untuk profil',
+          street: 'Alamat yang cukup panjang untuk profil',
+          villageCode: '19.02.01.1001',
           storeName: invalid,
         },
         'buyer-one',
@@ -96,7 +102,11 @@ test('nama toko pelanggan tersimpan terpisah, dapat dikosongkan, tidak mengubah 
     const oldStyle = await request(
       'PUT',
       '/api/profile',
-      { name: 'Nama Penerima Baru', address: 'Jalan Baru lengkap nomor 45' },
+      {
+        name: 'Nama Penerima Baru',
+        street: 'Jalan Baru lengkap nomor 45',
+        villageCode: '19.02.01.1001',
+      },
       'buyer-one',
     );
     assert.equal(oldStyle.status, 200);
@@ -104,7 +114,12 @@ test('nama toko pelanggan tersimpan terpisah, dapat dikosongkan, tidak mengubah 
     const cleared = await request(
       'PUT',
       '/api/profile',
-      { name: 'Nama Penerima Baru', address: 'Jalan Baru lengkap nomor 45', storeName: '' },
+      {
+        name: 'Nama Penerima Baru',
+        street: 'Jalan Baru lengkap nomor 45',
+        villageCode: '19.02.01.1001',
+        storeName: '',
+      },
       'buyer-one',
     );
     assert.equal(cleared.status, 200);

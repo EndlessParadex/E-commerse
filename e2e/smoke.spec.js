@@ -152,7 +152,16 @@ test('akun baru tanpa email: daftar, disetujui Admin, masuk dengan nomor HP, dia
   await expect(form.getByLabel('Email (opsional)')).toBeVisible();
   await form.locator('[name="name"]').fill(name);
   await form.locator('[name="phone"]').fill(phone);
-  await form.locator('[name="address"]').fill('Jl. Uji Coba No. 1, Tanjung Pandan');
+  // Address: typed street, kelurahan/desa from the official Belitung list.
+  await form.locator('[name="jalan"]').fill('Jl. Uji Coba No. 1');
+  await form.getByLabel('Kecamatan').selectOption({ label: 'Manggar' });
+  // Choosing a kecamatan narrows the list to its desa only.
+  await expect(form.locator('[name="desa"] option')).toHaveCount(10);
+  await form.locator('[name="desa"]').selectOption({ label: 'Baru (Desa)' });
+  await expect(form.locator('.address-area-summary')).toContainText(
+    'Jl. Uji Coba No. 1, Desa Baru, Kec. Manggar, Kab. Belitung Timur',
+  );
+  await expectNoHorizontalScroll(page);
   // A typo in the optional email is still caught; an empty one is accepted.
   await form.locator('[name="email"]').fill('bukan-email');
   await form.locator('[name="password"]').fill(newPassword);

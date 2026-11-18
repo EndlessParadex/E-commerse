@@ -58,6 +58,8 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     name: 'Akun Pertama',
     email: 'first@example.com',
     address: 'Alamat pertama',
+    street: 'Alamat pertama',
+    villageCode: '19.02.01.1001',
   };
   let saves = 0;
   const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -167,12 +169,9 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       container.querySelector('input[value="dark"]').closest('label').textContent.includes('Gelap'),
     );
     await openTab('address');
-    const address = container.querySelector('#account-address');
+    const address = container.querySelector('#account-jalan');
     await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(
-        dom.HTMLTextAreaElement.prototype,
-        'value',
-      ).set;
+      const setter = Object.getOwnPropertyDescriptor(dom.HTMLInputElement.prototype, 'value').set;
       setter.call(address, 'Alamat baru belum disimpan');
       address.dispatchEvent(new dom.Event('input', { bubbles: true }));
       await settle();
@@ -197,7 +196,7 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     await openTab('profile');
     await openTab('address');
     assert.equal(
-      container.querySelector('#account-address'),
+      container.querySelector('#account-jalan'),
       address,
       'tab changes keep the same draft form',
     );
@@ -246,9 +245,16 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       'saved choice survives a remount',
     );
     assert.deepEqual(details(), { textSize: 'xlarge', accent: 'violet' });
-    assert.equal(container.querySelector('#account-address').value, 'Alamat pertama');
+    assert.equal(container.querySelector('#account-jalan').value, 'Alamat pertama');
 
-    user = { id: 'second', name: 'Budi', email: 'second@example.com', address: 'Alamat kedua' };
+    user = {
+      id: 'second',
+      name: 'Budi',
+      email: 'second@example.com',
+      address: 'Alamat kedua',
+      street: 'Alamat kedua',
+      villageCode: '19.02.01.1001',
+    };
     await render();
     assert.deepEqual(current(), { mode: 'light', background: 'default' });
     assert.deepEqual(details(), { textSize: 'normal', accent: 'blue' });
@@ -264,6 +270,8 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
       name: 'Akun Pertama',
       email: 'first@example.com',
       address: 'Alamat pertama',
+      street: 'Alamat pertama',
+      villageCode: '19.02.01.1001',
     };
     await render();
     assert.deepEqual(current(), { mode: 'dark', background: 'lavender' });

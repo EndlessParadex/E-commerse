@@ -277,7 +277,8 @@ test('v31: no SMTP accepts an unverified registration using its original passwor
       name: 'Pendaftar Baru',
       email: 'new@fixture.test',
       phone: '081234560005',
-      address: 'Alamat pendaftar lengkap',
+      street: 'Alamat pendaftar lengkap',
+      villageCode: '19.02.01.1001',
       password: pass,
     };
     assert.equal((await request(app, 'POST', '/api/auth/register', fields)).status, 202);
@@ -314,7 +315,8 @@ test('v31: no SMTP accepts an unverified registration using its original passwor
     const readiness = await request(app, 'GET', '/api/admin/readiness', undefined, admin);
     assert.equal(readiness.body.emailReady, false);
     const user = { id: login.body.user.id, role: 'user' };
-    assert.throws(() => app.workflow.create(user, input()), {
+    const belitung = { ...input(), street: 'Jalan Fixture No. 1', villageCode: '19.02.01.1001' };
+    assert.throws(() => app.workflow.create(user, belitung), {
       code: 'email_verification_required',
     });
     assert.ok(cookie);

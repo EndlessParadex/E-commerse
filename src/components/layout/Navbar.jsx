@@ -4,7 +4,7 @@ import './Navbar.css';
 import ShopActions from '../shop/ShopActions';
 import { useDelivery } from '../../state/useDelivery';
 import { useShop } from '../../state/useShop';
-import { normalizeDelivery } from '../../state/deliveryModel';
+import { accountDelivery } from '../../state/deliveryModel';
 import { filterCatalogProducts as filterProducts, searchHref } from '../../data/catalog';
 import CompanyBrand from './CompanyBrand';
 import CatalogMenu from './CatalogMenu';
@@ -97,9 +97,7 @@ const Navbar = () => {
     setShowDeliverPopup(false);
     setShowSearchSuggestions(false);
   };
-  const accountLocation = user
-    ? normalizeDelivery({ namaToko: user.name, namaJalan: user.address })
-    : null;
+  const accountLocation = accountDelivery(user);
   const deliveryTitle = user ? user.storeName || 'Alamat saya' : 'Alamat pengiriman';
   const deliverRef = useRef(null);
   const [compactDelivery, setCompactDelivery] = useState(

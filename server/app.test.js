@@ -89,7 +89,8 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
   try {
     const registration = await request(app, 'POST', '/api/auth/register', {
       name: 'User Test',
-      address: 'Alamat pengguna contoh',
+      street: 'Alamat pengguna contoh',
+      villageCode: '19.02.01.1001',
       email: 'user@test.id',
       phone: '081234560001',
       password,
@@ -121,7 +122,11 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       app,
       'PUT',
       `/api/admin/users/${active.body.user.id}`,
-      { name: 'Nama Disusupi', address: 'Alamat korban yang diubah tanpa izin' },
+      {
+        name: 'Nama Disusupi',
+        street: 'Alamat korban yang diubah tanpa izin',
+        villageCode: '19.02.01.1001',
+      },
       userCookie,
     );
     assert.equal(unauthorizedProfile.status, 403);
@@ -133,7 +138,8 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       (
         await request(app, 'POST', '/api/auth/register', {
           name: 'User Test',
-          address: 'Alamat pengguna contoh',
+          street: 'Alamat pengguna contoh',
+          villageCode: '19.02.01.1001',
           email: 'USER@test.id',
           phone: '081234560001',
           password,
@@ -157,7 +163,11 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       app,
       'PUT',
       `/api/admin/users/${active.body.user.id}`,
-      { name: 'User Diperbarui', address: 'Alamat pelanggan yang diperbarui pemilik' },
+      {
+        name: 'User Diperbarui',
+        street: 'Alamat pelanggan yang diperbarui pemilik',
+        villageCode: '19.02.01.1001',
+      },
       cookie,
     );
     assert.equal(ownerProfile.status, 200);
@@ -166,7 +176,12 @@ test('registrasi, peran admin, cookie dan logout ditegakkan oleh server', async 
       app,
       'PUT',
       '/api/profile',
-      { name: 'User Baru', address: 'Alamat pengguna baru', role: 'admin' },
+      {
+        name: 'User Baru',
+        street: 'Alamat pengguna baru',
+        villageCode: '19.02.01.1001',
+        role: 'admin',
+      },
       userCookie,
     );
     assert.equal(profile.body.user.role, 'user');
@@ -441,7 +456,8 @@ test('asal permintaan, JSON, batas ukuran dan percobaan login diperiksa', async 
       name: 'User Test',
       email: 'test@test.id',
       phone: '081234560002',
-      address: 'Alamat lengkap test',
+      street: 'Alamat lengkap test',
+      villageCode: '19.02.01.1001',
       password,
     };
     assert.equal(
@@ -528,7 +544,8 @@ test('public HTTPS app origin enables Secure session cookies even without NODE_E
       name: 'HTTPS Account',
       email: 'https-account@fixture.test',
       phone: '081234560009',
-      address: 'Alamat HTTPS Test Panjang',
+      street: 'Alamat HTTPS Test Panjang',
+      villageCode: '19.02.01.1001',
       password,
     };
     const response = await request(app, 'POST', '/api/auth/register', value, '', {

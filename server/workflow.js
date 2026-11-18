@@ -571,7 +571,11 @@ export class WorkflowRepository {
     if (!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(requestKey))
       fail('Nomor permintaan tidak valid.');
     const recipient = text(body.recipient, 2, 100, 'Nama penerima');
-    const address = text(body.address, 10, 500, 'Alamat');
+    // Commerce resolves Belitung addresses; without it (tests, preview) the line is free text.
+    const area = this.resolveAddress?.(user, body) ?? {
+      address: text(body.address, 10, 500, 'Alamat'),
+    };
+    const address = area.address;
     const note = text(body.note ?? '', 0, 300, 'Catatan');
     const payment = paymentMethod(body.paymentId);
     const shipping = shippingOptions.find((entry) => entry.id === body.shippingId);
@@ -652,6 +656,7 @@ export class WorkflowRepository {
         createdAt: time,
         recipient,
         address,
+        ...(area.villageCode ? { villageCode: area.villageCode } : {}),
         note,
         items,
         subtotal,

@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { ActionIcon } from '../shop/ShopIcon';
 import { validateAuth } from './authValidation';
 import { useDelivery } from '../../state/useDelivery';
+import BelitungAddressFields from './BelitungAddressFields';
 import './AuthPage.css';
 
 function EyeIcon({ visible }) {
@@ -33,7 +34,8 @@ export default function AuthPage({ mode }) {
   const [values, setValues] = useState({
     name: '',
     phone: '',
-    address: '',
+    jalan: '',
+    desa: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -49,8 +51,8 @@ export default function AuthPage({ mode }) {
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
 
-  const update = (event) => {
-    const { name, value } = event.target;
+  const update = (event) => setField(event.target.name, event.target.value);
+  const setField = (name, value) => {
     setValues((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({
       ...current,
@@ -81,7 +83,7 @@ export default function AuthPage({ mode }) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           name: values.name,
-          address: values.address,
+          ...(isRegister ? { street: values.jalan, villageCode: values.desa } : {}),
           email: values.email.trim(),
           ...(isRegister ? { phone: values.phone } : {}),
           password: values.password,
@@ -89,7 +91,8 @@ export default function AuthPage({ mode }) {
       });
       const payload = await response.json();
       if (!response.ok) {
-        setErrors(payload.errors || {});
+        const { street, villageCode, ...rest } = payload.errors || {};
+        setErrors({ ...rest, jalan: street, desa: villageCode });
         setNotice(
           payload.errors?.form ||
             (response.status === 429
@@ -316,33 +319,19 @@ export default function AuthPage({ mode }) {
                   help: 'Dipakai untuk masuk dan untuk konfirmasi pesanan lewat WhatsApp.',
                 })}
               {isRegister && (
-                <div className="auth-field">
-                  <label htmlFor="auth-address">Alamat lengkap</label>
-                  <div className={`auth-input-wrap${errors.address ? ' has-error' : ''}`}>
-                    <textarea
-                      id="auth-address"
-                      name="address"
-                      value={values.address}
-                      disabled={busy}
-                      onChange={update}
-                      rows={3}
-                      maxLength={500}
-                      autoComplete="street-address"
-                      required
-                      placeholder="Nama jalan, nomor rumah, kelurahan, kecamatan, kota, provinsi, dan kode pos"
-                      aria-invalid={Boolean(errors.address)}
-                      aria-describedby={`address-hint${errors.address ? ' address-error' : ''}`}
-                    />
-                  </div>
-                  <p id="address-hint" className="auth-hint">
-                    Nama lengkap digunakan sebagai nama penerima pada “Kirim ke”.
-                  </p>
-                  {errors.address && (
-                    <p id="address-error" className="auth-error">
-                      {errors.address}
-                    </p>
-                  )}
-                </div>
+                <BelitungAddressFields
+                  idPrefix="auth"
+                  value={values}
+                  errors={errors}
+                  disabled={busy}
+                  onChange={setField}
+                  classes={{
+                    field: 'auth-field',
+                    error: 'auth-error',
+                    hint: 'auth-hint',
+                    wrap: 'auth-input-wrap',
+                  }}
+                />
               )}
               {field(
                 'email',

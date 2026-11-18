@@ -319,7 +319,8 @@ test('self registration appears in the buyer directory without role selection or
       name: 'Pembeli Baru',
       email: 'new@fixture.test',
       phone: '081234560003',
-      address: 'Alamat pembeli baru lengkap',
+      street: 'Alamat pembeli baru lengkap',
+      villageCode: '19.02.01.1001',
       password: 'new-customer-password',
       role: 'admin',
       isOwner: true,
@@ -396,7 +397,7 @@ test('account management requires ownership, protects every owner, hides credent
           app,
           'PUT',
           '/api/admin/users/buyer',
-          { name: 'Nama lain', address: 'Alamat lengkap lain' },
+          { name: 'Nama lain', street: 'Alamat lengkap lain', villageCode: '19.02.01.1001' },
           'operator',
         )
       ).status,
@@ -479,7 +480,7 @@ test('deactivation revokes sessions and recovery links, cannot be bypassed throu
           app,
           'PUT',
           '/api/profile',
-          { name: 'Nama baru', address: 'Alamat lengkap baru' },
+          { name: 'Nama baru', street: 'Alamat lengkap baru', villageCode: '19.02.01.1001' },
           'buyer',
         )
       ).status,
@@ -510,7 +511,8 @@ test('deactivation revokes sessions and recovery links, cannot be bypassed throu
           email: 'buyer@fixture.test',
           phone: '081234560004',
           name: 'Nama penimpa',
-          address: 'Alamat lengkap penimpa',
+          street: 'Alamat lengkap penimpa',
+          villageCode: '19.02.01.1001',
           password: 'new-registration-password',
         })
       ).status,

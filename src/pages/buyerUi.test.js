@@ -146,7 +146,8 @@ test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembat
     assert.ok(container.querySelector('#checkout-name[aria-invalid="true"]'));
     assert.equal(orders.readOrders(dom.sessionStorage).length, 0);
     await fill('#checkout-name', 'Pembeli Uji');
-    await fill('#checkout-address', 'Alamat untuk pengujian frontend');
+    await fill('#checkout-jalan', 'Alamat untuk pengujian frontend');
+    await fill('#checkout-desa', '19.02.01.1001');
     const group = (label) =>
       [...container.querySelectorAll('.payment-group-options button')].find((element) =>
         element.textContent.endsWith(label),
@@ -206,7 +207,8 @@ test('pembeli: filter dan kembali, validasi checkout, pilihan pembayaran, pembat
     await click(button('Beli sekarang'));
     await click(container.querySelector('a[href="#/checkout"]'));
     await fill('#checkout-name', 'Pembeli Uji');
-    await fill('#checkout-address', 'Alamat untuk pengujian frontend');
+    await fill('#checkout-jalan', 'Alamat untuk pengujian frontend');
+    await fill('#checkout-desa', '19.02.01.1001');
     const variant = seed.edits
       .find((item) => item.groupId === 'snack-pedas')
       .variants.find((item) => item.id === 'snack-pedas-23g');

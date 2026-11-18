@@ -388,6 +388,7 @@ export async function createServerOrder(input) {
   const body = {
     recipient: input.recipient,
     address: input.address,
+    ...(input.villageCode ? { street: input.street, villageCode: input.villageCode } : {}),
     shippingId: input.shipping.id,
     paymentId: input.payment.id,
     note: input.note || '',

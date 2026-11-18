@@ -539,7 +539,8 @@ test('failed-login limits persist on the same source; registration throttling do
     );
     const fields = {
       name: 'New User',
-      address: 'Alamat lengkap pengujian',
+      street: 'Alamat lengkap pengujian',
+      villageCode: '19.02.01.1001',
       password: 'strong-password',
     };
     for (const email of ['first@test.id', 'second@test.id'])

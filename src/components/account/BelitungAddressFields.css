@@ -1,0 +1,58 @@
+/* Fields keep their form's own spacing (margins in Daftar/Profil, gaps in Checkout). */
+.address-area {
+  container-type: inline-size;
+  display: grid;
+}
+.address-area-row {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+/* Kecamatan and kelurahan side by side only when the form is wide enough to read both. */
+@container (min-width: 520px) {
+  .address-area-row {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    align-items: start;
+  }
+}
+.checkout-fields .address-area,
+.checkout-fields .address-area-row {
+  gap: 15px;
+}
+.address-area select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-input-border, #cbd5e1);
+  border-radius: 9px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #0f172a);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.address-area select:focus-visible {
+  outline: 3px solid var(--color-focus, #2563eb);
+  outline-offset: 1px;
+}
+.address-area select[aria-invalid='true'] {
+  border-color: var(--color-danger-text, #b91c1c);
+}
+.address-area-summary {
+  margin: 0 0 18px;
+  overflow-wrap: anywhere;
+}
+.checkout-fields .address-area-summary {
+  margin-bottom: 0;
+}
+/* Match the neighbouring inputs on larger screens; phones keep 16px so iOS does not zoom. */
+@media (min-width: 761px) {
+  .account-field .address-area select,
+  .account-field select,
+  .checkout-field select {
+    min-height: 46px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+  }
+}

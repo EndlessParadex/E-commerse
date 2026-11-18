@@ -23,6 +23,7 @@ import { logUnexpectedError } from './errorLogging.js';
 import { PasswordQueue, accountRateKey } from './authSecurity.js';
 import { clientIpResolver } from './clientIp.js';
 import { PhoneRecovery, temporaryPassword } from './phoneRecovery.js';
+import { composeAddress, validateArea } from '../src/data/belitungRegions.js';
 import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
 import { accountIsActive, accountIsApproved } from './accountAccess.js';
@@ -107,6 +108,21 @@ export function readBody(req, limit = 100000) {
     req.on('error', reject);
   });
 }
+/** Street + desa/kelurahan on Pulau Belitung, composed into the stored address line. */
+export function areaFields(body) {
+  const street = typeof body?.street === 'string' ? body.street.trim().replace(/\s+/g, ' ') : '';
+  const villageCode = typeof body?.villageCode === 'string' ? body.villageCode : '';
+  const found = validateArea({ jalan: street, desa: villageCode });
+  const errors = {};
+  if (found.jalan) errors.street = found.jalan;
+  if (found.desa) errors.villageCode = found.desa;
+  return {
+    errors,
+    street,
+    villageCode,
+    address: Object.keys(errors).length ? '' : composeAddress(street, villageCode),
+  };
+}
 function authFields(body, registration) {
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
   // Older login clients still submit "email"; new clients submit "identifier".
@@ -120,7 +136,8 @@ function authFields(body, registration) {
   const email = (
     registration ? (typeof body?.email === 'string' ? body.email.trim() : '') : rawLogin
   ).toLowerCase();
-  const address = typeof body?.address === 'string' ? body.address.trim() : '';
+  const area = registration ? areaFields(body) : { errors: {} };
+  const address = area.address || '';
   const password = typeof body?.password === 'string' ? body.password : '';
   const phone = registration ? normalizeWhatsApp(body?.phone) : normalizeWhatsApp(rawLogin);
   const loginKey = phone || email;
@@ -137,9 +154,18 @@ function authFields(body, registration) {
     errors.phone = 'Isi nomor HP Indonesia yang valid, misalnya 081234567890.';
   if (!password || password.length > 128 || (registration && password.length < 8))
     errors.password = registration ? 'Kata sandi harus 8–128 karakter.' : 'Kata sandi tidak valid.';
-  if (registration && (address.length < 10 || address.length > 500))
-    errors.address = 'Alamat harus berisi 10–500 karakter.';
-  return { errors, name, email, address, phone, password, loginKey };
+  Object.assign(errors, area.errors);
+  return {
+    errors,
+    name,
+    email,
+    address,
+    street: area.street,
+    villageCode: area.villageCode,
+    phone,
+    password,
+    loginKey,
+  };
 }
 export async function hashPassword(password) {
   const salt = randomBytes(16);
@@ -224,6 +250,13 @@ export function createApp({
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     photo TEXT NOT NULL
   );`);
+  // Street + desa/kelurahan behind users.address (which keeps the composed, printable line).
+  // Accounts from before the Belitung address picker have no row here.
+  db.exec(`CREATE TABLE IF NOT EXISTS user_addresses (
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    street TEXT NOT NULL,
+    village_code TEXT NOT NULL
+  );`);
   db.exec(`CREATE TABLE IF NOT EXISTS user_contact_phones (
     user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     phone TEXT NOT NULL
@@ -302,6 +335,12 @@ export function createApp({
     logger,
   });
   messages.delivery = delivery;
+  const savedArea = (id) => {
+    const row = db
+      .prepare('SELECT street,village_code FROM user_addresses WHERE user_id=?')
+      .get(id);
+    return { street: row?.street || '', villageCode: row?.village_code || '' };
+  };
   const publicUser = (user) => ({
     ...userView(user),
     avatar:
@@ -310,6 +349,7 @@ export function createApp({
       db.prepare('SELECT store_name FROM user_store_names WHERE user_id=?').get(user.id)
         ?.store_name || '',
     ...phoneVerification.contact(user.id),
+    ...savedArea(user.id),
     emailVerified: identity.verified(user.id),
     // Ordering needs one confirmed contact: the email or the WhatsApp number.
     orderReady: identity.contactVerified(user.id),
@@ -1189,9 +1229,15 @@ export function createApp({
         const userId = path === '/api/profile' ? actor.id : path.slice('/api/admin/users/'.length);
         const body = await readBody(req);
         const name = typeof body?.name === 'string' ? body.name.trim() : '';
-        const address = typeof body?.address === 'string' ? body.address.trim() : '';
-        if (name.length < 2 || name.length > 100 || address.length < 10 || address.length > 500)
-          return sendError(res, 422, 'validation_error', { form: 'Nama atau alamat tidak valid.' });
+        const area = areaFields(body);
+        if (name.length < 2 || name.length > 100)
+          return sendError(res, 422, 'validation_error', { form: 'Nama penerima tidak valid.' });
+        if (Object.keys(area.errors).length)
+          return sendError(res, 422, 'validation_error', {
+            ...area.errors,
+            form: area.errors.villageCode || area.errors.street,
+          });
+        const address = area.address;
         const canEditStoreName = path === '/api/profile' && Object.hasOwn(body, 'storeName');
         const storeName =
           canEditStoreName && typeof body.storeName === 'string' ? body.storeName.trim() : '';
@@ -1211,6 +1257,9 @@ export function createApp({
         db.exec('BEGIN IMMEDIATE');
         try {
           db.prepare('UPDATE users SET name=?,address=? WHERE id=?').run(name, address, userId);
+          db.prepare(
+            'INSERT INTO user_addresses(user_id,street,village_code) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET street=excluded.street,village_code=excluded.village_code',
+          ).run(userId, area.street, area.villageCode);
           if (canEditStoreName) {
             if (storeName)
               db.prepare(

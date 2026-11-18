@@ -4,6 +4,8 @@ import { Window } from 'happy-dom';
 import { createServer } from 'vite';
 import { act, createElement } from 'react';
 
+import { composeAddress } from '../data/belitungRegions.js';
+
 test('late profile responses cannot restore a logged-out account or replace a newly saved avatar or phone', async () => {
   const dom = new Window({ url: 'http://fixture.test/#/akun' });
   const originalFetch = globalThis.fetch;
@@ -50,8 +52,19 @@ test('late profile responses cannot restore a logged-out account or replace a ne
     ssr: { external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'] },
   });
   let root, current;
-  const changed = { ...initial, name: 'Nama Terbaru', address: 'Alamat terbaru yang lengkap' };
-  const values = { namaToko: changed.name, namaJalan: changed.address, storeName: '' };
+  const changed = {
+    ...initial,
+    name: 'Nama Terbaru',
+    street: 'Jalan Terbaru No. 7',
+    villageCode: '19.02.01.1001',
+    address: composeAddress('Jalan Terbaru No. 7', '19.02.01.1001'),
+  };
+  const values = {
+    namaToko: changed.name,
+    jalan: changed.street,
+    desa: changed.villageCode,
+    storeName: '',
+  };
   const reply = (user) => new Response(JSON.stringify({ user }));
   const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
   try {

@@ -139,7 +139,7 @@ test('profile photo API authenticates, isolates accounts, persists after restart
     const profile = await request(
       'PUT',
       '/api/profile',
-      { name: 'Nama Baru', address: 'Alamat baru yang lengkap' },
+      { name: 'Nama Baru', street: 'Alamat baru yang lengkap', villageCode: '19.02.01.1001' },
       'one',
     );
     assert.equal(profile.body.user.avatar, png);

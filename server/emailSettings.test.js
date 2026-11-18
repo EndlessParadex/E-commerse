@@ -142,7 +142,13 @@ test('only an explicitly granted owner can read or write mail settings; forged o
       app,
       'PUT',
       '/api/profile',
-      { name: 'Admin biasa', address: 'Alamat lengkap fixture', isOwner: true, role: 'owner' },
+      {
+        name: 'Admin biasa',
+        street: 'Alamat lengkap fixture',
+        villageCode: '19.02.01.1001',
+        isOwner: true,
+        role: 'owner',
+      },
       'admin',
     );
     assert.equal(profile.status, 200);
@@ -155,7 +161,8 @@ test('only an explicitly granted owner can read or write mail settings; forged o
       (
         await request(app, 'POST', '/api/auth/register', {
           name: 'Pengunjung baru',
-          address: 'Alamat lengkap pengunjung',
+          street: 'Alamat lengkap pengunjung',
+          villageCode: '19.02.01.1001',
           email: 'new@fixture.test',
           phone: '081234560007',
           password,

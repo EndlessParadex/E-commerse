@@ -17,7 +17,8 @@ const districtLabel = (code) => DISTRICTS.find((district) => district.code === c
 /**
  * Address on Pulau Belitung: the street is typed, the desa/kelurahan is chosen from the official
  * list. Choosing a kecamatan first narrows the list; choosing a desa fills the kecamatan. Names
- * repeat across kecamatan (e.g. Dukong), so every option shows where it is.
+ * repeat across kecamatan (e.g. Dukong), so options sit under their kecamatan heading and the
+ * kecamatan field fills in once one is chosen.
  *
  * `classes` lets each form keep its own field, error and hint styles.
  */
@@ -130,11 +131,11 @@ export default function BelitungAddressFields({
               ? districtsIn().map((entry) => (
                   <optgroup
                     key={entry.code}
-                    label={`Kec. ${entry.name} · ${REGENCIES[entry.code.slice(0, 5)]}`}
+                    label={`Kec. ${entry.name} · ${REGENCIES[entry.code.slice(0, 5)].replace('Kabupaten', 'Kab.')}`}
                   >
                     {villagesIn(entry.code).map((option) => (
                       <option key={option.code} value={option.code}>
-                        {option.name} ({villageKind(option.code)}, Kec. {entry.name})
+                        {option.name} ({villageKind(option.code)})
                       </option>
                     ))}
                   </optgroup>

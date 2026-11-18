@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import { invoiceDiscount } from '../src/components/shop/invoiceDiscount.js';
 import { shortOrderNumber } from '../src/data/orderListPresentation.js';
+import { freeOf } from '../src/data/orderFree.js';
 
 const rupiah = (value) => 'Rp ' + value.toLocaleString('id-ID');
 // Built-in PDF fonts cover Latin-1 only. Replace the rest so emoji cannot corrupt a line.
@@ -69,6 +70,26 @@ function itemRow(doc, item, index) {
     }),
   );
   doc.y = y + height + 8;
+  const free = freeOf(item);
+  if (free) {
+    const label = safe(
+      `Gratis promo: ${item.name}` + (item.promotion?.label ? ` (${item.promotion.label})` : ''),
+    );
+    const freeHeight = doc.heightOfString(label, { width: columns[1].width });
+    if (doc.y + freeHeight > 760) {
+      doc.addPage();
+      tableHeader(doc);
+      doc.font('Helvetica').fontSize(9);
+    }
+    const row = doc.y;
+    ['', label, String(free), rupiah(0), 'GRATIS'].forEach((value, column) =>
+      doc.text(value, columns[column].x, row, {
+        width: columns[column].width,
+        align: columns[column].align || 'left',
+      }),
+    );
+    doc.y = row + freeHeight + 8;
+  }
 }
 
 function summaryRow(doc, label, value, bold = false) {

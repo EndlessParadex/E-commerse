@@ -10,6 +10,8 @@ import { useShop } from '../../state/useShop';
 import { productGallery } from '../../data/productGallery';
 import { workflowUsesServer } from '../../data/adminStore';
 import { groupSoldStockLabel } from '../../data/productStockPresentation';
+import { promotionLabel } from '../../data/promotions';
+import { promotionOf, usePromotions } from '../../data/promotionStore';
 
 export default function ProductCard({
   product,
@@ -29,6 +31,7 @@ export default function ProductCard({
   const variants = productVariants(product.id);
   const productName = purchaseProductName(product, variants);
   const shop = useShop();
+  const promotions = usePromotions();
   const stocks = variants.map((variant) => shop.stockFor(variant));
   const stockFailed = stocks.some((stock) => stock.failed);
   const shared = shop.shared;
@@ -108,6 +111,9 @@ export default function ProductCard({
     : showDiscount && discounted
       ? `Hemat ${Math.floor(((product.oldPrice - product.price) * 100) / product.oldPrice)}%`
       : product.tag;
+  const promotion = (variants.length ? variants : [product])
+    .map((variant) => promotionOf(variant.id, promotions))
+    .find(Boolean);
   const favoriteLabel =
     (isFavorite ? 'Hapus' : 'Tambah') +
     ' ' +
@@ -133,6 +139,9 @@ export default function ProductCard({
         >
           <ProductImage product={preview} loading={imageLoading} />
           {badge && <span className="product-tag">{badge}</span>}
+          {promotion && (
+            <span className="product-promo-tag">PROMO {promotionLabel(promotion)}</span>
+          )}
         </a>
         <button
           type="button"

@@ -9,6 +9,9 @@ import {
   usesLegacyAddress,
   validateShipping,
 } from '../state/deliveryModel';
+import { products } from '../data/products';
+import { loadPromotions, promotionOf, usePromotions } from '../data/promotionStore';
+import { lineFree, promotionLabel } from '../data/promotions';
 import BelitungAddressFields from '../components/account/BelitungAddressFields';
 import { useDelivery } from '../state/useDelivery';
 import { ORDER_NOTE_MAX_LENGTH } from '../state/orderModel';
@@ -113,7 +116,21 @@ export default function CheckoutPage() {
       : paymentId;
   const payment = paymentMethod(effectivePaymentId);
   const total = shop.subtotal + shipping.cost;
-  const itemProducts = shop.cart.map((item) => ({ item, display: cartItemPresentation(item) }));
+  const promotions = usePromotions();
+  const freeFor = (item) => {
+    const current = products.find((product) => product.id === item.id);
+    return lineFree(
+      promotionOf(item.id, promotions),
+      item.quantity,
+      current ? shop.stockFor(current).maximum : item.quantity,
+    );
+  };
+  const itemProducts = shop.cart.map((item) => ({
+    item,
+    display: cartItemPresentation(item),
+    free: freeFor(item),
+  }));
+  const freeUnits = itemProducts.reduce((sum, entry) => sum + entry.free, 0);
 
   if (shop.shared?.enabled && shop.cartMode === 'store')
     return (
@@ -218,7 +235,10 @@ export default function CheckoutPage() {
         return;
       }
       const input = {
-        cart: shop.cart,
+        // Promotions loaded: tell the server what the buyer saw as free.
+        cart: promotions.loaded
+          ? shop.cart.map((item) => ({ ...item, expectedFree: freeFor(item) }))
+          : shop.cart,
         recipient: form.namaToko,
         address: formAddress(form),
         ...(usesLegacyAddress(form) ? {} : { street: form.jalan, villageCode: form.desa }),
@@ -234,6 +254,9 @@ export default function CheckoutPage() {
       window.location.assign('#/pesanan/' + encodeURIComponent(order.id));
     } catch (error) {
       if (!active.current) return;
+      // A promotion or its stock changed: show the current free units before trying again.
+      if (error?.code === 'promotion_changed' || /promo/i.test(error?.message || ''))
+        loadPromotions();
       setSubmitError(
         error instanceof Error &&
           (workflowUsesServer || /Stok|Pesanan belum tersimpan/.test(error.message))
@@ -395,7 +418,7 @@ export default function CheckoutPage() {
               </a>
             </div>
             <ul className="checkout-items">
-              {itemProducts.map(({ item, display }) => (
+              {itemProducts.map(({ item, display, free }) => (
                 <li key={item.id}>
                   <div className="checkout-item-image">
                     <ProductImage product={display.product} variant="thumbnail" />
@@ -410,6 +433,12 @@ export default function CheckoutPage() {
                     <span>
                       {item.quantity} × {rupiah(item.price)}
                     </span>
+                    {free > 0 && (
+                      <span className="checkout-item-free">
+                        🎁 + {free} {display.packaging?.packagingType || 'barang'} gratis ·{' '}
+                        {promotionLabel(promotionOf(item.id, promotions))}
+                      </span>
+                    )}
                   </div>
                   <strong className="checkout-item-subtotal">
                     {rupiah(item.price * item.quantity)}
@@ -521,6 +550,12 @@ export default function CheckoutPage() {
               <span>Subtotal</span>
               <strong>{rupiah(shop.subtotal)}</strong>
             </div>
+            {freeUnits > 0 && (
+              <div className="checkout-free-total">
+                <span>Barang gratis promo</span>
+                <strong>{freeUnits} kemasan</strong>
+              </div>
+            )}
             <div>
               <span>Ongkir</span>
               <strong>

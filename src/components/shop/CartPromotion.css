@@ -1,0 +1,73 @@
+/* "Beli X gratis Y": badge on product cards and pages, free row in carts and orders. */
+.promo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: var(--color-danger-soft, #ffe4e9);
+  color: var(--color-danger-text, #b4123c);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.cart-promotion {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.cart-free-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--color-success-border, #86efac);
+  border-radius: 10px;
+  background: var(--color-success-soft, #f0fdf4);
+}
+.cart-free-icon {
+  font-size: 1.125rem;
+}
+.cart-free-text {
+  display: grid;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+.cart-free-text strong {
+  color: var(--color-success-text, #166534);
+}
+.cart-free-text span {
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}
+.cart-free-price {
+  color: var(--color-success-text, #166534);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+}
+.cart-promotion-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+.cart-promotion-next button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--color-link);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-link);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cart-promotion-next button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}

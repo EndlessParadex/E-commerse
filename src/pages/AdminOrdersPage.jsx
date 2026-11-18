@@ -18,6 +18,8 @@ import { driverNames } from '../data/companyProfile';
 import { shortOrderNumber } from '../data/orderListPresentation';
 import { FOCUS_DRIVERS_KEY } from './AdminCompanyPage';
 import '../styles/workflow.css';
+import OrderFree from '../components/shop/OrderFree';
+import { orderUnits } from '../data/orderFree';
 
 // Store delivery dates are plain YYYY-MM-DD days; show them like other dates ("2 Nov 2026").
 const deliveryDay = (value) => {
@@ -311,8 +313,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
                 </header>
                 <div className="workflow-order-summary">
                   <span>
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan ·{' '}
-                    {order.payment.label}
+                    {orderUnits(order)} kemasan · {order.payment.label}
                   </span>
                   <strong>{rupiah(order.total)}</strong>
                 </div>
@@ -359,6 +360,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
                             <span>
                               {item.quantity} × {rupiah(item.price)}
                             </span>
+                            <OrderFree item={item} />
                           </div>
                         </li>
                       );

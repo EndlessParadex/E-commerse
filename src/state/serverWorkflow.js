@@ -395,7 +395,13 @@ export async function createServerOrder(input) {
     whatsappNumber: input.whatsappNumber || '',
     whatsappOptIn: input.whatsappOptIn === true,
     items: input.cart
-      .map((item) => ({ id: item.id, quantity: item.quantity, expectedPrice: item.price }))
+      .map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+        expectedPrice: item.price,
+        // What the cart showed as free; the server stops if it would give something else.
+        ...(Number.isSafeInteger(item.expectedFree) ? { expectedFree: item.expectedFree } : {}),
+      }))
       .sort((a, b) => a.id.localeCompare(b.id)),
   };
   const digest = await crypto.subtle.digest(

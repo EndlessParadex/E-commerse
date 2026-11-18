@@ -1,5 +1,6 @@
 import { orderItemPresentation } from './orderItemPresentation.js';
 import { MAX_ITEM_QUANTITY } from './orderLimits.js';
+import { freeOf } from './orderFree.js';
 
 export const packingColumns = [
   ['satuan', 'Satuan'],
@@ -31,13 +32,21 @@ export function b2bPackingList(order) {
     const { packagingType, unitsPerPackage } = shown.packaging;
     if (!Object.hasOwn(totals, packagingType))
       throw new Error('Jenis kemasan pesanan belum dikenali.');
-    totals[packagingType] += item.quantity;
+    // Free promotion units are picked and delivered with the paid ones.
+    const free = freeOf(item);
+    const units = item.quantity + free;
+    totals[packagingType] += units;
     types.add(`${shown.brand}\u0000${shown.name}\u0000${shown.sizeLabel}`);
     return {
       name: shown.name,
       size: shown.sizeLabel,
-      contents: packagingType === 'satuan' ? '' : `1 ${packagingType} = ${unitsPerPackage} satuan`,
-      quantities: { [packagingType]: item.quantity },
+      contents: [
+        packagingType === 'satuan' ? '' : `1 ${packagingType} = ${unitsPerPackage} satuan`,
+        free ? `termasuk ${free} gratis promo` : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      quantities: { [packagingType]: units },
     };
   });
   return {

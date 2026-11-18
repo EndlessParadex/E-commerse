@@ -903,3 +903,63 @@ test('Admin reschedule rejects destination collisions, invalid dates, and finali
     app.db.close();
   }
 });
+
+test('B2B: promo beli 2 gratis 1 masuk pemeriksaan (dan tokennya), stok, dan pesanan final', () => {
+  const app = createApp({ dbPath: ':memory:', logger: () => {} });
+  const { first, actors } = seedSharedCart(app);
+  try {
+    const promote = (extra = {}) =>
+      app.promotions.save(
+        {
+          revision: app.promotions.stored().revision,
+          promotions: [
+            {
+              id: 'promo-23g',
+              variantId: 'snack-pedas-23g',
+              buy: 2,
+              free: 1,
+              maxFree: 0,
+              active: true,
+              ...extra,
+            },
+          ],
+        },
+        actors.owner,
+      );
+    promote();
+    add(app, actors.buyer, first, 4);
+    lock(app, actors.owner, first);
+    let review = app.b2bFinalization.review(actors.owner, first.id, date);
+    assert.equal(review.items[0].freeQuantity, 2);
+    assert.equal(review.items[0].promotion.label, 'Beli 2 gratis 1');
+    assert.equal(review.stock[0].required, 6, 'paid 4 + free 2 satuan');
+    assert.equal(review.subtotal, review.items[0].current.price * 4);
+    // The promotion changes after the review: finalizing the old review is refused.
+    const stale = ready(app, actors.owner, first);
+    promote({ maxFree: 1 });
+    assert.throws(
+      () => app.b2bFinalization.change(actors.owner, first.id, stale),
+      /berubah sejak pemeriksaan/,
+    );
+    review = app.b2bFinalization.review(actors.owner, first.id, date);
+    assert.equal(review.items[0].freeQuantity, 1);
+    const key = review.stock[0].key;
+    const before = app.db
+      .prepare('SELECT available FROM inventory WHERE stock_key=?')
+      .get(key).available;
+    const { order } = app.b2bFinalization.change(
+      actors.owner,
+      first.id,
+      ready(app, actors.owner, first),
+    );
+    assert.equal(order.items[0].quantity, 4);
+    assert.equal(order.items[0].freeQuantity, 1);
+    assert.equal(order.items[0].promotion.id, 'promo-23g');
+    assert.equal(
+      app.db.prepare('SELECT available FROM inventory WHERE stock_key=?').get(key).available,
+      before - 5,
+    );
+  } finally {
+    app.db.close();
+  }
+});

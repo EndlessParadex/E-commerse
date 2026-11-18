@@ -7,6 +7,7 @@ import { suppliers } from '../../data/suppliers';
 import { productDescriptions } from '../../data/productDescriptions';
 import { useShop } from '../../state/useShop';
 import UnitPrice from './UnitPrice';
+import ProductPromotion from './ProductPromotion';
 import './ProductDetailPage.css';
 import ProductGallery from './ProductGallery';
 import ProductPurchasePanel from './ProductPurchasePanel';
@@ -245,6 +246,10 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
                 Harga untuk {purchasePackagingLabel(product)}
                 <UnitPrice packaging={product} price={product.price} />
               </p>
+              <ProductPromotion
+                variantId={product.id}
+                unit={purchasePackagingLabel(product).replace(/^1 /, '')}
+              />
               <div className="detail-divider" />
               <div
                 className="detail-selection"

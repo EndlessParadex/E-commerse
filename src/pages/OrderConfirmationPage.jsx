@@ -15,6 +15,8 @@ import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import PaymentDetails from '../components/shop/PaymentDetails';
 import OrderReviews from '../components/shop/OrderReviews';
 import { shortOrderNumber } from '../data/orderListPresentation';
+import OrderFree from '../components/shop/OrderFree';
+import { orderUnits } from '../data/orderFree';
 
 export default function OrderConfirmationPage({ orderId }) {
   const { order, failed, loading, server, detailError } = useOrderDetail(orderId);
@@ -159,8 +161,7 @@ export default function OrderConfirmationPage({ orderId }) {
             </time>
           </div>
           <p className="confirmation-item-count">
-            {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan ·{' '}
-            {order.items.length} pilihan produk/kemasan
+            {orderUnits(order)} kemasan · {order.items.length} pilihan produk/kemasan
           </p>
           <ul className="confirmation-items">
             {order.items.map((item) => {
@@ -180,6 +181,7 @@ export default function OrderConfirmationPage({ orderId }) {
                     <span>
                       {item.quantity} × {rupiah(item.price)}
                     </span>
+                    <OrderFree item={item} />
                   </div>
                   <div className="confirmation-line-total">
                     <span>Subtotal barang</span>

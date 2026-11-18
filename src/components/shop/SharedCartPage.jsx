@@ -22,6 +22,7 @@ import {
   weekdays,
   eventLabel,
 } from '../../data/sharedCartPresentation';
+import CartPromotion from './CartPromotion';
 import { AdminCartAdd, CartRemove, CartQuantity } from './SharedCartItemControls';
 import AdminCartWorkspace from './AdminCartWorkspace';
 
@@ -621,6 +622,26 @@ export default function SharedCartPage({ adminView = false }) {
                                       <strong>{rupiah(item.price)}</strong> /{' '}
                                       {item.packaging?.packagingType || 'kemasan'}
                                     </span>
+                                    <CartPromotion
+                                      variantId={item.id}
+                                      quantity={item.quantity}
+                                      name={[display.name, display.sizeLabel]
+                                        .filter(Boolean)
+                                        .join(' ')}
+                                      unit={item.packaging?.packagingType || 'kemasan'}
+                                      maximum={current ? shop.stockFor(current).maximum : undefined}
+                                      onAdd={
+                                        cart.canEdit && shared.canEdit
+                                          ? (more) =>
+                                              shared.mutate(
+                                                'set',
+                                                item.id,
+                                                item.quantity + more,
+                                                cart.revision,
+                                              )
+                                          : undefined
+                                      }
+                                    />
                                   </div>
                                 </div>
                                 <div className="shared-item-controls">

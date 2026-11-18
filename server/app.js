@@ -24,6 +24,7 @@ import { PasswordQueue, accountRateKey } from './authSecurity.js';
 import { clientIpResolver } from './clientIp.js';
 import { PhoneRecovery, temporaryPassword } from './phoneRecovery.js';
 import { BannerRepository, BANNER_PHOTO_PATH } from './banners.js';
+import { PromotionRepository } from './promotions.js';
 import { composeAddress, validateArea } from '../src/data/belitungRegions.js';
 import { EmailSettingsRepository, isStoreOwner } from './emailSettings.js';
 import { IdentityRepository } from './identity.js';
@@ -325,6 +326,7 @@ export function createApp({
     hashPassword,
   });
   const banners = new BannerRepository(db, { now });
+  const promotions = new PromotionRepository(db, { catalog, now });
   const phoneRecovery = new PhoneRecovery(db, {
     phones: phoneVerification,
     identity,
@@ -369,6 +371,7 @@ export function createApp({
   });
   const workflow = new WorkflowRepository(db, catalog, company, now, reservationPolicy, messages);
   installCommerce(workflow, identity, messages, { codOnly: !legacyCommerceFixture });
+  workflow.promotions = promotions;
   const accounts = new AccountRepository(db, now);
   const b2bStores = new B2BStoreRepository(db, now);
   const deliverySchedules = new DeliveryScheduleRepository(db, b2bStores, now);
@@ -992,6 +995,15 @@ export function createApp({
       }
       if (req.method === 'GET' && path === '/api/company')
         return json(res, 200, company.snapshot());
+      if (req.method === 'GET' && path === '/api/promotions')
+        return json(res, 200, promotions.public(), { 'cache-control': 'no-cache' });
+      if (path === '/api/admin/promotions' && (req.method === 'GET' || req.method === 'PUT')) {
+        const user = currentUser(req);
+        if (!user) return sendError(res, 401, 'unauthorized');
+        if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (req.method === 'GET') return json(res, 200, promotions.admin());
+        return json(res, 200, promotions.save(await readBody(req, 200000), user));
+      }
       if (req.method === 'GET' && path === '/api/home/banners')
         return json(res, 200, banners.public(), { 'cache-control': 'no-cache' });
       if (path === '/api/admin/banners' && (req.method === 'GET' || req.method === 'PUT')) {
@@ -1336,6 +1348,7 @@ export function createApp({
     db,
     catalog,
     banners,
+    promotions,
     company,
     workflow,
     identity,

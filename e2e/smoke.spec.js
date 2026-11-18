@@ -367,6 +367,56 @@ test('admin: banner beranda bisa ditambah dengan gambar, tampil di beranda, dise
   expect(errors).toEqual([]);
 });
 
+test('promo beli 2 gratis 1: Admin membuat promo, pembeli menerima barang gratis tanpa bayar', async ({
+  page,
+}) => {
+  const errors = watchErrors(page);
+  await login(page, ACCOUNTS.admin);
+  await page.goto('/#/admin/promo');
+  await expect(page.getByRole('heading', { name: 'Promo beli gratis', level: 2 })).toBeVisible();
+  await page.getByRole('button', { name: '+ Tambah promo' }).click();
+  await page.getByRole('button', { name: 'Simpan promo' }).click();
+  await expect(page.getByText('Pilih SKU produk.')).toBeVisible();
+  await page.getByLabel('SKU produk *').selectOption('snack-pedas');
+  await expect(page.locator('.admin-promo-example')).toContainText('bayar 2');
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: 'Simpan promo' }).click();
+  await expect(page.getByText('Promo ditambahkan.')).toBeVisible();
+  const row = page.locator('.admin-banner-row', { hasText: 'Beli 2 gratis 1' });
+  await expect(row).toContainText('Berjalan');
+  await page.context().clearCookies();
+
+  await login(page, ACCOUNTS.pribadi);
+  await page.goto('/#/produk/snack-pedas');
+  await expect(page.locator('.detail-promotion')).toContainText('Bayar 2');
+  await page
+    .getByRole('button', { name: /Tambah ke keranjang/ })
+    .first()
+    .click();
+  await page.goto('/#/keranjang');
+  const promo = page.locator('.cart-promotion').first();
+  await expect(promo).toContainText('Beli 2 gratis 1');
+  // The nudge adds the one missing package; the free one appears as its own line.
+  await promo.getByRole('button', { name: '+ Tambah 1' }).click();
+  await expect(promo.locator('.cart-free-line')).toContainText('Gratis · 1');
+  await expectNoHorizontalScroll(page);
+  await page.goto('/#/checkout');
+  await expect(page.locator('main')).toContainText('Barang gratis promo');
+  await page.locator('button.checkout-submit:visible').click();
+  await expect(page.locator('main')).toContainText(/BAM-[0-9A-F]{8}/);
+  await expect(page.locator('.order-item-free').first()).toContainText('+ 1 gratis');
+  await page.context().clearCookies();
+
+  // The report counts the free unit; deleting the promotion leaves the order as it was.
+  await login(page, ACCOUNTS.admin);
+  await page.goto('/#/admin/promo');
+  await expect(row).toContainText(/Sudah diberikan: [1-9]\d* \S+ di [1-9]/);
+  await row.getByRole('button', { name: 'Hapus' }).click();
+  await page.locator('dialog[open]').getByRole('button', { name: 'Hapus promo' }).click();
+  await expect(row).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test('foto profil: geser dan perbesar sebelum disimpan, hasilnya persegi sesuai pilihan', async ({
   page,
 }) => {

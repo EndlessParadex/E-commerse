@@ -71,3 +71,21 @@ test('Box and Renceng share unit inventory without double counting or guessed fa
     );
   }
 });
+test('packing list picks free promotion units together with the paid ones', () => {
+  const order = {
+    b2b: { storeName: 'Toko contoh', sales: [] },
+    items: [
+      {
+        ...item('dus', 120, 4),
+        freeQuantity: 2,
+        promotion: { id: 'p', label: 'Beli 2 gratis 1', buy: 2, free: 1, maxFree: 0 },
+      },
+      item('pack', 6, 3),
+    ],
+  };
+  const printed = b2bPackingList(order);
+  assert.equal(printed.totals.dus, 6, '4 paid + 2 free');
+  assert.equal(printed.totals.pack, 3);
+  assert.deepEqual(printed.rows[0].quantities, { dus: 6 });
+  assert.equal(printed.rows[0].contents, '1 dus = 120 satuan · termasuk 2 gratis promo');
+});

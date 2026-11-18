@@ -9,6 +9,7 @@ import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { withNotificationEvent } from '../src/state/orderNotifications.js';
 import { normalizeReservationPolicy } from './securityPolicy.js';
 import { MAX_ITEM_QUANTITY } from '../src/data/orderLimits.js';
+import { freeQuantity, promotionLabel } from '../src/data/promotions.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -520,6 +521,56 @@ export class WorkflowRepository {
       total,
     };
   }
+  /**
+   * "Beli X gratis Y": adds `freeQuantity` and `promotion` to each paid line that earns free
+   * units, and reserves those units too. Free units are limited by the stock left after the
+   * paid units ("selama stok tersedia"). When the cart said how many it expected free and the
+   * answer differs (the promotion ended, or stock ran out), the order stops so the buyer sees
+   * it before paying. Prices and totals do not change: free units cost Rp 0.
+   */
+  applyPromotions(items, allocations, requested = []) {
+    const running = this.promotions?.running() || [];
+    const keys = new Map(
+      this.catalogItems().map((entry) => [
+        entry.variant.id,
+        { key: entry.key, variant: entry.variant },
+      ]),
+    );
+    for (const item of items) {
+      const promotion = running.find((entry) => entry.variantId === item.id);
+      const found = keys.get(item.id);
+      let free = found ? freeQuantity(promotion, item.quantity) : 0;
+      if (free) {
+        const units = packagingValues(found.variant).unitsPerPackage;
+        const available =
+          this.db.prepare('SELECT available FROM inventory WHERE stock_key=?').get(found.key)
+            ?.available || 0;
+        const left = available - (allocations.get(found.key) || 0);
+        free = Math.max(0, Math.min(free, Math.floor(left / units)));
+        if (free) allocations.set(found.key, (allocations.get(found.key) || 0) + free * units);
+      }
+      const expected = requested.find((row) => row.id === item.id)?.expectedFree;
+      if (expected !== undefined && expected !== free)
+        fail(
+          free > expected
+            ? 'Ada barang gratis promo baru untuk pesanan ini. Periksa keranjang lalu pesan lagi.'
+            : 'Promo atau stok barang gratis berubah. Periksa keranjang lalu pesan lagi.',
+          409,
+          'promotion_changed',
+        );
+      if (free) {
+        item.freeQuantity = free;
+        item.promotion = {
+          id: promotion.id,
+          label: promotionLabel(promotion),
+          buy: promotion.buy,
+          free: promotion.free,
+          maxFree: promotion.maxFree,
+        };
+      }
+    }
+    return items;
+  }
   snapshotItems(requested) {
     const catalog = this.catalogItems();
     const allocations = new Map();
@@ -593,11 +644,18 @@ export class WorkflowRepository {
           row.quantity < 1 ||
           row.quantity > MAX_ITEM_QUANTITY ||
           !Number.isSafeInteger(row.expectedPrice) ||
-          row.expectedPrice <= 0
+          row.expectedPrice <= 0 ||
+          (row.expectedFree !== undefined &&
+            (!Number.isSafeInteger(row.expectedFree) || row.expectedFree < 0))
         )
           fail('SKU, harga, atau jumlah barang tidak valid.');
         seen.add(row.id.toLowerCase());
-        return { id: row.id, quantity: row.quantity, expectedPrice: row.expectedPrice };
+        return {
+          id: row.id,
+          quantity: row.quantity,
+          expectedPrice: row.expectedPrice,
+          ...(row.expectedFree !== undefined ? { expectedFree: row.expectedFree } : {}),
+        };
       })
       .sort((a, b) => a.id.localeCompare(b.id));
     const whatsapp = {
@@ -635,6 +693,7 @@ export class WorkflowRepository {
       this.validateCheckout?.(user, body, payment);
       this.checkCheckoutSource?.(user, ip);
       const { items, allocations, names } = this.snapshotItems(requested);
+      this.applyPromotions(items, allocations, requested);
       this.checkReservations(user, allocations, names);
       const id = 'BAM-' + randomUUID().toUpperCase();
       const time = this.now();

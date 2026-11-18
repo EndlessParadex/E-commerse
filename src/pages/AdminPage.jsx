@@ -7,6 +7,7 @@ import AdminApprovalsPage from './AdminApprovalsPage';
 import AdminB2BStoresPage from './AdminB2BStoresPage';
 import AdminReviewsPage from './AdminReviewsPage';
 import AdminBannersPage from './AdminBannersPage';
+import AdminPromotionsPage from './AdminPromotionsPage';
 import AdminDeliveriesPage from './AdminDeliveriesPage';
 import SharedCartPage from '../components/shop/SharedCartPage';
 import { suppliers } from '../data/suppliers';
@@ -92,6 +93,7 @@ const navigationGroups = [
       { view: 'categories', label: 'Kategori', href: '#/admin/kategori' },
       { view: 'reviews', label: 'Ulasan pembeli', href: '#/admin/ulasan' },
       { view: 'banners', label: 'Banner beranda', href: '#/admin/banner' },
+      { view: 'promotions', label: 'Promo beli gratis', href: '#/admin/promo' },
     ],
   },
   {
@@ -211,7 +213,10 @@ export default function AdminPage({ view = 'overview' }) {
   // Storage notes matter only while data can be lost; database-backed pages go straight to the work.
   const previewStorage = workflowView
     ? !workflowUsesServer
-    : !b2bView && !ownerSettingsView && view !== 'banners' && !catalogUsesServer;
+    : !b2bView &&
+      !ownerSettingsView &&
+      !['banners', 'promotions'].includes(view) &&
+      !catalogUsesServer;
   const areaLabel =
     view === 'overview'
       ? 'Dashboard'
@@ -232,6 +237,7 @@ export default function AdminPage({ view = 'overview' }) {
     categories: 'Susun kategori dan subkategori katalog toko.',
     reviews: 'Baca ulasan pembeli dan sembunyikan ulasan yang tidak pantas.',
     banners: 'Atur banner di bagian atas beranda: teks, tujuan, gambar, dan jadwal tampil.',
+    promotions: 'Atur promo beli X gratis Y per SKU, jadwal, dan laporan barang gratis.',
     deliveries: 'Pesanan per sopir per hari, siap dicetak untuk pengantaran.',
     stock: workflowUsesServer
       ? 'Periksa dan perbarui stok setiap ukuran produk.'
@@ -248,6 +254,7 @@ export default function AdminPage({ view = 'overview' }) {
     categories: 'Kategori & subkategori',
     reviews: 'Ulasan pembeli',
     banners: 'Banner beranda',
+    promotions: 'Promo beli gratis',
     deliveries: 'Daftar antar sopir',
     orders: 'Pesanan toko',
     stock: 'Stok produk',
@@ -506,6 +513,8 @@ export default function AdminPage({ view = 'overview' }) {
           <AdminReviewsPage />
         ) : view === 'banners' ? (
           <AdminBannersPage />
+        ) : view === 'promotions' ? (
+          <AdminPromotionsPage />
         ) : view === 'sharedCarts' ? (
           <SharedCartPage key={delivery?.user?.id} adminView />
         ) : view === 'b2bStores' ? (

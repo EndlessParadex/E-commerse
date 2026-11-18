@@ -16,6 +16,7 @@ import '../components/shop/OrderItem.css';
 import CancelOrderDialog from '../components/shop/CancelOrderDialog';
 import { useShop } from '../state/useShop';
 import { products } from '../data/products';
+import { orderUnits } from '../data/orderFree';
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState('all');
@@ -296,8 +297,7 @@ export default function OrdersPage() {
                 </ul>
                 <div className="orders-card-preview-details">
                   <p className="orders-card-preview-summary">
-                    {order.items.length} SKU ·{' '}
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} kemasan
+                    {order.items.length} SKU · {orderUnits(order)} kemasan
                   </p>
                   <ul className="orders-preview-packaging" aria-label="Ringkasan jenis kemasan">
                     {order.items.slice(0, 3).map((item) => {

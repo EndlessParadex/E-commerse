@@ -6,6 +6,7 @@ import { invoiceDiscount } from './invoiceDiscount';
 import './Commerce.css';
 import { shortOrderNumber } from '../../data/orderListPresentation';
 import { INVOICE_PAPER, printPageCss } from '../../data/printPaper';
+import { freeOf } from '../../data/orderFree';
 
 export default function OrderInvoice({ order }) {
   const company = useCompany();
@@ -129,6 +130,23 @@ export default function OrderInvoice({ order }) {
                   )}
                 </td>
                 <td className="invoice-money">{rupiah(item.price * item.quantity)}</td>
+              </tr>
+            ))}
+            {order.items.filter(freeOf).map((item) => (
+              <tr key={item.id + ':free'} className="invoice-free-row">
+                <td className="invoice-number">🎁</td>
+                <td className="invoice-product">
+                  <strong>{item.name}</strong>
+                  <small>
+                    Gratis promo{item.promotion?.label ? ' · ' + item.promotion.label : ''}
+                  </small>
+                </td>
+                <td className="invoice-quantity">{freeOf(item)}</td>
+                <td className="invoice-money">{rupiah(0)}</td>
+                <td className="invoice-discount">
+                  <span className="invoice-no-discount">—</span>
+                </td>
+                <td className="invoice-money">GRATIS</td>
               </tr>
             ))}
           </tbody>

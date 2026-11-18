@@ -7,6 +7,7 @@ import { orderStatusLabel } from '../state/orderModel';
 import { isCOD } from '../state/frontendWorkflow';
 import { rupiah } from '../components/shop/shopPresentation';
 import './AdminDeliveriesPage.css';
+import { orderUnits } from '../data/orderFree';
 
 const jakartaDay = (time) =>
   new Intl.DateTimeFormat('en-CA', {
@@ -25,7 +26,7 @@ const longDay = (day) =>
   });
 // Cash the driver collects: COD orders that are not marked paid yet.
 const codDue = (order) => (isCOD(order) && order.payment?.status !== 'paid' ? order.total : 0);
-const packages = (order) => order.items.reduce((sum, item) => sum + item.quantity, 0);
+const packages = orderUnits;
 
 /**
  * Daily delivery sheet: orders handed to each BAM driver on one day, with the

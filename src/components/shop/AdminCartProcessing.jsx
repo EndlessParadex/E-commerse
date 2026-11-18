@@ -552,6 +552,13 @@ export default function AdminCartProcessing({ shared }) {
                                 {item.quantity} × {rupiah(item.current.price)} ={' '}
                                 <strong>{rupiah(item.total)}</strong>
                               </p>
+                              {item.freeQuantity > 0 && (
+                                <p className="admin-cart-free">
+                                  🎁 + {item.freeQuantity}{' '}
+                                  {item.current.packaging?.packagingType || 'kemasan'} gratis ·{' '}
+                                  {item.promotion?.label}. Ikut dikemas dan memotong stok.
+                                </p>
+                              )}
                               {item.changed && (
                                 <p className="shop-warning">
                                   Harga atau informasi berubah. Isian sebelumnya: {item.name},{' '}

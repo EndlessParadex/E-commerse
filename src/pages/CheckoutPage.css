@@ -622,3 +622,11 @@
 .checkout-legacy-address {
   color: var(--color-warning-text, #92400e);
 }
+.checkout-item-free {
+  color: var(--color-success-text, #166534);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.checkout-free-total strong {
+  color: var(--color-success-text, #166534);
+}

@@ -8,6 +8,7 @@ import './ShopActions.css';
 import './CartPage.css';
 import { useEffect, useState } from 'react';
 import CancelShoppingDialog from './CancelShoppingDialog';
+import CartPromotion from './CartPromotion';
 import CartReview from './CartReview';
 import PackagingSummary from './PackagingSummary';
 import { initializeCatalog, catalogUsesServer, workflowUsesServer } from '../../data/adminStore';
@@ -215,6 +216,20 @@ export default function ShopPage({ type }) {
                               <strong>{rupiah(item.price)}</strong>
                               <span> / {display.packaging?.packagingType || 'barang'}</span>
                             </p>
+                            <CartPromotion
+                              variantId={item.id}
+                              quantity={item.quantity}
+                              name={display.name}
+                              unit={display.packaging?.packagingType || 'barang'}
+                              maximum={maximum}
+                              onAdd={(more) =>
+                                shop.dispatch({
+                                  type: 'quantity',
+                                  id: item.id,
+                                  quantity: item.quantity + more,
+                                })
+                              }
+                            />
                           </div>
                         </div>
                         <div className="cart-item-footer">

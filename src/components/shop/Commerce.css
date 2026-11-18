@@ -601,3 +601,18 @@
     border-top: 1px dashed #111 !important;
   }
 }
+
+/* Free promotion units: their own row, priced 0, packed with the order. */
+.invoice-free-row td {
+  background: color-mix(in srgb, #16a34a 8%, transparent);
+}
+.invoice-free-row .invoice-product small {
+  display: block;
+  color: #166534;
+  font-weight: 700;
+}
+@media print {
+  .invoice-free-row td {
+    background: none;
+  }
+}

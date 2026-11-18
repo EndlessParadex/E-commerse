@@ -123,3 +123,7 @@
     padding: 16px;
   }
 }
+.admin-cart-free {
+  color: var(--color-success-text, #166534);
+  font-weight: 700;
+}

@@ -4,6 +4,7 @@ import { cartDate } from './sharedCarts.js';
 import { isPastCutoff, isPastDeliveryDate } from './b2bCutoff.js';
 import { paymentMethod } from '../src/state/paymentMethods.js';
 import { withNotificationEvent } from '../src/state/orderNotifications.js';
+import { freeQuantity, promotionLabel } from '../src/data/promotions.js';
 
 const fail = (message, status = 422, code = 'validation_error') => {
   throw new CatalogError(message, status, code);
@@ -241,6 +242,32 @@ export class B2BFinalizationRepository {
         total: current ? current.price * item.quantity : 0,
       };
     });
+    // "Beli X gratis Y": free units on top, limited by the stock left after the paid units.
+    // They are part of the review, so the review token changes if a promotion changes.
+    const running = this.workflow.promotions?.running() || [];
+    for (const item of items) {
+      const promotion = item.current && running.find((entry) => entry.variantId === item.id);
+      let free = freeQuantity(promotion, item.quantity);
+      if (!free) continue;
+      const units = item.current.packaging.unitsPerPackage;
+      const available =
+        this.db.prepare('SELECT available FROM inventory WHERE stock_key=?').get(item.stockKey)
+          ?.available || 0;
+      free = Math.max(
+        0,
+        Math.min(free, Math.floor((available - (allocations.get(item.stockKey) || 0)) / units)),
+      );
+      if (!free) continue;
+      allocations.set(item.stockKey, (allocations.get(item.stockKey) || 0) + free * units);
+      item.freeQuantity = free;
+      item.promotion = {
+        id: promotion.id,
+        label: promotionLabel(promotion),
+        buy: promotion.buy,
+        free: promotion.free,
+        maxFree: promotion.maxFree,
+      };
+    }
     const stock = [...allocations].map(([key, required]) => {
       const row = this.db
         .prepare('SELECT available,revision FROM inventory WHERE stock_key=?')
@@ -429,6 +456,19 @@ export class B2BFinalizationRepository {
             expectedPrice: item.current.price,
           })),
         );
+        // Free units decided in the review (and covered by its token) go into the order.
+        for (const item of items) {
+          const reviewed = review.items.find((entry) => entry.id === item.id);
+          if (!reviewed?.freeQuantity) continue;
+          item.freeQuantity = reviewed.freeQuantity;
+          item.promotion = reviewed.promotion;
+          const key = reviewed.stockKey;
+          allocations.set(
+            key,
+            (allocations.get(key) || 0) +
+              reviewed.freeQuantity * reviewed.current.packaging.unitsPerPackage,
+          );
+        }
         const time = this.carts.now();
         const profile = this.workflow.company.snapshot().profile;
         const finalizedBy = this.db.prepare('SELECT id,name FROM users WHERE id=?').get(user.id);

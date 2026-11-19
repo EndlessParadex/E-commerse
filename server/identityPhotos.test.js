@@ -45,7 +45,7 @@ test('brand photos migrate, survive restart and older clients, reject invalid da
     delete older.masters.brands[0].logo;
     older.masters.brands[0].name += ' Baru';
     saved = app.catalog.save(older);
-    assert.equal(saved.masters.brands[0].logo, png);
+    assert.equal(app.catalog.withInlinePhotos(saved).masters.brands[0].logo, png);
     for (const invalid of invalidPhotos) {
       const draft = structuredClone(saved);
       draft.masters.brands[0].logo = invalid;

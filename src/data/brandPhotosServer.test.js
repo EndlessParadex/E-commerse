@@ -39,7 +39,9 @@ test('brand uploads wait for a capable server and reject a success response that
     assert.equal(brands.find((brand) => brand.id === draft.id).logo || '', '');
     losePhoto = false;
     await initializeCatalog(transport);
-    assert.equal(brands.find((brand) => brand.id === draft.id).logo, png);
+    // Stored photos come back as URLs; compare the bytes behind them.
+    const logo = brands.find((brand) => brand.id === draft.id).logo;
+    assert.equal(api.catalog.withInlinePhotos({ edits: [{ image: logo }] }).edits[0].image, png);
     assert.equal((await saveMaster('brands', { ...draft, logo: '' })).id, draft.id);
     assert.equal(
       api.catalog.snapshot().masters.brands.find((brand) => brand.id === draft.id).logo,

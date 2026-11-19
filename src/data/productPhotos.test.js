@@ -73,7 +73,12 @@ test('server lama tidak menerima beberapa foto; restart dan muat ulang menyimpan
     assert.ok((await saveProduct(draft)).groupId);
     assert.equal(writes, 1);
     await initializeCatalog(transport);
-    assert.deepEqual(productDraft('snack-pedas').gallery, draft.gallery);
+    // Stored photos come back as URLs; compare the bytes behind them.
+    assert.deepEqual(
+      app.catalog.withInlinePhotos({ edits: [{ gallery: productDraft('snack-pedas').gallery }] })
+        .edits[0].gallery,
+      draft.gallery,
+    );
     assert.ok(
       products
         .filter((entry) => entry.groupId === 'snack-pedas')

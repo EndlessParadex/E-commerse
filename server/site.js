@@ -35,7 +35,9 @@ export function publicProduct(catalog, company, id, publicUrl = '') {
     imageData: variantImageData(draft, variant),
   };
 }
-const SERVABLE_IMAGE = /^data:image\/(?:png|jpeg|webp);base64,/;
+// Inline photos (older databases) or photos stored in catalog_photos.
+const SERVABLE_IMAGE =
+  /^(?:data:image\/(?:png|jpeg|webp);base64,|\/api\/catalog\/photos\/[a-f0-9]{64}\.(?:jpg|png|webp)$)/;
 /** Absolute URL of the first product photo the public image route can serve, or ''. */
 export function homePreviewImage(catalog, publicUrl) {
   for (const draft of catalog.snapshot().edits)

@@ -27,10 +27,10 @@ import { masterSnapshot } from '../src/data/catalogMasters.js';
 import { products as demoProducts } from '../src/data/products.js';
 import { MAX_PRODUCT_PHOTOS } from '../src/data/productPhotos.js';
 
-// GET /api/catalog mengirim seluruh katalog (termasuk foto base64) ke setiap pengunjung,
-// dan PUT /api/admin/catalog dibatasi 20 MB. Sisakan ruang agar admin tetap bisa menyimpan.
-export const CATALOG_WARN_BYTES = 5 * 1024 * 1024;
-export const CATALOG_MAX_BYTES = 15 * 1024 * 1024;
+// Foto disimpan terpisah di tabel catalog_photos dan dikirim ke browser sebagai file ber-cache,
+// jadi ukuran katalog tidak lagi bergantung pada jumlah foto. Batas ini hanya menjaga agar satu
+// kali impor (semua foto barunya dibaca ke memori sekaligus) tetap wajar untuk server kecil.
+export const CATALOG_MAX_BYTES = 300 * 1024 * 1024;
 
 const MIME = { '.jpg': 'jpeg', '.jpeg': 'jpeg', '.png': 'png', '.webp': 'webp' };
 const KEMASAN = { satuan: 'satuan', pack: 'pack', dus: 'dus', renceng: 'renceng', box: 'box' };
@@ -313,8 +313,8 @@ export function mergeKatalog(
   const bytes = Buffer.byteLength(JSON.stringify(next));
   if (bytes > CATALOG_MAX_BYTES)
     fail(
-      `Katalog akan menjadi ${(bytes / 1048576).toFixed(1)} MB, melebihi batas aman ${CATALOG_MAX_BYTES / 1048576} MB. ` +
-        'Kecilkan atau kurangi foto (lihat docs/IMPOR-KATALOG.md).',
+      `Impor ini ${(bytes / 1048576).toFixed(1)} MB, melebihi ${CATALOG_MAX_BYTES / 1048576} MB untuk sekali impor. ` +
+        'Bagi foto ke beberapa folder impor, atau kecilkan fotonya (lihat docs/IMPOR-KATALOG.md).',
     );
   // Validasi akhir memakai aturan server yang sama dengan form admin.
   normalizeCatalog(next, current);
@@ -352,12 +352,7 @@ export async function importKatalog({
     if (result.removed.length) log(`Contoh dihapus: ${result.removed.length}`);
     log(`Varian (SKU)  : ${variants}`);
     log(`Foto          : ${photos}`);
-    log(`Ukuran katalog: ${(result.bytes / 1048576).toFixed(1)} MB`);
-    if (result.bytes > CATALOG_WARN_BYTES)
-      log(
-        'PERINGATAN: seluruh katalog (termasuk foto) dikirim ke setiap pengunjung. ' +
-          'Di atas 5 MB halaman toko terasa lambat di jaringan seluler.',
-      );
+    log(`Ukuran impor  : ${(result.bytes / 1048576).toFixed(1)} MB`);
     if (!tulis) {
       log(
         '\nPemeriksaan selesai, TIDAK ada yang disimpan. Jalankan dengan --tulis untuk menyimpan.',

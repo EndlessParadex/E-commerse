@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { gunzipSync } from 'node:zlib';
-import { mkdtempSync, unlinkSync, rmdirSync, existsSync } from 'node:fs';
+import { mkdtempSync, unlinkSync, rmdirSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -355,16 +355,24 @@ test('katalog publik: foto sebagai URL ber-cache, JSON terkompresi dengan ETag, 
     }
     const resaved = await request(app, 'PUT', '/api/admin/catalog', body, cookie);
     assert.equal(resaved.status, 200, JSON.stringify(resaved.body));
-    assert.equal(app.catalog.snapshot().edits[0].image, png);
-    assert.equal(app.catalog.snapshot().edits[0].gallery[0].src, png);
-    assert.equal(app.catalog.snapshot().masters.brands[0].logo, png);
+    // Stored once in catalog_photos; the catalog rows keep only the URL.
+    const photoUrl = body.edits[0].image;
+    assert.equal(app.catalog.snapshot().edits[0].image, photoUrl);
+    assert.equal(app.catalog.snapshot().edits[0].gallery[0].src, photoUrl);
+    assert.equal(app.catalog.snapshot().masters.brands[0].logo, photoUrl);
+    assert.equal(app.db.prepare('SELECT COUNT(*) n FROM catalog_photos').get().n, 1);
+    assert.equal(
+      app.db.prepare("SELECT COUNT(*) n FROM catalog_products WHERE data LIKE '%data:image%'").get()
+        .n,
+      0,
+    );
     // A photo URL that is not part of the catalog is refused without changing anything.
     const unknown = structuredClone(resaved.body);
     unknown.edits[0].image = '/api/catalog/photos/' + 'a'.repeat(64) + '.png';
     const refused = await request(app, 'PUT', '/api/admin/catalog', unknown, cookie);
     assert.equal(refused.status, 409);
     assert.equal(refused.body.error, 'photo_missing');
-    assert.equal(app.catalog.snapshot().edits[0].image, png);
+    assert.equal(app.catalog.snapshot().edits[0].image, photoUrl);
     assert.equal(
       (await rawRequest(app, '/api/catalog/photos/' + 'b'.repeat(64) + '.png')).status,
       404,
@@ -588,5 +596,57 @@ test('pengunjung tanpa akun melihat katalog tanpa harga; harga hanya untuk akun 
     assert.equal(JSON.parse(stale.body).pricesHidden, true);
   } finally {
     app.db.close();
+  }
+});
+
+test('database lama: foto inline dipindah ke catalog_photos tanpa mengubah URL publik atau revisi', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'bam-catalog-move-'));
+  const path = join(directory, 'test.sqlite');
+  let app;
+  try {
+    app = createApp({ dbPath: path });
+    const cookie = await adminCookie(app);
+    const next = app.catalog.snapshot();
+    next.edits[0].image = png;
+    next.edits[0].gallery = [{ src: png, alt: 'Depan' }];
+    next.edits[0].variants[0].gallery = [{ src: png, alt: '' }];
+    next.masters.brands[0].logo = png;
+    next.masters.suppliers[0].logo = png;
+    assert.equal((await request(app, 'PUT', '/api/admin/catalog', next, cookie)).status, 200);
+    const before = (await request(app, 'GET', '/api/catalog', undefined, cookie)).body;
+    // Put the database back in the pre-0025 shape: photos inline, no photo table.
+    const inline = (value) =>
+      JSON.parse(JSON.stringify(value).replaceAll(before.edits[0].image, png));
+    for (const row of app.db.prepare('SELECT id,data FROM catalog_products').all())
+      app.db
+        .prepare('UPDATE catalog_products SET data=? WHERE id=?')
+        .run(JSON.stringify(inline(JSON.parse(row.data))), row.id);
+    for (const row of app.db.prepare('SELECT id,data FROM catalog_suppliers').all())
+      app.db
+        .prepare('UPDATE catalog_suppliers SET data=? WHERE id=?')
+        .run(JSON.stringify(inline(JSON.parse(row.data))), row.id);
+    app.db.prepare("UPDATE catalog_brands SET logo=? WHERE logo!=''").run(png);
+    app.db.exec('DROP TABLE catalog_photos');
+    app.db.close();
+
+    app = createApp({ dbPath: path });
+    const after = (await request(app, 'GET', '/api/catalog', undefined, cookie)).body;
+    assert.deepEqual(after, before, 'same URLs, same revision, same everything');
+    await assertCatalogPhoto(app, after.edits[0].variants[0].gallery[0].src);
+    await assertCatalogPhoto(app, after.masters.suppliers[0].logo);
+    for (const [table, column] of [
+      ['catalog_products', 'data'],
+      ['catalog_suppliers', 'data'],
+      ['catalog_brands', 'logo'],
+    ])
+      assert.equal(
+        app.db.prepare(`SELECT COUNT(*) n FROM ${table} WHERE ${column} LIKE '%data:image%'`).get()
+          .n,
+        0,
+        table,
+      );
+  } finally {
+    app?.db.close();
+    rmSync(directory, { recursive: true, force: true });
   }
 });

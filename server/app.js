@@ -541,14 +541,18 @@ export function createApp({
         const item = site.product(decodeURIComponent(publicProductMatch[1]));
         if (!item) return sendError(res, 404, 'not_found');
         if (publicProductMatch[2]) {
-          const image = item.imageData.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
-          if (!image) return sendError(res, 404, 'not_found');
+          const stored = CATALOG_PHOTO_PATH.exec(item.imageData);
+          const inline = item.imageData.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+          const file = stored
+            ? catalog.photoFile(stored[1])
+            : inline && { contentType: inline[1], bytes: Buffer.from(inline[2], 'base64') };
+          if (!file) return sendError(res, 404, 'not_found');
           res.writeHead(200, {
-            'content-type': image[1],
+            'content-type': file.contentType,
             'cache-control': 'public, max-age=300',
             'x-content-type-options': 'nosniff',
           });
-          res.end(Buffer.from(image[2], 'base64'));
+          res.end(file.bytes);
           return;
         }
         return json(res, 200, { ...item, imageData: Boolean(item.imageData) });

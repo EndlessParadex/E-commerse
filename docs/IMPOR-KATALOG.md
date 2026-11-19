@@ -63,11 +63,10 @@ Opsi tambahan:
 
 Database yang dipakai mengikuti `BAM_DB_PATH` (default `data/bam.sqlite`).
 
-## Batas ukuran foto
+## Ukuran foto
 
-Saat ini seluruh katalog, termasuk foto dalam bentuk base64, dikirim oleh `GET /api/catalog`
-ke setiap pengunjung tanpa cache, dan `PUT /api/admin/catalog` dibatasi 20 MB. Karena itu
-skrip menolak katalog di atas 15 MB dan memberi peringatan di atas 5 MB. Kecilkan foto
-(sekitar 800 px sisi terpanjang sudah cukup untuk kartu dan halaman produk) sebelum impor.
-Perbaikan jangka panjang: sajikan foto sebagai file terpisah dengan cache, bukan di dalam JSON
-katalog.
+Setiap foto maksimal 1 MB (JPG, PNG, atau WebP). Foto disimpan terpisah di database (tabel
+`catalog_photos`) dan dikirim ke browser sebagai file ber-cache, jadi banyaknya foto tidak
+memperlambat halaman toko. Sekitar 800 px sisi terpanjang sudah cukup untuk kartu dan halaman
+produk; foto lebih kecil berarti backup lebih kecil dan halaman lebih cepat di jaringan seluler.
+Satu kali impor dibatasi 300 MB; bila lebih, bagi foto ke beberapa folder impor.

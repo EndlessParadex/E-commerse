@@ -449,6 +449,18 @@ export class WorkflowRepository {
   }
   saveImage(image) {
     if (!image) return '';
+    // A catalog photo: copy it so the order keeps its photo even if the catalog changes.
+    const stored = /^\/api\/catalog\/photos\/([a-f0-9]{64})\.(?:jpg|png|webp)$/.exec(image);
+    if (stored) {
+      const asset = this.db
+        .prepare('SELECT content_type,bytes FROM catalog_photos WHERE hash=?')
+        .get(stored[1]);
+      if (!asset) return '';
+      this.db
+        .prepare('INSERT OR IGNORE INTO order_images VALUES(?,?,?)')
+        .run(stored[1], asset.content_type, asset.bytes);
+      return stored[1];
+    }
     const match = image.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
     if (!match) return '';
     const bytes = Buffer.from(match[2], 'base64');

@@ -27,8 +27,11 @@ test('beberapa foto dan foto khusus SKU tersimpan setelah server dibuka ulang; k
     draft.variants[1].gallery = [{ src: second, alt: 'Foto ukuran lain' }];
     let saved = app.catalog.save(input);
     assert.equal(saved.capabilities.gallery, true);
-    assert.deepEqual(saved.edits[0].gallery, draft.gallery);
-    assert.deepEqual(saved.edits[0].variants[1].gallery, draft.variants[1].gallery);
+    assert.deepEqual(app.catalog.withInlinePhotos(saved).edits[0].gallery, draft.gallery);
+    assert.deepEqual(
+      app.catalog.withInlinePhotos(saved).edits[0].variants[1].gallery,
+      draft.variants[1].gallery,
+    );
     app.db.close();
     app = createApp({ dbPath: path });
     assert.deepEqual(app.catalog.snapshot(), saved);
@@ -39,8 +42,11 @@ test('beberapa foto dan foto khusus SKU tersimpan setelah server dibuka ulang; k
     }
     older.edits[0].variants[0].price = '19000';
     saved = app.catalog.save(older);
-    assert.deepEqual(saved.edits[0].gallery, draft.gallery);
-    assert.deepEqual(saved.edits[0].variants[1].gallery, draft.variants[1].gallery);
+    assert.deepEqual(app.catalog.withInlinePhotos(saved).edits[0].gallery, draft.gallery);
+    assert.deepEqual(
+      app.catalog.withInlinePhotos(saved).edits[0].variants[1].gallery,
+      draft.variants[1].gallery,
+    );
     for (const mutate of [
       (value) => {
         value.edits[0].gallery = Array.from({ length: 9 }, () => ({ src: png }));

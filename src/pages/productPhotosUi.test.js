@@ -169,18 +169,23 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     await click(button('Simpan produk'));
     await waitForSaves(1);
     await store.initializeCatalog(transport);
+    // Stored photos come back as URLs; compare the bytes behind them.
+    const inline = (src) =>
+      api.catalog.withInlinePhotos({
+        edits: [{ image: new URL(src, 'http://localhost').pathname }],
+      }).edits[0].image;
     await renderForm('reloaded');
     assert.equal(container.querySelectorAll('.admin-photo-item').length, 2);
-    assert.equal(container.querySelector('.admin-form-preview img').src, sources[1]);
+    assert.equal(inline(container.querySelector('.admin-form-preview img').src), sources[1]);
     let product = catalog.products.find((entry) => entry.id === 'snack-pedas');
     await act(async () => root.render(createElement(Gallery, { product })));
     assert.equal(container.querySelectorAll('.gallery-thumbnail').length, 2);
     assert.ok(!container.querySelector('.gallery-caption'));
     assert.ok(!container.querySelector('.gallery-thumbnail-label'));
     assert.ok(!/Depan|Belakang|Samping|Detail/.test(container.textContent));
-    assert.equal(container.querySelector('.detail-image img').src, sources[1]);
+    assert.equal(inline(container.querySelector('.detail-image img').src), sources[1]);
     await click(container.querySelectorAll('.gallery-thumbnail')[1]);
-    assert.equal(container.querySelector('.detail-image img').src, sources[0]);
+    assert.equal(inline(container.querySelector('.detail-image img').src), sources[0]);
     assert.equal(
       container.querySelectorAll('.gallery-thumbnail')[1].getAttribute('aria-pressed'),
       'true',
@@ -197,7 +202,7 @@ test('admin menambah beberapa foto, memilih foto utama, menghapus dan menyimpan;
     assert.ok(container.querySelector('.detail-image .bam-product-fallback'));
     await renderForm('remove');
     await click(container.querySelector('button[aria-label="Hapus foto 1"]'));
-    assert.equal(container.querySelector('.admin-form-preview img').src, sources[0]);
+    assert.equal(inline(container.querySelector('.admin-form-preview img').src), sources[0]);
     await click(button('Simpan produk'));
     await waitForSaves(2);
     await store.initializeCatalog(transport);

@@ -7,6 +7,8 @@ import { isCategoryIcon } from '../src/data/categoryIcons.js';
 import { packagingValues, packagingErrors, variantKey } from '../src/data/productPackaging.js';
 import { MAX_PRODUCT_PHOTOS } from '../src/data/productPhotos.js';
 
+export const CATALOG_PHOTO_PATH = /^\/api\/catalog\/photos\/([a-f0-9]{64})\.(jpg|png|webp)$/;
+
 export class CatalogError extends Error {
   constructor(message, status = 422, code = 'validation_error') {
     super(message);
@@ -26,6 +28,8 @@ const text = (value, limit, label, optional = false) => {
 };
 export function photo(value) {
   if (value === '') return '';
+  // A photo already stored by the catalog (checked against catalog_photos when saving).
+  if (typeof value === 'string' && CATALOG_PHOTO_PATH.test(value)) return value;
   if (typeof value !== 'string' || value.length > 1400000) fail('Foto maksimal 1 MB.');
   const match = value.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
   if (!match) fail('Foto harus JPG, PNG, atau WebP.');
@@ -64,12 +68,12 @@ function entries(value, maximum, label, allowEmpty = false) {
   });
   return value;
 }
-// Photos stay stored as data URLs. Public responses replace them with content-addressed
-// URLs so browsers download each photo once and cache it, instead of receiving every photo
-// inside the catalog JSON on each visit.
+// Photos are stored once each in catalog_photos (keyed by the SHA-256 of their bytes). The
+// catalog rows keep only the photo's URL, so reading the catalog never loads photo bytes and
+// browsers download each photo once and cache it. Admin saves send new photos as data URLs;
+// the server stores them and keeps the URL.
 const PHOTO_DATA = /^data:(image\/(png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
 const PHOTO_EXTENSION = { png: 'png', jpeg: 'jpg', webp: 'webp' };
-export const CATALOG_PHOTO_PATH = /^\/api\/catalog\/photos\/([a-f0-9]{64})\.(jpg|png|webp)$/;
 
 // Apply `map` to every photo field of a catalog snapshot or admin save payload.
 export function mapCatalogPhotos(value, map) {
@@ -121,6 +125,8 @@ function photoAsset(dataUrl) {
     path: `/api/catalog/photos/${hash}.${PHOTO_EXTENSION[match[2]]}`,
   };
 }
+/** True when any catalog row still holds an inline data URL (databases from before 0025). */
+const INLINE_PHOTO = '%data:image/%';
 
 export function normalizeCatalog(input, current = null) {
   try {
@@ -387,6 +393,73 @@ export class CatalogRepository {
         throw error;
       }
     }
+    db.exec(`CREATE TABLE IF NOT EXISTS catalog_photos (
+      hash TEXT PRIMARY KEY, content_type TEXT NOT NULL, bytes BLOB NOT NULL, created_at INTEGER NOT NULL)`);
+    this.moveInlinePhotos();
+  }
+  /** Store data-URL photos in catalog_photos; returns `value` with photo URLs only. */
+  storePhotos(value) {
+    const insert = this.db.prepare(
+      'INSERT OR IGNORE INTO catalog_photos(hash,content_type,bytes,created_at) VALUES(?,?,?,?)',
+    );
+    const store = (src) => {
+      const asset = photoAsset(src);
+      if (!asset) return src;
+      insert.run(asset.hash, asset.contentType, asset.bytes, Date.now());
+      return asset.path;
+    };
+    return mapCatalogPhotos(value, store);
+  }
+  /**
+   * Databases from before photos had their own table keep every photo inline in the catalog
+   * rows. Move them once, in place: IDs, order, prices and the catalog revision stay the same,
+   * and the public photo URLs do not change (they were already derived from the same hash).
+   */
+  moveInlinePhotos() {
+    const db = this.db;
+    const inline = db
+      .prepare(
+        `SELECT 1 FROM catalog_products WHERE data LIKE ?1 UNION ALL
+         SELECT 1 FROM catalog_suppliers WHERE data LIKE ?1 UNION ALL
+         SELECT 1 FROM catalog_brands WHERE logo LIKE ?1 LIMIT 1`,
+      )
+      .get(INLINE_PHOTO);
+    if (!inline) return;
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      const store = (src) => this.storePhotos({ edits: [{ image: src }] }).edits[0].image;
+      const gallery = (items) =>
+        Array.isArray(items)
+          ? items.map((entry) => (entry?.src ? { ...entry, src: store(entry.src) } : entry))
+          : items;
+      for (const row of db.prepare('SELECT id,data FROM catalog_products').all()) {
+        const data = JSON.parse(row.data);
+        if (data.image) data.image = store(data.image);
+        data.gallery = gallery(data.gallery);
+        if (data.variantPhotos)
+          data.variantPhotos = Object.fromEntries(
+            Object.entries(data.variantPhotos).map(([key, items]) => [key, gallery(items)]),
+          );
+        db.prepare('UPDATE catalog_products SET data=? WHERE id=?').run(
+          JSON.stringify(data),
+          row.id,
+        );
+      }
+      for (const row of db.prepare('SELECT id,data FROM catalog_suppliers').all()) {
+        const data = JSON.parse(row.data);
+        if (data.logo) data.logo = store(data.logo);
+        db.prepare('UPDATE catalog_suppliers SET data=? WHERE id=?').run(
+          JSON.stringify(data),
+          row.id,
+        );
+      }
+      for (const row of db.prepare("SELECT id,logo FROM catalog_brands WHERE logo!=''").all())
+        db.prepare('UPDATE catalog_brands SET logo=? WHERE id=?').run(store(row.logo), row.id);
+      db.exec('COMMIT');
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
   }
   snapshot() {
     const db = this.db;
@@ -541,32 +614,25 @@ export class CatalogRepository {
       });
     });
   }
-  // Index of the current catalog photos, rebuilt only when the catalog revision changes.
-  photoIndex(snapshot = null) {
-    const revision = snapshot
-      ? snapshot.revision
-      : this.db.prepare('SELECT revision FROM catalog_meta WHERE id=1').get().revision;
-    if (this.photoCache?.revision === revision) return this.photoCache;
-    const byHash = new Map();
-    const byData = new Map();
-    mapCatalogPhotos(snapshot || this.snapshot(), (value) => {
-      const asset = byData.get(value) || photoAsset(value);
-      if (asset) {
-        byData.set(value, asset);
-        byHash.set(asset.hash, asset);
-      }
-      return value;
-    });
-    this.photoCache = { revision, byHash, byData };
-    return this.photoCache;
-  }
-  // Catalog for browsers: photos become cacheable URLs instead of inline base64.
+  /** The catalog for browsers. Photos are already URLs; kept as a seam for the routes. */
   publicSnapshot(snapshot = this.snapshot()) {
-    const { byData } = this.photoIndex(snapshot);
-    return mapCatalogPhotos(snapshot, (value) => byData.get(value)?.path ?? value);
+    return snapshot;
+  }
+  /** `value` with stored photo URLs replaced by data URLs (exports and tests). */
+  withInlinePhotos(value) {
+    return mapCatalogPhotos(value, (src) => {
+      const match = CATALOG_PHOTO_PATH.exec(src);
+      const file = match && this.photoFile(match[1]);
+      return file ? `data:${file.contentType};base64,${file.bytes.toString('base64')}` : src;
+    });
   }
   photoFile(hash) {
-    return this.photoIndex().byHash.get(hash) || null;
+    const row = this.db
+      .prepare('SELECT hash,content_type,bytes FROM catalog_photos WHERE hash=?')
+      .get(hash);
+    return row
+      ? { hash: row.hash, contentType: row.content_type, bytes: Buffer.from(row.bytes) }
+      : null;
   }
   save(input) {
     const db = this.db;
@@ -579,21 +645,19 @@ export class CatalogRepository {
           409,
           'catalog_conflict',
         );
-      // The admin form sends back the photo URLs it received; map them to the stored data.
-      const { byHash } = this.photoIndex(current);
-      const resolved = mapCatalogPhotos(input, (value) => {
+      // The admin form sends back the photo URLs it received; each must be a stored photo.
+      const known = this.db.prepare('SELECT 1 FROM catalog_photos WHERE hash=?');
+      mapCatalogPhotos(input, (value) => {
         const match = CATALOG_PHOTO_PATH.exec(value);
-        if (!match) return value;
-        const asset = byHash.get(match[1]);
-        if (!asset)
+        if (match && !known.get(match[1]))
           throw new CatalogError(
             'Foto lama tidak ditemukan di katalog. Muat ulang halaman lalu simpan lagi.',
             409,
             'photo_missing',
           );
-        return asset.dataUrl;
+        return value;
       });
-      const next = normalizeCatalog(resolved, current);
+      const next = this.storePhotos(normalizeCatalog(input, current));
       this.write(next);
       this.afterWrite?.();
       db.prepare('UPDATE catalog_meta SET revision=revision+1 WHERE id=1').run();

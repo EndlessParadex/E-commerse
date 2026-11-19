@@ -717,3 +717,62 @@ test('deactivation persists across server restart and another connection sees fr
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('kelola akun: pemilik melihat foto profil dan alamat; foto hanya untuk pemilik', async () => {
+  const { app } = makeApp();
+  await seed(app);
+  const png =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9i0AAAAASUVORK5CYII=';
+  app.db.prepare('INSERT INTO user_profile_photos(user_id,photo) VALUES(?,?)').run('buyer', png);
+  app.db
+    .prepare('UPDATE users SET address=? WHERE id=?')
+    .run(
+      'Jl. Sriwijaya No. 5, Kel. Tanjung Pendam, Kec. Tanjung Pandan, Kab. Belitung, Kepulauan Bangka Belitung',
+      'buyer',
+    );
+  app.db
+    .prepare('INSERT INTO user_addresses(user_id,street,village_code) VALUES(?,?,?)')
+    .run('buyer', 'Jl. Sriwijaya No. 5', '19.02.01.1001');
+  const raw = async (path, actor) => {
+    const req = Readable.from([]);
+    Object.assign(req, {
+      method: 'GET',
+      url: path,
+      socket: { remoteAddress: '192.0.2.1' },
+      headers: { host: 'fixture.test', cookie: actor ? 'bam_session=' + tokens[actor] : '' },
+    });
+    let response;
+    await app.handler(req, {
+      writeHead(status, headers) {
+        response = { status, headers };
+      },
+      end(value) {
+        response.bytes = Buffer.from(value || '');
+      },
+    });
+    return response;
+  };
+  try {
+    const listed = (await request(app, 'GET', '/api/admin/accounts', undefined, 'owner')).body;
+    const buyer = listed.users.find((user) => user.id === 'buyer');
+    assert.match(buyer.address, /Tanjung Pendam/);
+    assert.equal(buyer.addressComplete, true);
+    assert.match(buyer.avatarUrl, /^\/api\/admin\/accounts\/buyer\/photo\?v=/);
+    assert.ok(!JSON.stringify(listed).includes('data:image'), 'photos are not inlined in the list');
+    const operator = listed.users.find((user) => user.id === 'operator');
+    assert.equal(operator.avatarUrl, '');
+    assert.equal(operator.addressComplete, false, 'old free-text address');
+
+    const photo = await raw(buyer.avatarUrl, 'owner');
+    assert.equal(photo.status, 200);
+    assert.equal(photo.headers['content-type'], 'image/png');
+    assert.equal(photo.bytes.toString('base64'), png.split(',')[1]);
+    // Not for admins who are not the owner, buyers, or visitors.
+    assert.equal((await raw(buyer.avatarUrl, 'operator')).status, 403);
+    assert.equal((await raw(buyer.avatarUrl, 'buyer')).status, 403);
+    assert.equal((await raw(buyer.avatarUrl)).status, 401);
+    assert.equal((await raw('/api/admin/accounts/operator/photo', 'owner')).status, 404);
+  } finally {
+    app.db.close();
+  }
+});

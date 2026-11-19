@@ -351,6 +351,27 @@ export function createApp({
       .get(id);
     return { street: row?.street || '', villageCode: row?.village_code || '' };
   };
+  /**
+   * Profile details for the owner's account list: the photo (as a versioned URL, so the list
+   * stays small) and whether the address uses the Belitung kelurahan picker.
+   */
+  const accountProfile = (account) => {
+    const photo = db
+      .prepare(
+        "SELECT length(photo) || '-' || substr(photo,-16) AS version FROM user_profile_photos WHERE user_id=?",
+      )
+      .get(account.id);
+    const area = db
+      .prepare('SELECT village_code FROM user_addresses WHERE user_id=?')
+      .get(account.id);
+    return {
+      ...account,
+      avatarUrl: photo
+        ? `/api/admin/accounts/${encodeURIComponent(account.id)}/photo?v=${encodeURIComponent(photo.version)}`
+        : '',
+      addressComplete: Boolean(area?.village_code),
+    };
+  };
   const publicUser = (user) => ({
     ...userView(user),
     avatar:
@@ -784,6 +805,26 @@ export function createApp({
         }
         return sendError(res, 405, 'method_not_allowed');
       }
+      // Profile photo of an account, for the owner's account list.
+      const accountPhoto = path.match(/^\/api\/admin\/accounts\/([^/]+)\/photo$/);
+      if (accountPhoto && req.method === 'GET') {
+        const owner = currentUser(req);
+        if (!owner) return sendError(res, 401, 'unauthorized');
+        if (!isStoreOwner(db, owner)) return sendError(res, 403, 'forbidden');
+        const photo = db
+          .prepare('SELECT photo FROM user_profile_photos WHERE user_id=?')
+          .get(decodeURIComponent(accountPhoto[1]))?.photo;
+        const image = photo?.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+        if (!image) return sendError(res, 404, 'not_found');
+        res.writeHead(200, {
+          'content-type': image[1],
+          // The URL carries a version, so a changed photo gets a new URL.
+          'cache-control': 'private, max-age=86400',
+          'x-content-type-options': 'nosniff',
+        });
+        res.end(Buffer.from(image[2], 'base64'));
+        return;
+      }
       const accountMatch = path.match(/^\/api\/admin\/accounts(?:\/([^/]+))?$/);
       if (accountMatch) {
         const owner = currentUser(req);
@@ -792,12 +833,10 @@ export function createApp({
           return sendError(res, 403, 'forbidden', {
             form: 'Kelola akun hanya tersedia untuk pemilik toko.',
           });
-        if (req.method === 'GET' && !accountMatch[1])
-          return json(
-            res,
-            200,
-            accounts.list(owner, new URL(req.url, 'http://bam.local').searchParams),
-          );
+        if (req.method === 'GET' && !accountMatch[1]) {
+          const listed = accounts.list(owner, new URL(req.url, 'http://bam.local').searchParams);
+          return json(res, 200, { ...listed, users: listed.users.map(accountProfile) });
+        }
         if (req.method === 'POST' && accountMatch[1]) {
           const body = await readBody(req, 12000);
           await confirmOwnerPassword(owner, body?.currentPassword, clientIp(req));

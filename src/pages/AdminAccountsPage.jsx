@@ -341,7 +341,10 @@ export default function AdminAccountsPage() {
                   {data.users.map((account) => (
                     <tr key={account.id} data-account-id={account.id}>
                       <td data-label="Akun">
-                        <strong>{account.name}</strong>
+                        <div className="accounts-identity">
+                          <AccountPhoto account={account} />
+                          <strong>{account.name}</strong>
+                        </div>
                         <span className="accounts-secondary">{account.email || 'Tanpa email'}</span>
                         {account.phone && (
                           <span className="accounts-secondary">{account.phone}</span>
@@ -356,6 +359,7 @@ export default function AdminAccountsPage() {
                             Buka WhatsApp ↗
                           </a>
                         )}
+                        <AccountAddress account={account} />
                         {account.linkedStoreCount > 0 && (
                           <div className="accounts-store-links">
                             <strong>{account.linkedStoreCount} toko terhubung</strong>
@@ -620,5 +624,51 @@ export default function AdminAccountsPage() {
         </ConfirmDialog>
       )}
     </section>
+  );
+}
+
+/** The account's profile photo (opens full size), or its initial. */
+function AccountPhoto({ account }) {
+  const initial = (account.name || '?').trim().charAt(0).toUpperCase();
+  if (!account.avatarUrl)
+    return (
+      <span className="accounts-avatar is-empty" aria-hidden="true">
+        {initial}
+      </span>
+    );
+  return (
+    <a
+      className="accounts-avatar"
+      href={account.avatarUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={'Lihat foto profil ' + account.name}
+    >
+      <img src={account.avatarUrl} alt="" loading="lazy" width="48" height="48" />
+    </a>
+  );
+}
+
+/** Where the account delivers to, with a map link to find it. */
+function AccountAddress({ account }) {
+  const address = (account.address || '').trim();
+  if (!address) return <span className="accounts-address is-missing">Alamat belum diisi</span>;
+  return (
+    <div className="accounts-address">
+      <span>
+        <span aria-hidden="true">📍 </span>
+        {address}
+      </span>
+      {!account.addressComplete && (
+        <span className="accounts-address-note">Alamat lama · kelurahan belum dipilih</span>
+      )}
+      <a
+        href={'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address)}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Buka di Maps ↗
+      </a>
+    </div>
   );
 }

@@ -406,7 +406,7 @@ export default function AdminMasterPage({ type }) {
         <p className="admin-results" role="status">
           Menampilkan {filtered.length} dari {entries.length} {labels[type]}
         </p>
-        <div className="admin-master-list">
+        <div className={'admin-master-list' + (type === 'brands' ? ' is-brands' : '')}>
           {filtered.map((entry) => {
             const items = products.filter((product) =>
               type === 'suppliers'
@@ -415,6 +415,61 @@ export default function AdminMasterPage({ type }) {
                   ? product.brandId === entry.id
                   : product.categoryId === entry.id,
             );
+            const blocked = masterDeleteReason(type, entry.id);
+            // Brands are recognised by their logo: small tiles with a large logo.
+            if (type === 'brands')
+              return (
+                <article className="admin-brand-tile" key={entry.id}>
+                  <div className="admin-brand-tile-logo" aria-hidden="true">
+                    {entry.logo ? (
+                      <img className="admin-brand-avatar" src={entry.logo} alt="" loading="lazy" />
+                    ) : (
+                      <span>{entry.name.slice(0, 2).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="admin-brand-tile-body">
+                    <h3>{entry.name}</h3>
+                    <p>
+                      {new Set(items.map((product) => product.groupId)).size} produk ·{' '}
+                      {items.length} SKU
+                    </p>
+                    <p className="admin-brand-tile-supplier">
+                      {entry.supplierIds
+                        .map((id) => suppliers.find((supplier) => supplier.id === id)?.name)
+                        .filter(Boolean)
+                        .join(' · ') || 'Belum ada PT pemasok'}
+                    </p>
+                  </div>
+                  <div className="admin-brand-tile-actions">
+                    <button
+                      type="button"
+                      className="admin-secondary"
+                      disabled={Boolean(deleting)}
+                      onClick={() => open(entry)}
+                      aria-label={`Edit ${entry.name}`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-danger"
+                      disabled={Boolean(deleting) || Boolean(blocked)}
+                      onClick={() => remove(entry)}
+                      title={blocked ? 'Belum dapat dihapus: ' + blocked : undefined}
+                      aria-describedby={blocked ? `delete-reason-${entry.id}` : undefined}
+                      aria-label={`Hapus ${labels[type]} ${entry.name}`}
+                    >
+                      {deleting === entry.id ? 'Menghapus…' : 'Hapus'}
+                    </button>
+                  </div>
+                  {blocked && (
+                    <p className="admin-brand-tile-note" id={`delete-reason-${entry.id}`}>
+                      <span aria-hidden="true">🔒 </span>Dipakai produk
+                      <span className="visually-hidden">, belum dapat dihapus: {blocked}</span>
+                    </p>
+                  )}
+                </article>
+              );
             return (
               <article
                 className="admin-master-card"

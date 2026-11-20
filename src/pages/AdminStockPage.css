@@ -931,3 +931,15 @@
     padding: 11px 12px;
   }
 }
+
+/* Status mode: available / empty per size, no counts. */
+.workflow-stock-status-skus {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+.workflow-stock-status-count {
+  margin: 0;
+  color: var(--color-text-muted);
+}

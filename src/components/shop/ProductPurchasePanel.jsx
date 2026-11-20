@@ -142,7 +142,8 @@ export default function ProductPurchasePanel({
             role="status"
             aria-live="polite"
           >
-            <span>Sisa stok</span>
+            {/* Without a count (stock not shown or not counted) there is nothing "left". */}
+            <span>{stock.available === null ? 'Ketersediaan' : 'Sisa stok'}</span>
             <strong className="detail-stock-remaining">{purchaseStockLabel(product, stock)}</strong>
           </div>
         )}

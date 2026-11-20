@@ -1060,7 +1060,12 @@ export function createApp({
         const user = currentUser(req);
         if (!user) return sendError(res, 401, 'unauthorized');
         if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
-        return json(res, 200, company.save(await readBody(req, 1500000)));
+        const before = company.snapshot().profile.stockMode;
+        const saved = company.save(await readBody(req, 1500000));
+        // Counting on or off resets the stock numbers to match (see applyStockMode).
+        if (saved.profile.stockMode !== before)
+          workflow.applyStockMode(saved.profile.stockMode, user);
+        return json(res, 200, saved);
       }
       if (req.method === 'GET' && path === '/api/catalog') {
         // Ratings come only from buyer reviews, never from catalog sample data.

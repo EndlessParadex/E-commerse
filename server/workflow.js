@@ -22,6 +22,12 @@ const text = (value, min, max, label) => {
   return value.trim();
 };
 const copy = (value) => JSON.parse(JSON.stringify(value));
+// "Status" stock mode (Pengaturan perusahaan): the store does not count stock. Each product size
+// is either available, stored as this many units so orders never run it down, or marked empty
+// (0). Reservations and history keep working unchanged underneath.
+export const STATUS_STOCK_UNITS = 1_000_000_000;
+export const stockModeOf = (profile) => (profile?.stockMode === 'status' ? 'status' : 'count');
+
 export class WorkflowRepository {
   constructor(db, catalog, company, now = () => Date.now(), policy = {}, messages = null) {
     this.db = db;
@@ -69,7 +75,35 @@ export class WorkflowRepository {
         draft.variants.map((variant) => ({ draft, variant, key: keyOf(draft.groupId, variant) })),
       );
   }
+  stockMode() {
+    return stockModeOf(this.company?.snapshot().profile);
+  }
+  /**
+   * Switch between counted stock and "available / empty" only. Switching to status makes every
+   * size available (the store said it does not count stock); switching back to counting starts
+   * every size at 0 so real counts are entered before anything is sold.
+   */
+  applyStockMode(mode, actor) {
+    this.transaction(() => {
+      this.ensureInventory();
+      const rows = this.db.prepare('SELECT stock_key,available FROM inventory').all();
+      for (const row of rows) {
+        const next =
+          mode === 'status'
+            ? STATUS_STOCK_UNITS
+            : row.available >= STATUS_STOCK_UNITS / 2
+              ? 0
+              : row.available;
+        if (next === row.available) continue;
+        this.db
+          .prepare('UPDATE inventory SET available=?,revision=revision+1 WHERE stock_key=?')
+          .run(next, row.stock_key);
+        this.event(row.stock_key, next - row.available, 'stock_mode_' + mode, actor?.id || null);
+      }
+    });
+  }
   ensureInventory(initial = 0) {
+    if (this.stockMode() === 'status') initial = STATUS_STOCK_UNITS;
     const insert = this.db.prepare(
       'INSERT OR IGNORE INTO inventory(stock_key,available) VALUES(?,?)',
     );
@@ -93,11 +127,19 @@ export class WorkflowRepository {
   }
   release(order, action, actor) {
     if (order.inventoryReleased || order.inventoryReserved === false) return;
+    const status = this.stockMode() === 'status';
     for (const row of order.inventory) {
+      // In status mode a size the store marked empty stays empty when an order is cancelled.
+      const back =
+        status &&
+        this.db.prepare('SELECT available FROM inventory WHERE stock_key=?').get(row.key)
+          ?.available === 0
+          ? 0
+          : row.units;
       this.db
         .prepare('UPDATE inventory SET available=available+?,revision=revision+1 WHERE stock_key=?')
-        .run(row.units, row.key);
-      this.event(row.key, row.units, action, actor, order.id);
+        .run(back, row.key);
+      this.event(row.key, back, action, actor, order.id);
       if (!this.metricsRebuilding) this.adjustStats(row.key, -row.units, 0);
     }
     order.inventoryReleased = true;
@@ -217,6 +259,7 @@ export class WorkflowRepository {
           .map((row) => [row.stock_key, row]),
       );
       const profile = this.company.snapshot().profile;
+      const status = stockModeOf(profile) === 'status';
       for (const entry of this.catalogItems()) {
         const row = rows.get(entry.key);
         if (!row) throw new Error('Missing inventory row');
@@ -225,12 +268,12 @@ export class WorkflowRepository {
         result[entry.key] = publicRead
           ? {
               revision: row.revision,
-              ...(profile.showExactStock === false
+              ...(status || profile.showExactStock === false
                 ? { inStock: row.available > 0 }
                 : { available: row.available }),
             }
           : {
-              available: row.available,
+              ...(status ? { inStock: row.available > 0 } : { available: row.available }),
               revision: row.revision,
               soldUnits: row.sold_units || 0,
               reservedUnits: row.reserved_units || 0,
@@ -248,12 +291,21 @@ export class WorkflowRepository {
             publishedSales[group] =
               units === 0 ? 0 : units < 10 ? 1 : 10 ** Math.floor(Math.log10(units));
         }
-        return { version: 1, stock: result, skuAvailability, publishedSales };
+        return {
+          version: 1,
+          stockMode: status ? 'status' : 'count',
+          stock: result,
+          skuAvailability,
+          publishedSales,
+        };
       }
       return {
         version: 1,
+        stockMode: status ? 'status' : 'count',
         stock: result,
+        ...(status ? { skuAvailability } : {}),
         canImportPreview:
+          !status &&
           !this.db.prepare('SELECT id FROM workflow_migrations WHERE id=1').get() &&
           !this.db.prepare('SELECT id FROM orders LIMIT 1').get() &&
           !this.db.prepare('SELECT stock_key FROM inventory WHERE revision>0 LIMIT 1').get(),
@@ -278,7 +330,9 @@ export class WorkflowRepository {
           .run(row.units, row.key, row.units).changes
       )
         fail(
-          'Stok tidak cukup untuk menyetujui pesanan. Periksa persediaan dan hubungi pelanggan.',
+          this.stockMode() === 'status'
+            ? 'Ada barang yang ditandai kosong. Ubah pesanan atau tandai barangnya tersedia.'
+            : 'Stok tidak cukup untuk menyetujui pesanan. Periksa persediaan dan hubungi pelanggan.',
           409,
           'insufficient_stock',
         );
@@ -321,6 +375,16 @@ export class WorkflowRepository {
   }
   setStock(user, body) {
     if (user.role !== 'admin') fail('Hanya admin yang dapat mengubah stok.', 403, 'forbidden');
+    const status = this.stockMode() === 'status';
+    if (status !== (typeof body?.inStock === 'boolean'))
+      fail(
+        status
+          ? 'Stok tidak dihitung. Tandai barang tersedia atau kosong.'
+          : 'Stok dihitung. Isi jumlah stok.',
+        409,
+        'stock_mode_changed',
+      );
+    if (status) body = { ...body, available: body.inStock ? STATUS_STOCK_UNITS : 0 };
     if (
       typeof body?.key !== 'string' ||
       !Number.isSafeInteger(body.available) ||
@@ -354,6 +418,8 @@ export class WorkflowRepository {
   }
   importStock(user, body) {
     if (user.role !== 'admin') fail('Akses admin diperlukan.', 403, 'forbidden');
+    if (this.stockMode() === 'status')
+      fail('Stok tidak dihitung, jadi tidak ada stok untuk diimpor.', 409, 'stock_mode_changed');
     if (!Array.isArray(body?.rows) || !body.rows.length || body.rows.length > 5000)
       fail('Daftar stok impor tidak valid.');
     this.transaction(() => {

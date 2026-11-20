@@ -18,9 +18,15 @@ export function useStockCounts() {
     return {
       inventory,
       counts: {
-        available: rows.filter((row) => row.available !== null && row.available > 0).length,
-        empty: rows.filter((row) => row.available === 0).length,
-        unknown: rows.filter((row) => row.available === null).length,
+        // Without counts (status mode) a size is only available or empty.
+        available: rows.filter((row) =>
+          row.available === null ? row.inStock === true : row.available > 0,
+        ).length,
+        empty: rows.filter((row) =>
+          row.available === null ? row.inStock === false : row.available === 0,
+        ).length,
+        unknown: rows.filter((row) => row.available === null && typeof row.inStock !== 'boolean')
+          .length,
         total: rows.length,
       },
     };

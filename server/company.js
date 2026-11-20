@@ -45,6 +45,7 @@ export class CompanyRepository {
         codEnabled: true,
         showSoldCount: false,
         showExactStock: true,
+        stockMode: 'count',
         ...JSON.parse(row.profile),
       },
     };
@@ -60,6 +61,12 @@ export class CompanyRepository {
       showSoldCount: body.profile.showSoldCount ?? current.showSoldCount,
       showExactStock: body.profile.showExactStock ?? current.showExactStock,
     });
+    profile.stockMode =
+      body.profile.stockMode === undefined
+        ? current.stockMode
+        : body.profile.stockMode === 'status'
+          ? 'status'
+          : 'count';
     profile.logo = photo(profile.logo);
     if (body?.version !== 1 || !Number.isSafeInteger(body.revision) || body.revision < 0)
       throw new CatalogError('Format pengaturan perusahaan tidak valid.');

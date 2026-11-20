@@ -1,3 +1,4 @@
+import { refreshServerWorkflow } from '../state/serverWorkflow';
 import CommerceReadiness from './CommerceReadiness';
 import AdminDeliverySettings from './AdminDeliverySettings';
 import { useEffect, useRef, useState } from 'react';
@@ -68,6 +69,16 @@ export default function AdminCompanyPage() {
         ?.focus();
       return;
     }
+    const modeChanged = (draft.stockMode || 'count') !== (baseline.stockMode || 'count');
+    if (
+      modeChanged &&
+      !window.confirm(
+        draft.stockMode === 'status'
+          ? 'Matikan hitungan stok? Semua barang akan menjadi Tersedia. Admin cukup menandai barang yang kosong.'
+          : 'Hitung stok lagi? Semua barang dimulai dari stok 0 dan tidak bisa dipesan sampai jumlahnya diisi di halaman Stok.',
+      )
+    )
+      return;
     pending.current = true;
     setBusy(true);
     try {
@@ -84,6 +95,8 @@ export default function AdminCompanyPage() {
         setDraft(saved);
         setBaseline(saved);
         setNotice('Pengaturan perusahaan tersimpan di server. Tampilan toko sudah diperbarui.');
+        // Stock numbers changed on the server with the mode.
+        if (modeChanged) refreshServerWorkflow();
       }
     } finally {
       pending.current = false;
@@ -380,6 +393,38 @@ export default function AdminCompanyPage() {
             </section>
             <section
               className="company-settings-section company-settings-divider"
+              aria-labelledby="company-stock-title"
+            >
+              <div className="company-section-heading">
+                <h3 id="company-stock-title">Stok barang</h3>
+                <p>
+                  Pilih apakah toko menghitung jumlah stok atau cukup menandai barang yang kosong.
+                </p>
+              </div>
+              <div className="company-visibility-options">
+                <label className="company-toggle" htmlFor="company-stockMode">
+                  <input
+                    id="company-stockMode"
+                    type="checkbox"
+                    checked={draft.stockMode !== 'status'}
+                    onChange={(event) =>
+                      update('stockMode', event.target.checked ? 'count' : 'status')
+                    }
+                    aria-describedby="company-stockMode-help"
+                  />
+                  <span className="company-toggle-copy">
+                    <strong>Hitung jumlah stok</strong>
+                    <span id="company-stockMode-help">
+                      {draft.stockMode === 'status'
+                        ? 'Mati: stok tidak dihitung. Semua barang bisa dipesan kecuali yang ditandai Kosong di halaman Stok.'
+                        : 'Nyala: setiap pesanan memotong stok, dan barang dengan stok 0 tidak bisa dipesan.'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </section>
+            <section
+              className="company-settings-section company-settings-divider"
               aria-labelledby="company-visibility-title"
             >
               <div className="company-section-heading">
@@ -402,22 +447,24 @@ export default function AdminCompanyPage() {
                     </span>
                   </span>
                 </label>
-                <label className="company-toggle" htmlFor="company-showExactStock">
-                  <input
-                    id="company-showExactStock"
-                    type="checkbox"
-                    checked={draft.showExactStock !== false}
-                    onChange={(event) => update('showExactStock', event.target.checked)}
-                    aria-describedby="company-stock-help"
-                  />
-                  <span className="company-toggle-copy">
-                    <strong>Tampilkan jumlah sisa stok</strong>
-                    <span id="company-stock-help">
-                      Jika dimatikan, pembeli melihat Tersedia atau Habis. Jumlah pesanan tetap
-                      diperiksa oleh toko.
+                {draft.stockMode !== 'status' && (
+                  <label className="company-toggle" htmlFor="company-showExactStock">
+                    <input
+                      id="company-showExactStock"
+                      type="checkbox"
+                      checked={draft.showExactStock !== false}
+                      onChange={(event) => update('showExactStock', event.target.checked)}
+                      aria-describedby="company-stock-help"
+                    />
+                    <span className="company-toggle-copy">
+                      <strong>Tampilkan jumlah sisa stok</strong>
+                      <span id="company-stock-help">
+                        Jika dimatikan, pembeli melihat Tersedia atau Habis. Jumlah pesanan tetap
+                        diperiksa oleh toko.
+                      </span>
                     </span>
-                  </span>
-                </label>
+                  </label>
+                )}
               </div>
             </section>
             {failure && (

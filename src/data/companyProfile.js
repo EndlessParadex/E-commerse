@@ -8,6 +8,7 @@ export const demoCompanyProfile = Object.freeze({
   logo: '',
   showSoldCount: false,
   showExactStock: true,
+  stockMode: 'count',
   bankName: '',
   bankAccount: '',
   bankHolder: '',
@@ -25,6 +26,7 @@ export const emptyCompanyProfile = Object.freeze({
   logo: '',
   showSoldCount: false,
   showExactStock: true,
+  stockMode: 'count',
   bankName: '',
   bankAccount: '',
   bankHolder: '',
@@ -110,6 +112,8 @@ export function normalizedCompanyProfile(value) {
     ...Object.fromEntries(companyFields.map((field) => [field, (value[field] ?? '').trim()])),
     showSoldCount: value.showSoldCount === true,
     showExactStock: value.showExactStock !== false,
+    // 'status': stock is not counted; each size is only available or empty.
+    stockMode: value.stockMode === 'status' ? 'status' : 'count',
     codEnabled: value.codEnabled !== false,
   };
 }

@@ -155,7 +155,9 @@ export function installCommerce(workflow, identity, messages, { codOnly = true }
         order.payment.status = 'cancelled';
         order.cancelledAt = time;
         order.cancellationReason =
-          'Stok tidak cukup saat diperiksa toko. Silakan pilih jumlah lain atau hubungi toko.';
+          w.stockMode() === 'status'
+            ? 'Barang sedang kosong saat diperiksa toko. Silakan pilih barang lain atau hubungi toko.'
+            : 'Stok tidak cukup saat diperiksa toko. Silakan pilih jumlah lain atau hubungi toko.';
         order.reviewOutcome = 'stock_unavailable';
         return { order, kind: 'orderCancelled' };
       }

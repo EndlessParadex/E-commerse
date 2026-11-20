@@ -569,9 +569,9 @@ export default function AdminCartProcessing({ shared }) {
                               {/* Only a shortage needs attention; enough stock is the normal case. */}
                               {!stock?.sufficient && (
                                 <p className="shop-warning">
-                                  Stok kurang: perlu {stock?.required.toLocaleString('id-ID')}{' '}
-                                  satuan, tersedia {stock?.available.toLocaleString('id-ID')}{' '}
-                                  satuan.
+                                  {stock?.available === 0
+                                    ? 'Barang ini ditandai kosong. Ubah jumlahnya atau hapus dari pesanan.'
+                                    : `Stok kurang: perlu ${stock?.required.toLocaleString('id-ID')} satuan, tersedia ${stock?.available.toLocaleString('id-ID')} satuan.`}
                                 </p>
                               )}
                             </>

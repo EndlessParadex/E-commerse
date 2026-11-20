@@ -13,6 +13,8 @@ const empty = () => ({
   skuAvailability: {},
   publishedSales: {},
   canImportPreview: false,
+  // 'status' when the store does not count stock (only available / empty per size).
+  stockMode: 'count',
   loading: true,
   failed: false,
   error: '',
@@ -146,6 +148,7 @@ export async function refreshServerWorkflow() {
         skuAvailability: payload.skuAvailability || {},
         publishedSales: payload.publishedSales || {},
         canImportPreview: payload.canImportPreview === true,
+        stockMode: payload.stockMode === 'status' ? 'status' : 'count',
         inventoryLoading: false,
         inventoryFailed: false,
         inventoryError: '',
@@ -299,7 +302,10 @@ export async function fetchServerOrder(id) {
     return { error: error.message };
   }
 }
-export async function setServerStock(product, amount, revision) {
+/** Status mode: mark a product size available or empty. */
+export const setServerAvailability = (product, inStock, revision) =>
+  setServerStock(product, null, revision, inStock);
+export async function setServerStock(product, amount, revision, inStock) {
   const token = generation;
   try {
     const payload = await api('/api/admin/inventory', {
@@ -307,13 +313,15 @@ export async function setServerStock(product, amount, revision) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         key: `${product.groupId || product.id}:${sizeKey(product)}`,
-        available: amount,
+        ...(typeof inStock === 'boolean' ? { inStock } : { available: amount }),
         revision,
       }),
     });
     if (token !== generation) return { error: 'Akun berubah. Muat ulang data.' };
     publish({
       stock: inventory(payload),
+      skuAvailability: payload.skuAvailability || {},
+      stockMode: payload.stockMode === 'status' ? 'status' : 'count',
       canImportPreview: payload.canImportPreview === true,
       failed: false,
       error: '',

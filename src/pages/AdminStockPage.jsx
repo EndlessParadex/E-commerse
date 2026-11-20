@@ -11,6 +11,7 @@ import { packagingTypes, packagingValues } from '../data/productPackaging';
 import {
   serverStock,
   setServerStock,
+  setServerAvailability,
   refreshServerWorkflow,
   importServerStock,
 } from '../state/serverWorkflow';
@@ -213,7 +214,7 @@ function StockEditorSession({
   );
 }
 
-export default function AdminStockPage() {
+function CountedStockPage() {
   const { orders, failed, loading, server, canImportPreview } = useWorkflow('inventory');
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
@@ -721,6 +722,221 @@ export default function AdminStockPage() {
             ))}
           </ul>
         </ConfirmDialog>
+      )}
+    </section>
+  );
+}
+
+/** Counting stock, or (Pengaturan perusahaan → stok tidak dihitung) only available / empty. */
+export default function AdminStockPage() {
+  const { server, stockMode } = useWorkflow('inventory');
+  return server && stockMode === 'status' ? <StockStatusPage /> : <CountedStockPage />;
+}
+
+function StockStatusPage() {
+  const { failed, loading, error: loadError } = useWorkflow('inventory');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [busyKey, setBusyKey] = useState('');
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  let rows = [];
+  let stockFailed = failed || loading;
+  if (!stockFailed)
+    try {
+      rows = [...new Map(products.map((product) => [stockKey(product), product])).values()].map(
+        (product) => {
+          const stock = serverStock(product);
+          return {
+            key: stockKey(product),
+            product,
+            inStock: stock.inStock === true,
+            revision: stock.revision,
+            variants: products.filter((entry) => stockKey(entry) === stockKey(product)),
+          };
+        },
+      );
+    } catch {
+      stockFailed = true;
+    }
+  const needle = query.trim().toLocaleLowerCase('id');
+  const visible = rows.filter(
+    ({ product, inStock, variants }) =>
+      (filter === 'all' || (filter === 'empty' ? !inStock : inStock)) &&
+      `${product.baseName} ${product.brand} ${product.sizeLabel} ${variants.map((v) => v.id).join(' ')}`
+        .toLocaleLowerCase('id')
+        .includes(needle),
+  );
+  const pagination = paginateAdminList(visible, page, 20);
+  const emptyCount = rows.filter((row) => !row.inStock).length;
+  const toggle = async (row) => {
+    if (busyKey) return;
+    setBusyKey(row.key);
+    setError('');
+    setNotice('');
+    try {
+      const result = await setServerAvailability(row.product, !row.inStock, row.revision);
+      if (result.error) setError(result.error);
+      else
+        setNotice(
+          `${row.product.baseName} ${row.product.sizeLabel} ditandai ${row.inStock ? 'kosong' : 'tersedia'}.`,
+        );
+    } finally {
+      setBusyKey('');
+    }
+  };
+  return (
+    <section className="admin-panel workflow-admin-stock">
+      <div className="admin-panel-heading">
+        <AdminSectionIcon name="stock" />
+        <div>
+          <h2>Ketersediaan barang</h2>
+          <p>
+            Stok tidak dihitung. Semua ukuran bisa dipesan, kecuali yang ditandai kosong. Satuan,
+            Pack, Dus, dan Renceng dengan ukuran yang sama ikut kosong bersama.
+          </p>
+        </div>
+        <span className="admin-result-pill">
+          {emptyCount} kosong · {rows.length} ukuran
+        </span>
+      </div>
+      <p className="workflow-preview">
+        Pesanan tidak memotong stok. Barang yang ditandai kosong tidak bisa dimasukkan ke keranjang,
+        dan pesanan yang masih menunggu dengan barang itu perlu diubah saat diproses. Untuk
+        menghitung stok lagi, buka <a href="#/admin/perusahaan">Pengaturan perusahaan</a>.
+      </p>
+      {notice && (
+        <p className="admin-save-notice" role="status">
+          ✓ {notice}
+        </p>
+      )}
+      {error && (
+        <p className="admin-form-alert" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="workflow-stock-toolbar">
+        <div className="workflow-filters">
+          <div className="admin-field">
+            <label htmlFor="admin-stock-status-search">Cari produk atau SKU</label>
+            <input
+              id="admin-stock-status-search"
+              type="search"
+              maxLength={200}
+              placeholder="Nama produk, merek, ukuran, atau SKU"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="admin-stock-status-filter">Ketersediaan</label>
+            <select
+              id="admin-stock-status-filter"
+              value={filter}
+              onChange={(event) => {
+                setFilter(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="all">Semua</option>
+              <option value="available">Tersedia</option>
+              <option value="empty">Kosong</option>
+            </select>
+          </div>
+        </div>
+        <p role="status" className="workflow-stock-status-count">
+          {stockFailed
+            ? 'Memeriksa ketersediaan…'
+            : `${pagination.items.length} dari ${visible.length} hasil`}
+        </p>
+      </div>
+      {stockFailed ? (
+        <div className="admin-empty" role={failed ? 'alert' : 'status'}>
+          <h3>{failed ? 'Ketersediaan belum dapat dimuat' : 'Memuat ketersediaan…'}</h3>
+          {failed && (
+            <>
+              <p>{loadError}</p>
+              <button
+                className="admin-secondary"
+                type="button"
+                onClick={() => refreshServerWorkflow()}
+              >
+                Muat ulang
+              </button>
+            </>
+          )}
+        </div>
+      ) : !visible.length ? (
+        <div className="admin-empty">
+          <h3>
+            {filter === 'empty' && !needle ? 'Tidak ada barang kosong' : 'Produk tidak ditemukan'}
+          </h3>
+        </div>
+      ) : (
+        <ul className="workflow-stock-list is-compact workflow-stock-status-list">
+          {pagination.items.map((row) => (
+            <li className="workflow-stock-card" key={row.key}>
+              <header>
+                <StockProductIdentity product={row.product} variants={row.variants} />
+                <span className={'workflow-badge' + (row.inStock ? '' : ' status-expired')}>
+                  {row.inStock ? 'Tersedia' : 'Kosong'}
+                </span>
+              </header>
+              <p className="workflow-stock-status-skus">
+                {row.variants
+                  .map((variant) => {
+                    const { packagingType, unitsPerPackage } = packagingValues(variant);
+                    return packagingType === 'satuan'
+                      ? 'Satuan'
+                      : `${packagingType} isi ${unitsPerPackage.toLocaleString('id-ID')}`;
+                  })
+                  .join(' · ')}
+              </p>
+              <footer className="workflow-stock-footer">
+                <button
+                  type="button"
+                  className={row.inStock ? 'admin-secondary' : 'admin-primary'}
+                  disabled={Boolean(busyKey)}
+                  aria-label={`${row.inStock ? 'Tandai kosong' : 'Tandai tersedia'} ${row.product.baseName} ${row.product.sizeLabel}`}
+                  onClick={() => toggle(row)}
+                >
+                  {busyKey === row.key
+                    ? 'Menyimpan…'
+                    : row.inStock
+                      ? 'Tandai kosong'
+                      : 'Tandai tersedia'}
+                </button>
+              </footer>
+            </li>
+          ))}
+        </ul>
+      )}
+      {pagination.pages > 1 && (
+        <nav className="admin-list-pagination" aria-label="Halaman ketersediaan">
+          <button
+            className="admin-secondary"
+            type="button"
+            disabled={pagination.page <= 1}
+            onClick={() => setPage(pagination.page - 1)}
+          >
+            Sebelumnya
+          </button>
+          <span>
+            Halaman {pagination.page} dari {pagination.pages}
+          </span>
+          <button
+            className="admin-secondary"
+            type="button"
+            disabled={pagination.page >= pagination.pages}
+            onClick={() => setPage(pagination.page + 1)}
+          >
+            Berikutnya
+          </button>
+        </nav>
       )}
     </section>
   );

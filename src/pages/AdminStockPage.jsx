@@ -792,19 +792,16 @@ function StockStatusPage() {
         <AdminSectionIcon name="stock" />
         <div>
           <h2>Ketersediaan barang</h2>
-          <p>
-            Stok tidak dihitung. Semua ukuran bisa dipesan, kecuali yang ditandai kosong. Satuan,
-            Pack, Dus, dan Renceng dengan ukuran yang sama ikut kosong bersama.
-          </p>
+          <p>Stok tidak dihitung. Tandai ukuran yang sedang kosong agar tidak bisa dipesan.</p>
         </div>
         <span className="admin-result-pill">
           {emptyCount} kosong · {rows.length} ukuran
         </span>
       </div>
       <p className="workflow-preview">
-        Pesanan tidak memotong stok. Barang yang ditandai kosong tidak bisa dimasukkan ke keranjang,
-        dan pesanan yang masih menunggu dengan barang itu perlu diubah saat diproses. Untuk
-        menghitung stok lagi, buka <a href="#/admin/perusahaan">Pengaturan perusahaan</a>.
+        Semua kemasan dengan ukuran yang sama (satuan, pack, dus, renceng) ikut kosong. Pesanan yang
+        sudah masuk tetap ada dan perlu diubah saat diproses. Hitung stok lagi lewat{' '}
+        <a href="#/admin/perusahaan">Pengaturan perusahaan</a>.
       </p>
       {notice && (
         <p className="admin-save-notice" role="status">
@@ -848,11 +845,13 @@ function StockStatusPage() {
             </select>
           </div>
         </div>
-        <p role="status" className="workflow-stock-status-count">
-          {stockFailed
-            ? 'Memeriksa ketersediaan…'
-            : `${pagination.items.length} dari ${visible.length} hasil`}
-        </p>
+        <div className="workflow-stock-controls">
+          <p role="status">
+            {stockFailed
+              ? 'Memeriksa ketersediaan…'
+              : `${pagination.items.length} dari ${visible.length} hasil (${rows.length} ukuran)`}
+          </p>
+        </div>
       </div>
       {stockFailed ? (
         <div className="admin-empty" role={failed ? 'alert' : 'status'}>
@@ -879,23 +878,25 @@ function StockStatusPage() {
       ) : (
         <ul className="workflow-stock-list is-compact workflow-stock-status-list">
           {pagination.items.map((row) => (
-            <li className="workflow-stock-card" key={row.key}>
-              <header>
-                <StockProductIdentity product={row.product} variants={row.variants} />
+            <li className={'workflow-stock-card' + (row.inStock ? '' : ' is-empty')} key={row.key}>
+              <StockProductIdentity product={row.product} variants={row.variants} />
+              <div className="workflow-stock-status-info">
                 <span className={'workflow-badge' + (row.inStock ? '' : ' status-expired')}>
                   {row.inStock ? 'Tersedia' : 'Kosong'}
                 </span>
-              </header>
-              <p className="workflow-stock-status-skus">
-                {row.variants
-                  .map((variant) => {
+                <ul className="workflow-stock-status-skus" aria-label="Kemasan">
+                  {row.variants.map((variant) => {
                     const { packagingType, unitsPerPackage } = packagingValues(variant);
-                    return packagingType === 'satuan'
-                      ? 'Satuan'
-                      : `${packagingType} isi ${unitsPerPackage.toLocaleString('id-ID')}`;
-                  })
-                  .join(' · ')}
-              </p>
+                    return (
+                      <li key={variant.id}>
+                        {packagingType === 'satuan'
+                          ? 'Satuan'
+                          : `${packagingType} isi ${unitsPerPackage.toLocaleString('id-ID')}`}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
               <footer className="workflow-stock-footer">
                 <button
                   type="button"

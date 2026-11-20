@@ -54,8 +54,18 @@
   font-size: 0.9375rem;
   overflow-wrap: anywhere;
 }
-.accounts-table td:first-child {
-  max-width: 260px;
+/* Akun holds the most (photo, contacts, address); the other columns stay compact. */
+.accounts-table th:nth-child(1) {
+  width: 30%;
+}
+.accounts-table th:nth-child(2) {
+  width: 11%;
+}
+.accounts-table th:nth-child(3) {
+  width: 19%;
+}
+.accounts-table th:nth-child(4) {
+  width: 9%;
 }
 .accounts-secondary {
   display: block;
@@ -423,12 +433,21 @@
 }
 .accounts-address {
   display: grid;
-  gap: 2px;
-  max-width: 34ch;
-  margin-top: 8px;
+  gap: 3px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-surface-soft, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
   font-size: 0.875rem;
-  line-height: 1.45;
-  color: inherit;
+  line-height: 1.5;
+}
+.accounts-address-label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .accounts-address a {
   width: fit-content;

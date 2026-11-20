@@ -933,13 +933,50 @@
 }
 
 /* Status mode: available / empty per size, no counts. */
+.workflow-stock-status-list .workflow-stock-card {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(180px, 220px);
+}
+.workflow-stock-status-list .workflow-stock-card.is-empty {
+  border-color: color-mix(in srgb, var(--color-danger, #dc2626) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger, #dc2626) 4%, var(--color-surface));
+}
+.workflow-stock-status-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-width: 0;
+}
 .workflow-stock-status-skus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
+  padding: 0;
+  list-style: none;
+}
+.workflow-stock-status-skus li {
+  padding: 3px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
   text-transform: capitalize;
 }
-.workflow-stock-status-count {
-  margin: 0;
-  color: var(--color-text-muted);
+.workflow-stock-status-list .workflow-stock-footer {
+  justify-self: end;
+  width: 100%;
+}
+@media (max-width: 1200px) {
+  .workflow-stock-status-list .workflow-stock-card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .workflow-stock-status-list .workflow-stock-footer {
+    justify-self: start;
+  }
+}
+@media (max-width: 700px) {
+  .workflow-stock-status-list .workflow-stock-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

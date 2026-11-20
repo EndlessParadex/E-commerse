@@ -655,10 +655,8 @@ function AccountAddress({ account }) {
   if (!address) return <span className="accounts-address is-missing">Alamat belum diisi</span>;
   return (
     <div className="accounts-address">
-      <span>
-        <span aria-hidden="true">📍 </span>
-        {address}
-      </span>
+      <span className="accounts-address-label">Alamat</span>
+      <span>{address}</span>
       {!account.addressComplete && (
         <span className="accounts-address-note">Alamat lama · kelurahan belum dipilih</span>
       )}

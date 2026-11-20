@@ -95,11 +95,20 @@ export default function AdminReviewsPage() {
           Memuat ulasan…
         </p>
       ) : data.reviews.length === 0 ? (
-        <p className="admin-reviews-empty">
-          {filter === 'hidden'
-            ? 'Tidak ada ulasan yang disembunyikan.'
-            : 'Belum ada ulasan dari pembeli.'}
-        </p>
+        <div className="admin-reviews-blank">
+          <strong>
+            {filter === 'hidden'
+              ? 'Tidak ada ulasan yang disembunyikan'
+              : filter === 'visible'
+                ? 'Belum ada ulasan yang tampil'
+                : 'Belum ada ulasan dari pembeli'}
+          </strong>
+          <p>
+            {filter === 'hidden'
+              ? 'Ulasan yang Anda sembunyikan akan muncul di sini.'
+              : 'Pembeli bisa menulis ulasan dari halaman Pesanan saya setelah pesanannya selesai.'}
+          </p>
+        </div>
       ) : (
         <ul className="admin-reviews-list">
           {data.reviews.map((review) => (

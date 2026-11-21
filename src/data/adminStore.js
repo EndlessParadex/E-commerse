@@ -361,7 +361,11 @@ function applyDraft(draft) {
   products.splice(0, products.length, ...retained);
   suppliers.forEach((supplier) => {
     supplier.productIds = supplier.productIds.filter((id) => !removed.has(id));
-    if (supplier.id === draft.supplierId) supplier.productIds.push(...next.map((item) => item.id));
+    supplier.productIds.push(
+      ...next
+        .filter((item) => (item.variantSupplierId || draft.supplierId) === supplier.id)
+        .map((item) => item.id),
+    );
   });
   refreshAdmin();
   return next[0].groupId;

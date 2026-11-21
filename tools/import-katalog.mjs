@@ -8,6 +8,9 @@
  * Opsi:
  *   --folder <path>     folder katalog lain (default: katalog-lokal)
  *   --perbarui          ganti produk dengan ID yang sama (SKU lama harus tetap ada)
+ *   --tambah-varian     produk yang sudah ada hanya mendapat kemasan (SKU) baru; foto, nama,
+ *                       deskripsi, dan harga SKU lama tidak diubah. Kemasan baru tercatat
+ *                       dari PT di katalog.json bila berbeda dengan PT produknya.
  *   --hapus-contoh      hapus produk contoh bawaan BAM beserta master yang tidak terpakai
  *   --tanpa-backup      lewati backup otomatis sebelum menulis
  *
@@ -125,8 +128,9 @@ export function mergeKatalog(
   current,
   data,
   folder,
-  { perbarui = false, hapusContoh = false } = {},
+  { perbarui = false, hapusContoh = false, tambahVarian = false } = {},
 ) {
+  if (perbarui && tambahVarian) fail('Pilih salah satu: --perbarui atau --tambah-varian.');
   const masters = structuredClone(current.masters);
   let edits = current.edits.map((draft) => structuredClone(draft));
   const removed = [];
@@ -184,7 +188,36 @@ export function mergeKatalog(
 
   const newProducts = [];
   const updatedProducts = [];
+  const addedVariants = [];
+  const skippedVariants = [];
   for (const produk of data.produk) {
+    if (tambahVarian) {
+      const index = edits.findIndex(
+        (entry) => entry.groupId === produk.id || sameName(entry.baseName, produk.nama),
+      );
+      if (index >= 0) {
+        // Only new packagings; everything already saved (photos, text, prices) stays.
+        const existing = edits[index];
+        const known = new Set(existing.variants.map((variant) => variant.id.toLowerCase()));
+        for (const varian of produk.varian) {
+          if (known.has(varian.sku.toLowerCase())) {
+            skippedVariants.push(varian.sku);
+            continue;
+          }
+          const { photos, ...variant } = variantDraft(folder, produk, varian);
+          existing.variants.push({
+            ...variant,
+            supplierId: supplierId !== existing.supplierId ? supplierId : '',
+            gallery: photos.length ? photos : null,
+          });
+          known.add(varian.sku.toLowerCase());
+          addedVariants.push(`${existing.baseName}: ${varian.sku}`);
+        }
+        const brand = masters.brands.find((entry) => entry.id === existing.brandId);
+        if (brand && !brand.supplierIds.includes(supplierId)) brand.supplierIds.push(supplierId);
+        continue;
+      }
+    }
     const brandSlug = slug(produk.merek);
     let brand = masters.brands.find(
       (entry) =>
@@ -318,7 +351,15 @@ export function mergeKatalog(
     );
   // Validasi akhir memakai aturan server yang sama dengan form admin.
   normalizeCatalog(next, current);
-  return { next, bytes, newProducts, updatedProducts, removed };
+  return {
+    next,
+    bytes,
+    newProducts,
+    updatedProducts,
+    addedVariants,
+    skippedVariants,
+    removed,
+  };
 }
 
 export async function importKatalog({
@@ -326,6 +367,7 @@ export async function importKatalog({
   dbPath = process.env.BAM_DB_PATH || 'data/bam.sqlite',
   tulis = false,
   perbarui = false,
+  tambahVarian = false,
   hapusContoh = false,
   backup = true,
   log = console.log,
@@ -340,7 +382,7 @@ export async function importKatalog({
   const app = createApp({ dbPath, logger: () => {} });
   try {
     const current = app.catalog.snapshot();
-    const result = mergeKatalog(current, data, root, { perbarui, hapusContoh });
+    const result = mergeKatalog(current, data, root, { perbarui, tambahVarian, hapusContoh });
     const variants = data.produk.reduce((sum, produk) => sum + produk.varian.length, 0);
     const photos = data.produk.reduce(
       (sum, produk) => sum + produk.varian.reduce((n, varian) => n + (varian.foto || []).length, 0),
@@ -349,6 +391,11 @@ export async function importKatalog({
     log(`Database      : ${resolve(dbPath)}`);
     log(`Produk baru   : ${result.newProducts.length}`);
     if (result.updatedProducts.length) log(`Diperbarui    : ${result.updatedProducts.length}`);
+    if (tambahVarian) {
+      log(`Kemasan baru  : ${result.addedVariants.length} (ke produk yang sudah ada)`);
+      if (result.skippedVariants.length)
+        log(`Sudah ada     : ${result.skippedVariants.length} SKU dilewati`);
+    }
     if (result.removed.length) log(`Contoh dihapus: ${result.removed.length}`);
     log(`Varian (SKU)  : ${variants}`);
     log(`Foto          : ${photos}`);
@@ -376,6 +423,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     folder: folderIndex >= 0 ? args[folderIndex + 1] : 'katalog-lokal',
     tulis: args.includes('--tulis'),
     perbarui: args.includes('--perbarui'),
+    tambahVarian: args.includes('--tambah-varian'),
     hapusContoh: args.includes('--hapus-contoh'),
     backup: !args.includes('--tanpa-backup'),
   }).catch((error) => {

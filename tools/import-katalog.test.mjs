@@ -272,3 +272,71 @@ test('memakai pemasok, merek, subkategori, dan produk yang dibuat lewat Admin', 
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('--tambah-varian: renceng dari PT lain ditambahkan; foto, harga, dan isian lama tetap', async () => {
+  const { root, folder, dbPath } = setup([produkUji()]);
+  try {
+    await importKatalog({ folder, dbPath, tulis: true, ...quiet });
+    // The admin edits the product after the first import.
+    const app = createApp({ dbPath, logger: () => {} });
+    const edited = app.catalog.snapshot();
+    const product = edited.edits.find((entry) => entry.groupId === 'stik-uji');
+    product.description = 'Deskripsi dari Admin.';
+    product.variants[0].price = '110000';
+    app.catalog.save(edited);
+    app.db.close();
+    const before = snapshot(dbPath).edits.find((entry) => entry.groupId === 'stik-uji');
+
+    // A distributor's list: the same product, sold per renceng (plus one SKU it already has).
+    const data = JSON.parse(readFileSync(join(folder, 'katalog.json'), 'utf8'));
+    data.pemasok = { id: 'pt-distributor', nama: 'PT Distributor Uji', singkatan: 'PDU' };
+    data.produk = [
+      {
+        ...produkUji({ nama: 'Nama Lain Dari Distributor', deskripsi: 'Tidak dipakai.' }),
+        varian: [
+          {
+            sku: 'STIK-20G-RCG10',
+            ukuran: 20,
+            satuan: 'g',
+            kemasan: 'renceng',
+            isi: 10,
+            harga: 18000,
+            foto: [],
+          },
+          { ...produkUji().varian[0], harga: 1 },
+        ],
+      },
+    ];
+    writeFileSync(join(folder, 'katalog.json'), JSON.stringify(data));
+    const result = await importKatalog({
+      folder,
+      dbPath,
+      tulis: true,
+      tambahVarian: true,
+      ...quiet,
+    });
+    assert.deepEqual(result.addedVariants, ['Stik Uji: STIK-20G-RCG10']);
+    assert.deepEqual(result.skippedVariants, ['STIK-20G-DUS60']);
+    assert.deepEqual(result.newProducts, []);
+
+    const saved = snapshot(dbPath);
+    const after = saved.edits.find((entry) => entry.groupId === 'stik-uji');
+    assert.equal(after.baseName, 'Stik Uji');
+    assert.equal(after.description, 'Deskripsi dari Admin.');
+    assert.equal(after.supplierId, 'pt-uji', 'the product keeps its PT');
+    assert.deepEqual(after.gallery, before.gallery, 'photos untouched');
+    assert.equal(after.variants[0].price, '110000', 'existing price untouched');
+    const renceng = after.variants.find((variant) => variant.id === 'STIK-20G-RCG10');
+    assert.equal(renceng.packagingType, 'renceng');
+    assert.equal(renceng.price, '18000');
+    assert.equal(renceng.supplierId, 'pt-distributor');
+    const brand = saved.masters.brands.find((entry) => entry.id === after.brandId);
+    assert.ok(brand.supplierIds.includes('pt-distributor'));
+    await assert.rejects(
+      importKatalog({ folder, dbPath, perbarui: true, tambahVarian: true, ...quiet }),
+      /salah satu/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

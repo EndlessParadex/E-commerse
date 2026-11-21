@@ -30,6 +30,7 @@ export const emptyVariant = () => ({
   packsPerBox: '',
   price: '',
   oldPrice: '',
+  supplierId: '',
 });
 export function productDraft(groupId, items = products) {
   const variants = items.filter((item) => item.groupId === groupId);
@@ -40,7 +41,11 @@ export function productDraft(groupId, items = products) {
         baseName: first.baseName,
         brand: first.brand,
         brandId: first.brandId,
-        supplierId: suppliers.find((supplier) => supplier.productIds.includes(first.id))?.id || '',
+        // The product's own PT (a packaging may come from another PT, see variant.supplierId).
+        supplierId:
+          first.productSupplierId ||
+          suppliers.find((supplier) => supplier.productIds.includes(first.id))?.id ||
+          '',
         categoryId: first.categoryId,
         subcategoryId: first.subcategoryId,
         description: first.description ?? productDescriptions[groupId] ?? '',
@@ -65,6 +70,7 @@ export function productDraft(groupId, items = products) {
             packsPerBox: pack.packsPerBox ? String(pack.packsPerBox) : '',
             price: String(price),
             oldPrice: oldPrice ? String(oldPrice) : '',
+            supplierId: variant.variantSupplierId || '',
             ...ownPhotos,
           };
         }),
@@ -163,6 +169,14 @@ export function validateDraft(draft, items = products) {
       (!Number.isSafeInteger(oldPrice) || oldPrice <= price || oldPrice > 1000000000)
     )
       errors[`${key}.oldPrice`] = 'Harga sebelum diskon harus lebih besar dari harga jual.';
+    if (
+      variant.supplierId &&
+      variant.supplierId !== draft.supplierId &&
+      !brands.some(
+        (brand) => brand.id === draft.brandId && brand.supplierIds.includes(variant.supplierId),
+      )
+    )
+      errors[`${key}.supplierId`] = 'Pilih PT yang terhubung dengan merek produk ini.';
   });
   return errors;
 }
@@ -214,6 +228,10 @@ export function buildVariants(draft, items = products) {
       icon: original.icon || '📦',
       color: draft.color || original.color || 'sky',
       tag: original.tag || '',
+      // Who supplies this packaging: its own PT, or the product's.
+      productSupplierId: draft.supplierId,
+      variantSupplierId:
+        variant.supplierId && variant.supplierId !== draft.supplierId ? variant.supplierId : '',
     };
   });
 }

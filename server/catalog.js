@@ -236,6 +236,18 @@ export function normalizeCatalog(input, current = null) {
         const combination = variantKey({ ...variant, ...packaging });
         if (sizes.has(combination)) fail('Kombinasi ukuran dan kemasan produk duplikat.');
         sizes.add(combination);
+        // A packaging can come from another PT than the product (e.g. renceng from a
+        // distributor, dus from the maker). Empty = the product's PT.
+        // Older clients omit the field: keep what was saved rather than dropping it.
+        const variantSupplier =
+          variant.supplierId === undefined ? previous?.supplierId : variant.supplierId;
+        const ownSupplier =
+          variantSupplier && variantSupplier !== draft.supplierId ? variantSupplier : '';
+        if (
+          ownSupplier &&
+          (!supplierIds.has(ownSupplier) || !brand.supplierIds.includes(ownSupplier))
+        )
+          fail('PT pemasok kemasan harus terhubung dengan merek produk.');
         if (
           !Number.isSafeInteger(price) ||
           price <= 0 ||
@@ -255,6 +267,7 @@ export function normalizeCatalog(input, current = null) {
           packsPerBox: packaging.packsPerBox ? String(packaging.packsPerBox) : '',
           price: String(price),
           oldPrice: oldPrice ? String(oldPrice) : '',
+          ...(ownSupplier ? { supplierId: ownSupplier } : {}),
           ...(ownGallery !== undefined ? { gallery: gallery(ownGallery) } : {}),
         };
       });
@@ -495,7 +508,7 @@ export class CatalogRepository {
       .prepare('SELECT data FROM catalog_products ORDER BY position')
       .all()
       .map((row) => {
-        const { variantPhotos = {}, ...draft } = JSON.parse(row.data);
+        const { variantPhotos = {}, variantSuppliers = {}, ...draft } = JSON.parse(row.data);
         const brand = brands.find((entry) => entry.id === draft.brandId);
         return {
           ...draft,
@@ -516,6 +529,7 @@ export class CatalogRepository {
               packsPerBox: variant.packs_per_box ? String(variant.packs_per_box) : '',
               price: String(variant.price),
               oldPrice: variant.old_price ? String(variant.old_price) : '',
+              ...(variantSuppliers[variant.id] ? { supplierId: variantSuppliers[variant.id] } : {}),
               ...(Array.isArray(variantPhotos[variant.id])
                 ? { gallery: variantPhotos[variant.id] }
                 : {}),
@@ -528,6 +542,7 @@ export class CatalogRepository {
         packaging: true,
         gallery: true,
         brandPhotos: true,
+        variantSuppliers: true,
         sharedCarts: this.workflowEnabled === true,
         orderSearch: this.workflowEnabled === true,
         b2bStoreMaintenance: this.workflowEnabled === true,
@@ -587,6 +602,11 @@ export class CatalogRepository {
         variants
           .filter((variant) => Array.isArray(variant.gallery))
           .map((variant) => [variant.id, variant.gallery]),
+      );
+      data.variantSuppliers = Object.fromEntries(
+        variants
+          .filter((variant) => variant.supplierId)
+          .map((variant) => [variant.id, variant.supplierId]),
       );
       db.prepare('INSERT INTO catalog_products VALUES(?,?,?,?,?,?,?)').run(
         draft.groupId,

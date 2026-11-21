@@ -328,6 +328,14 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       )}
     </div>
   );
+  // Other PTs that supply this brand can supply single packagings (renceng, pack, dus).
+  const productSupplier = suppliers.find((entry) => entry.id === draft.supplierId);
+  const packagingSuppliers = suppliers.filter(
+    (entry) =>
+      entry.id !== draft.supplierId &&
+      (brandsForSupplier(entry.id).some((brand) => brand.id === draft.brandId) ||
+        draft.variants.some((variant) => variant.supplierId === entry.id)),
+  );
   const renderVariantFields = (variant, index) => (
     <fieldset className="admin-variant-row">
       <legend>Rincian varian {index + 1}</legend>
@@ -429,6 +437,34 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
           )}
         {variant.packagingType === 'dus' &&
           packagingInput(variant, index, 'packsPerBox', 'Jumlah pack dalam dus', true)}
+        {packagingSuppliers.length > 0 && (
+          <div className="admin-field">
+            <label htmlFor={`variant-${index}-supplierId`}>PT pemasok kemasan ini</label>
+            <select
+              id={`variant-${index}-supplierId`}
+              value={variant.supplierId || ''}
+              onChange={(event) => updateVariant(index, 'supplierId', event.target.value)}
+              aria-invalid={Boolean(errors[`variants.${index}.supplierId`])}
+              aria-describedby={`variant-${index}-supplierId-hint`}
+            >
+              <option value="">
+                Sama dengan produk
+                {productSupplier ? ` (${productSupplier.name})` : ''}
+              </option>
+              {packagingSuppliers.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.name}
+                </option>
+              ))}
+            </select>
+            <small className="admin-form-hint" id={`variant-${index}-supplierId-hint`}>
+              Contoh: renceng dari distributor, dus dari pabrik.
+            </small>
+            {errors[`variants.${index}.supplierId`] && (
+              <small className="admin-error">{errors[`variants.${index}.supplierId`]}</small>
+            )}
+          </div>
+        )}
       </div>
       <p className="admin-form-hint">
         {Number(variant.unitsPerPackage) > 0
@@ -726,6 +762,13 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                       <small className="admin-variant-card-sku">
                         SKU: {variant.id || 'Belum diisi'}
                       </small>
+                      {variant.supplierId && variant.supplierId !== draft.supplierId && (
+                        <small className="admin-variant-card-sku">
+                          PT:{' '}
+                          {suppliers.find((entry) => entry.id === variant.supplierId)?.name ||
+                            variant.supplierId}
+                        </small>
+                      )}
                       <span className="admin-variant-card-edit">Edit varian</span>
                     </button>
                   </li>

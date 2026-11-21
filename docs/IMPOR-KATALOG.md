@@ -58,6 +58,11 @@ Opsi tambahan:
   yang tidak dipakai lagi.
 - `--perbarui` mengganti produk dengan `id` yang sama (misalnya harga baru). Semua SKU lama
   produk itu harus tetap ada di `katalog.json`.
+- `--tambah-varian` untuk daftar harga yang hanya menambah kemasan ke produk yang sudah ada
+  (misalnya renceng dari distributor). Produk dicocokkan lewat `id` atau nama. Foto, nama,
+  deskripsi, dan harga SKU lama tidak diubah; SKU yang sudah ada dilewati. Bila `pemasok` di
+  `katalog.json` berbeda dengan PT produk, kemasan baru tercatat dari PT tersebut dan PT itu
+  dihubungkan dengan mereknya. Produk yang belum ada dibuat seperti biasa.
 - `--folder <path>` memakai folder lain selain `katalog-lokal`.
 - `--tanpa-backup` melewati backup otomatis.
 

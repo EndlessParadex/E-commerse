@@ -650,3 +650,53 @@ test('database lama: foto inline dipindah ke catalog_photos tanpa mengubah URL p
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('PT per kemasan: renceng dari PT lain tersimpan, divalidasi, dan tidak hilang oleh klien lama', async () => {
+  const app = createApp({ dbPath: ':memory:' });
+  try {
+    const cookie = await adminCookie(app);
+    const save = (value) => request(app, 'PUT', '/api/admin/catalog', value, cookie);
+    const initial = (await request(app, 'GET', '/api/catalog', undefined, cookie)).body;
+    assert.equal(initial.capabilities.variantSuppliers, true);
+    const candidate = structuredClone(initial);
+    const product = candidate.edits[0];
+    const brand = candidate.masters.brands.find((entry) => entry.id === product.brandId);
+    candidate.masters.suppliers.push({
+      id: 'pt-distributor',
+      name: 'PT Distributor',
+      initials: 'PD',
+      color: 'sky',
+      logo: '',
+    });
+    // A PT that does not supply the brand cannot supply one of its packagings.
+    product.variants[0].supplierId = 'pt-distributor';
+    let saved = await save(candidate);
+    assert.equal(saved.status, 422, JSON.stringify(saved.body));
+    assert.match(JSON.stringify(saved.body), /PT pemasok kemasan/);
+
+    brand.supplierIds.push('pt-distributor');
+    saved = await save(candidate);
+    assert.equal(saved.status, 200, JSON.stringify(saved.body));
+    const sku = product.variants[0].id;
+    const stored = () =>
+      app.catalog.snapshot().edits.find((entry) => entry.groupId === product.groupId);
+    assert.equal(stored().variants[0].supplierId, 'pt-distributor');
+    assert.equal(stored().supplierId, product.supplierId, 'the product keeps its own PT');
+    assert.equal(stored().variants[1]?.supplierId, undefined);
+
+    // An older client sends the variant without the field: the saved PT stays.
+    const older = structuredClone(saved.body);
+    delete older.edits[0].variants[0].supplierId;
+    assert.equal((await save(older)).status, 200);
+    assert.equal(stored().variants[0].supplierId, 'pt-distributor');
+
+    // Choosing "same as the product" clears it; the brand link can then be removed.
+    const cleared = structuredClone(app.catalog.snapshot());
+    cleared.edits[0].variants[0].supplierId = '';
+    assert.equal((await save(cleared)).status, 200);
+    assert.equal(stored().variants[0].supplierId, undefined);
+    assert.ok(stored().variants.some((variant) => variant.id === sku));
+  } finally {
+    app.db.close();
+  }
+});

@@ -408,7 +408,11 @@ export async function importKatalog({
     }
     const saved = app.catalog.save({ ...result.next, revision: current.revision });
     log(`\nTersimpan. Revisi katalog sekarang ${saved.revision}.`);
-    log('Stok produk baru = 0. Atur stok lewat halaman Admin sebelum produk bisa dipesan.');
+    log(
+      app.workflow?.stockMode?.() === 'status'
+        ? 'Stok tidak dihitung: produk baru langsung Tersedia.'
+        : 'Stok produk baru = 0. Atur stok lewat halaman Admin sebelum produk bisa dipesan.',
+    );
     return { ...result, written: true, revision: saved.revision };
   } finally {
     app.db.close();

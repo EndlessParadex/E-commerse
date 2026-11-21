@@ -678,6 +678,20 @@
 }
 .admin-shell .admin-editor .admin-variant-cards li {
   min-width: 0;
+  cursor: grab;
+  border-radius: 12px;
+}
+.admin-shell .admin-editor .admin-variant-cards li.is-dragging {
+  opacity: 0.45;
+}
+.admin-shell .admin-editor .admin-variant-cards li.is-drop-target {
+  outline: 2px dashed var(--color-action);
+  outline-offset: 3px;
+}
+.admin-shell .admin-editor .admin-variant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .admin-shell .admin-editor .admin-variant-card {
   display: flex;

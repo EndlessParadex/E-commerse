@@ -1,10 +1,24 @@
+// Smallest to largest: buyers and admins see packagings in this order.
 export const packagingTypes = [
   { id: 'satuan', name: 'Satuan' },
+  { id: 'renceng', name: 'Renceng' },
   { id: 'pack', name: 'Pack' },
   { id: 'box', name: 'Box' },
   { id: 'dus', name: 'Dus' },
-  { id: 'renceng', name: 'Renceng' },
 ];
+
+/** Variants ordered by unit, size, then packaging from smallest to largest. */
+export function compareVariants(a, b) {
+  const first = packagingValues(a);
+  const second = packagingValues(b);
+  const rank = (type) => packagingTypes.findIndex((entry) => entry.id === type);
+  return (
+    String(a.sizeUnit || '').localeCompare(String(b.sizeUnit || '')) ||
+    (Number(a.sizeValue) || 0) - (Number(b.sizeValue) || 0) ||
+    rank(first.packagingType) - rank(second.packagingType) ||
+    first.unitsPerPackage - second.unitsPerPackage
+  );
+}
 
 // Missing fields belong to the catalog before packaging variants were introduced.
 export function packagingValues(variant) {

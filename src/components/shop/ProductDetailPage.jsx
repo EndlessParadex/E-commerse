@@ -17,7 +17,7 @@ import StarRating from './StarRating';
 import { rupiah } from './shopPresentation';
 import { purchaseStockLabel, soldStockLabel } from '../../data/productStockPresentation';
 import {
-  packagingTypes,
+  compareVariants,
   packagingValues,
   sizeKey,
   variantForSize,
@@ -99,15 +99,7 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
   const sizes = [...new Map(variants.map((variant) => [sizeKey(variant), variant])).values()];
   const packages = variants
     .filter((variant) => sizeKey(variant) === sizeKey(product))
-    .sort((a, b) => {
-      const first = packagingValues(a);
-      const second = packagingValues(b);
-      return (
-        packagingTypes.findIndex((entry) => entry.id === first.packagingType) -
-          packagingTypes.findIndex((entry) => entry.id === second.packagingType) ||
-        first.unitsPerPackage - second.unitsPerPackage
-      );
-    });
+    .sort(compareVariants);
   const selectVariant = (variant) => {
     setSelectedId(variant.id);
     setQuantity(1);

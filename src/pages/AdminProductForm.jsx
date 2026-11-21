@@ -8,7 +8,12 @@ import ProductImage from '../components/shop/ProductImage';
 import { rupiah } from '../components/shop/shopPresentation';
 import { brandsForSupplier } from '../data/catalogMasters';
 import useUnsavedChanges from '../state/useUnsavedChanges';
-import { packagingTypes, packagingLabel, packagingContents } from '../data/productPackaging';
+import {
+  compareVariants,
+  packagingTypes,
+  packagingLabel,
+  packagingContents,
+} from '../data/productPackaging';
 import { MAX_PRODUCT_PHOTOS } from '../data/productPhotos';
 import {
   MAX_PRODUCT_UPLOAD_BYTES,
@@ -43,6 +48,28 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
       .filter((entry) => products.some((product) => product.id === entry.id))
       .map((entry) => entry.id),
   );
+  // The saved SKU each row started as, so locks follow a variant when rows move.
+  const [origins, setOrigins] = useState(() => initial.variants.map((entry) => entry.id));
+  const [dragFrom, setDragFrom] = useState(null);
+  const [dropAt, setDropAt] = useState(null);
+  const locked = (index) => fixedIds.has(origins[index]);
+  const reorderVariants = (order) => {
+    setDraft((current) => ({ ...current, variants: order.map((row) => current.variants[row]) }));
+    setOrigins((current) => order.map((row) => current[row]));
+    setErrors({});
+  };
+  const moveVariant = (from, to) => {
+    if (from === null || from === to || to < 0 || to >= draft.variants.length) return;
+    const order = draft.variants.map((_, row) => row);
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    reorderVariants(order);
+  };
+  const sortVariants = () =>
+    reorderVariants(
+      draft.variants
+        .map((_, row) => row)
+        .sort((a, b) => compareVariants(draft.variants[a], draft.variants[b]) || a - b),
+    );
   useEffect(() => {
     heading.current?.focus();
     return () => {
@@ -348,12 +375,13 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
         <button
           type="button"
           className="admin-text-button"
-          disabled={draft.variants.length === 1 || fixedIds.has(initial.variants[index]?.id)}
+          disabled={draft.variants.length === 1 || locked(index)}
           onClick={() => {
             setDraft((current) => ({
               ...current,
               variants: current.variants.filter((_, row) => row !== index),
             }));
+            setOrigins((current) => current.filter((_, row) => row !== index));
             setEditingVariant(null);
             setErrors({});
           }}
@@ -381,7 +409,7 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
               <input
                 id={id}
                 value={variant[name]}
-                readOnly={name === 'id' && fixedIds.has(initial.variants[index]?.id)}
+                readOnly={name === 'id' && locked(index)}
                 type={name === 'id' ? 'text' : 'number'}
                 step={name === 'sizeValue' ? 'any' : '1'}
                 min={name === 'id' ? undefined : '0'}
@@ -481,7 +509,7 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
           masing-masing berisi 6 satuan.
         </p>
       )}
-      {fixedIds.has(initial.variants[index]?.id) && (
+      {locked(index) && (
         <p className="admin-form-hint">
           SKU yang sudah ada dipertahankan agar tautan produk tetap tersedia.
         </p>
@@ -710,26 +738,38 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
                 <div>
                   <h3>03 · Ukuran, kemasan, dan harga</h3>
                   <p>
-                    Klik varian untuk mengedit SKU, gramasi, kemasan (Satuan/Pack/Box/Dus/Renceng),
-                    dan harga masing-masing.
+                    Klik varian untuk mengedit SKU, gramasi, kemasan (Satuan/Renceng/Pack/Box/Dus),
+                    dan harga masing-masing. Seret kartu untuk mengubah urutan (atau Alt + panah
+                    kiri/kanan).
                   </p>
                 </div>
-                <button
-                  className="admin-secondary"
-                  type="button"
-                  disabled={draft.variants.length >= 20}
-                  onClick={() => {
-                    const index = draft.variants.length;
-                    setDraft((current) => ({
-                      ...current,
-                      variants: [...current.variants, emptyVariant()],
-                    }));
-                    setEditingVariant(index);
-                    setErrors({});
-                  }}
-                >
-                  + Tambah varian
-                </button>
+                <div className="admin-variant-actions">
+                  <button
+                    className="admin-secondary"
+                    type="button"
+                    disabled={draft.variants.length < 2}
+                    onClick={sortVariants}
+                  >
+                    Urutkan otomatis
+                  </button>
+                  <button
+                    className="admin-secondary"
+                    type="button"
+                    disabled={draft.variants.length >= 20}
+                    onClick={() => {
+                      const index = draft.variants.length;
+                      setDraft((current) => ({
+                        ...current,
+                        variants: [...current.variants, emptyVariant()],
+                      }));
+                      setOrigins((current) => [...current, null]);
+                      setEditingVariant(index);
+                      setErrors({});
+                    }}
+                  >
+                    + Tambah varian
+                  </button>
+                </div>
               </div>
               {errors.variants && (
                 <p className="admin-error" role="alert">
@@ -738,14 +778,60 @@ export default function AdminProductForm({ groupId, onClose, onSaved, onNavigate
               )}
               <ul className="admin-variant-cards" aria-label="Daftar varian produk">
                 {draft.variants.map((variant, index) => (
-                  <li key={index}>
+                  <li
+                    key={index}
+                    draggable
+                    className={
+                      (dragFrom === index ? 'is-dragging' : '') +
+                      (dropAt === index && dragFrom !== index ? ' is-drop-target' : '')
+                    }
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', String(index));
+                      setDragFrom(index);
+                    }}
+                    onDragOver={(event) => {
+                      if (dragFrom === null) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                      setDropAt(index);
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      moveVariant(dragFrom, index);
+                      setDragFrom(null);
+                      setDropAt(null);
+                    }}
+                    onDragEnd={() => {
+                      setDragFrom(null);
+                      setDropAt(null);
+                    }}
+                  >
                     <button
                       type="button"
                       className="admin-variant-card"
                       data-variant-index={index}
                       aria-haspopup="dialog"
                       aria-controls={editingVariant === index ? 'admin-variant-editor' : undefined}
+                      aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
                       onClick={() => setEditingVariant(index)}
+                      onKeyDown={(event) => {
+                        if (!event.altKey) return;
+                        const step =
+                          event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+                            ? -1
+                            : event.key === 'ArrowRight' || event.key === 'ArrowDown'
+                              ? 1
+                              : 0;
+                        if (!step) return;
+                        event.preventDefault();
+                        const to = index + step;
+                        if (to < 0 || to >= draft.variants.length) return;
+                        moveVariant(index, to);
+                        setTimeout(() =>
+                          document.querySelector(`[data-variant-index="${to}"]`)?.focus(),
+                        );
+                      }}
                     >
                       <span className="admin-variant-card-header">
                         <strong>

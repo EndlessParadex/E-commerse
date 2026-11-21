@@ -385,6 +385,28 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await click(container.querySelector('.admin-variant-card[data-variant-index="0"]'));
     assert.equal(container.querySelector('#variant-0-id').readOnly, true);
     await click(button('Selesai mengedit'));
+    const firstSku = container.querySelectorAll('.admin-variant-card')[0].textContent;
+    await act(async () => {
+      container
+        .querySelector('.admin-variant-card[data-variant-index="0"]')
+        .dispatchEvent(
+          new dom.KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true }),
+        );
+    });
+    assert.equal(
+      container.querySelectorAll('.admin-variant-card')[1].textContent.replace(/Varian \d+/, ''),
+      firstSku.replace(/Varian \d+/, ''),
+      'Alt+panah kanan memindah kartu varian satu posisi',
+    );
+    assert.equal(container.querySelectorAll('.admin-variant-cards li[draggable="true"]').length, 5);
+    await click(container.querySelector('.admin-variant-card[data-variant-index="1"]'));
+    assert.equal(
+      container.querySelector('#variant-1-id').readOnly,
+      true,
+      'SKU tersimpan tetap terkunci setelah dipindah',
+    );
+    await click(button('Selesai mengedit'));
+    await click(button('Urutkan otomatis'));
     await click(button('Batal'));
     await render('suppliers');
     const usedDelete = container.querySelector(

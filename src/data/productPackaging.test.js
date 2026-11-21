@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { products } from './products.js';
 import { productDraft, validateDraft, buildVariants } from './adminEditor.js';
 import {
+  compareVariants,
   packagingValues,
   packagingErrors,
   packagingContents,
@@ -173,4 +174,22 @@ test('keranjang lama dengan SKU pack harus memperbarui informasi; riwayat lama t
     }).cart[0].packaging,
     undefined,
   );
+});
+
+test('compareVariants: ukuran naik, lalu satuan, renceng, pack, box, dus', () => {
+  const v = (sizeValue, packagingType, unitsPerPackage = '1') => ({
+    sizeValue,
+    sizeUnit: 'g',
+    packagingType,
+    unitsPerPackage,
+  });
+  const sorted = [
+    v('24', 'dus', '48'),
+    v('15', 'dus', '60'),
+    v('24', 'satuan'),
+    v('15', 'renceng', '10'),
+  ]
+    .sort(compareVariants)
+    .map((entry) => `${entry.sizeValue}-${entry.packagingType}`);
+  assert.deepEqual(sorted, ['15-renceng', '15-dus', '24-satuan', '24-dus']);
 });

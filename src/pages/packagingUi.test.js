@@ -41,6 +41,8 @@ test('admin menyimpan pack/dus melalui API; pembeli memilih kombinasi tersedia s
     ['/src/App.jsx', '/src/state/orderModel.js'].map((path) => server.ssrLoadModule(path)),
   );
   const dom = new Window({ url: 'http://localhost/#/admin/produk' });
+  // These checks use the per-SKU table; the grouped views have their own test.
+  dom.localStorage.setItem('bam.admin.product-view', 'sku');
   const previousFetch = globalThis.fetch;
   globalThis.window = dom;
   globalThis.document = dom.document;

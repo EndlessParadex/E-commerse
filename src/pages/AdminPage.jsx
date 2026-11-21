@@ -18,6 +18,8 @@ import AdminIcon from '../components/admin/AdminIcon';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import AdminPageGuide from '../components/admin/AdminPageGuide';
 import { paginateAdminList } from '../data/adminPagination';
+import { groupAdminProducts } from '../data/adminProductGroups';
+import AdminPager from '../components/admin/AdminPager';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import AdminProductForm from './AdminProductForm';
 import {
@@ -116,6 +118,48 @@ const navigationGroups = [
   },
 ];
 
+const PRODUCT_VIEWS = [
+  { id: 'grid', name: 'Kotak', hint: 'Satu kartu per produk dengan foto besar' },
+  { id: 'list', name: 'Daftar', hint: 'Satu baris per produk' },
+  { id: 'sku', name: 'Per SKU', hint: 'Satu baris per ukuran dan kemasan' },
+];
+const MAX_CHIPS = 6;
+
+function priceRange(group) {
+  return group.minPrice === group.maxPrice
+    ? rupiah(group.minPrice)
+    : `${rupiah(group.minPrice)} – ${rupiah(group.maxPrice)}`;
+}
+
+function VariantChips({ group }) {
+  const shown = group.skus.slice(0, MAX_CHIPS);
+  return (
+    <ul className="admin-variant-chips" aria-label={`Varian ${group.baseName}`}>
+      {shown.map((sku) => (
+        <li key={sku.id} title={`${sku.id} · ${rupiah(sku.price)}`}>
+          {sku.sizeLabel} · {packagingLabel(sku)}
+        </li>
+      ))}
+      {group.skus.length > MAX_CHIPS && (
+        <li className="is-more">+{group.skus.length - MAX_CHIPS} lainnya</li>
+      )}
+    </ul>
+  );
+}
+
+function AdminViewIcon({ name }) {
+  const paths = {
+    grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    list: 'M4 5h4v4H4zM10 6h10v2H10zM4 11h4v4H4zM10 12h10v2H10zM4 17h4v4H4zM10 18h10v2H10z',
+    sku: 'M4 5h16v2H4zM4 9h16v2H4zM4 13h16v2H4zM4 17h16v2H4z',
+  };
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+      <path d={paths[name]} fill="currentColor" />
+    </svg>
+  );
+}
+
 function ProductIdentity({ product }) {
   return (
     <div className="admin-product-identity">
@@ -143,6 +187,15 @@ export default function AdminPage({ view = 'overview' }) {
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
   const [productPage, setProductPage] = useState(1);
+  const [productView, setProductView] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem('bam.admin.product-view');
+      return PRODUCT_VIEWS.some((entry) => entry.id === saved) ? saved : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+  const productsTop = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
@@ -192,7 +245,26 @@ export default function AdminPage({ view = 'overview' }) {
   };
   const brands = adminBrands(supplierId);
   const filtered = filterAdminProducts({ query, supplierId, brandId });
-  const productPagination = paginateAdminList(filtered, productPage, 24);
+  const groups = groupAdminProducts(filtered);
+  const productCount = new Set(adminProducts.map((product) => product.groupId)).size;
+  const productPagination = paginateAdminList(
+    productView === 'sku' ? filtered : groups,
+    productPage,
+    24,
+  );
+  const changeProductView = (value) => {
+    setProductView(value);
+    setProductPage(1);
+    try {
+      window.localStorage.setItem('bam.admin.product-view', value);
+    } catch {
+      /* Private browsing may prevent storage; the choice still applies now. */
+    }
+  };
+  const goToProductPage = (value) => {
+    setProductPage(value);
+    productsTop.current?.scrollIntoView?.({ block: 'start' });
+  };
   const hasFilters = Boolean(query || supplierId || brandId);
   const reset = () => {
     setProductPage(1);
@@ -311,6 +383,35 @@ export default function AdminPage({ view = 'overview' }) {
         className="admin-view-product"
         href={'#/produk/' + encodeURIComponent(product.id)}
         aria-label={`Lihat ${product.baseName} ukuran ${product.sizeLabel}${packagingLabel(product) === 'Satuan' ? '' : ` · ${packagingLabel(product)}`} di toko`}
+      >
+        Lihat produk ↗
+      </a>
+    </div>
+  );
+  const groupActions = (group) => (
+    <div className="admin-row-actions">
+      <button
+        type="button"
+        className="admin-text-button"
+        disabled={Boolean(deleting)}
+        onClick={() => startEdit(group.groupId)}
+        aria-label={`Edit produk ${group.baseName}`}
+      >
+        Edit produk
+      </button>
+      <button
+        type="button"
+        className="admin-danger"
+        disabled={Boolean(deleting)}
+        onClick={() => removeProduct(group.first)}
+        aria-label={`Hapus produk ${group.baseName} beserta semua SKU`}
+      >
+        {deleting === group.groupId ? 'Menghapus…' : 'Hapus produk'}
+      </button>
+      <a
+        className="admin-view-product"
+        href={'#/produk/' + encodeURIComponent(group.first.id)}
+        aria-label={`Lihat ${group.baseName} di toko`}
       >
         Lihat produk ↗
       </a>
@@ -642,12 +743,14 @@ export default function AdminPage({ view = 'overview' }) {
               <div>
                 <h2>Katalog produk</h2>
                 <p>
-                  Setiap kombinasi ukuran dan kemasan ditampilkan sebagai SKU terpisah. Hapus produk
+                  Satu produk bisa punya banyak SKU (setiap ukuran dan kemasan). Hapus produk
                   menghapus seluruh SKU produk tersebut.
                 </p>
               </div>
               <div className="admin-heading-actions">
-                <span className="admin-result-pill">{adminProducts.length} SKU</span>
+                <span className="admin-result-pill">
+                  {productCount} produk · {adminProducts.length} SKU
+                </span>
                 <button
                   type="button"
                   className="admin-primary"
@@ -713,105 +816,179 @@ export default function AdminPage({ view = 'overview' }) {
                 </select>
               </div>
             </AdminProductFilters>
-            <div className="admin-results">
+            <div className="admin-results" ref={productsTop}>
               <p role="status">
-                Menampilkan <strong>{productPagination.items.length}</strong> dari {filtered.length}{' '}
-                hasil ({adminProducts.length} SKU tersedia)
+                {productView === 'sku' ? (
+                  <>
+                    <strong>{filtered.length}</strong> SKU dari {groups.length} produk
+                  </>
+                ) : (
+                  <>
+                    <strong>{groups.length}</strong> produk ({filtered.length} SKU)
+                  </>
+                )}
+                {hasFilters && ` cocok dengan filter · total ${productCount} produk`}
               </p>
               {hasFilters && (
                 <button type="button" className="admin-text-button" onClick={reset}>
                   Reset filter
                 </button>
               )}
+              <div className="admin-view-switch" role="group" aria-label="Tampilan katalog">
+                {PRODUCT_VIEWS.map((entry) => (
+                  <button
+                    type="button"
+                    key={entry.id}
+                    title={entry.hint}
+                    aria-pressed={productView === entry.id}
+                    onClick={() => changeProductView(entry.id)}
+                  >
+                    <AdminViewIcon name={entry.id} />
+                    {entry.name}
+                  </button>
+                ))}
+              </div>
             </div>
             {filtered.length ? (
               <>
-                <div className="admin-table-wrap">
-                  <table className="admin-table">
-                    <caption className="admin-sr-only">
-                      Daftar produk, pemasok, merek, ukuran, dan harga
-                    </caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Produk / SKU</th>
-                        <th scope="col">PT pemasok</th>
-                        <th scope="col">Merek</th>
-                        <th scope="col">Ukuran / kemasan</th>
-                        <th scope="col">Harga</th>
-                        <th scope="col">Tindakan</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productPagination.items.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <ProductIdentity product={product} />
-                          </td>
-                          <td>{product.supplier?.name || 'Belum ditentukan'}</td>
-                          <td>{product.brand}</td>
-                          <td>
-                            <span className="admin-size">{product.sizeLabel}</span>
-                            <small className="admin-packaging">{packagingLabel(product)}</small>
-                          </td>
-                          <td className="admin-price">{rupiah(product.price)}</td>
-                          <td>{actions(product)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <ul className="admin-mobile-products">
-                  {productPagination.items.map((product) => (
-                    <li key={product.id}>
-                      <ProductIdentity product={product} />
-                      <dl>
-                        <div>
-                          <dt>PT pemasok</dt>
-                          <dd>{product.supplier?.name || 'Belum ditentukan'}</dd>
+                {productView === 'grid' && (
+                  <ul className="admin-product-grid">
+                    {productPagination.items.map((group) => (
+                      <li key={group.groupId} className="admin-product-tile">
+                        <button
+                          type="button"
+                          className="admin-product-tile-media"
+                          disabled={Boolean(deleting)}
+                          onClick={() => startEdit(group.groupId)}
+                          tabIndex={-1}
+                          aria-hidden="true"
+                        >
+                          <ProductImage product={group.first} variant="card" />
+                          <span className="admin-product-tile-count">{group.skus.length} SKU</span>
+                        </button>
+                        <div className="admin-product-tile-body">
+                          <small className="admin-product-tile-meta">
+                            {group.brand}
+                            {group.suppliers.length ? ` · ${group.suppliers.join(', ')}` : ''}
+                          </small>
+                          <h3>{group.baseName}</h3>
+                          <p className="admin-price">{priceRange(group)}</p>
+                          <VariantChips group={group} />
                         </div>
-                        <div>
-                          <dt>Merek</dt>
-                          <dd>{product.brand}</dd>
-                        </div>
-                        <div>
-                          <dt>Ukuran / kemasan</dt>
-                          <dd>
-                            <span className="admin-size">{product.sizeLabel}</span>
-                            <small className="admin-packaging">{packagingLabel(product)}</small>
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>Harga</dt>
-                          <dd className="admin-price">{rupiah(product.price)}</dd>
-                        </div>
-                      </dl>
-                      {actions(product)}
-                    </li>
-                  ))}
-                </ul>
-                {productPagination.pages > 1 && (
-                  <nav className="admin-list-pagination" aria-label="Halaman katalog produk">
-                    <button
-                      type="button"
-                      className="admin-secondary"
-                      disabled={productPagination.page <= 1}
-                      onClick={() => setProductPage(productPagination.page - 1)}
-                    >
-                      Sebelumnya
-                    </button>
-                    <span role="status">
-                      Halaman {productPagination.page} dari {productPagination.pages}
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-secondary"
-                      disabled={productPagination.page >= productPagination.pages}
-                      onClick={() => setProductPage(productPagination.page + 1)}
-                    >
-                      Berikutnya
-                    </button>
-                  </nav>
+                        {groupActions(group)}
+                      </li>
+                    ))}
+                  </ul>
                 )}
+                {productView === 'list' && (
+                  <div className="admin-product-rows">
+                    <div className="admin-product-rows-head" aria-hidden="true">
+                      <span>Produk</span>
+                      <span>Merek / PT pemasok</span>
+                      <span>Varian</span>
+                      <span>Harga</span>
+                      <span>Tindakan</span>
+                    </div>
+                    <ul>
+                      {productPagination.items.map((group) => (
+                        <li key={group.groupId}>
+                          <div className="admin-product-identity">
+                            <div className="admin-product-image">
+                              <ProductImage product={group.first} variant="thumbnail" />
+                            </div>
+                            <div>
+                              <strong>{group.baseName}</strong>
+                              <small>{group.skus.length} SKU</small>
+                            </div>
+                          </div>
+                          <div className="admin-product-rows-meta">
+                            <span>{group.brand}</span>
+                            <small>{group.suppliers.join(', ') || 'Belum ditentukan'}</small>
+                          </div>
+                          <VariantChips group={group} />
+                          <p className="admin-price">{priceRange(group)}</p>
+                          {groupActions(group)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {productView === 'sku' && (
+                  <>
+                    <div className="admin-table-wrap">
+                      <table className="admin-table">
+                        <caption className="admin-sr-only">
+                          Daftar produk, pemasok, merek, ukuran, dan harga
+                        </caption>
+                        <thead>
+                          <tr>
+                            <th scope="col">Produk / SKU</th>
+                            <th scope="col">PT pemasok</th>
+                            <th scope="col">Merek</th>
+                            <th scope="col">Ukuran / kemasan</th>
+                            <th scope="col">Harga</th>
+                            <th scope="col">Tindakan</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {productPagination.items.map((product) => (
+                            <tr key={product.id}>
+                              <td>
+                                <ProductIdentity product={product} />
+                              </td>
+                              <td>{product.supplier?.name || 'Belum ditentukan'}</td>
+                              <td>{product.brand}</td>
+                              <td>
+                                <span className="admin-size">{product.sizeLabel}</span>
+                                <small className="admin-packaging">{packagingLabel(product)}</small>
+                              </td>
+                              <td className="admin-price">{rupiah(product.price)}</td>
+                              <td>{actions(product)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <ul className="admin-mobile-products">
+                      {productPagination.items.map((product) => (
+                        <li key={product.id}>
+                          <ProductIdentity product={product} />
+                          <dl>
+                            <div>
+                              <dt>PT pemasok</dt>
+                              <dd>{product.supplier?.name || 'Belum ditentukan'}</dd>
+                            </div>
+                            <div>
+                              <dt>Merek</dt>
+                              <dd>{product.brand}</dd>
+                            </div>
+                            <div>
+                              <dt>Ukuran / kemasan</dt>
+                              <dd>
+                                <span className="admin-size">{product.sizeLabel}</span>
+                                <small className="admin-packaging">{packagingLabel(product)}</small>
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Harga</dt>
+                              <dd className="admin-price">{rupiah(product.price)}</dd>
+                            </div>
+                          </dl>
+                          {actions(product)}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <AdminPager
+                  page={productPagination.page}
+                  pages={productPagination.pages}
+                  total={productPagination.total}
+                  pageSize={24}
+                  unit={productView === 'sku' ? 'SKU' : 'produk'}
+                  label="Halaman katalog produk"
+                  onPage={goToProductPage}
+                />
               </>
             ) : (
               <div className="admin-empty">

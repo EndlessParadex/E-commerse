@@ -29,6 +29,8 @@ test('akses admin dan form server: selama menyimpan terkunci; kegagalan memperta
   );
   const [{ default: AdminPage }, { default: AdminAccess }, { DeliveryContext }, store] = modules;
   const dom = new Window({ url: 'http://localhost/#/admin/produk' });
+  // These checks use the per-SKU table; the grouped views have their own test.
+  dom.localStorage.setItem('bam.admin.product-view', 'sku');
   globalThis.window = dom;
   globalThis.document = dom.document;
   globalThis.HTMLElement = dom.HTMLElement;

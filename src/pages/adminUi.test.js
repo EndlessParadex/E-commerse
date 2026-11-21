@@ -7,6 +7,8 @@ import { readFile } from 'node:fs/promises';
 
 test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/merek baru tersedia dan SKU baru tidak terkunci', async () => {
   const dom = new Window({ url: 'http://localhost/#/admin' });
+  // These checks use the per-SKU table; the grouped views have their own test.
+  dom.localStorage.setItem('bam.admin.product-view', 'sku');
   const themeStyle = dom.document.createElement('style');
   themeStyle.textContent = (
     await Promise.all(
@@ -137,6 +139,19 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
       'middle',
       'product rows and actions use the same vertical alignment',
     );
+    const skuRows = container.querySelectorAll('.admin-table tbody tr').length;
+    await click(button('Kotak'));
+    const tiles = container.querySelectorAll('.admin-product-tile');
+    assert.ok(tiles.length > 0 && tiles.length < skuRows, 'grid shows one card per product');
+    assert.ok(tiles[0].querySelector('.admin-variant-chips li'), 'cards list their variants');
+    assert.equal(dom.localStorage.getItem('bam.admin.product-view'), 'grid');
+    await click(button('Daftar'));
+    assert.equal(container.querySelectorAll('.admin-product-rows > ul > li').length, tiles.length);
+    assert.equal(
+      container.querySelector('.admin-view-switch button[aria-pressed="true"]').textContent,
+      'Daftar',
+    );
+    await click(button('Per SKU'));
     await render('overview');
     const adminTheme = await readFile(new URL('./AdminDesign2.css', import.meta.url), 'utf8');
     assert.match(adminTheme, /\.admin-shell \.admin-sidebar\s*\{/);

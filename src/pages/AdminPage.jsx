@@ -491,34 +491,37 @@ export default function AdminPage({ view = 'overview' }) {
       </aside>
       <div className="admin-content">
         <div className="admin-topbar">
-          <form
-            className="admin-topbar-search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              try {
-                window.sessionStorage.setItem('bam.admin.catalog-search', query);
-              } catch {
-                /* Search still works in the current page. */
-              }
-              if (window.location.hash !== '#/admin/produk')
-                window.location.hash = '#/admin/produk';
-            }}
-          >
-            <AdminIcon name="products" />
-            <label htmlFor="admin-global-search" className="admin-visually-hidden">
-              Cari produk di katalog
-            </label>
-            <input
-              id="admin-global-search"
-              type="search"
-              maxLength={200}
-              placeholder="Cari nama produk, merek, atau SKU..."
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <button type="submit">Cari katalog</button>
-          </form>
+          {/* The product page has its own search, so the shortcut would only duplicate it. */}
+          {!isProducts && (
+            <form
+              className="admin-topbar-search"
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                try {
+                  window.sessionStorage.setItem('bam.admin.catalog-search', query);
+                } catch {
+                  /* Search still works in the current page. */
+                }
+                if (window.location.hash !== '#/admin/produk')
+                  window.location.hash = '#/admin/produk';
+              }}
+            >
+              <AdminIcon name="products" />
+              <label htmlFor="admin-global-search" className="admin-visually-hidden">
+                Cari produk di katalog
+              </label>
+              <input
+                id="admin-global-search"
+                type="search"
+                maxLength={200}
+                placeholder="Cari nama produk, merek, atau SKU..."
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <button type="submit">Cari katalog</button>
+            </form>
+          )}
           <div className="admin-topbar-profile">
             <span className="admin-topbar-avatar" aria-hidden="true">
               {(delivery?.user?.name || 'A').slice(0, 1).toUpperCase()}

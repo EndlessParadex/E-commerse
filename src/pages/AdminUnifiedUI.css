@@ -1317,3 +1317,11 @@
     justify-content: center;
   }
 }
+
+/* The search box draws one focus ring around itself; the field inside must not add a second. */
+.admin-shell .admin-topbar-search input:focus-visible {
+  outline: none;
+}
+.admin-shell .admin-topbar:not(:has(.admin-topbar-search)) {
+  justify-content: flex-end;
+}

@@ -714,7 +714,7 @@ export default function AdminPage({ view = 'overview' }) {
         ) : view === 'company' ? (
           <AdminCompanyPage />
         ) : view === 'orders' ? (
-          <AdminOrdersPage />
+          <AdminOrdersPage statusCounts={workCounts.statusCounts} />
         ) : view === 'stock' ? (
           <AdminStockPage />
         ) : masterType ? (

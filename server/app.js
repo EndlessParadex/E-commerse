@@ -962,6 +962,13 @@ export function createApp({
             approvalsPending: db
               .prepare("SELECT COUNT(*) AS n FROM account_approvals WHERE status='pending'")
               .get().n,
+            // Orders per status, for the status tabs on the admin order list.
+            orderStatusCounts: Object.fromEntries(
+              db
+                .prepare('SELECT status, COUNT(*) AS n FROM orders GROUP BY status')
+                .all()
+                .map((row) => [row.status, row.n]),
+            ),
           });
         const retryMatch = path.match(/^\/api\/admin\/notifications\/(.+)\/retry$/);
         if (retryMatch && req.method === 'POST')

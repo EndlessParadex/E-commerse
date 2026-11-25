@@ -58,5 +58,6 @@ export default function useAdminWorkCounts(view) {
     proofs: work?.proofPending ?? null,
     approvals: work?.approvalsPending ?? null,
     stockEmpty: stock ? stock.empty : null,
+    statusCounts: work?.orderStatusCounts ?? null,
   };
 }

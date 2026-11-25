@@ -34,20 +34,36 @@ const deliveryDay = (value) => {
       });
 };
 
+// Tabs in the order work moves through; `act` marks statuses that wait on the shop.
 const ORDER_FILTERS = [
-  { id: 'awaiting_acceptance', label: 'Menunggu persetujuan total' },
   { id: 'all', label: 'Semua' },
-  { id: 'awaiting_payment', label: 'Menunggu pembayaran' },
-  { id: 'awaiting_confirmation', label: 'Menunggu konfirmasi COD' },
-  { id: 'awaiting_review', label: 'Menunggu pemeriksaan toko' },
-  { id: 'processing', label: 'Diproses' },
+  {
+    id: 'awaiting_acceptance',
+    label: 'Persetujuan',
+    title: 'Menunggu pembeli menyetujui total baru',
+    act: true,
+  },
+  { id: 'awaiting_payment', label: 'Belum bayar', title: 'Menunggu pembayaran' },
+  {
+    id: 'awaiting_confirmation',
+    label: 'Cek COD',
+    title: 'Menunggu konfirmasi COD',
+    act: true,
+  },
+  {
+    id: 'awaiting_review',
+    label: 'Cek toko',
+    title: 'Menunggu pemeriksaan toko',
+    act: true,
+  },
+  { id: 'processing', label: 'Perlu dikirim', title: 'Diproses, belum dikirim', act: true },
   { id: 'shipped', label: 'Dikirim' },
   { id: 'completed', label: 'Selesai' },
   { id: 'cancelled', label: 'Dibatalkan' },
   { id: 'expired', label: 'Kedaluwarsa' },
 ];
 
-export default function AdminOrdersPage({ initialFilter = 'all' }) {
+export default function AdminOrdersPage({ initialFilter = 'all', statusCounts = null }) {
   const company = useCompany();
   const [shippingCost, setShippingCost] = useState(''),
     [rejectionReason, setRejectionReason] = useState('');
@@ -177,6 +193,34 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
           {loading ? 'Memuat…' : `${total ?? orders.length} pesanan`}
         </span>
       </div>
+      <div className="admin-order-tabs" role="group" aria-label="Status pesanan">
+        {ORDER_FILTERS.map((item) => {
+          const count = !statusCounts
+            ? null
+            : item.id === 'all'
+              ? Object.values(statusCounts).reduce((sum, value) => sum + value, 0)
+              : statusCounts[item.id] || 0;
+          return (
+            <button
+              type="button"
+              key={item.id}
+              title={item.title}
+              aria-pressed={filter === item.id}
+              onClick={() => {
+                setFilter(item.id);
+                setSelectedIds([]);
+              }}
+            >
+              {item.label}
+              {count !== null && (
+                <span className={'admin-order-tab-count' + (item.act && count ? ' is-due' : '')}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
       <details className="admin-order-help">
         <summary>Informasi pembayaran dan pengiriman</summary>
         <p>
@@ -196,20 +240,6 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Nomor pesanan, penerima, produk, atau SKU"
           />
-        </div>
-        <div className="admin-field">
-          <label htmlFor="admin-order-status">Status pesanan</label>
-          <select
-            id="admin-order-status"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-          >
-            {ORDER_FILTERS.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
       {!loading && !failed && (

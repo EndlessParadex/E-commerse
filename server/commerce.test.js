@@ -402,6 +402,11 @@ test('v31: failed order email is visible, survives restart, retries safely and w
     let status = await request(app, 'GET', '/api/admin/readiness', undefined, admin);
     assert.equal(status.body.failedMessages.length, 1);
     assert.equal(status.body.accountDelivery.retrying, 1);
+    assert.equal(
+      status.body.orderStatusCounts[order.status],
+      1,
+      'readiness counts orders per status for the admin tabs',
+    );
     app.db.close();
     app = createApp({
       dbPath,

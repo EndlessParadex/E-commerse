@@ -338,7 +338,11 @@ export default function AdminPage({ view = 'overview' }) {
     query || supplierId || brandId || categoryId || productScope !== 'all',
   );
   // From a PT or brand tile: open the product list already narrowed to that PT or brand.
-  const showProducts = ({ supplierId: nextSupplier = '', brandId: nextBrand = '' }) => {
+  const showProducts = ({
+    supplierId: nextSupplier = '',
+    brandId: nextBrand = '',
+    scope: nextScope = 'all',
+  }) => {
     setQuery('');
     try {
       window.sessionStorage.removeItem('bam.admin.catalog-search');
@@ -348,7 +352,7 @@ export default function AdminPage({ view = 'overview' }) {
     setSupplierId(nextSupplier);
     setBrandId(nextBrand);
     setCategoryId('');
-    setProductScope('all');
+    setProductScope(nextScope);
     setProductPage(1);
     window.location.hash = '#/admin/produk';
   };
@@ -823,7 +827,11 @@ export default function AdminPage({ view = 'overview' }) {
               </section>
             )}
             <AdminOpsOverview
-              counts={workCounts}
+              counts={{
+                ...workCounts,
+                noPhoto: scopeProductGroups(groupAdminProducts(adminProducts), 'nophoto').length,
+              }}
+              onShowNoPhoto={() => showProducts({ scope: 'nophoto' })}
               user={delivery?.user}
               disabled={Boolean(deleting || importing)}
               onProductSaved={finishEdit}

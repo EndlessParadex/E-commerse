@@ -85,8 +85,12 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     await render('overview');
     assert.equal(
       container.querySelectorAll('.admin-work-card').length,
-      4,
-      'dashboard leads with the four pending-work cards',
+      5,
+      'dashboard leads with the pending-work cards, including products without photos',
+    );
+    assert.match(
+      [...container.querySelectorAll('.admin-work-card')].map((card) => card.textContent).join(' '),
+      /Produk tanpa foto/,
     );
     assert.equal(container.querySelector('.admin-home-hero'), null);
     assert.ok(container.querySelector('.admin-ops-orders'), 'live order activity panel is present');

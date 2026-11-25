@@ -228,7 +228,14 @@ function InventorySummary() {
   );
 }
 
-export default function AdminOpsOverview({ counts, user, disabled, onProductSaved, onLeave }) {
+export default function AdminOpsOverview({
+  counts,
+  user,
+  disabled,
+  onProductSaved,
+  onLeave,
+  onShowNoPhoto,
+}) {
   const [panel, setPanel] = useState('queue');
   const close = () => setPanel('queue');
   return (
@@ -258,6 +265,16 @@ export default function AdminOpsOverview({ counts, user, disabled, onProductSave
           tone="warning"
           href="#/admin/stok"
         />
+        {onShowNoPhoto && (
+          <WorkCard
+            label="Produk tanpa foto"
+            value={counts.noPhoto ?? null}
+            hint="Tambah foto agar produk menarik"
+            icon="products"
+            tone="warning"
+            onClick={onShowNoPhoto}
+          />
+        )}
         <WorkCard
           label="Akun menunggu"
           value={counts.approvals}

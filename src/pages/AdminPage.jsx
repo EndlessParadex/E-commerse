@@ -25,7 +25,7 @@ import {
   sortProductGroups,
 } from '../data/adminProductGroups';
 import { categories as catalogCategories } from '../data/catalog';
-import { serverStock } from '../state/serverWorkflow';
+import { serverStock, setServerAvailability } from '../state/serverWorkflow';
 import AdminPager from '../components/admin/AdminPager';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import AdminProductForm from './AdminProductForm';
@@ -36,6 +36,7 @@ import {
   pendingLocalImport,
   importLocalCatalog,
   deleteProduct,
+  moveProducts,
 } from '../data/adminStore';
 import { brands as managedBrands } from '../data/catalogMasters';
 import AdminMasterPage from './AdminMasterPage';
@@ -225,6 +226,9 @@ export default function AdminPage({ view = 'overview' }) {
   const [categoryId, setCategoryId] = useState('');
   const [productScope, setProductScope] = useState('all');
   const [productSort, setProductSort] = useState('catalog');
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [moveTarget, setMoveTarget] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [productPage, setProductPage] = useState(1);
   const [productView, setProductView] = useState(() => {
     try {
@@ -283,7 +287,9 @@ export default function AdminPage({ view = 'overview' }) {
     approvals: workCounts.approvals,
   };
   const brands = adminBrands(supplierId);
-  const { counts: stockCounts } = useStockCounts();
+  const { counts: stockCounts, inventory } = useStockCounts();
+  // Bulk Tersedia/Kosong only exists in status mode; counted stock is edited on the Stok page.
+  const statusMode = Boolean(stockCounts && inventory?.stockMode === 'status');
   // Stock per packaging is only known from the server; otherwise the "Kosong" view stays hidden.
   const isEmptySku = stockCounts
     ? (sku) => {
@@ -460,6 +466,73 @@ export default function AdminPage({ view = 'overview' }) {
       </a>
     </div>
   );
+  // Only products on the current page count as selected, so nothing hidden is ever changed.
+  const selection =
+    productView === 'sku'
+      ? []
+      : productPagination.items.filter((group) => selectedGroups.includes(group.groupId));
+  const toggleGroup = (groupId) =>
+    setSelectedGroups((current) =>
+      current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId],
+    );
+  const allOnPage =
+    productPagination.items.length > 0 &&
+    productPagination.items.every((group) => selectedGroups.includes(group.groupId));
+  const togglePage = () =>
+    setSelectedGroups(allOnPage ? [] : productPagination.items.map((group) => group.groupId));
+  const bulkAvailability = async (inStock) => {
+    if (bulkBusy || !selection.length) return;
+    setBulkBusy(true);
+    setDeleteError('');
+    setNotice('');
+    // One request per size: availability is stored per size, shared by its packagings.
+    const sizes = [
+      ...new Map(
+        selection
+          .flatMap((group) => group.skus)
+          .map((sku) => [`${sku.groupId}:${sku.sizeLabel}`, sku]),
+      ).values(),
+    ];
+    const failed = [];
+    for (const sku of sizes) {
+      let revision = 0;
+      try {
+        revision = serverStock(sku).revision;
+      } catch {
+        /* Unknown stock row: the server answers with the current revision. */
+      }
+      const result = await setServerAvailability(sku, inStock, revision);
+      if (result.error) failed.push(`${sku.baseName} ${sku.sizeLabel}`);
+    }
+    setBulkBusy(false);
+    setSelectedGroups([]);
+    if (failed.length) setDeleteError(`Belum berhasil ditandai: ${failed.join(', ')}.`);
+    setNotice(
+      `${selection.length} produk (${sizes.length - failed.length} ukuran) ditandai ${inStock ? 'tersedia' : 'kosong'}.`,
+    );
+  };
+  const bulkMove = async () => {
+    if (bulkBusy || !selection.length || !moveTarget) return;
+    const [categoryId, subcategoryId] = moveTarget.split('/');
+    setBulkBusy(true);
+    setDeleteError('');
+    setNotice('');
+    const result = await moveProducts(
+      selection.map((group) => group.groupId),
+      categoryId,
+      subcategoryId,
+    );
+    setBulkBusy(false);
+    if (result.storageError) {
+      setDeleteError(result.storageError);
+      return;
+    }
+    const category = catalogCategories.find((entry) => entry.id === categoryId);
+    const child = category?.children.find((entry) => entry.id === subcategoryId);
+    setSelectedGroups([]);
+    setMoveTarget('');
+    setNotice(`${selection.length} produk dipindah ke ${category?.name} › ${child?.name}.`);
+  };
   const groupActions = (group) => (
     <div className="admin-row-actions">
       <button
@@ -986,10 +1059,93 @@ export default function AdminPage({ view = 'overview' }) {
             </div>
             {filtered.length ? (
               <>
+                {productView !== 'sku' && (
+                  <div className={'admin-bulk-bar' + (selection.length ? ' is-active' : '')}>
+                    <label className="admin-bulk-all">
+                      <input type="checkbox" checked={allOnPage} onChange={togglePage} />
+                      {selection.length
+                        ? `${selection.length} produk dipilih`
+                        : 'Pilih semua di halaman ini'}
+                    </label>
+                    {selection.length > 0 && (
+                      <div className="admin-bulk-actions">
+                        {statusMode && (
+                          <>
+                            <button
+                              type="button"
+                              className="admin-secondary"
+                              disabled={bulkBusy}
+                              onClick={() => bulkAvailability(true)}
+                            >
+                              Tandai Tersedia
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-secondary"
+                              disabled={bulkBusy}
+                              onClick={() => bulkAvailability(false)}
+                            >
+                              Tandai Kosong
+                            </button>
+                          </>
+                        )}
+                        <label className="visually-hidden" htmlFor="admin-bulk-move">
+                          Pindah ke kategori
+                        </label>
+                        <select
+                          id="admin-bulk-move"
+                          value={moveTarget}
+                          disabled={bulkBusy}
+                          onChange={(event) => setMoveTarget(event.target.value)}
+                        >
+                          <option value="">Pindah ke kategori…</option>
+                          {catalogCategories.map((category) => (
+                            <optgroup key={category.id} label={category.name}>
+                              {category.children.map((child) => (
+                                <option key={child.id} value={`${category.id}/${child.id}`}>
+                                  {child.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="admin-primary"
+                          disabled={bulkBusy || !moveTarget}
+                          onClick={bulkMove}
+                        >
+                          {bulkBusy ? 'Menyimpan…' : 'Pindahkan'}
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-text-button"
+                          disabled={bulkBusy}
+                          onClick={() => setSelectedGroups([])}
+                        >
+                          Batal pilih
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {productView === 'grid' && (
                   <ul className="admin-product-grid">
                     {productPagination.items.map((group) => (
-                      <li key={group.groupId} className="admin-product-tile">
+                      <li
+                        key={group.groupId}
+                        className={
+                          'admin-product-tile' +
+                          (selectedGroups.includes(group.groupId) ? ' is-selected' : '')
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          className="admin-product-select"
+                          checked={selectedGroups.includes(group.groupId)}
+                          onChange={() => toggleGroup(group.groupId)}
+                          aria-label={`Pilih ${group.baseName}`}
+                        />
                         <button
                           type="button"
                           className="admin-product-tile-media"
@@ -1022,6 +1178,7 @@ export default function AdminPage({ view = 'overview' }) {
                 {productView === 'list' && (
                   <div className="admin-product-rows">
                     <div className="admin-product-rows-head" aria-hidden="true">
+                      <span />
                       <span>Produk</span>
                       <span>Merek / PT pemasok</span>
                       <span>Varian</span>
@@ -1030,7 +1187,17 @@ export default function AdminPage({ view = 'overview' }) {
                     </div>
                     <ul>
                       {productPagination.items.map((group) => (
-                        <li key={group.groupId}>
+                        <li
+                          key={group.groupId}
+                          className={selectedGroups.includes(group.groupId) ? 'is-selected' : ''}
+                        >
+                          <input
+                            type="checkbox"
+                            className="admin-product-select"
+                            checked={selectedGroups.includes(group.groupId)}
+                            onChange={() => toggleGroup(group.groupId)}
+                            aria-label={`Pilih ${group.baseName}`}
+                          />
                           <div className="admin-product-identity">
                             <div className="admin-product-image">
                               <ProductImage product={group.first} variant="thumbnail" />

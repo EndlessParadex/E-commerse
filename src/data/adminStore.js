@@ -177,6 +177,28 @@ export function deleteProduct(groupId, storage = globalThis.localStorage) {
     ? persistServer(masters, nextEdits, { deleted: true })
     : persistLocal(masters, nextEdits, { deleted: true }, storage);
 }
+/** Move several products to one category and subcategory in a single catalog save. */
+export function moveProducts(
+  groupIds,
+  categoryId,
+  subcategoryId,
+  storage = globalThis.localStorage,
+) {
+  const wanted = new Set(groupIds);
+  const source = catalogUsesServer ? edits : catalogDrafts();
+  const category = masterSnapshot().categories.find((entry) => entry.id === categoryId);
+  if (!category?.children.some((entry) => entry.id === subcategoryId))
+    return { storageError: 'Pilih kategori dan subkategori tujuan.' };
+  if (!source.some((draft) => wanted.has(draft.groupId)))
+    return { storageError: 'Produk tidak ditemukan.' };
+  const nextEdits = source.map((draft) =>
+    wanted.has(draft.groupId) ? { ...draft, categoryId, subcategoryId } : draft,
+  );
+  const masters = masterSnapshot();
+  return catalogUsesServer
+    ? persistServer(masters, nextEdits, { moved: wanted.size })
+    : persistLocal(masters, nextEdits, { moved: wanted.size }, storage);
+}
 export function deleteMaster(type, id, storage = globalThis.localStorage) {
   const reason = masterDeleteReason(type, id);
   if (reason) return { storageError: reason };

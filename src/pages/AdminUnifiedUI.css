@@ -1171,7 +1171,9 @@
 .admin-shell .admin-product-rows-head,
 .admin-shell .admin-product-rows > ul > li {
   display: grid;
-  grid-template-columns: minmax(170px, 1.4fr) minmax(120px, 1fr) minmax(150px, 1.6fr) 170px 310px;
+  grid-template-columns:
+    22px minmax(170px, 1.4fr) minmax(120px, 1fr) minmax(150px, 1.6fr)
+    170px 310px;
   align-items: center;
   gap: 16px;
   padding: 12px var(--admin-panel-padding);
@@ -1600,4 +1602,99 @@
 .admin-shell .workflow-admin-orders .workflow-filters {
   grid-template-columns: minmax(0, 1fr);
   max-width: 760px;
+}
+
+/* Product selection and the bulk bar (Kotak and Daftar views). */
+.admin-shell .admin-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  min-height: 56px;
+  padding: 8px var(--admin-panel-padding);
+  border-bottom: 1px solid var(--color-border);
+}
+.admin-shell .admin-bulk-bar.is-active {
+  position: sticky;
+  top: 0;
+  z-index: 13;
+  background: var(--color-info-soft);
+}
+.admin-shell .admin-bulk-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.admin-shell .admin-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.admin-shell .admin-bulk-actions select {
+  min-height: 40px;
+  max-width: 260px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+.admin-shell .admin-bulk-actions button {
+  min-height: 40px;
+}
+.admin-shell
+  :is(.admin-bulk-all, .admin-product-tile, .admin-product-rows li)
+  input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-action);
+  cursor: pointer;
+}
+.admin-shell .admin-product-tile {
+  position: relative;
+}
+.admin-shell .admin-product-tile > .admin-product-select {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+}
+.admin-shell .admin-product-tile.is-selected {
+  border-color: var(--color-action);
+  box-shadow: 0 0 0 2px var(--color-info-soft);
+}
+.admin-shell .admin-product-rows > ul > li.is-selected {
+  background: var(--color-info-soft);
+}
+@media (max-width: 1280px) {
+  .admin-shell .admin-product-rows > ul > li {
+    position: relative;
+  }
+  .admin-shell .admin-product-rows > ul > li > .admin-product-select {
+    position: absolute;
+    top: 14px;
+    right: var(--admin-panel-padding);
+  }
+  .admin-shell .admin-product-rows > ul > li > .admin-product-identity {
+    padding-right: 32px;
+  }
+}
+@media (max-width: 650px) {
+  .admin-shell .admin-bulk-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+  .admin-shell .admin-bulk-actions select {
+    max-width: none;
+    flex: 1 1 100%;
+  }
 }

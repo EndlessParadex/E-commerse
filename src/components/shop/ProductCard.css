@@ -406,3 +406,25 @@
     font-size: 0.68rem;
   }
 }
+
+/* No reviews or sales line yet: drop the empty row instead of reserving 34px for it. The price
+   stays pinned to the bottom of the card (margin-top: auto), so cards in a row still line up. */
+.product-card .product-rating {
+  min-height: 0;
+}
+.product-card .product-rating:empty {
+  display: none;
+}
+.product-card h3 {
+  margin-bottom: 8px;
+}
+/* Price room grows only when a struck-through old price is shown; since the price block is
+   pushed to the bottom, buttons in a row stay aligned either way. */
+.product-card .product-price {
+  min-height: 0;
+}
+/* "Masuk untuk lihat harga" is one short line; it does not need room for a two-line price. */
+.product-price.is-locked-price,
+.product-price.is-locked-price strong {
+  min-height: 0;
+}

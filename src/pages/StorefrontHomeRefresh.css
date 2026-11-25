@@ -1,25 +1,36 @@
 /* Storefront refresh: a saturated hero with a bubble pattern, a shorter first screen,
  * and a soft dotted page background. Loaded last so it wins over the older layers. */
 
-/* Soft bubble/dot pattern behind every storefront page (admin keeps its plain surface). */
+/* Storefront page background: large soft gradient orbs that stay in place while the
+   page scrolls, plus a faint dot grid. Admin keeps its plain surface. */
 .page-main--store {
-  --store-dot: #0369a114;
-  --store-bubble: #0ea5e910;
-  background-image:
-    radial-gradient(circle at 8% 12%, var(--store-bubble) 0 90px, transparent 91px),
-    radial-gradient(circle at 94% 38%, var(--store-bubble) 0 130px, transparent 131px),
-    radial-gradient(circle at 18% 78%, var(--store-bubble) 0 70px, transparent 71px),
-    radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
-  background-size:
-    100% 1400px,
-    100% 1400px,
-    100% 1400px,
-    22px 22px;
-  background-repeat: repeat-y, repeat-y, repeat-y, repeat;
+  --store-dot: #0369a112;
+  --store-orb-blue: #3b82f68c;
+  --store-orb-cyan: #06b6d473;
+  --store-orb-violet: #8b5cf666;
+  --store-orb-sky: #0ea5e959;
+  background-image: radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+.page-main--store::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 4% 22%, var(--store-orb-blue), transparent 34%),
+    radial-gradient(circle at 98% 26%, var(--store-orb-cyan), transparent 36%),
+    radial-gradient(circle at 82% 98%, var(--store-orb-violet), transparent 34%),
+    radial-gradient(circle at 14% 92%, var(--store-orb-sky), transparent 28%),
+    radial-gradient(circle at 50% 60%, var(--store-orb-sky), transparent 18%);
 }
 :root[data-theme='dark'] .page-main--store {
-  --store-dot: #9cc7f01a;
-  --store-bubble: #38bdf80d;
+  --store-dot: #9cc7f017;
+  --store-orb-blue: #2563eb55;
+  --store-orb-cyan: #0891b247;
+  --store-orb-violet: #7c3aed40;
+  --store-orb-sky: #0284c738;
 }
 
 /* Hero: blue gradient in both themes, white text, floating bubbles. */
@@ -154,5 +165,65 @@
 @media (prefers-reduced-transparency: reduce) {
   .home-landing .home-feature-rail .bam-promo::before {
     display: none;
+  }
+}
+
+/* Big white panels get soft gradient orbs behind their content. The cards inside keep
+   their own surfaces, so text contrast is unchanged. */
+.home-landing {
+  --panel-orb-a: #3b82f62e;
+  --panel-orb-b: #06b6d424;
+  --panel-orb-c: #8b5cf61f;
+  --panel-surface: var(--color-surface);
+}
+:root[data-theme='dark'] .home-landing {
+  --panel-orb-a: #3b82f633;
+  --panel-orb-b: #06b6d426;
+  --panel-orb-c: #8b5cf626;
+}
+.home-landing .home-feature-rail .bam-vertical-promos,
+.home-landing .home-discovery-row.bam-compact-discovery > section,
+.home-landing .bam-promotions,
+.home-landing .store-featured-products {
+  background:
+    radial-gradient(circle at 100% 0%, var(--panel-orb-a), transparent 42%),
+    radial-gradient(circle at 0% 100%, var(--panel-orb-b), transparent 46%),
+    radial-gradient(circle at 70% 85%, var(--panel-orb-c), transparent 30%), var(--panel-surface);
+}
+.home-landing .home-discovery-row.bam-compact-discovery > section + section {
+  background:
+    radial-gradient(circle at 0% 0%, var(--panel-orb-b), transparent 42%),
+    radial-gradient(circle at 100% 100%, var(--panel-orb-a), transparent 46%),
+    radial-gradient(circle at 30% 80%, var(--panel-orb-c), transparent 30%), var(--panel-surface);
+}
+.home-landing .bam-promotions {
+  background:
+    radial-gradient(circle at 95% 10%, var(--panel-orb-a), transparent 30%),
+    radial-gradient(circle at 25% 105%, var(--panel-orb-b), transparent 34%),
+    radial-gradient(circle at 60% 40%, var(--panel-orb-c), transparent 24%), var(--panel-surface);
+}
+/* "Produk pilihan untukmu" becomes a panel too, so the orbs have room to show. */
+.home-landing .store-featured-products,
+.home-landing--personal .store-featured-products {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 0% 0%, var(--panel-orb-a), transparent 30%),
+    radial-gradient(circle at 100% 45%, var(--panel-orb-b), transparent 30%),
+    radial-gradient(circle at 20% 100%, var(--panel-orb-c), transparent 32%), var(--panel-surface);
+}
+.home-landing .store-featured-products .product-grid {
+  gap: 16px;
+}
+@media (max-width: 650px) {
+  .home-landing .store-featured-products,
+  .home-landing--personal .store-featured-products {
+    padding: 16px 12px;
+    border-radius: 18px;
+  }
+  .home-landing .store-featured-products .product-grid {
+    gap: 10px;
   }
 }

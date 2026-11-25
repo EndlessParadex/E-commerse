@@ -52,6 +52,16 @@ export default function ProductCard({
     : product.price;
   const priceShown = hasPrice(product.price);
   const priceLabel = priceShown ? rupiah(minimumPrice) : PRICE_LOCKED;
+  // Buyers compare grosir packs by the price of one piece, so show it when a pack holds more.
+  const packed = (hasVariants ? variants : [product]).filter(
+    (item) => packagingValues(item).unitsPerPackage > 1 && hasPrice(item.price),
+  );
+  const unitPrice =
+    priceShown && packed.length
+      ? Math.min(
+          ...packed.map((item) => Math.round(item.price / packagingValues(item).unitsPerPackage)),
+        )
+      : 0;
   const photo = productGallery(product)[0];
   const preview = { ...product, image: photo.src, imageAlt: photo.alt };
   useEffect(() => {
@@ -198,6 +208,12 @@ export default function ProductCard({
             <span className="product-price-amount">{priceLabel}</span>
           </strong>
           {discounted && <del>{rupiah(product.oldPrice)}</del>}
+          {unitPrice > 0 && (
+            <span className="product-unit-price">
+              {hasVariants ? 'mulai ' : ''}
+              {rupiah(unitPrice)} / pcs
+            </span>
+          )}
         </div>
         <button
           type="button"

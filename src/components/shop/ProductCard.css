@@ -428,3 +428,13 @@
 .product-price.is-locked-price strong {
   min-height: 0;
 }
+.product-card .product-unit-price {
+  color: var(--color-success-text);
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme='dark'] .product-card .product-unit-price {
+  color: var(--color-success-border);
+}

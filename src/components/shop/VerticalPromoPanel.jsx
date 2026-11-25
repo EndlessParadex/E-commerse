@@ -87,11 +87,11 @@ export default function VerticalPromoPanel({ storefront = false, personal = fals
           </div>
         )}
       </div>
-      <p className="bam-vertical-promos-disclaimer">
-        {discountedCount
-          ? 'Potongan harga mengikuti data katalog. Periksa detail produk dan kemasannya.'
-          : 'Pilihan produk dari katalog BAM. Belum ada diskon khusus yang berlaku.'}
-      </p>
+      {discountedCount > 0 && (
+        <p className="bam-vertical-promos-disclaimer">
+          Harga potongan berlaku untuk kemasan yang ditandai.
+        </p>
+      )}
     </section>
   );
 }

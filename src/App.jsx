@@ -216,7 +216,12 @@ function App() {
             {!isAdmin && !isAccountRoute && !fastOrderRoute && route !== '/keranjang' && (
               <SharedCartBar />
             )}
-            <main ref={contentRef} id="main-content" tabIndex={-1} className="page-main">
+            <main
+              ref={contentRef}
+              id="main-content"
+              tabIndex={-1}
+              className={isAdmin ? 'page-main' : 'page-main page-main--store'}
+            >
               <CatalogAccess>
                 <Suspense
                   fallback={

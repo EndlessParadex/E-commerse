@@ -62,7 +62,9 @@ test('tamu: beranda tanpa harga, isi toko meminta masuk/daftar, lalu kembali ke 
   for (const icon of manifest.icons) expect((await page.request.get(icon.src)).status()).toBe(200);
 
   // No prices for visitors: not on the page, and not from the API either.
-  await expect(page.getByText('Masuk untuk lihat harga').first()).toBeVisible();
+  await expect(
+    page.locator('.product-card').getByText('Masuk untuk lihat harga').first(),
+  ).toBeVisible();
   await expect(page.locator('main')).not.toContainText(/Rp\s?\d/);
   const catalog = await (await page.request.get('/api/catalog')).json();
   expect(catalog.pricesHidden).toBe(true);

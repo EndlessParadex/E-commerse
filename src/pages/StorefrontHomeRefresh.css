@@ -1,0 +1,158 @@
+/* Storefront refresh: a saturated hero with a bubble pattern, a shorter first screen,
+ * and a soft dotted page background. Loaded last so it wins over the older layers. */
+
+/* Soft bubble/dot pattern behind every storefront page (admin keeps its plain surface). */
+.page-main--store {
+  --store-dot: #0369a114;
+  --store-bubble: #0ea5e910;
+  background-image:
+    radial-gradient(circle at 8% 12%, var(--store-bubble) 0 90px, transparent 91px),
+    radial-gradient(circle at 94% 38%, var(--store-bubble) 0 130px, transparent 131px),
+    radial-gradient(circle at 18% 78%, var(--store-bubble) 0 70px, transparent 71px),
+    radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
+  background-size:
+    100% 1400px,
+    100% 1400px,
+    100% 1400px,
+    22px 22px;
+  background-repeat: repeat-y, repeat-y, repeat-y, repeat;
+}
+:root[data-theme='dark'] .page-main--store {
+  --store-dot: #9cc7f01a;
+  --store-bubble: #38bdf80d;
+}
+
+/* Hero: blue gradient in both themes, white text, floating bubbles. */
+.home-landing .home-feature-rail {
+  --feature-hero-start: #0b4f8a;
+  --feature-hero-end: #1d8ad6;
+  --feature-hero-ink: #ffffff;
+  --feature-hero-muted: #dbeafe;
+  --feature-hero-accent: #bae6fd;
+  --feature-hero-border: #0b4f8a;
+  --feature-hero-glow: #ffffff2e;
+  --feature-orbit-border: #ffffff38;
+  --feature-footer-bg: #06325a59;
+  --feature-footer-border: #ffffff26;
+  --feature-arrow-bg: #ffffff;
+  --feature-arrow-ink: #0b4f8a;
+  --feature-arrow-border: #ffffff;
+  --feature-dot-ink: #ffffffa6;
+  --feature-bubble: #ffffff1f;
+  --feature-bubble-soft: #ffffff12;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail {
+  --feature-hero-start: #0a2540;
+  --feature-hero-end: #12528a;
+  --feature-hero-ink: #f6faff;
+  --feature-hero-muted: #cfe3f7;
+  --feature-hero-accent: #8fd3ff;
+  --feature-hero-border: #1f4f7a;
+  --feature-bubble: #8fd3ff1c;
+  --feature-bubble-soft: #8fd3ff10;
+}
+.home-landing .home-feature-rail .bam-promo {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 92% 14%, var(--feature-bubble) 0 74px, transparent 75px),
+    radial-gradient(circle at 78% 92%, var(--feature-bubble-soft) 0 120px, transparent 121px),
+    radial-gradient(circle at 6% 96%, var(--feature-bubble) 0 46px, transparent 47px),
+    radial-gradient(circle at 46% 8%, var(--feature-bubble-soft) 0 22px, transparent 23px),
+    radial-gradient(circle at 58% 70%, var(--feature-bubble-soft) 0 12px, transparent 13px),
+    radial-gradient(circle at 36% 88%, var(--feature-bubble) 0 8px, transparent 9px),
+    linear-gradient(125deg, var(--feature-hero-start) 0%, var(--feature-hero-end) 100%);
+}
+.home-landing .home-feature-rail .bam-promo::before {
+  z-index: -1;
+  background:
+    radial-gradient(circle at 86% 18%, var(--feature-hero-glow), transparent 55%),
+    radial-gradient(circle, #ffffff1a 1.5px, transparent 1.8px) 0 0 / 18px 18px;
+  -webkit-mask-image: linear-gradient(110deg, transparent 35%, #000 100%);
+  mask-image: linear-gradient(110deg, transparent 35%, #000 100%);
+}
+
+/* The page h1 stays for screen readers; the visible wordmark already sits in the navbar. */
+.home-landing .home-feature-rail .bam-promo-brand {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* White call to action on the blue hero. */
+.home-landing .home-feature-rail .bam-promo-cta,
+.home-landing .home-feature-rail .bam-promo-cta:hover {
+  background: #ffffff;
+  color: #0b4f8a;
+}
+.home-landing .home-feature-rail .bam-promo-cta:hover {
+  background: #e0f2fe;
+}
+.home-landing .home-feature-rail .bam-promo-cta svg {
+  background: #0b4f8a;
+  color: #ffffff;
+}
+.home-landing .home-feature-rail .bam-promo-cta:focus-visible,
+.home-landing .home-feature-rail .bam-promo a:focus-visible,
+.home-landing .home-feature-rail .bam-promo button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Shorter first screen so categories and products show without scrolling far. */
+.home-feature-rail .bam-promo {
+  min-height: 420px;
+}
+.home-feature-rail .bam-promo-slide {
+  padding: 22px 26px 14px;
+}
+.home-feature-rail .bam-promo-copy .bam-promo-title {
+  font-size: clamp(1.7rem, 2.3vw, 2.6rem);
+  margin: 10px 0 12px;
+}
+.home-feature-rail .bam-promo-products {
+  --promo-stage-height: 180px;
+}
+.home-feature-rail .bam-promo-products.is-single {
+  --promo-stage-height: 240px;
+}
+
+.home-landing > .bam-store-benefits {
+  margin-top: 16px;
+}
+@media (max-width: 960px) {
+  .home-feature-rail .bam-promo {
+    min-height: 0;
+  }
+  .home-feature-rail .bam-promo-products {
+    --promo-stage-height: 200px;
+  }
+}
+@media (max-width: 650px) {
+  .home-feature-rail .bam-promo-slide {
+    padding: 18px 16px 14px;
+  }
+  .home-feature-rail .bam-promo-copy .bam-promo-title {
+    font-size: clamp(1.45rem, 6vw, 1.9rem);
+  }
+  .home-landing > .bam-store-benefits {
+    margin-top: 12px;
+  }
+  /* Phones: the hero is a headline and one action; product picks and discounts follow below,
+     so categories are reached after one short scroll instead of three screens. */
+  .home-feature-rail .bam-promo-products,
+  .home-feature-rail .bam-vertical-promos {
+    display: none;
+  }
+  .home-landing > .bam-store-benefits small {
+    display: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .home-landing .home-feature-rail .bam-promo::before {
+    display: none;
+  }
+}

@@ -74,7 +74,7 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
     );
     assert.ok(container.querySelector('.home-landing--personal'));
     assert.ok(container.querySelector('.bam-vertical-promos.is-personal'));
-    assert.equal(container.querySelector('.bam-promotions'), null);
+    assert.ok(container.querySelector('.bam-promotions'), 'diskon tampil untuk semua pembeli');
     assert.ok(container.querySelector('.home-category-card'));
     assert.ok(container.querySelector('.bam-supplier-card'));
     assert.equal(
@@ -133,7 +133,7 @@ test('pemulihan tampilan: banner lengkap, kotak promo, pemasok, menu admin dan g
     shop.shared = { enabled: false, status: 'ready', role: 'personal' };
     await act(async () => root.render(home({ id: 'qa-private-buyer' })));
     assert.ok(container.querySelector('.home-landing--personal'));
-    assert.equal(container.querySelector('.bam-promotions'), null);
+    assert.ok(container.querySelector('.bam-promotions'));
     assert.ok(container.querySelector('.bam-vertical-promos.is-personal'));
     assert.equal(
       container.querySelectorAll('.bam-compact-discovery .home-category-card').length,

@@ -17,6 +17,7 @@ import SupplierSection from '../components/shop/SupplierSection';
 import CategoryShortcuts from '../components/shop/CategoryShortcuts';
 import FeaturedProducts from '../components/shop/FeaturedProducts';
 import B2BHomeExperience from '../components/shop/B2BHomeExperience';
+import StoreBenefits from '../components/shop/StoreBenefits';
 import CatalogSearchDropdown from '../components/shop/CatalogSearchDropdown';
 import SupplierBrandsPage from './SupplierBrandsPage';
 import { brandsForSupplier } from '../data/catalogMasters';
@@ -25,6 +26,7 @@ import './Home.css';
 import './StorefrontDesign2.css';
 import './StorefrontFeatureRail.css';
 import './HomeMobile.css';
+import './StorefrontHomeRefresh.css';
 
 export default function Home({ catalog = null }) {
   const { addItem, favoriteIds, toggleFavorite, shared, setCartMode } = useShop();
@@ -113,6 +115,7 @@ export default function Home({ catalog = null }) {
               )}
               <VerticalPromoPanel personal={personalHome} />
             </div>
+            <StoreBenefits />
             <div
               className="home-discovery-row bam-compact-discovery"
               aria-label="Kategori dan mitra pemasok BAM"
@@ -120,7 +123,7 @@ export default function Home({ catalog = null }) {
               <CategoryShortcuts compact />
               <SupplierSection compact />
             </div>
-            {!personalHome && <PromotionSection />}
+            <PromotionSection />
             <FeaturedProducts personal={personalHome} />
           </>
         )}

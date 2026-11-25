@@ -318,10 +318,9 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.ok(!container.querySelector('.catalog-status'));
     assert.ok(container.querySelector('.home-categories'));
     assert.ok(container.querySelector('.home-landing--personal'));
-    assert.equal(
+    assert.ok(
       container.querySelector('.bam-promotions'),
-      null,
-      'no redundant horizontal promotions',
+      'diskon tampil juga untuk pembeli pribadi',
     );
     assert.ok(container.querySelector('.store-featured-products'));
     assert.match(
@@ -334,6 +333,10 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     const categoriesSection = discoveryRow?.querySelector('.home-categories');
     const supplierSection = discoveryRow?.querySelector('.bam-suppliers');
     const featuredSection = container.querySelector('.store-featured-products');
+    const benefits = container.querySelector('.bam-store-benefits');
+    const promotions = container.querySelector('.bam-promotions');
+    assert.equal(benefits.querySelectorAll('li').length, 4, 'Empat keunggulan BAM');
+    assert.match(benefits.textContent, /COD/);
     assert.ok(featureRail, 'Banner utama dan promo vertikal tampil di beranda');
     assert.ok(featureRail.querySelector('.bam-promo'), 'Banner katalog utama tetap ada');
     const panel = featureRail.querySelector('.bam-vertical-promos.is-personal');
@@ -359,11 +362,13 @@ test('katalog: kerangka kartu hanya saat memuat, kegagalan memberi tombol coba l
     assert.deepEqual(
       [
         sections.indexOf(featureRail),
+        sections.indexOf(benefits),
         sections.indexOf(discoveryRow),
+        sections.indexOf(promotions),
         sections.indexOf(featuredSection),
       ],
-      [0, 1, 2],
-      'Beranda pribadi menampilkan banner dan promo kanan, kategori/pemasok, lalu produk',
+      [0, 1, 2, 3, 4],
+      'Beranda pribadi: banner, keunggulan, kategori/pemasok, diskon, lalu produk',
     );
     const discoveryStyles = await readFile(
       new URL('./StorefrontDesign2.css', import.meta.url),

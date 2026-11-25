@@ -1427,3 +1427,115 @@
     grid-auto-flow: row;
   }
 }
+
+/* Quick views above the product filters: Semua, Tanpa foto, Ada kemasan Kosong. */
+.admin-shell .admin-scope-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px var(--admin-panel-padding) 0;
+}
+.admin-shell .admin-scope-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-shell .admin-scope-tabs button:hover {
+  border-color: var(--color-action);
+  color: var(--color-action);
+}
+.admin-shell .admin-scope-tabs button[aria-pressed='true'] {
+  border-color: var(--color-action);
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+}
+.admin-shell .admin-scope-tabs button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.admin-shell .admin-scope-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-surface-soft);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.admin-shell .admin-scope-tabs button[aria-pressed='true'] .admin-scope-count {
+  background: var(--color-action);
+  color: var(--color-on-action);
+}
+
+/* Per-product status in the Kotak and Daftar views. */
+.admin-shell .admin-product-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.admin-shell .admin-product-status:empty {
+  display: none;
+}
+.admin-shell .admin-stock-badge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-shell .admin-stock-badge.is-ok {
+  background: var(--color-success-soft, #dcfce7);
+  color: var(--color-success-text, #166534);
+}
+.admin-shell .admin-stock-badge.is-partial {
+  background: var(--color-warning-soft, #ffedd5);
+  color: var(--color-warning-text, #9a3412);
+}
+.admin-shell .admin-stock-badge.is-empty {
+  background: var(--color-danger-soft, #fee2e2);
+  color: var(--color-danger-text, #b91c1c);
+}
+.admin-shell .admin-photo-missing {
+  min-height: 32px;
+  white-space: nowrap;
+  text-align: left;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-warning-text, #9a3412);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.admin-shell .admin-photo-missing:hover {
+  text-decoration: underline;
+}
+.admin-shell .admin-photo-missing:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.admin-shell .admin-product-rows .admin-product-identity small + .admin-product-status {
+  margin-top: 2px;
+}
+
+/* Five product filters fit one row on a laptop, so the sticky bar stays one row tall. */
+@media (min-width: 1200px) {
+  .admin-shell .admin-products-panel .admin-filters {
+    grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
+  }
+}

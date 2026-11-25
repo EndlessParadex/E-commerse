@@ -42,3 +42,37 @@ test('pageNumbers: awal, akhir, tetangga halaman aktif, dan celah', () => {
   assert.deepEqual(pageNumbers(7, 24), [1, null, 6, 7, 8, null, 24]);
   assert.deepEqual(pageNumbers(24, 24), [1, null, 21, 22, 23, 24]);
 });
+
+test('scopeProductGroups and sortProductGroups: tanpa foto, kemasan kosong, urutan', async () => {
+  const { scopeProductGroups, sortProductGroups } = await import('./adminProductGroups.js');
+  const photo = { gallery: [{ src: '/img/a.webp' }] };
+  const groups = groupAdminProducts(
+    [
+      { ...sku('b', 'B-1', '10', 'satuan', 5000), ...photo },
+      sku('a', 'A-1', '10', 'satuan', 9000),
+      sku('a', 'A-2', '20', 'satuan', 12000),
+    ],
+    { isEmpty: (entry) => entry.id === 'A-2' },
+  );
+  assert.deepEqual(
+    scopeProductGroups(groups, 'nophoto').map((group) => group.groupId),
+    ['a'],
+  );
+  assert.deepEqual(
+    scopeProductGroups(groups, 'empty').map((group) => group.groupId),
+    ['a'],
+  );
+  assert.deepEqual(
+    groups.find((group) => group.groupId === 'a').emptySkus.map((s) => s.id),
+    ['A-2'],
+  );
+  assert.deepEqual(
+    sortProductGroups(groups, 'price-asc').map((group) => group.groupId),
+    ['b', 'a'],
+  );
+  assert.deepEqual(
+    sortProductGroups(groups, 'name').map((group) => group.groupId),
+    ['a', 'b'],
+  );
+  assert.equal(groupAdminProducts(groups[0].skus)[0].emptySkus, null, 'unknown stock stays null');
+});

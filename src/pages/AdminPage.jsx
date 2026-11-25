@@ -18,7 +18,14 @@ import AdminIcon from '../components/admin/AdminIcon';
 import AdminSectionIcon from '../components/admin/AdminSectionIcon';
 import AdminPageGuide from '../components/admin/AdminPageGuide';
 import { paginateAdminList } from '../data/adminPagination';
-import { groupAdminProducts } from '../data/adminProductGroups';
+import {
+  PRODUCT_SORTS,
+  groupAdminProducts,
+  scopeProductGroups,
+  sortProductGroups,
+} from '../data/adminProductGroups';
+import { categories as catalogCategories } from '../data/catalog';
+import { serverStock } from '../state/serverWorkflow';
 import AdminPager from '../components/admin/AdminPager';
 import AdminProductFilters from '../components/admin/AdminProductFilters';
 import AdminProductForm from './AdminProductForm';
@@ -40,7 +47,7 @@ import AdminCompanyPage from './AdminCompanyPage';
 import CompanyBrand from '../components/layout/CompanyBrand';
 import AdminStockPage from './AdminStockPage';
 import AdminOpsOverview from './AdminOpsOverview';
-import useAdminWorkCounts from './useAdminWorkCounts';
+import useAdminWorkCounts, { useStockCounts } from './useAdminWorkCounts';
 import { approveNextRoute } from '../state/routeGuards';
 // Load the final shared layer after every admin view's styles.
 import './AdminPage.css';
@@ -131,6 +138,35 @@ function priceRange(group) {
     : `${rupiah(group.minPrice)} – ${rupiah(group.maxPrice)}`;
 }
 
+/** Stock badge plus a "no photo" shortcut, so the work left on a product is visible in the list. */
+function ProductStatus({ group, onAddPhoto }) {
+  const empty = group.emptySkus?.length ?? null;
+  return (
+    <div className="admin-product-status">
+      {empty !== null && (
+        <span
+          className={
+            'admin-stock-badge ' +
+            (!empty ? 'is-ok' : empty === group.skus.length ? 'is-empty' : 'is-partial')
+          }
+        >
+          {!empty ? 'Tersedia' : empty === group.skus.length ? 'Kosong' : `${empty} kemasan Kosong`}
+        </span>
+      )}
+      {!group.hasPhoto && (
+        <button
+          type="button"
+          className="admin-photo-missing"
+          onClick={onAddPhoto}
+          aria-label={`Tambah foto ${group.baseName}`}
+        >
+          + Tambah foto
+        </button>
+      )}
+    </div>
+  );
+}
+
 function VariantChips({ group }) {
   const shown = group.skus.slice(0, MAX_CHIPS);
   return (
@@ -186,6 +222,9 @@ export default function AdminPage({ view = 'overview' }) {
   });
   const [supplierId, setSupplierId] = useState('');
   const [brandId, setBrandId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [productScope, setProductScope] = useState('all');
+  const [productSort, setProductSort] = useState('catalog');
   const [productPage, setProductPage] = useState(1);
   const [productView, setProductView] = useState(() => {
     try {
@@ -244,8 +283,32 @@ export default function AdminPage({ view = 'overview' }) {
     approvals: workCounts.approvals,
   };
   const brands = adminBrands(supplierId);
-  const filtered = filterAdminProducts({ query, supplierId, brandId });
-  const groups = groupAdminProducts(filtered);
+  const { counts: stockCounts } = useStockCounts();
+  // Stock per packaging is only known from the server; otherwise the "Kosong" view stays hidden.
+  const isEmptySku = stockCounts
+    ? (sku) => {
+        try {
+          return serverStock(sku).inStock === false;
+        } catch {
+          return false;
+        }
+      }
+    : null;
+  const baseGroups = groupAdminProducts(
+    filterAdminProducts({ query, supplierId, brandId }).filter(
+      (product) => !categoryId || product.categoryId === categoryId,
+    ),
+    { isEmpty: isEmptySku },
+  );
+  const scopeCounts = {
+    all: baseGroups.length,
+    nophoto: scopeProductGroups(baseGroups, 'nophoto').length,
+    empty: isEmptySku ? scopeProductGroups(baseGroups, 'empty').length : null,
+  };
+  const groups = sortProductGroups(scopeProductGroups(baseGroups, productScope), productSort);
+  const filtered = groups.flatMap((group) =>
+    productScope === 'empty' ? group.emptySkus : group.skus,
+  );
   const productCount = new Set(adminProducts.map((product) => product.groupId)).size;
   const productPagination = paginateAdminList(
     productView === 'sku' ? filtered : groups,
@@ -265,7 +328,9 @@ export default function AdminPage({ view = 'overview' }) {
     setProductPage(value);
     productsTop.current?.scrollIntoView?.({ block: 'start' });
   };
-  const hasFilters = Boolean(query || supplierId || brandId);
+  const hasFilters = Boolean(
+    query || supplierId || brandId || categoryId || productScope !== 'all',
+  );
   // From a PT or brand tile: open the product list already narrowed to that PT or brand.
   const showProducts = ({ supplierId: nextSupplier = '', brandId: nextBrand = '' }) => {
     setQuery('');
@@ -276,6 +341,8 @@ export default function AdminPage({ view = 'overview' }) {
     }
     setSupplierId(nextSupplier);
     setBrandId(nextBrand);
+    setCategoryId('');
+    setProductScope('all');
     setProductPage(1);
     window.location.hash = '#/admin/produk';
   };
@@ -289,6 +356,8 @@ export default function AdminPage({ view = 'overview' }) {
     }
     setSupplierId('');
     setBrandId('');
+    setCategoryId('');
+    setProductScope('all');
   };
   const isProducts = view === 'products';
   const masterType = { suppliers: 'suppliers', brands: 'brands', categories: 'categories' }[view];
@@ -766,8 +835,34 @@ export default function AdminPage({ view = 'overview' }) {
                 </button>
               </div>
             </div>
+            <div className="admin-scope-tabs" role="group" aria-label="Tampilan cepat">
+              {[
+                { id: 'all', name: 'Semua' },
+                { id: 'nophoto', name: 'Tanpa foto' },
+                { id: 'empty', name: 'Ada kemasan Kosong' },
+              ]
+                .filter((entry) => scopeCounts[entry.id] !== null)
+                .map((entry) => (
+                  <button
+                    type="button"
+                    key={entry.id}
+                    aria-pressed={productScope === entry.id}
+                    onClick={() => {
+                      setProductScope(entry.id);
+                      setProductPage(1);
+                    }}
+                  >
+                    {entry.name} <span className="admin-scope-count">{scopeCounts[entry.id]}</span>
+                  </button>
+                ))}
+            </div>
             <AdminProductFilters
-              activeCount={Number(Boolean(supplierId)) + Number(Boolean(brandId))}
+              activeCount={
+                Number(Boolean(supplierId)) +
+                Number(Boolean(brandId)) +
+                Number(Boolean(categoryId)) +
+                Number(productSort !== 'catalog')
+              }
             >
               <div className="admin-field admin-search">
                 <label htmlFor="admin-search">Cari produk</label>
@@ -816,6 +911,41 @@ export default function AdminPage({ view = 'overview' }) {
                   {brands.map((brand) => (
                     <option key={brand.id} value={brand.id}>
                       {brand.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="admin-field">
+                <label htmlFor="admin-category">Kategori</label>
+                <select
+                  id="admin-category"
+                  value={categoryId}
+                  onChange={(event) => {
+                    setCategoryId(event.target.value);
+                    setProductPage(1);
+                  }}
+                >
+                  <option value="">Semua kategori</option>
+                  {catalogCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="admin-field">
+                <label htmlFor="admin-sort">Urutkan</label>
+                <select
+                  id="admin-sort"
+                  value={productSort}
+                  onChange={(event) => {
+                    setProductSort(event.target.value);
+                    setProductPage(1);
+                  }}
+                >
+                  {PRODUCT_SORTS.map((entry) => (
+                    <option key={entry.id} value={entry.id}>
+                      {entry.name}
                     </option>
                   ))}
                 </select>
@@ -878,6 +1008,10 @@ export default function AdminPage({ view = 'overview' }) {
                           </small>
                           <h3>{group.baseName}</h3>
                           <p className="admin-price">{priceRange(group)}</p>
+                          <ProductStatus
+                            group={group}
+                            onAddPhoto={() => startEdit(group.groupId)}
+                          />
                           <VariantChips group={group} />
                         </div>
                         {groupActions(group)}
@@ -904,6 +1038,10 @@ export default function AdminPage({ view = 'overview' }) {
                             <div>
                               <strong>{group.baseName}</strong>
                               <small>{group.skus.length} SKU</small>
+                              <ProductStatus
+                                group={group}
+                                onAddPhoto={() => startEdit(group.groupId)}
+                              />
                             </div>
                           </div>
                           <div className="admin-product-rows-meta">

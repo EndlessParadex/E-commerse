@@ -123,10 +123,9 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     assert.ok(container.querySelector('nav a[href="#/admin/toko-sales"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/keranjang"]'));
     assert.ok(container.querySelector('nav a[href="#/admin/produk"]'));
-    assert.equal(
-      dom.getComputedStyle(container.querySelector('.admin-page-guide')).marginBottom,
-      '20px',
-      'shared guide has a consistent gap to the following panel',
+    assert.ok(
+      container.querySelector('.admin-header > .admin-page-guide'),
+      'the guide sits in the page header instead of taking its own row above the content',
     );
     assert.equal(
       dom.getComputedStyle(container.querySelector('.admin-metric')).minHeight,
@@ -427,11 +426,16 @@ test('form admin: navigasi batal mempertahankan isian, setuju menutup form, PT/m
     const usedDelete = container.querySelector(
       'button[aria-label="Hapus PT pemasok PT Pangan Contoh"]',
     );
-    assert.equal(usedDelete.disabled, true);
-    assert.match(container.textContent, /Belum dapat dihapus/);
-    assert.equal(
-      container.querySelector('button[aria-label="Hapus PT pemasok PT UI Uji"]').disabled,
-      true,
+    assert.equal(usedDelete, null, 'a PT used by products offers no Hapus button at all');
+    assert.equal(container.querySelector('button[aria-label="Hapus PT pemasok PT UI Uji"]'), null);
+    assert.match(
+      container.textContent,
+      /Masih terhubung ke merek/,
+      'a PT blocked for another reason than products says why',
+    );
+    assert.ok(
+      container.querySelector('button[aria-label^="Lihat "][aria-label*="PT Pangan Contoh"]'),
+      'the product count opens the filtered product list',
     );
     await render('brands');
     const deleteBrand = container.querySelector('button[aria-label="Hapus merek Merek UI Uji"]');

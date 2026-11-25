@@ -90,7 +90,8 @@ function App() {
     '/admin/persetujuan': 'approvals',
     '/admin/toko-sales': 'b2bStores',
     '/admin/keranjang': 'sharedCarts',
-  }[route];
+    // A typed "#/admin/" (trailing slash) is the same page, not a 404.
+  }[route.length > 1 ? route.replace(/\/+$/, '') : route];
   const isAdmin = Boolean(adminView);
   const fastOrderRoute = isFastOrderRoute(route);
   const accountRoute = /^\/akun(?:\/(profil|alamat|keamanan|kalender|tampilan))?$/.exec(route);

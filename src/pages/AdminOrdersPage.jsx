@@ -245,7 +245,7 @@ export default function AdminOrdersPage({ initialFilter = 'all' }) {
           <p>
             {query.trim() || filter !== 'all'
               ? 'Ubah kata pencarian atau status pesanan.'
-              : 'Buat pesanan melalui checkout untuk mencoba halaman ini.'}
+              : 'Pesanan dari pembeli akan muncul di sini begitu ada yang checkout.'}
           </p>
           {query.trim() || filter !== 'all' ? (
             <button

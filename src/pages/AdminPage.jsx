@@ -266,6 +266,19 @@ export default function AdminPage({ view = 'overview' }) {
     productsTop.current?.scrollIntoView?.({ block: 'start' });
   };
   const hasFilters = Boolean(query || supplierId || brandId);
+  // From a PT or brand tile: open the product list already narrowed to that PT or brand.
+  const showProducts = ({ supplierId: nextSupplier = '', brandId: nextBrand = '' }) => {
+    setQuery('');
+    try {
+      window.sessionStorage.removeItem('bam.admin.catalog-search');
+    } catch {
+      /* Private browsing may prevent storage. */
+    }
+    setSupplierId(nextSupplier);
+    setBrandId(nextBrand);
+    setProductPage(1);
+    window.location.hash = '#/admin/produk';
+  };
   const reset = () => {
     setProductPage(1);
     setQuery('');
@@ -289,16 +302,6 @@ export default function AdminPage({ view = 'overview' }) {
       !ownerSettingsView &&
       !['banners', 'promotions'].includes(view) &&
       !catalogUsesServer;
-  const areaLabel =
-    view === 'overview'
-      ? 'Dashboard'
-      : b2bView
-        ? 'Pengelolaan toko B2B'
-        : workflowView
-          ? 'Operasional pesanan & stok'
-          : ownerSettingsView
-            ? 'Pengaturan & akses'
-            : 'Pengelolaan katalog';
   const areaDescription = {
     company: 'Perbarui identitas perusahaan, alamat, dan pengaturan toko.',
     email: 'Atur pengiriman email verifikasi, pemulihan akun, dan pembaruan pesanan.',
@@ -534,9 +537,6 @@ export default function AdminPage({ view = 'overview' }) {
         </div>
         <header className="admin-header">
           <div>
-            <span className="admin-eyebrow">
-              {companyProfile.shortName} · {areaLabel}
-            </span>
             <h1>
               <span className="admin-page-title-icon">
                 <AdminIcon
@@ -565,6 +565,9 @@ export default function AdminPage({ view = 'overview' }) {
               {workflowView ? 'Pratinjau · Simulasi' : 'Pratinjau · Data dummy'}
             </span>
           )}
+          {/* The guide sits in the header: closed it is one small button beside the title, so
+              the page content starts right below the heading. */}
+          {!editor && view !== 'b2bStores' && <AdminPageGuide key={view} view={view} />}
         </header>
         {previewStorage && (
           <p className="admin-preview-notice">
@@ -573,7 +576,6 @@ export default function AdminPage({ view = 'overview' }) {
               : 'Pratinjau katalog. Perubahan produk disimpan di browser ini dan terlihat di toko pada browser yang sama. Data belum tersimpan ke server.'}
           </p>
         )}
-        {!editor && view !== 'b2bStores' && <AdminPageGuide view={view} />}
         {pendingLocalImport && view === 'overview' && !editor && (
           <section className="admin-next">
             <h2>Data pratinjau sebelumnya ditemukan</h2>
@@ -647,7 +649,7 @@ export default function AdminPage({ view = 'overview' }) {
         ) : view === 'stock' ? (
           <AdminStockPage />
         ) : masterType ? (
-          <AdminMasterPage key={masterType} type={masterType} />
+          <AdminMasterPage key={masterType} type={masterType} onShowProducts={showProducts} />
         ) : !isProducts ? (
           <>
             {!adminProducts.length && (

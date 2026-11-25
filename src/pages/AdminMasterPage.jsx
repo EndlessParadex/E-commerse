@@ -306,7 +306,7 @@ function MasterForm({ type, initial, onClose, onSaved }) {
   );
 }
 
-export default function AdminMasterPage({ type }) {
+export default function AdminMasterPage({ type, onShowProducts }) {
   const [editor, setEditor] = useState(null);
   const [notice, setNotice] = useState('');
   const [query, setQuery] = useState('');
@@ -371,15 +371,9 @@ export default function AdminMasterPage({ type }) {
       <section className="admin-panel">
         <div className="admin-panel-heading">
           <AdminSectionIcon name={type} />
+          {/* The page header above already describes this page. */}
           <div>
             <h2>Daftar {labels[type]}</h2>
-            <p>
-              {type === 'suppliers'
-                ? 'Kelola PT yang memasok produk toko.'
-                : type === 'brands'
-                  ? 'Kelola merek dan PT pemasok yang terhubung.'
-                  : 'Kelola kategori dan subkategori untuk katalog toko.'}
-            </p>
           </div>
           <button
             type="button"
@@ -449,9 +443,26 @@ export default function AdminMasterPage({ type }) {
                 </div>
                 <div className="admin-master-tile-body">
                   <h3>{entry.name}</h3>
-                  <p>
-                    {groups} produk · {items.length} SKU
-                  </p>
+                  {groups && type !== 'categories' && onShowProducts ? (
+                    <p>
+                      <button
+                        type="button"
+                        className="admin-master-tile-link"
+                        onClick={() =>
+                          onShowProducts(
+                            type === 'suppliers' ? { supplierId: entry.id } : { brandId: entry.id },
+                          )
+                        }
+                        aria-label={`Lihat ${groups} produk ${entry.name}`}
+                      >
+                        {groups} produk · {items.length} SKU <span aria-hidden="true">→</span>
+                      </button>
+                    </p>
+                  ) : (
+                    <p>
+                      {groups} produk · {items.length} SKU
+                    </p>
+                  )}
                   {type === 'brands' && (
                     <p className="admin-master-tile-detail">
                       {entry.supplierIds
@@ -485,24 +496,21 @@ export default function AdminMasterPage({ type }) {
                   >
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    className="admin-danger"
-                    disabled={Boolean(deleting) || Boolean(blocked)}
-                    onClick={() => remove(entry)}
-                    title={blocked ? 'Belum dapat dihapus: ' + blocked : undefined}
-                    aria-describedby={blocked ? `delete-reason-${entry.id}` : undefined}
-                    aria-label={`Hapus ${labels[type]} ${entry.name}`}
-                  >
-                    {deleting === entry.id ? 'Menghapus…' : 'Hapus'}
-                  </button>
+                  {/* Only entries that can actually be deleted offer Hapus; a greyed-out button on
+                      every tile in use was noise. */}
+                  {!blocked && (
+                    <button
+                      type="button"
+                      className="admin-danger"
+                      disabled={Boolean(deleting)}
+                      onClick={() => remove(entry)}
+                      aria-label={`Hapus ${labels[type]} ${entry.name}`}
+                    >
+                      {deleting === entry.id ? 'Menghapus…' : 'Hapus'}
+                    </button>
+                  )}
                 </div>
-                {blocked && (
-                  <p className="admin-master-tile-note" id={`delete-reason-${entry.id}`}>
-                    <span aria-hidden="true">🔒 </span>Dipakai produk
-                    <span className="visually-hidden">. Belum dapat dihapus: {blocked}</span>
-                  </p>
-                )}
+                {blocked && !items.length && <p className="admin-master-tile-note">{blocked}</p>}
               </article>
             );
           })}

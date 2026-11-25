@@ -7,7 +7,9 @@ export default function AdminPageGuide({ view }) {
   if (!steps?.length) return null;
   return (
     <details className="admin-page-guide">
-      <summary>Petunjuk halaman (opsional)</summary>
+      <summary aria-label="Petunjuk halaman">
+        <span aria-hidden="true">?</span> Petunjuk
+      </summary>
       <nav aria-label="Panduan halaman Admin">
         <ol className="admin-page-guide-steps">
           {steps.map(([icon, label, description], index) => (

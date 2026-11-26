@@ -270,9 +270,14 @@ test('account website: buyer security summary, admin password settings, registra
     assert.ok(accountCenter.querySelector('.account-premium-profile-main'));
     assert.ok(accountCenter.querySelector('.account-premium-profile-side'));
     assert.equal(
-      container.querySelectorAll('.account-premium-shortcuts .account-premium-shortcut').length,
-      3,
-      'Quick links are rendered after the account workspace, at full page width',
+      container.querySelector('.account-premium-shortcuts'),
+      null,
+      'Pesanan, Favorit, dan Kalender cukup ada di menu samping, tanpa kartu ganda di bawah',
+    );
+    assert.equal(
+      container.querySelector('.account-premium-role-card'),
+      null,
+      'Jenis akun tidak diulang di kartu terpisah',
     );
     await act(async () => {
       container.querySelector('#account-tab-calendar').click();

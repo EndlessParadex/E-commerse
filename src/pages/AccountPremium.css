@@ -986,3 +986,75 @@
     margin-top: 18px;
   }
 }
+
+/* Profile tidy-up: one hero without a repeated role card, and the photo as a compact row
+   above the details instead of a tall column beside them. */
+.account-premium-hero {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  padding: 22px 24px;
+}
+.account-premium .account-profile-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.account-premium .account-avatar-card {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+  padding: 14px 16px;
+  text-align: left;
+}
+.account-premium .account-avatar-large {
+  width: 76px;
+  margin: 0;
+  border-radius: 50%;
+  font-size: 2rem;
+}
+.account-premium .account-avatar-card > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.account-premium .account-avatar-card .photo-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+.account-premium .account-avatar-card .photo-upload > label {
+  width: 100%;
+  font-weight: 750;
+}
+.account-premium .account-avatar-card .photo-upload > p {
+  width: 100%;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .account-premium .account-avatar-card {
+    grid-template-columns: 60px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .account-premium .account-avatar-large {
+    width: 60px;
+    font-size: 1.6rem;
+  }
+}
+.account-premium .account-premium-phone-card .account-phone-form {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.account-premium .account-premium-phone-card .account-phone-form label {
+  font-weight: 750;
+}
+.account-premium .account-premium-phone-card .account-phone-form .account-field {
+  margin-top: 0;
+}

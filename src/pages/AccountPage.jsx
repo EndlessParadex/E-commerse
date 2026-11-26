@@ -369,20 +369,6 @@ export default function AccountPage({ section = null }) {
                     </div>
                   </div>
                 </div>
-                <div className="account-premium-role-card">
-                  <span className="account-premium-role-mark">
-                    <AccountCenterIcon name="shield" size={23} />
-                  </span>
-                  <div>
-                    <small>Jenis akun</small>
-                    <strong>
-                      {user.role === 'admin'
-                        ? `Admin ${companyProfile.shortName}`
-                        : `Pelanggan ${companyProfile.shortName}`}
-                    </strong>
-                    <span>Hak akses mengikuti jenis akun.</span>
-                  </div>
-                </div>
               </section>
               <section
                 id="account-panel-profile"
@@ -454,17 +440,9 @@ export default function AccountPage({ section = null }) {
                             </dd>
                           </div>
                         </dl>
-                        <button
-                          type="button"
-                          className="account-page-secondary"
-                          onClick={() => openSection('address')}
-                        >
-                          Ubah nama dan alamat <span aria-hidden="true">→</span>
-                        </button>
                         <p className="account-profile-help">
                           Email digunakan untuk masuk ke akun Anda.
                         </p>
-                        <AccountPhone key={user.id} />
                       </div>
                     </div>
                   </div>
@@ -547,6 +525,9 @@ export default function AccountPage({ section = null }) {
                           Lihat
                         </button>
                       </div>
+                    </section>
+                    <section className="account-premium-aside-card account-premium-phone-card">
+                      <AccountPhone key={user.id} />
                     </section>
                   </div>
                 </div>
@@ -690,42 +671,6 @@ export default function AccountPage({ section = null }) {
               </section>
             </div>
           </div>
-          <nav className="account-premium-shortcuts" aria-label="Akses cepat akun">
-            <a href="#/pesanan" className="account-premium-shortcut is-orders">
-              <span className="account-premium-shortcut-icon">
-                <AccountCenterIcon name="orders" size={27} />
-              </span>
-              <span>
-                <strong>Pesanan saya</strong>
-                <small>Lihat dan kelola riwayat pesanan Anda.</small>
-              </span>
-              <AccountCenterIcon name="chevron" />
-            </a>
-            <a href="#/favorit" className="account-premium-shortcut is-favorite">
-              <span className="account-premium-shortcut-icon">
-                <AccountCenterIcon name="favorite" size={27} />
-              </span>
-              <span>
-                <strong>Favorit</strong>
-                <small>Produk tersimpan untuk memudahkan belanja.</small>
-              </span>
-              <AccountCenterIcon name="chevron" />
-            </a>
-            <button
-              type="button"
-              className="account-premium-shortcut is-calendar"
-              onClick={() => openSection('calendar')}
-            >
-              <span className="account-premium-shortcut-icon">
-                <AccountCenterIcon name="calendar" size={27} />
-              </span>
-              <span>
-                <strong>Kalender pengiriman</strong>
-                <small>Lihat informasi jadwal pengiriman.</small>
-              </span>
-              <AccountCenterIcon name="chevron" />
-            </button>
-          </nav>
         </>
       )}
     </div>

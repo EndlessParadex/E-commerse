@@ -1698,3 +1698,26 @@
     flex: 1 1 100%;
   }
 }
+
+/* Topbar profile: the owner's own photo, and a link to their account page. */
+.admin-shell a.admin-topbar-profile {
+  margin: -6px -10px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.admin-shell a.admin-topbar-profile:hover {
+  background: var(--color-info-soft);
+}
+.admin-shell a.admin-topbar-profile:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.admin-shell .admin-topbar-avatar.account-avatar {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-border);
+}

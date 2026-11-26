@@ -1,4 +1,5 @@
 import useCompany from '../state/useCompany';
+import AccountAvatar from '../components/account/AccountAvatar';
 import { useContext, useRef, useState } from 'react';
 import { DeliveryContext } from '../state/useDelivery';
 import AdminEmailPage from './AdminEmailPage';
@@ -671,15 +672,13 @@ export default function AdminPage({ view = 'overview' }) {
               <button type="submit">Cari katalog</button>
             </form>
           )}
-          <div className="admin-topbar-profile">
-            <span className="admin-topbar-avatar" aria-hidden="true">
-              {(delivery?.user?.name || 'A').slice(0, 1).toUpperCase()}
-            </span>
+          <a className="admin-topbar-profile" href="#/akun" title="Buka profil akun">
+            <AccountAvatar user={delivery?.user || { name: 'A' }} className="admin-topbar-avatar" />
             <div>
               <strong>{delivery?.user?.name || 'Admin BAM'}</strong>
               <small>{delivery?.user?.isOwner ? 'Pemilik BAM' : 'Admin operasional'}</small>
             </div>
-          </div>
+          </a>
         </div>
         <header className="admin-header">
           <div>

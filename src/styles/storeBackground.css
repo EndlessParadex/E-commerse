@@ -1,0 +1,97 @@
+/* Storefront page background: large soft gradient orbs on two fixed layers, plus a faint
+   dot grid. The orbs drift slowly while the page sits still and slide at two different
+   speeds while scrolling, which gives depth. Only transform moves (cheap for the GPU);
+   reduced-motion users get still orbs. Admin keeps its plain surface. */
+.page-main--store {
+  --store-dot: #0369a112;
+  --store-orb-blue: #3b82f68c;
+  --store-orb-cyan: #06b6d473;
+  --store-orb-violet: #8b5cf666;
+  --store-orb-sky: #0ea5e959;
+  background-image: radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+:root[data-theme='dark'] .page-main--store {
+  --store-dot: #9cc7f017;
+  --store-orb-blue: #2563eb55;
+  --store-orb-cyan: #0891b247;
+  --store-orb-violet: #7c3aed40;
+  --store-orb-sky: #0284c738;
+}
+.page-main--store::before,
+.page-main--store::after {
+  content: '';
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  will-change: transform;
+}
+.page-main--store::before {
+  background:
+    radial-gradient(circle at 12% 28%, var(--store-orb-blue), transparent 30%),
+    radial-gradient(circle at 80% 90%, var(--store-orb-violet), transparent 30%);
+  animation: store-orbs-a 26s ease-in-out infinite alternate;
+}
+.page-main--store::after {
+  background:
+    radial-gradient(circle at 92% 30%, var(--store-orb-cyan), transparent 32%),
+    radial-gradient(circle at 20% 86%, var(--store-orb-sky), transparent 25%),
+    radial-gradient(circle at 50% 58%, var(--store-orb-sky), transparent 16%);
+  animation: store-orbs-b 19s ease-in-out infinite alternate;
+}
+@keyframes store-orbs-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4vw, 3vh, 0) scale(1.08);
+  }
+}
+@keyframes store-orbs-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(-5vw, -2vh, 0) scale(0.96);
+  }
+}
+/* While scrolling: the back layer moves a little, the front layer more. */
+@supports (animation-timeline: scroll()) and (animation-composition: add) {
+  .page-main--store::before {
+    animation:
+      store-orbs-a 26s ease-in-out infinite alternate,
+      store-orbs-scroll-back linear both;
+    animation-timeline: auto, scroll(root);
+    animation-composition: replace, add;
+  }
+  .page-main--store::after {
+    animation:
+      store-orbs-b 19s ease-in-out infinite alternate,
+      store-orbs-scroll-front linear both;
+    animation-timeline: auto, scroll(root);
+    animation-composition: replace, add;
+  }
+}
+@keyframes store-orbs-scroll-back {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -8vh, 0);
+  }
+}
+@keyframes store-orbs-scroll-front {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -20vh, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-main--store::before,
+  .page-main--store::after {
+    animation: none;
+  }
+}

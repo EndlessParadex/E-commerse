@@ -38,6 +38,7 @@ import PaymentPage from './pages/PaymentPage';
 import CatalogStatus from './components/shop/CatalogStatus';
 import { subscribeShopRoute, shopRouteSnapshot } from './state/shopNavigation';
 import './styles/storefront.css';
+import './styles/storeBackground.css';
 import './styles/workflow.css';
 
 const decodeId = (value) => {

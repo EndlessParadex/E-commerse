@@ -1,38 +1,6 @@
 /* Storefront refresh: a saturated hero with a bubble pattern, a shorter first screen,
  * and a soft dotted page background. Loaded last so it wins over the older layers. */
 
-/* Storefront page background: large soft gradient orbs that stay in place while the
-   page scrolls, plus a faint dot grid. Admin keeps its plain surface. */
-.page-main--store {
-  --store-dot: #0369a112;
-  --store-orb-blue: #3b82f68c;
-  --store-orb-cyan: #06b6d473;
-  --store-orb-violet: #8b5cf666;
-  --store-orb-sky: #0ea5e959;
-  background-image: radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
-  background-size: 22px 22px;
-}
-.page-main--store::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 4% 22%, var(--store-orb-blue), transparent 34%),
-    radial-gradient(circle at 98% 26%, var(--store-orb-cyan), transparent 36%),
-    radial-gradient(circle at 82% 98%, var(--store-orb-violet), transparent 34%),
-    radial-gradient(circle at 14% 92%, var(--store-orb-sky), transparent 28%),
-    radial-gradient(circle at 50% 60%, var(--store-orb-sky), transparent 18%);
-}
-:root[data-theme='dark'] .page-main--store {
-  --store-dot: #9cc7f017;
-  --store-orb-blue: #2563eb55;
-  --store-orb-cyan: #0891b247;
-  --store-orb-violet: #7c3aed40;
-  --store-orb-sky: #0284c738;
-}
-
 /* Hero: blue gradient in both themes, white text, floating bubbles. */
 .home-landing .home-feature-rail {
   --feature-hero-start: #0b4f8a;

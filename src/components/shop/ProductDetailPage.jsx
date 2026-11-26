@@ -10,6 +10,8 @@ import UnitPrice from './UnitPrice';
 import ProductPromotion from './ProductPromotion';
 import './ProductDetailPage.css';
 import ProductGallery from './ProductGallery';
+import { productGallery } from '../../data/productGallery';
+import { announceCartAdd } from '../../state/cartFeedback';
 import ProductPurchasePanel from './ProductPurchasePanel';
 import ProductInformation from './ProductInformation';
 import ProductReviews from './ProductReviews';
@@ -135,7 +137,16 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
       setAdded(true);
       window.clearTimeout(feedbackTimer.current);
       feedbackTimer.current = window.setTimeout(() => setAdded(false), 1800);
-      if (goToCart) window.location.assign('#/keranjang');
+      if (goToCart) {
+        window.location.assign('#/keranjang');
+        return;
+      }
+      const photo = productGallery(product)[0];
+      announceCartAdd({
+        product: { ...product, image: photo?.src, imageAlt: photo?.alt },
+        quantity,
+        source: document.querySelector('.product-detail-card .bam-product-media'),
+      });
     };
     const result = addItem(product, quantity);
     if (result && typeof result.then === 'function') void result.then(finish);

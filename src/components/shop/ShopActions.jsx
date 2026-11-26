@@ -8,6 +8,7 @@ import AccountMenu from '../account/AccountMenu';
 import AccountAvatar from '../account/AccountAvatar';
 import { rupiah } from './shopPresentation';
 import NotificationItem from './NotificationItem';
+import { CART_ADDED_EVENT } from '../../state/cartFeedback';
 import './ShopActions.css';
 import './Notifications.css';
 
@@ -18,6 +19,20 @@ export default function ShopActions({ onOpen }) {
   const [active, setActive] = useState(null);
   const rootRef = useRef(null);
   const closeTimer = useRef(null);
+  const [bump, setBump] = useState(0);
+  useEffect(() => {
+    let wait;
+    // Bump the badge when the flying photo lands (no photo flies when motion is reduced).
+    const onAdded = (event) => {
+      window.clearTimeout(wait);
+      wait = window.setTimeout(() => setBump((value) => value + 1), event.detail?.rect ? 620 : 0);
+    };
+    window.addEventListener(CART_ADDED_EVENT, onAdded);
+    return () => {
+      window.removeEventListener(CART_ADDED_EVENT, onAdded);
+      window.clearTimeout(wait);
+    };
+  }, []);
 
   const close = () => {
     clearTimeout(closeTimer.current);
@@ -136,7 +151,11 @@ export default function ShopActions({ onOpen }) {
                   </span>
                 )}
                 {count > 0 && (
-                  <span className="shop-badge" aria-hidden="true">
+                  <span
+                    key={isCart ? 'bump-' + bump : undefined}
+                    className={'shop-badge' + (isCart && bump ? ' is-bumping' : '')}
+                    aria-hidden="true"
+                  >
                     {count > 99 ? '99+' : count}
                   </span>
                 )}

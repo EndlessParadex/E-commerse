@@ -1,0 +1,161 @@
+/* Storefront motion: every movement answers something for the buyer (what just happened,
+   what can be clicked, what is still loading). Transform and opacity only. */
+
+/* Cart badge pops when an added item lands. */
+.shop-badge.is-bumping {
+  animation: store-badge-bump 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes store-badge-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.45);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Carousel: the active dot fills while the slide waits, so buyers see when it changes. */
+.bam-promo-dots [aria-current] span {
+  position: relative;
+  overflow: hidden;
+}
+.bam-promo.is-playing .bam-promo-dots [aria-current] span {
+  opacity: 0.45;
+}
+.bam-promo.is-playing .bam-promo-dots [aria-current] span::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  border-radius: inherit;
+  background: #ffffff;
+  transform-origin: left;
+  animation: store-slide-progress 6s linear forwards;
+}
+@keyframes store-slide-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Main hero button: the arrow nudges forward on hover. */
+.bam-promo-cta svg,
+.bam-promo-cta > span:last-child {
+  transition: transform 0.18s ease;
+}
+.bam-promo-cta:hover svg,
+.bam-promo-cta:hover > span:last-child {
+  transform: translateX(4px);
+}
+
+/* Buttons give a small press. */
+:is(.add-product-button, .shop-primary, .bam-promo-cta, .home-category-card, .detail-add):active {
+  transform: scale(0.97);
+}
+:is(.add-product-button, .shop-primary, .bam-promo-cta, .home-category-card) {
+  transition:
+    transform 0.12s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.18s ease;
+}
+
+/* Product cards lift and the photo leans in on desktop hover. */
+@media (hover: hover) and (pointer: fine) {
+  .product-card {
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+  }
+  .product-card .bam-product-media img {
+    transition:
+      transform 0.35s ease,
+      opacity 0.3s ease;
+  }
+  .product-card:hover .bam-product-media img {
+    transform: scale(1.05);
+  }
+  .home-category-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Photos fade in over a soft shimmer instead of popping in. */
+.bam-product-media:has(> img.is-loading) {
+  background:
+    linear-gradient(
+        90deg,
+        transparent 0,
+        color-mix(in srgb, var(--color-surface) 70%, transparent) 50%,
+        transparent 100%
+      )
+      0 0 / 200% 100%,
+    var(--color-surface-muted);
+  animation: store-shimmer 1.3s linear infinite;
+}
+.bam-product-media img {
+  transition: opacity 0.3s ease;
+}
+.bam-product-media img.is-loading {
+  opacity: 0;
+}
+@keyframes store-shimmer {
+  from {
+    background-position:
+      100% 0,
+      0 0;
+  }
+  to {
+    background-position:
+      -100% 0,
+      0 0;
+  }
+}
+
+/* Product cards rise in as they scroll into view (browsers with scroll timelines only;
+   elsewhere they simply show). */
+@supports (animation-timeline: view()) {
+  .product-grid .product-card {
+    animation: store-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+@keyframes store-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-badge.is-bumping,
+  .bam-promo.is-playing .bam-promo-dots [aria-current] span::after,
+  .bam-product-media:has(> img.is-loading),
+  .product-grid .product-card {
+    animation: none;
+  }
+  .product-card:hover,
+  .product-card:hover .bam-product-media img,
+  .home-category-card:hover,
+  .bam-promo-cta:hover svg,
+  :is(.add-product-button, .shop-primary, .bam-promo-cta, .home-category-card, .detail-add):active {
+    transform: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ProductImage from './ProductImage';
+import { announceCartAdd } from '../../state/cartFeedback';
 import StarRating from './StarRating';
 import { PRICE_LOCKED, hasPrice, rupiah } from './shopPresentation';
 import './ProductCard.css';
@@ -28,6 +29,7 @@ export default function ProductCard({
   const pending = useRef(false);
   const mounted = useRef(false);
   const timer = useRef(null);
+  const cardRef = useRef(null);
   const variants = productVariants(product.id);
   const productName = purchaseProductName(product, variants);
   const shop = useShop();
@@ -101,6 +103,10 @@ export default function ProductCard({
         return;
       }
       setAdded(true);
+      announceCartAdd({
+        product: preview,
+        source: cardRef.current?.querySelector('.bam-product-media'),
+      });
       timer.current = window.setTimeout(() => setAdded(false), 1600);
     } catch {
       if (mounted.current)
@@ -133,7 +139,7 @@ export default function ProductCard({
     ' favorit';
 
   return (
-    <article className="product-card">
+    <article className="product-card" ref={cardRef}>
       <div
         className={
           'product-image-wrap ' +

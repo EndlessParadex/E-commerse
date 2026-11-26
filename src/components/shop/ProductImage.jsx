@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './ProductImage.css';
 
 /**
@@ -27,8 +27,17 @@ export function ProductPlaceholderIcon() {
 
 function ImageContent({ src, product, loading }) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const ref = useRef(null);
+  // A cached photo can finish before React listens; mark it loaded straight away.
+  useEffect(() => {
+    if (ref.current?.complete && ref.current.naturalWidth > 0) setLoaded(true);
+  }, []);
   return src && !failed ? (
     <img
+      ref={ref}
+      className={loaded ? 'is-loaded' : 'is-loading'}
+      onLoad={() => setLoaded(true)}
       src={src}
       alt={product.imageAlt || product.name}
       loading={loading}

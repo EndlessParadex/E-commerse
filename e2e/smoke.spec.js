@@ -125,6 +125,10 @@ test('pembeli pribadi: tambah ke keranjang lalu buat pesanan COD', async ({ page
   await expectTappable(submit);
   await submit.click();
   await expect(page.locator('main')).toContainText(/BAM-[0-9A-F]{8}/);
+  // The emptied cart reaches the account too, so the next test starts from an empty cart.
+  await expect
+    .poll(async () => (await (await page.request.get('/api/cart')).json()).cart.length)
+    .toBe(0);
   await expectNoHorizontalScroll(page);
 
   // The empty search box now offers what was just ordered; typing returns to normal search.

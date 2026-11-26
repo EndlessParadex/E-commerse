@@ -84,7 +84,7 @@ export default function PromoCarousel({ catalog, categoryList, preview } = {}) {
   const titleLines = slide.title.split('\n');
   return (
     <section
-      className={`bam-promo bam-promo--${slide.theme}`}
+      className={`bam-promo bam-promo--${slide.theme}${playing && slides.length > 1 ? ' is-playing' : ''}`}
       aria-label={`Pilihan katalog ${companyProfile.legalName}`}
       aria-roledescription="carousel"
       onMouseEnter={() => setHovered(true)}

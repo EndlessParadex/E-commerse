@@ -3,6 +3,7 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 import { useEffect, useRef, useState, useSyncExternalStore, lazy, Suspense } from 'react';
 import useCompany from './state/useCompany';
 import Navbar from './components/layout/Navbar';
+import CartAddedPopup from './components/shop/CartAddedPopup';
 import Home from './pages/Home';
 import { parseCatalogRoute } from './data/catalog';
 import {
@@ -314,6 +315,7 @@ function App() {
               </CatalogAccess>
             </main>
             {!isAdmin && <StoreFooter />}
+            {!isAdmin && <CartAddedPopup />}
           </AppearanceProvider>
         </ShopProvider>
       </WorkflowProvider>

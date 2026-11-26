@@ -1058,3 +1058,81 @@
 .account-premium .account-premium-phone-card .account-phone-form .account-field {
   margin-top: 0;
 }
+
+/* Profile hero: same blue gradient and bubbles as the storefront banner, so the
+   account area feels like part of the shop. Text turns white; badges stay solid pills. */
+.account-premium-hero {
+  --hero-bubble: #ffffff24;
+  --hero-bubble-soft: #ffffff14;
+  border-color: #0b4f8a;
+  background:
+    radial-gradient(circle at 88% 18%, var(--hero-bubble) 0 64px, transparent 65px),
+    radial-gradient(circle at 97% 92%, var(--hero-bubble-soft) 0 92px, transparent 93px),
+    radial-gradient(circle at 72% 86%, var(--hero-bubble) 0 18px, transparent 19px),
+    radial-gradient(circle at 62% 16%, var(--hero-bubble-soft) 0 10px, transparent 11px),
+    radial-gradient(circle at 78% 52%, var(--hero-bubble-soft) 0 34px, transparent 35px),
+    linear-gradient(120deg, #0b4f8a 0%, #1677c4 55%, #2a9be0 100%);
+  box-shadow: 0 16px 36px #0b4f8a2e;
+}
+:root[data-theme='dark'] .account-premium-hero {
+  --hero-bubble: #8fd3ff1f;
+  --hero-bubble-soft: #8fd3ff12;
+  border-color: #1f4f7a;
+  background:
+    radial-gradient(circle at 88% 18%, var(--hero-bubble) 0 64px, transparent 65px),
+    radial-gradient(circle at 97% 92%, var(--hero-bubble-soft) 0 92px, transparent 93px),
+    radial-gradient(circle at 72% 86%, var(--hero-bubble) 0 18px, transparent 19px),
+    radial-gradient(circle at 62% 16%, var(--hero-bubble-soft) 0 10px, transparent 11px),
+    radial-gradient(circle at 78% 52%, var(--hero-bubble-soft) 0 34px, transparent 35px),
+    linear-gradient(120deg, #0a2540 0%, #0f3f6c 55%, #12528a 100%);
+}
+.account-premium-hero::after {
+  right: auto;
+  left: -40px;
+  top: auto;
+  bottom: -120px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle at center, #ffffff26, transparent 70%);
+}
+.account-premium-hero::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: radial-gradient(circle, #ffffff1f 1.4px, transparent 1.7px) 0 0 / 18px 18px;
+  -webkit-mask-image: linear-gradient(100deg, transparent 40%, #000 100%);
+  mask-image: linear-gradient(100deg, transparent 40%, #000 100%);
+  pointer-events: none;
+}
+.account-premium-hero .account-page-avatar {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 6px #ffffff2e,
+    0 14px 30px #031f3a4d;
+}
+.account-premium-hero .account-premium-greeting h2 {
+  color: #ffffff;
+  font-size: clamp(1.2rem, 1.9vw, 1.6rem);
+}
+.account-premium-hero .account-premium-greeting > p {
+  color: #dbeafe;
+}
+.account-premium-hero .account-premium-role {
+  background: #ffffff;
+  color: #0b4f8a;
+}
+.account-premium-hero .account-premium-badge {
+  background: #ffffff;
+  box-shadow: 0 4px 12px #031f3a1f;
+}
+.account-premium-hero .account-premium-badge.is-verified {
+  color: #0b4f8a;
+}
+:root[data-theme='dark'] .account-premium-hero .account-premium-badge,
+:root[data-theme='dark'] .account-premium-hero .account-premium-role {
+  background: #0b1d33;
+}
+:root[data-theme='dark'] .account-premium-hero .account-premium-role,
+:root[data-theme='dark'] .account-premium-hero .account-premium-badge.is-verified {
+  color: #8fd3ff;
+}

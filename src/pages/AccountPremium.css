@@ -1136,3 +1136,68 @@
 :root[data-theme='dark'] .account-premium-hero .account-premium-badge.is-verified {
   color: #8fd3ff;
 }
+
+/* Profile banner bubbles drift slowly on their own layer (transform only). */
+.account-premium-hero {
+  isolation: isolate;
+  background: linear-gradient(120deg, #0b4f8a 0%, #1677c4 55%, #2a9be0 100%);
+}
+:root[data-theme='dark'] .account-premium-hero {
+  background: linear-gradient(120deg, #0a2540 0%, #0f3f6c 55%, #12528a 100%);
+}
+.account-premium-hero::before,
+.account-premium-hero::after {
+  inset: -10%;
+  left: -10%;
+  right: -10%;
+  top: -10%;
+  bottom: -10%;
+  z-index: -1;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+  will-change: transform;
+}
+.account-premium-hero::before {
+  background:
+    radial-gradient(circle at 86% 20%, var(--hero-bubble) 0 64px, transparent 65px),
+    radial-gradient(circle at 94% 88%, var(--hero-bubble-soft) 0 92px, transparent 93px),
+    radial-gradient(circle at 76% 52%, var(--hero-bubble-soft) 0 34px, transparent 35px),
+    radial-gradient(circle at 4% 100%, #ffffff1f, transparent 26%);
+  animation: account-bubbles-drift-a 15s ease-in-out infinite alternate;
+}
+.account-premium-hero::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 70% 82%, var(--hero-bubble) 0 18px, transparent 19px),
+    radial-gradient(circle at 62% 20%, var(--hero-bubble-soft) 0 10px, transparent 11px),
+    radial-gradient(circle at 54% 70%, var(--hero-bubble) 0 6px, transparent 7px),
+    radial-gradient(circle at 80% 30%, var(--hero-bubble) 0 8px, transparent 9px);
+  animation: account-bubbles-drift-b 10s ease-in-out infinite alternate;
+}
+@keyframes account-bubbles-drift-a {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-16px, 12px, 0);
+  }
+}
+@keyframes account-bubbles-drift-b {
+  from {
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    transform: translate3d(14px, -12px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-premium-hero::before,
+  .account-premium-hero::after {
+    animation: none;
+  }
+}

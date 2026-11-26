@@ -162,11 +162,6 @@
     display: none;
   }
 }
-@media (prefers-reduced-transparency: reduce) {
-  .home-landing .home-feature-rail .bam-promo::before {
-    display: none;
-  }
-}
 
 /* Big white panels get soft gradient orbs behind their content. The cards inside keep
    their own surfaces, so text contrast is unchanged. */
@@ -225,5 +220,66 @@
   }
   .home-landing .store-featured-products .product-grid {
     gap: 10px;
+  }
+}
+
+/* Animated bubbles: the bubbles live on two pseudo layers that drift slowly at different
+   speeds, so the banner feels alive without moving any content. Only transform is
+   animated, which the browser composites cheaply; reduced-motion users get still bubbles. */
+.home-landing .home-feature-rail .bam-promo {
+  background: linear-gradient(125deg, var(--feature-hero-start) 0%, var(--feature-hero-end) 100%);
+}
+.home-landing .home-feature-rail .bam-promo::before,
+.home-landing .home-feature-rail .bam-promo::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -8%;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  pointer-events: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+  will-change: transform;
+}
+.home-landing .home-feature-rail .bam-promo::before {
+  background:
+    radial-gradient(circle at 86% 18%, var(--feature-hero-glow), transparent 40%),
+    radial-gradient(circle at 90% 16%, var(--feature-bubble) 0 74px, transparent 75px),
+    radial-gradient(circle at 76% 88%, var(--feature-bubble-soft) 0 120px, transparent 121px),
+    radial-gradient(circle at 10% 92%, var(--feature-bubble) 0 46px, transparent 47px);
+  animation: bam-bubbles-drift-a 16s ease-in-out infinite alternate;
+}
+.home-landing .home-feature-rail .bam-promo::after {
+  background:
+    radial-gradient(circle at 46% 12%, var(--feature-bubble-soft) 0 22px, transparent 23px),
+    radial-gradient(circle at 58% 68%, var(--feature-bubble-soft) 0 12px, transparent 13px),
+    radial-gradient(circle at 36% 86%, var(--feature-bubble) 0 8px, transparent 9px),
+    radial-gradient(circle at 68% 30%, var(--feature-bubble) 0 6px, transparent 7px),
+    radial-gradient(circle at 24% 20%, var(--feature-bubble-soft) 0 10px, transparent 11px);
+  animation: bam-bubbles-drift-b 11s ease-in-out infinite alternate;
+}
+@keyframes bam-bubbles-drift-a {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-18px, 14px, 0);
+  }
+}
+@keyframes bam-bubbles-drift-b {
+  from {
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    transform: translate3d(16px, -16px, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-landing .home-feature-rail .bam-promo::before,
+  .home-landing .home-feature-rail .bam-promo::after {
+    animation: none;
   }
 }

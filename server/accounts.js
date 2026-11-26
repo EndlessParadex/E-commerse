@@ -234,7 +234,10 @@ export class AccountRepository {
             ORDER BY audit.created_at DESC,audit.id DESC LIMIT 1) AS decisionReason ` +
           from +
           clause +
-          ' ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?',
+          // Waiting registrations: oldest first, so nobody is left at the bottom of the list.
+          (['pending', 'all'].includes(status)
+            ? ' ORDER BY u.created_at,u.id LIMIT ? OFFSET ?'
+            : ' ORDER BY u.created_at DESC,u.id LIMIT ? OFFSET ?'),
       )
       .all(...args, pageSize, (actualPage - 1) * pageSize)
       .map((row) => ({

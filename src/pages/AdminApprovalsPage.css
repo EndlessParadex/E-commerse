@@ -270,3 +270,24 @@
     font-size: 1.5rem;
   }
 }
+
+.approval-waiting {
+  display: inline-flex;
+  align-self: flex-start;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-info-soft);
+  color: var(--color-info-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.approval-waiting.is-late {
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
+}
+.approvals-table .approval-email {
+  overflow-wrap: normal;
+  word-break: normal;
+}

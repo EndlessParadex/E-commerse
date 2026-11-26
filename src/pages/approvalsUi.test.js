@@ -300,11 +300,12 @@ test('approval website: complete details, status filters, confirmed decisions, c
     }
     await fill('#approval-search', '');
     await fill('#approval-status', 'pending');
-    await wait(() => row('page-25'));
-    await click(button(container.querySelector('.accounts-pagination'), 'Berikutnya'));
+    // Waiting registrations are listed oldest first, so the newest lands on page 2.
     await wait(() => row('page-0'));
+    await click(button(container.querySelector('.accounts-pagination'), 'Berikutnya'));
+    await wait(() => row('page-25'));
     assert.equal(container.querySelectorAll('[data-approval-id]').length, 1);
-    await click(button(row('page-0'), 'Setujui'));
+    await click(button(row('page-25'), 'Setujui'));
     await fill('#approval-password', secret);
     await click(confirm());
     await wait(
@@ -315,9 +316,9 @@ test('approval website: complete details, status filters, confirmed decisions, c
     assert.match(container.querySelector('.accounts-pagination').textContent, /Halaman 1 dari 1/);
     actor = 'operator';
     await render(actors.operator);
-    await wait(() => row('page-25'));
+    await wait(() => row('page-24'));
     assert.equal(container.querySelector('.approval-owner-link'), null);
-    assert.ok(button(row('page-25'), 'Setujui'));
+    assert.ok(button(row('page-24'), 'Setujui'));
     actor = 'buyer';
     await render(actors.buyer);
     assert.match(container.textContent, /Akses admin diperlukan/);

@@ -41,6 +41,7 @@ import { normalizeWhatsApp } from '../src/state/whatsappModel.js';
 import { createWhatsAppOtpSender } from './whatsappOtp.js';
 import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
 import { OrderDelivery } from './orderDelivery.js';
+import { RegistrationNotices } from './registrationNotices.js';
 import { DeliveryScheduleRepository } from './deliverySchedules.js';
 import { ReviewRepository } from './reviews.js';
 import { PersonalCartRepository } from './personalCarts.js';
@@ -345,6 +346,7 @@ export function createApp({
     logger,
   });
   messages.delivery = delivery;
+  const registrationNotices = new RegistrationNotices(db, { identity, company, now, logger });
   const savedArea = (id) => {
     const row = db
       .prepare('SELECT street,village_code FROM user_addresses WHERE user_id=?')
@@ -1410,6 +1412,7 @@ export function createApp({
     phoneVerification,
     messages,
     delivery,
+    registrationNotices,
     emailSettings,
     accounts,
     b2bStores,

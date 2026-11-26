@@ -6,6 +6,7 @@ import useUnsavedChanges from '../state/useUnsavedChanges';
 import ConfirmDialog from '../components/shop/ConfirmDialog';
 import './AdminAccountsPage.css';
 import './AdminApprovalsPage.css';
+import { waitingLabel } from '../data/approvalWaiting';
 
 const statuses = {
   pending: 'Menunggu persetujuan',
@@ -27,6 +28,12 @@ const dateLabel = (value) => {
     }) + ' WIB'
   );
 };
+function WaitingChip({ createdAt }) {
+  const wait = waitingLabel(createdAt);
+  return wait ? (
+    <span className={'approval-waiting' + (wait.late ? ' is-late' : '')}>{wait.text}</span>
+  ) : null;
+}
 function StatusBadge({ status }) {
   return (
     <span className={'accounts-status approval-status is-' + status}>
@@ -435,6 +442,9 @@ export default function AdminApprovalsPage() {
                         Daftar{' '}
                         <time dateTime={account.createdAt}>{dateLabel(account.createdAt)}</time>
                       </span>
+                      {account.approvalStatus === 'pending' && (
+                        <WaitingChip createdAt={account.createdAt} />
+                      )}
                     </td>
                     <td data-label="Kontak">
                       <span className="approval-phone">{account.phone || 'Belum ditambahkan'}</span>

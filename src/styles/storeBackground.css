@@ -155,3 +155,10 @@
 :root[data-appearance-bg-motion='off'] .page-main--store::after {
   animation: none !important;
 }
+
+/* Shop photos: no long-press "Save image" sheet on phones and no drag-out (see imageGuard.js). */
+:is(.page-main--store, .cart-added-region) img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}

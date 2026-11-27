@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, lazy, Suspense } fro
 import useCompany from './state/useCompany';
 import Navbar from './components/layout/Navbar';
 import CartAddedPopup from './components/shop/CartAddedPopup';
+import { guardStoreImages } from './state/imageGuard';
 import Home from './pages/Home';
 import { parseCatalogRoute } from './data/catalog';
 import {
@@ -184,6 +185,8 @@ function App() {
       previousRoute.current = route;
     }
   }, [route, title, restoreY, companyProfile.shortName]);
+
+  useEffect(() => (isAdmin ? undefined : guardStoreImages()), [isAdmin]);
 
   // Account recovery and help must remain reachable when catalog loading fails.
   const catalogIndependentRoute =

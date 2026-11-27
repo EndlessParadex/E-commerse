@@ -6,7 +6,8 @@ import ProductImage from './ProductImage';
 import { cartItemPresentation } from '../../data/cartItemPresentation';
 import './ShopActions.css';
 import './CartPage.css';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import CartRemovedToast from './CartRemovedToast';
 import CancelShoppingDialog from './CancelShoppingDialog';
 import CartPromotion from './CartPromotion';
 import CartReview from './CartReview';
@@ -35,14 +36,11 @@ export default function ShopPage({ type }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   // The last removed cart line can be put back for a few seconds.
   const [removed, setRemoved] = useState(null);
-  useEffect(() => {
-    if (!removed) return undefined;
-    const timer = window.setTimeout(() => setRemoved(null), 8000);
-    return () => window.clearTimeout(timer);
-  }, [removed]);
+  const closeRemoved = useCallback(() => setRemoved(null), []);
   const removeWithUndo = (item) => {
     const index = shop.cart.findIndex((entry) => entry.id === item.id);
-    if (shop.dispatch({ type: 'remove', id: item.id }) !== false) setRemoved({ item, index });
+    if (shop.dispatch({ type: 'remove', id: item.id }) !== false)
+      setRemoved({ item, index, at: Date.now() });
   };
   const undoRemove = () => {
     if (removed) shop.dispatch({ type: 'restore', item: removed.item, index: removed.index });
@@ -118,13 +116,8 @@ export default function ShopPage({ type }) {
             ? shop.quantity + ' kemasan • ' + shop.cart.length + ' pilihan produk/kemasan'
             : shop.notifications.length + ' notifikasi • ' + shop.unreadCount + ' belum dibaca'}
         </p>
-        {isCart && removed && (
-          <div className="cart-undo" role="status">
-            <span>{removed.item.name} dihapus dari keranjang.</span>
-            <button type="button" onClick={undoRemove}>
-              Urungkan
-            </button>
-          </div>
+        {isCart && (
+          <CartRemovedToast removed={removed} onUndo={undoRemove} onClose={closeRemoved} />
         )}
         {isCart && shop.cart.length > 0 && (
           <a className="cart-continue-shopping" href="#/cari?q=">

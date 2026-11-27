@@ -313,3 +313,19 @@
     animation: none;
   }
 }
+
+/* Phones: the banner keeps its description (an admin-written banner needs it to make sense),
+   shortened to three lines and a size that still leaves room for the button. */
+@media (max-width: 650px) {
+  .home-landing .home-feature-rail .bam-promo-copy > p {
+    display: -webkit-box;
+    max-width: none;
+    margin: 0 0 14px;
+    overflow: hidden;
+    color: var(--feature-hero-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+}

@@ -149,11 +149,19 @@ test('account website: buyer security summary, admin password settings, registra
     assert.equal(container.querySelector('.account-trigger-name').textContent, 'Guest');
     await fill('#auth-name', 'Pembeli Website');
     await fill('#auth-phone', '081234560014');
+    assert.equal(
+      container.querySelector('#auth-email'),
+      null,
+      'email disembunyikan sampai diminta',
+    );
+    await act(async () => {
+      container.querySelector('.auth-add-email').click();
+      await settle();
+    });
     await fill('#auth-email', 'website@fixture.test');
     await fill('#auth-jalan', 'Alamat pengujian website lengkap');
     await fill('#auth-desa', '19.02.01.1001');
     await fill('#auth-password', 'registration-password');
-    await fill('#auth-confirmPassword', 'registration-password');
     await submit('.auth-card form');
     await wait(() => container.querySelector('.auth-submit-notice'));
     assert.ok(container.querySelector('.auth-registration-result a[href="#/login"]'));

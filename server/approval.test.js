@@ -414,6 +414,10 @@ test('pemilik bisa mengalihkan persetujuan ke otomatis: pendaftar baru langsung 
     );
     assert.equal(saved.status, 200);
     assert.equal(saved.body.autoApprove, true);
+    // The sign-up page reads only the mode, without signing in.
+    const publicMode = await request(app, 'GET', '/api/auth/registration-mode');
+    assert.equal(publicMode.status, 200);
+    assert.deepEqual(publicMode.body, { autoApprove: true });
     const stale = await request(
       app,
       'PUT',

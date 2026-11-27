@@ -13,62 +13,161 @@
   box-shadow: 0 14px 48px #0f172a08;
 }
 .auth-intro {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #ffffff;
   background: linear-gradient(
-    145deg,
-    var(--color-info-soft),
-    var(--color-surface-hover) 65%,
-    var(--color-surface)
+    150deg,
+    color-mix(in srgb, var(--color-action) 70%, #0b2545) 0%,
+    var(--color-action) 100%
   );
   padding: 44px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: flex-start;
+  gap: 18px;
+}
+/* Soft bubbles behind the intro copy. */
+.auth-intro::before,
+.auth-intro::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  background: #ffffff1f;
+  pointer-events: none;
+}
+.auth-intro::before {
+  width: 260px;
+  height: 260px;
+  top: -90px;
+  right: -80px;
+}
+.auth-intro::after {
+  width: 200px;
+  height: 200px;
+  bottom: -70px;
+  left: -60px;
+  background: #ffffff14;
 }
 .auth-brand {
-  color: var(--color-info-text);
   font-size: 1.5rem;
   font-weight: 800;
-  margin-bottom: 40px;
-}
-.auth-intro-icon {
-  width: 76px;
-  height: 76px;
-  border-radius: 24px;
-  background: var(--color-surface);
-  display: grid;
-  place-items: center;
-  color: var(--color-link-bright);
-  box-shadow: 0 8px 28px #0284c714;
-  margin-bottom: 24px;
-}
-.auth-intro-icon svg {
-  width: 36px;
-  height: 36px;
+  margin-bottom: 18px;
 }
 .auth-intro h2 {
   font-size: clamp(1.625rem, 3vw, 2.25rem);
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: -0.6px;
-  margin-bottom: 16px;
+  margin: 0;
 }
 .auth-intro p {
-  color: var(--color-text-secondary);
+  margin: 0;
+  color: #ffffffd9;
   font-size: 0.9375rem;
 }
+.auth-steps {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+.auth-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #ffffff1a;
+  border: 1px solid #ffffff2e;
+}
+.auth-steps li > span {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  color: color-mix(in srgb, var(--color-action) 80%, #0b2545);
+  font-weight: 800;
+}
+.auth-steps strong {
+  display: block;
+  font-size: 0.9375rem;
+}
+.auth-steps small {
+  color: #ffffffc7;
+  font-size: 0.8125rem;
+}
 .auth-intro-tags {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 28px;
 }
-.auth-intro-tags span {
+.auth-intro-tags li {
   padding: 6px 12px;
   border-radius: 20px;
-  background: var(--color-overlay-soft);
-  border: 1px solid var(--color-border-info-strong);
-  color: var(--color-info-text);
+  background: #ffffff1f;
+  border: 1px solid #ffffff3d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.auth-intro .auth-help {
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 0.8125rem;
+}
+/* Registration form split into three numbered parts. */
+.auth-group {
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.auth-card form > .auth-group:first-child {
+  margin-top: 22px;
+}
+.auth-group legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0;
   font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-info-text);
+}
+.auth-group legend span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: var(--color-info-soft);
+  letter-spacing: 0;
+}
+.auth-add-email {
+  margin: -4px 0 4px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--color-link-bright);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.auth-add-email:hover {
+  text-decoration: underline;
 }
 .auth-card {
   padding: 40px 44px;
@@ -256,13 +355,37 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .auth-intro {
-    padding: 24px;
+    padding: 24px 20px;
+    gap: 12px;
   }
   .auth-brand {
-    margin-bottom: 12px;
+    margin-bottom: 4px;
   }
-  .auth-intro-icon,
-  .auth-intro-tags {
+  .auth-intro-tags,
+  .auth-intro .auth-help {
+    display: none;
+  }
+  /* On a phone the three steps become one compact row. */
+  .auth-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .auth-steps li {
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .auth-steps li > span {
+    width: 24px;
+    height: 24px;
+    font-size: 0.8125rem;
+  }
+  .auth-steps strong {
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+  .auth-steps small {
     display: none;
   }
   .auth-intro h2 {

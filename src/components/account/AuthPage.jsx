@@ -1,6 +1,5 @@
 import useCompany from '../../state/useCompany';
-import { useRef, useState } from 'react';
-import { ActionIcon } from '../shop/ShopIcon';
+import { useEffect, useRef, useState } from 'react';
 import { validateAuth } from './authValidation';
 import { useDelivery } from '../../state/useDelivery';
 import BelitungAddressFields from './BelitungAddressFields';
@@ -29,6 +28,19 @@ function EyeIcon({ visible }) {
 
 export default function AuthPage({ mode }) {
   const { profile: companyProfile } = useCompany();
+  const [autoApprove, setAutoApprove] = useState(null);
+  const [showEmail, setShowEmail] = useState(false);
+  useEffect(() => {
+    if (mode !== 'register') return undefined;
+    let live = true;
+    fetch('/api/auth/registration-mode', { cache: 'no-store', signal: AbortSignal.timeout(8000) })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => live && setAutoApprove(payload?.autoApprove === true))
+      .catch(() => live && setAutoApprove(false));
+    return () => {
+      live = false;
+    };
+  }, [mode]);
   const isRegister = mode === 'register';
   const { setUser } = useDelivery();
   const formRef = useRef(null);
@@ -66,7 +78,11 @@ export default function AuthPage({ mode }) {
   const submit = async (event) => {
     event.preventDefault();
     if (pending.current) return;
-    const nextErrors = validateAuth(values, mode);
+    // Registration shows one password field with a show/hide button, so it confirms itself.
+    const nextErrors = validateAuth(
+      isRegister ? { ...values, confirmPassword: values.password } : values,
+      mode,
+    );
     setErrors(nextErrors);
     setNotice('');
     const firstError = Object.keys(nextErrors)[0];
@@ -224,27 +240,65 @@ export default function AuthPage({ mode }) {
       <div className="auth-layout">
         <aside className="auth-intro">
           <span className="auth-brand">{companyProfile.shortName}.</span>
-          <div className="auth-intro-icon">
-            <ActionIcon account />
-          </div>
-          <h2>{isRegister ? 'Mulai dari satu akun.' : 'Selamat datang kembali.'}</h2>
-          <p>Temukan kosmetik, snack, dan kebutuhan harian pilihan dalam satu tempat.</p>
-          <div className="auth-intro-tags">
-            <span>Kosmetik</span>
-            <span>Snack</span>
-            <span>Kebutuhan harian</span>
-          </div>
+          <h2>
+            {isRegister ? 'Daftar sekali, belanja grosir kapan saja.' : 'Selamat datang kembali.'}
+          </h2>
+          <p>
+            Kebutuhan toko dari {companyProfile.legalName || companyProfile.shortName}, diantar
+            sopir sendiri.
+          </p>
+          {isRegister ? (
+            <ol className="auth-steps">
+              <li>
+                <span aria-hidden="true">1</span>
+                <div>
+                  <strong>Isi data dan alamat toko</strong>
+                  <small>Sekitar satu menit</small>
+                </div>
+              </li>
+              <li>
+                <span aria-hidden="true">2</span>
+                <div>
+                  <strong>Konfirmasi nomor WhatsApp</strong>
+                  <small>Sebelum pesanan pertama</small>
+                </div>
+              </li>
+              <li>
+                <span aria-hidden="true">3</span>
+                <div>
+                  <strong>Pesan, bayar saat barang tiba</strong>
+                  <small>Diantar sopir {companyProfile.shortName} ke toko Anda</small>
+                </div>
+              </li>
+            </ol>
+          ) : (
+            <ul className="auth-intro-tags">
+              <li>Bayar di tempat (COD)</li>
+              <li>Harga per renceng, pack, dus</li>
+              <li>Status pesanan jelas</li>
+            </ul>
+          )}
+          {companyProfile.phone && (
+            <p className="auth-help">
+              Butuh bantuan? Hubungi {companyProfile.shortName} di{' '}
+              <strong>{companyProfile.phone}</strong>
+            </p>
+          )}
         </aside>
         <section className="auth-card" aria-labelledby="auth-title">
           <header>
             <h1 id="auth-title">{isRegister ? 'Buat akun' : 'Masuk ke akun'}</h1>
             <p>
-              {isRegister
-                ? 'Daftar sebagai pembeli. Akun harus disetujui Admin atau Pemilik sebelum dapat masuk.'
-                : 'Gunakan email atau nomor HP dengan kata sandi Anda.'}
+              {!isRegister
+                ? 'Gunakan email atau nomor HP dengan kata sandi Anda.'
+                : autoApprove === null
+                  ? 'Daftar sebagai pembeli.'
+                  : autoApprove
+                    ? 'Daftar sebagai pembeli. Akun langsung aktif setelah daftar.'
+                    : 'Daftar sebagai pembeli. Setelah daftar, akun diperiksa Admin sebelum bisa masuk.'}
             </p>
           </header>
-          {!registrationSent && (
+          {!registrationSent && !isRegister && (
             <p className="auth-preview-note">
               {isRegister
                 ? 'Nama penerima dan alamat digunakan untuk checkout. Nama toko dapat diatur melalui Akun Saya → Alamat.'
@@ -314,54 +368,81 @@ export default function AuthPage({ mode }) {
             </div>
           ) : (
             <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy}>
-              {isRegister && field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
-              {isRegister &&
-                field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890', {
-                  help: 'Dipakai untuk masuk dan untuk konfirmasi pesanan lewat WhatsApp.',
-                })}
-              {isRegister && (
-                <BelitungAddressFields
-                  idPrefix="auth"
-                  value={values}
-                  errors={errors}
-                  disabled={busy}
-                  onChange={setField}
-                  classes={{
-                    field: 'auth-field',
-                    error: 'auth-error',
-                    hint: 'auth-hint',
-                    wrap: 'auth-input-wrap',
-                  }}
-                />
+              {isRegister ? (
+                <>
+                  <fieldset className="auth-group">
+                    <legend>
+                      <span aria-hidden="true">1</span> Kontak
+                    </legend>
+                    {field('name', 'Nama lengkap', 'text', 'name', 'Nama lengkap Anda')}
+                    {field('phone', 'Nomor HP / WhatsApp', 'tel', 'tel', '081234567890', {
+                      help: 'Dipakai untuk masuk dan untuk konfirmasi pesanan lewat WhatsApp.',
+                    })}
+                    {showEmail || values.email || errors.email ? (
+                      field('email', 'Email (opsional)', 'email', 'email', 'nama@contoh.com', {
+                        optional: true,
+                        help: 'Boleh dikosongkan. Tanpa email, masuk dan pemulihan kata sandi memakai nomor HP.',
+                      })
+                    ) : (
+                      <button
+                        type="button"
+                        className="auth-add-email"
+                        onClick={() => setShowEmail(true)}
+                        disabled={busy}
+                      >
+                        + Tambah email (opsional)
+                      </button>
+                    )}
+                  </fieldset>
+                  <fieldset className="auth-group">
+                    <legend>
+                      <span aria-hidden="true">2</span> Alamat pengiriman
+                    </legend>
+                    <BelitungAddressFields
+                      idPrefix="auth"
+                      value={values}
+                      errors={errors}
+                      disabled={busy}
+                      onChange={setField}
+                      classes={{
+                        field: 'auth-field',
+                        error: 'auth-error',
+                        hint: 'auth-hint',
+                        wrap: 'auth-input-wrap',
+                      }}
+                    />
+                  </fieldset>
+                  <fieldset className="auth-group">
+                    <legend>
+                      <span aria-hidden="true">3</span> Kata sandi
+                    </legend>
+                    {field(
+                      'password',
+                      'Kata sandi',
+                      'password',
+                      'new-password',
+                      'Masukkan kata sandi',
+                    )}
+                  </fieldset>
+                </>
+              ) : (
+                <>
+                  {field(
+                    'email',
+                    'Email atau Nomor HP',
+                    'text',
+                    'username',
+                    'nama@contoh.com atau 081234567890',
+                  )}
+                  {field(
+                    'password',
+                    'Kata sandi',
+                    'password',
+                    'current-password',
+                    'Masukkan kata sandi',
+                  )}
+                </>
               )}
-              {field(
-                'email',
-                isRegister ? 'Email (opsional)' : 'Email atau Nomor HP',
-                isRegister ? 'email' : 'text',
-                isRegister ? 'email' : 'username',
-                isRegister ? 'nama@contoh.com' : 'nama@contoh.com atau 081234567890',
-                isRegister
-                  ? {
-                      optional: true,
-                      help: 'Boleh dikosongkan. Tanpa email, masuk dan pemulihan kata sandi memakai nomor HP.',
-                    }
-                  : {},
-              )}
-              {field(
-                'password',
-                'Kata sandi',
-                'password',
-                isRegister ? 'new-password' : 'current-password',
-                'Masukkan kata sandi',
-              )}
-              {isRegister &&
-                field(
-                  'confirmPassword',
-                  'Konfirmasi kata sandi',
-                  'password',
-                  'new-password',
-                  'Ulangi kata sandi',
-                )}
               {notice && (
                 <p className="auth-submit-notice" role="status">
                   {notice}

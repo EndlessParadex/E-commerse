@@ -190,7 +190,8 @@ test('akun baru tanpa email: daftar, disetujui Admin, masuk dengan nomor HP, dia
 
   await page.goto('/#/daftar');
   const form = page.locator('main form');
-  await expect(form.getByLabel('Email (opsional)')).toBeVisible();
+  // Email is optional, so it stays folded away until asked for.
+  await expect(form.getByRole('button', { name: '+ Tambah email (opsional)' })).toBeVisible();
   await form.locator('[name="name"]').fill(name);
   await form.locator('[name="phone"]').fill(phone);
   // Address: typed street, kelurahan/desa from the official Belitung list.
@@ -204,9 +205,9 @@ test('akun baru tanpa email: daftar, disetujui Admin, masuk dengan nomor HP, dia
   );
   await expectNoHorizontalScroll(page);
   // A typo in the optional email is still caught; an empty one is accepted.
+  await form.getByRole('button', { name: '+ Tambah email (opsional)' }).click();
   await form.locator('[name="email"]').fill('bukan-email');
   await form.locator('[name="password"]').fill(newPassword);
-  await form.locator('[name="confirmPassword"]').fill(newPassword);
   await page.getByRole('button', { name: 'Daftar akun' }).click();
   await expect(form.locator('#email-error')).toContainText('kosongkan');
   await form.locator('[name="email"]').fill('');

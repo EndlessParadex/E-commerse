@@ -1195,6 +1195,9 @@ export function createApp({
       }
       if (req.method === 'POST' && path === '/api/auth/reset-phone')
         return json(res, 200, await phoneRecovery.confirm(await readBody(req), clientIp(req)));
+      // Public: lets the sign-up page say whether a new account waits for approval.
+      if (req.method === 'GET' && path === '/api/auth/registration-mode')
+        return json(res, 200, { autoApprove: registrationSettings.snapshot().autoApprove });
       if (req.method === 'POST' && path === '/api/auth/register') {
         const fields = authFields(await readBody(req), true);
         if (Object.keys(fields.errors).length)

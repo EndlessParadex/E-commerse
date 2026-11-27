@@ -323,11 +323,6 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
               />
             </section>
           </div>
-          <button className="bam-button-secondary commerce-share" type="button" onClick={share}>
-            Bagikan produk
-          </button>
-          {shareMessage && <p role="status">{shareMessage}</p>}
-
           <ProductReviews groupId={product.groupId} />
         </div>
         <aside className="detail-purchase-rail">
@@ -346,6 +341,8 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
             sharedCart={shared}
             cartMode={cartMode}
             onCartMode={chooseCartMode}
+            onShare={share}
+            shareMessage={shareMessage}
           />
         </aside>
       </div>
@@ -354,13 +351,19 @@ export default function ProductDetailPage({ productId, returnTo = '/cari?q=' }) 
           <span>{purchasePackagingLabel(product, quantity)}</span>
           <strong>{rupiah(product.price * quantity)}</strong>
         </div>
+        {/* Phones add and stay on the product, like the desktop "Tambah ke keranjang";
+            the cart popup offers the way to the cart. */}
         <button
           type="button"
-          className="detail-mobile-buy"
+          className={'detail-mobile-buy' + (added ? ' is-added' : '')}
           disabled={!remaining}
-          onClick={() => addToCart(true)}
+          onClick={() => addToCart(false)}
         >
-          {shared?.enabled ? 'Tambah dan buka keranjang' : 'Beli sekarang'}
+          {added
+            ? 'Masuk keranjang ✓'
+            : shared?.enabled
+              ? 'Tambah ke keranjang toko'
+              : 'Tambah ke keranjang'}
         </button>
       </div>
     </div>

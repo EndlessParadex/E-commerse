@@ -1095,3 +1095,66 @@
 .detail-package-price .unit-price {
   white-space: nowrap;
 }
+
+/* Share sits as an icon beside the purchase panel title instead of a separate button. */
+.detail-purchase-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.detail-purchase-head h2,
+.detail-purchase-panel .detail-purchase-head h2 {
+  margin-bottom: 0;
+}
+.detail-share-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -6px -6px 0 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-link);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+.detail-share-icon:hover {
+  background: var(--color-info-soft);
+}
+.detail-share-icon:active {
+  transform: scale(0.94);
+}
+.detail-share-icon:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.detail-share-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.detail-share-message {
+  margin: -8px 0 14px;
+  color: var(--color-success-text);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.detail-mobile-buy.is-added {
+  background: var(--color-success-text);
+}
+/* On a product page the cart popup sits above the quick-purchase bar, not over it. */
+@media (max-width: 760px) {
+  body:has(.detail-mobile-purchase) .cart-added-region {
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  }
+}

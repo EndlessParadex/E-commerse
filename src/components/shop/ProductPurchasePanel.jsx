@@ -20,6 +20,8 @@ export default function ProductPurchasePanel({
   sharedCart,
   cartMode,
   onCartMode,
+  onShare,
+  shareMessage,
 }) {
   const panel = useRef(null);
   useLayoutEffect(() => {
@@ -75,13 +77,36 @@ export default function ProductPurchasePanel({
           </div>
         </div>
       )}
-      <h2 id="detail-purchase-title">
-        {sharedCart?.enabled
-          ? 'Atur keranjang toko'
-          : sharedCart?.canChooseCart
-            ? 'Atur keranjang pribadi'
-            : 'Atur pembelian'}
-      </h2>
+      <div className="detail-purchase-head">
+        <h2 id="detail-purchase-title">
+          {sharedCart?.enabled
+            ? 'Atur keranjang toko'
+            : sharedCart?.canChooseCart
+              ? 'Atur keranjang pribadi'
+              : 'Atur pembelian'}
+        </h2>
+        {onShare && (
+          <button
+            type="button"
+            className="detail-share-icon"
+            aria-label="Bagikan produk"
+            title="Bagikan produk"
+            onClick={onShare}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="18" cy="5" r="2.6" />
+              <circle cx="6" cy="12" r="2.6" />
+              <circle cx="18" cy="19" r="2.6" />
+              <path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {shareMessage && (
+        <p className="detail-share-message" role="status">
+          {shareMessage}
+        </p>
+      )}
       {sharedCart?.canChooseCart && !sharedCart.enabled && (
         <p className="detail-personal-context">
           Produk ditambahkan ke keranjang pribadi dan tidak masuk ke keranjang bersama toko.

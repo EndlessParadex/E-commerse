@@ -2006,3 +2006,79 @@
     min-width: 44px;
   }
 }
+
+/* Session check placeholders: same size as what replaces them, so nothing jumps. */
+.auth-skeleton {
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+        90deg,
+        transparent 0,
+        color-mix(in srgb, var(--color-surface) 75%, transparent) 50%,
+        transparent 100%
+      )
+      0 0 / 200% 100%,
+    var(--color-surface-muted);
+  animation: auth-skeleton-shimmer 1.3s linear infinite;
+}
+.auth-skeleton--avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.auth-skeleton--name {
+  width: 64px;
+  height: 14px;
+}
+.auth-skeleton--text {
+  width: 96px;
+  height: 14px;
+}
+.auth-skeleton--nav {
+  width: 112px;
+  height: 36px;
+  border-radius: 12px;
+}
+.auth-skeleton--icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+}
+.auth-skeleton--label {
+  width: 46px;
+  height: 9px;
+}
+.mobile-nav-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+}
+.shop-hover-target.is-loading .shop-action {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.shop-hover-target.is-loading .account-trigger {
+  pointer-events: none;
+}
+@keyframes auth-skeleton-shimmer {
+  from {
+    background-position:
+      100% 0,
+      0 0;
+  }
+  to {
+    background-position:
+      -100% 0,
+      0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-skeleton {
+    animation: none;
+  }
+}

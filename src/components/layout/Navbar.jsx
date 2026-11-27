@@ -61,7 +61,8 @@ const Navbar = () => {
   }, []);
   // Deliver To State
   const [showDeliverPopup, setShowDeliverPopup] = useState(false);
-  const { user } = useDelivery();
+  // authLoading: the session check is still running; show placeholders, not the guest view.
+  const { user, authLoading } = useDelivery();
   const { shared, cartMode, setCartMode } = useShop();
   const [mobileRoute, setMobileRoute] = useState(
     () => window.location.hash.slice(1).split('?')[0] || '/',
@@ -484,7 +485,7 @@ const Navbar = () => {
             )}
             {/* Kirim Ke dengan Pop-Up */}
             <div
-              className={'deliver-to' + (user ? '' : ' is-guest')}
+              className={'deliver-to' + (authLoading ? ' is-loading' : user ? '' : ' is-guest')}
               ref={deliverRef}
               onKeyDown={(event) => {
                 if (event.key === 'Escape') {
@@ -525,9 +526,13 @@ const Navbar = () => {
                     <circle cx="12" cy="10" r="2.2" />
                   </svg>
 
-                  <span className="deliver-code" title={deliveryTitle}>
-                    {deliveryTitle}
-                  </span>
+                  {authLoading ? (
+                    <span className="auth-skeleton auth-skeleton--text" aria-hidden="true" />
+                  ) : (
+                    <span className="deliver-code" title={deliveryTitle}>
+                      {deliveryTitle}
+                    </span>
+                  )}
                 </div>
 
                 {accountLocation && (
@@ -641,20 +646,25 @@ const Navbar = () => {
         <div className="secondary-navbar-container">
           <div className="secondary-nav-left">
             {!b2bCart && <CatalogMenu />}
-            {navigationLinks
-              .filter((link) => link.desktop)
-              .map((link) => (
-                <a
-                  key={link.href}
-                  className="navbar-role-link"
-                  href={link.href}
-                  aria-current={roleNavigationActive(link, mobileRoute) ? 'page' : undefined}
-                  onClick={() => goToRoleDestination(link)}
-                >
-                  <NavigationIcon name={link.icon} />
-                  <span>{link.label}</span>
-                </a>
+            {authLoading &&
+              [0, 1, 2].map((index) => (
+                <span key={index} className="auth-skeleton auth-skeleton--nav" aria-hidden="true" />
               ))}
+            {!authLoading &&
+              navigationLinks
+                .filter((link) => link.desktop)
+                .map((link) => (
+                  <a
+                    key={link.href}
+                    className="navbar-role-link"
+                    href={link.href}
+                    aria-current={roleNavigationActive(link, mobileRoute) ? 'page' : undefined}
+                    onClick={() => goToRoleDestination(link)}
+                  >
+                    <NavigationIcon name={link.icon} />
+                    <span>{link.label}</span>
+                  </a>
+                ))}
           </div>
           <div className="secondary-nav-right">
             {!b2bCart && (
@@ -670,19 +680,27 @@ const Navbar = () => {
         aria-label="Navigasi utama mobile"
         style={{ '--nav-items': bottomLinks.length }}
       >
-        {bottomLinks.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            aria-current={link.active ? 'page' : undefined}
-            onClick={() => {
-              goToRoleDestination(link);
-            }}
-          >
-            <NavigationIcon name={link.icon} />
-            <span>{link.label}</span>
-          </a>
-        ))}
+        {authLoading &&
+          bottomLinks.map((link) => (
+            <span key={link.label} className="mobile-nav-skeleton" aria-hidden="true">
+              <span className="auth-skeleton auth-skeleton--icon" />
+              <span className="auth-skeleton auth-skeleton--label" />
+            </span>
+          ))}
+        {!authLoading &&
+          bottomLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              aria-current={link.active ? 'page' : undefined}
+              onClick={() => {
+                goToRoleDestination(link);
+              }}
+            >
+              <NavigationIcon name={link.icon} />
+              <span>{link.label}</span>
+            </a>
+          ))}
       </nav>
     </div>
   );

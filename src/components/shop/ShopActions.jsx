@@ -15,7 +15,9 @@ import './Notifications.css';
 export default function ShopActions({ onOpen }) {
   const { profile: companyProfile } = useCompany();
   const shop = useShop();
-  const { user } = useDelivery();
+  // While the session is still being checked, show placeholders instead of the guest view,
+  // so a signed-in buyer never sees "Guest" flash on refresh.
+  const { user, authLoading } = useDelivery();
   const [active, setActive] = useState(null);
   const rootRef = useRef(null);
   const closeTimer = useRef(null);
@@ -96,7 +98,7 @@ export default function ShopActions({ onOpen }) {
     <div className="icon-group shop-actions" ref={rootRef}>
       {['cart', 'notifications', 'account']
         // Tamu tidak punya notifikasi akun; di mode server lonceng hanya membingungkan.
-        .filter((kind) => kind !== 'notifications' || user || !workflowUsesServer)
+        .filter((kind) => kind !== 'notifications' || user || authLoading || !workflowUsesServer)
         .map((kind) => {
           const isCart = kind === 'cart';
           const isAccount = kind === 'account';
@@ -106,7 +108,9 @@ export default function ShopActions({ onOpen }) {
           const expanded = active === kind;
           return (
             <div
-              className="shop-hover-target"
+              className={
+                'shop-hover-target' + (authLoading && kind !== 'cart' ? ' is-loading' : '')
+              }
               data-kind={kind}
               key={kind}
               onPointerEnter={(event) => {
@@ -133,9 +137,11 @@ export default function ShopActions({ onOpen }) {
                 href={href}
                 aria-label={
                   isAccount
-                    ? user
-                      ? 'Akun saya, ' + user.name
-                      : 'Guest, masuk atau daftar'
+                    ? authLoading
+                      ? 'Akun, sedang memeriksa'
+                      : user
+                        ? 'Akun saya, ' + user.name
+                        : 'Guest, masuk atau daftar'
                     : isCart
                       ? 'Keranjang, ' + count + ' barang'
                       : 'Notifikasi, ' + count + ' belum dibaca'
@@ -144,12 +150,21 @@ export default function ShopActions({ onOpen }) {
                 aria-controls={'preview-' + kind}
                 onClick={close}
               >
-                {isAccount ? <AccountAvatar user={user} /> : <ActionIcon notification={!isCart} />}
-                {isAccount && (
-                  <span className="account-trigger-name" title={user?.name || 'Guest'}>
-                    {user?.name || 'Guest'}
-                  </span>
+                {isAccount && authLoading ? (
+                  <span className="auth-skeleton auth-skeleton--avatar" aria-hidden="true" />
+                ) : isAccount ? (
+                  <AccountAvatar user={user} />
+                ) : (
+                  <ActionIcon notification={!isCart} />
                 )}
+                {isAccount &&
+                  (authLoading ? (
+                    <span className="auth-skeleton auth-skeleton--name" aria-hidden="true" />
+                  ) : (
+                    <span className="account-trigger-name" title={user?.name || 'Guest'}>
+                      {user?.name || 'Guest'}
+                    </span>
+                  ))}
                 {count > 0 && (
                   <span
                     key={isCart ? 'bump-' + bump : undefined}
@@ -295,7 +310,7 @@ export default function ShopActions({ onOpen }) {
             </div>
           );
         })}
-      {!user && (
+      {!user && !authLoading && (
         <a className="guest-auth-link" href="#/login">
           Masuk
         </a>

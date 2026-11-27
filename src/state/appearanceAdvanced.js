@@ -16,6 +16,7 @@ export const defaultAdvancedAppearance = Object.freeze({
   radius: 16,
   density: 'comfortable',
   motion: true,
+  backgroundMotion: true,
 });
 const validHex = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 export const normalizeHex = (value) => (validHex(value) ? value.toLowerCase() : '');
@@ -32,6 +33,7 @@ export const normalizeAdvancedAppearance = (value) => ({
     ? value.density
     : 'comfortable',
   motion: typeof value?.motion === 'boolean' ? value.motion : true,
+  backgroundMotion: typeof value?.backgroundMotion === 'boolean' ? value.backgroundMotion : true,
 });
 export const advancedStorageKey = (owner) =>
   companyStorageKey(`bam.appearance.advanced.v1.${encodeURIComponent(owner)}`);

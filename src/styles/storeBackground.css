@@ -4,19 +4,56 @@
    reduced-motion users get still orbs. Admin keeps its plain surface. */
 .page-main--store {
   --store-dot: #0369a112;
-  --store-orb-blue: #3b82f68c;
-  --store-orb-cyan: #06b6d473;
-  --store-orb-violet: #8b5cf666;
-  --store-orb-sky: #0ea5e959;
+  /* The neutral background takes its orbs from the accent colour, so accent choices and the
+     theme presets (Sakura, Forest…) get matching orbs too. */
+  --store-orb-blue: color-mix(in srgb, var(--color-action) 50%, transparent);
+  --store-orb-cyan: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--color-action) 45%, #06b6d4) 42%,
+    transparent
+  );
+  --store-orb-violet: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--color-action) 45%, #8b5cf6) 38%,
+    transparent
+  );
+  --store-orb-sky: color-mix(in srgb, var(--color-action) 32%, transparent);
   background-image: radial-gradient(circle, var(--store-dot) 1.4px, transparent 1.6px);
   background-size: 22px 22px;
 }
+/* The orbs take the colours of the background the buyer picked in Tampilan. */
+:root[data-background='sky'] .page-main--store {
+  --store-orb-blue: #3b82f68c;
+  --store-orb-cyan: #0ea5e980;
+  --store-orb-violet: #60a5fa66;
+  --store-orb-sky: #38bdf866;
+}
+:root[data-background='lavender'] .page-main--store {
+  --store-orb-blue: #8b5cf680;
+  --store-orb-cyan: #ec48996b;
+  --store-orb-violet: #a78bfa80;
+  --store-orb-sky: #c084fc5c;
+}
+:root[data-background='mint'] .page-main--store {
+  --store-orb-blue: #10b98173;
+  --store-orb-cyan: #14b8a673;
+  --store-orb-violet: #34d39966;
+  --store-orb-sky: #2dd4bf59;
+}
 :root[data-theme='dark'] .page-main--store {
   --store-dot: #9cc7f017;
-  --store-orb-blue: #2563eb55;
-  --store-orb-cyan: #0891b247;
-  --store-orb-violet: #7c3aed40;
-  --store-orb-sky: #0284c738;
+  --store-orb-blue: color-mix(in srgb, var(--color-action) 30%, transparent);
+  --store-orb-cyan: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--color-action) 45%, #0891b2) 26%,
+    transparent
+  );
+  --store-orb-violet: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--color-action) 45%, #7c3aed) 24%,
+    transparent
+  );
+  --store-orb-sky: color-mix(in srgb, var(--color-action) 20%, transparent);
 }
 .page-main--store::before,
 .page-main--store::after {
@@ -94,4 +131,27 @@
   .page-main--store::after {
     animation: none;
   }
+}
+:root[data-theme='dark'][data-background='sky'] .page-main--store {
+  --store-orb-blue: #2563eb55;
+  --store-orb-cyan: #0284c74d;
+  --store-orb-violet: #3b82f640;
+  --store-orb-sky: #0369a140;
+}
+:root[data-theme='dark'][data-background='lavender'] .page-main--store {
+  --store-orb-blue: #7c3aed4d;
+  --store-orb-cyan: #db277733;
+  --store-orb-violet: #8b5cf640;
+  --store-orb-sky: #a855f733;
+}
+:root[data-theme='dark'][data-background='mint'] .page-main--store {
+  --store-orb-blue: #05966940;
+  --store-orb-cyan: #0d948840;
+  --store-orb-violet: #10b98133;
+  --store-orb-sky: #14b8a62e;
+}
+/* The buyer switched background motion (or all interface animation) off in Tampilan. */
+:root[data-appearance-bg-motion='off'] .page-main--store::before,
+:root[data-appearance-bg-motion='off'] .page-main--store::after {
+  animation: none !important;
 }

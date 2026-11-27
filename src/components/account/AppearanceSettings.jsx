@@ -57,6 +57,18 @@ function HexControl({ title, value, fallback, onSave, disabled = false }) {
   );
 }
 
+// Mirrors the page-background orbs in storeBackground.css so each swatch shows its colours.
+const ORB_PREVIEW = {
+  default: ['#3b82f6', '#8b5cf6'],
+  sky: ['#3b82f6', '#0ea5e9'],
+  lavender: ['#8b5cf6', '#ec4899'],
+  mint: ['#10b981', '#14b8a6'],
+};
+const orbPreview = (id) => {
+  const [first, second] = ORB_PREVIEW[id] || ORB_PREVIEW.default;
+  return `radial-gradient(circle at 18% 30%, ${first}59, transparent 48%), radial-gradient(circle at 85% 85%, ${second}4d, transparent 50%)`;
+};
+
 export default function AppearanceSettings() {
   const { profile } = useCompany();
   const { preferences, effectiveMode, update, reset, notice, advanced, updateAdvanced } =
@@ -287,7 +299,10 @@ export default function AppearanceSettings() {
                     />
                     <span
                       className="appearance-swatch"
-                      style={{ backgroundColor: item[effectiveMode] }}
+                      style={{
+                        backgroundColor: item[effectiveMode],
+                        backgroundImage: orbPreview(item.id),
+                      }}
                       aria-hidden="true"
                     >
                       <span />
@@ -397,6 +412,26 @@ export default function AppearanceSettings() {
             </div>
           </section>
         </div>
+      </div>
+      <div className="appearance-bg-motion-row">
+        <label className="appearance-motion-toggle appearance-bg-motion">
+          <input
+            type="checkbox"
+            checked={advanced.motion && advanced.backgroundMotion}
+            disabled={!advanced.motion}
+            aria-describedby="appearance-bg-motion-help"
+            onChange={(event) => setAdvanced({ backgroundMotion: event.target.checked })}
+          />
+          Latar bergerak
+        </label>
+        <p
+          id="appearance-bg-motion-help"
+          className="appearance-motion-help appearance-bg-motion-help"
+        >
+          {advanced.motion
+            ? 'Bola gradien di belakang halaman toko melayang pelan dan bergeser saat digulir.'
+            : 'Animasi antarmuka sedang mati (Advanced). Nyalakan dulu untuk memakai latar bergerak.'}
+        </p>
       </div>
       <div className="appearance-footer">
         <p>

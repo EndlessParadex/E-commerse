@@ -386,6 +386,21 @@ test('tampilan akun: perubahan langsung, muat ulang, mengikuti perangkat, pergan
     });
     assert.ok(container.querySelector('input[aria-label="Warna aksen (HEX)"]'));
     assert.equal(container.querySelectorAll('.appearance-settings fieldset').length, 4);
+    // Background motion has its own switch, visible in both panels, and stays off while all
+    // interface animation is off.
+    const bgMotion = container.querySelector('.appearance-bg-motion input');
+    assert.equal(page.getAttribute('data-appearance-bg-motion'), 'on');
+    await act(async () => {
+      bgMotion.click();
+      await settle();
+    });
+    assert.equal(page.getAttribute('data-appearance-bg-motion'), 'off');
+    assert.equal(page.getAttribute('data-appearance-motion'), 'on', 'only the background stops');
+    await act(async () => {
+      container.querySelector('.appearance-bg-motion input').click();
+      await settle();
+    });
+    assert.equal(page.getAttribute('data-appearance-bg-motion'), 'on');
     // Dragging inside the browser's colour picker fires many input events. The picker
     // closes if its <input> is replaced, so every change must keep the same element.
     const picker = container.querySelector('input[aria-label="Pilih warna aksen"]');

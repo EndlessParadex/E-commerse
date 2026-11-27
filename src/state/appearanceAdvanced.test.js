@@ -45,6 +45,7 @@ test('advanced appearance: reject invalid HEX, CSS injection, overflow and unsup
       radius: 0,
       density: 'compact',
       motion: false,
+      backgroundMotion: false,
       privateEmail: 'not stored',
     }),
     {
@@ -55,6 +56,7 @@ test('advanced appearance: reject invalid HEX, CSS injection, overflow and unsup
       radius: 0,
       density: 'compact',
       motion: false,
+      backgroundMotion: false,
     },
   );
   assert.equal(appearancePresets.length, 6);

@@ -97,6 +97,7 @@ export default function AppearanceProvider({ children }) {
       'data-appearance-corners': advanced.radius === 16 ? 'default' : 'custom',
       'data-appearance-density': advanced.density,
       'data-appearance-motion': advanced.motion ? 'on' : 'off',
+      'data-appearance-bg-motion': advanced.motion && advanced.backgroundMotion ? 'on' : 'off',
     };
     const vars = advancedCssVariables(advanced, effectiveMode);
     const oldAttributes = Object.fromEntries(

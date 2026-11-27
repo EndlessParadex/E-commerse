@@ -731,3 +731,30 @@
     transition: none;
   }
 }
+.appearance-motion-toggle:has(input:disabled) {
+  color: var(--color-text-muted);
+}
+.appearance-bg-motion {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.appearance-bg-motion-help {
+  margin: 2px 0 0 27px;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.appearance-bg-motion-row {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 14px;
+  background: var(--color-surface-soft);
+}
+.appearance-bg-motion-row .appearance-bg-motion {
+  margin-top: 0;
+}

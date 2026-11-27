@@ -61,18 +61,80 @@
   white-space: nowrap;
 }
 
-/* White call to action on the blue hero. */
+/* White call to action on the coloured hero; its ink follows the banner's colour. */
+.home-landing .home-feature-rail .bam-promo {
+  --feature-cta-ink: #0b4f8a;
+  --feature-cta-hover: #e0f2fe;
+}
 .home-landing .home-feature-rail .bam-promo-cta,
 .home-landing .home-feature-rail .bam-promo-cta:hover {
   background: #ffffff;
-  color: #0b4f8a;
+  color: var(--feature-cta-ink);
 }
 .home-landing .home-feature-rail .bam-promo-cta:hover {
-  background: #e0f2fe;
+  background: var(--feature-cta-hover);
 }
 .home-landing .home-feature-rail .bam-promo-cta svg {
-  background: #0b4f8a;
+  background: var(--feature-cta-ink);
   color: #ffffff;
+}
+
+/* Banner colours chosen in Admin › Banner beranda. Each is a deep gradient like the blue one,
+   so white text, the white button and the bubbles stay readable on every choice. */
+.home-landing .home-feature-rail .bam-promo--spice {
+  --feature-hero-start: #8a2c0a;
+  --feature-hero-end: #e0620f;
+  --feature-hero-accent: #fed7aa;
+  --feature-hero-muted: #ffedd5;
+  --feature-hero-border: #8a2c0a;
+  --feature-arrow-ink: #8a2c0a;
+  --feature-cta-ink: #9a3412;
+  --feature-cta-hover: #ffedd5;
+}
+.home-landing .home-feature-rail .bam-promo--beauty {
+  --feature-hero-start: #831843;
+  --feature-hero-end: #d63a7c;
+  --feature-hero-accent: #fbcfe8;
+  --feature-hero-muted: #fce7f3;
+  --feature-hero-border: #831843;
+  --feature-arrow-ink: #831843;
+  --feature-cta-ink: #9d174d;
+  --feature-cta-hover: #fce7f3;
+}
+.home-landing .home-feature-rail .bam-promo--home {
+  --feature-hero-start: #064e3b;
+  --feature-hero-end: #0f9f6e;
+  --feature-hero-accent: #bbf7d0;
+  --feature-hero-muted: #d1fae5;
+  --feature-hero-border: #064e3b;
+  --feature-arrow-ink: #065f46;
+  --feature-cta-ink: #065f46;
+  --feature-cta-hover: #d1fae5;
+}
+.home-landing .home-feature-rail :is(.bam-promo--spice, .bam-promo--beauty, .bam-promo--home) {
+  --feature-hero-ink: #ffffff;
+  --feature-hero-glow: #ffffff2e;
+  --feature-orbit-border: #ffffff38;
+  --feature-footer-bg: #0000002e;
+  --feature-footer-border: #ffffff26;
+  --feature-arrow-bg: #ffffff;
+  --feature-arrow-border: #ffffff;
+  --feature-dot-ink: #ffffffa6;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--spice {
+  --feature-hero-start: #3a1606;
+  --feature-hero-end: #7c2d0c;
+  --feature-hero-muted: #fde3c8;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--beauty {
+  --feature-hero-start: #3b0d22;
+  --feature-hero-end: #7a1d47;
+  --feature-hero-muted: #fbd5e8;
+}
+:root[data-theme='dark'] .home-landing .home-feature-rail .bam-promo--home {
+  --feature-hero-start: #052e22;
+  --feature-hero-end: #0b5e43;
+  --feature-hero-muted: #cdf3e1;
 }
 .home-landing .home-feature-rail .bam-promo-cta:focus-visible,
 .home-landing .home-feature-rail .bam-promo a:focus-visible,

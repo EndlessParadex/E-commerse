@@ -40,22 +40,26 @@
 .admin-banner-row.is-ended .admin-banner-thumb {
   opacity: 0.55;
 }
-/* Theme swatches: the same light colours as the home page banner. */
+/* Theme swatches: the same deep gradients as the home page banner, with white text. */
 .bam-theme-snack {
-  --swatch: linear-gradient(120deg, #e2efff, #daecff);
-  --swatch-ink: #136be4;
+  --swatch: linear-gradient(120deg, #0b4f8a, #1d8ad6);
+  --swatch-ink: #0b4f8a;
+  --swatch-text: #ffffff;
 }
 .bam-theme-beauty {
-  --swatch: linear-gradient(120deg, #fde7ef, #fadbe7);
-  --swatch-ink: #b8305f;
+  --swatch: linear-gradient(120deg, #831843, #d63a7c);
+  --swatch-ink: #9d174d;
+  --swatch-text: #ffffff;
 }
 .bam-theme-spice {
-  --swatch: linear-gradient(120deg, #ffeedc, #ffe3c6);
-  --swatch-ink: #b4500c;
+  --swatch: linear-gradient(120deg, #8a2c0a, #e0620f);
+  --swatch-ink: #9a3412;
+  --swatch-text: #ffffff;
 }
 .bam-theme-home {
-  --swatch: linear-gradient(120deg, #def4ea, #d1eee0);
-  --swatch-ink: #0f7550;
+  --swatch: linear-gradient(120deg, #064e3b, #0f9f6e);
+  --swatch-ink: #065f46;
+  --swatch-text: #ffffff;
 }
 .admin-banner-thumb {
   display: grid;
@@ -65,7 +69,7 @@
   overflow: hidden;
   border-radius: 10px;
   background: var(--swatch);
-  color: var(--swatch-ink);
+  color: var(--swatch-text, var(--swatch-ink));
   font-size: 1.25rem;
   font-weight: 800;
 }
@@ -201,13 +205,15 @@
   border: 1px solid var(--color-border);
   border-radius: 10px;
   background: var(--swatch, var(--color-surface));
-  color: var(--swatch-ink, var(--color-text));
+  color: var(--swatch-text, var(--color-text));
   font-weight: 600;
   cursor: pointer;
 }
 .admin-banner-choice:has(input:checked) {
   border-color: var(--swatch-ink, var(--color-link));
-  box-shadow: 0 0 0 2px var(--swatch-ink, var(--color-link));
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--swatch-ink, var(--color-link));
 }
 .admin-banner-choice:has(input:focus-visible) {
   outline: 3px solid var(--color-focus);

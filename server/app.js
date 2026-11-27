@@ -42,6 +42,7 @@ import { createWhatsAppOtpSender } from './whatsappOtp.js';
 import { createWhatsAppBusinessSender } from './whatsappBusiness.js';
 import { OrderDelivery } from './orderDelivery.js';
 import { RegistrationNotices } from './registrationNotices.js';
+import { RegistrationSettings } from './registrationSettings.js';
 import { DeliveryScheduleRepository } from './deliverySchedules.js';
 import { ReviewRepository } from './reviews.js';
 import { PersonalCartRepository } from './personalCarts.js';
@@ -286,6 +287,7 @@ export function createApp({
   const limiter = new AuthRateLimiter(db, now, authLimits);
   const passwordQueue = new PasswordQueue(passwordQueueOptions);
   const clientIp = clientIpResolver(trustedProxies);
+  const registrationSettings = new RegistrationSettings(db, { now });
   const emailSettings = new EmailSettingsRepository(db, {
     filename,
     now,
@@ -857,6 +859,26 @@ export function createApp({
         }
         return sendError(res, 405, 'method_not_allowed');
       }
+      // Manual or automatic approval of new registrations: Admins may read it, only the owner changes it.
+      if (path === '/api/admin/registration-settings') {
+        const user = currentUser(req);
+        if (!user) return sendError(res, 401, 'unauthorized');
+        if (user.role !== 'admin') return sendError(res, 403, 'forbidden');
+        if (req.method === 'GET')
+          return json(res, 200, {
+            ...registrationSettings.snapshot(),
+            canEdit: isStoreOwner(db, user),
+          });
+        if (req.method === 'PUT') {
+          if (!isStoreOwner(db, user))
+            return sendError(res, 403, 'forbidden', {
+              form: 'Hanya Pemilik yang dapat mengubah cara persetujuan akun.',
+            });
+          const saved = registrationSettings.save(user, await readBody(req, 2000));
+          return json(res, 200, { ...saved, canEdit: true });
+        }
+        return sendError(res, 405, 'method_not_allowed');
+      }
       if (path === '/api/admin/email-settings' || path === '/api/admin/email-settings/test') {
         const owner = currentUser(req);
         if (!owner) return sendError(res, 401, 'unauthorized');
@@ -1413,6 +1435,7 @@ export function createApp({
     messages,
     delivery,
     registrationNotices,
+    registrationSettings,
     emailSettings,
     accounts,
     b2bStores,

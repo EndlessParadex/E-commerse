@@ -228,7 +228,7 @@ export class AccountRepository {
       .prepare(
         `SELECT u.id,u.name,COALESCE(u.email,'') AS email,u.address,u.created_at AS createdAt,a.status AS approvalStatus,a.revision,
           s.verified_at AS verifiedAt,p.phone,p.verified_at AS phoneVerifiedAt,
-          a.decided_at AS decidedAt,manager.name AS decidedByName,
+          a.decided_at AS decidedAt,COALESCE(manager.name,CASE WHEN a.decided_by='system:auto' THEN 'Otomatis' END) AS decidedByName,
           (SELECT reason FROM account_management_audit audit WHERE audit.target_id=u.id AND audit.actor_id=a.decided_by
             AND audit.action=CASE a.status WHEN 'approved' THEN 'registration:approve' WHEN 'rejected' THEN 'registration:reject' END
             ORDER BY audit.created_at DESC,audit.id DESC LIMIT 1) AS decisionReason ` +

@@ -41,11 +41,12 @@ export class RegistrationNotices {
   waiting(limit = 20) {
     return this.db
       .prepare(
-        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,u.created_at AS createdAt,p.phone
+        `SELECT u.id,u.name,COALESCE(u.email,'') AS email,u.created_at AS createdAt,p.phone,a.status
          FROM account_approvals a JOIN users u ON u.id=a.user_id
          LEFT JOIN user_contact_phones p ON p.user_id=u.id
          LEFT JOIN registration_notices n ON n.user_id=u.id
-         WHERE a.status='pending' AND u.role='user' AND n.user_id IS NULL
+         WHERE (a.status='pending' OR a.decided_by='system:auto') AND u.role='user'
+           AND n.user_id IS NULL
          ORDER BY u.created_at,u.id LIMIT ?`,
       )
       .all(limit);
@@ -73,19 +74,23 @@ export class RegistrationNotices {
         `${index + 1}. ${row.name}`,
         `   Daftar: ${timeLabel(row.createdAt)}`,
         `   Kontak: ${[row.email, row.phone].filter(Boolean).join(' · ') || '-'}`,
+        `   Status: ${row.status === 'approved' ? 'langsung aktif (persetujuan otomatis)' : 'menunggu persetujuan'}`,
       ].join('\n'),
     );
     const count = rows.length;
+    const waiting = rows.some((row) => row.status !== 'approved');
     return {
-      subject: `${shortName} · ${count} pendaftar baru menunggu persetujuan`,
+      subject: waiting
+        ? `${shortName} · ${count} pendaftar baru menunggu persetujuan`
+        : `${shortName} · ${count} pembeli baru mendaftar`,
       text: [
-        count === 1
-          ? 'Ada pendaftar baru yang menunggu persetujuan akun:'
-          : `Ada ${count} pendaftar baru yang menunggu persetujuan akun:`,
+        waiting
+          ? `Ada ${count === 1 ? '' : count + ' '}pendaftar baru. Yang menunggu perlu Anda putuskan:`
+          : `Ada ${count === 1 ? '' : count + ' '}pembeli baru. Akun mereka sudah aktif otomatis:`,
         '',
         ...lines,
         '',
-        link ? 'Tinjau sekarang: ' + link : 'Tinjau di Admin › Persetujuan akun.',
+        link ? 'Buka: ' + link : 'Buka Admin › Persetujuan akun.',
         '',
         'Email ini dikirim otomatis ke semua admin aktif.',
       ].join('\n'),

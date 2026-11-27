@@ -381,3 +381,83 @@ test('tautan verifikasi pendaftaran dapat diminta ulang tanpa login; akun asing 
     app.db.close();
   }
 });
+
+test('pemilik bisa mengalihkan persetujuan ke otomatis: pendaftar baru langsung bisa masuk, lalu kembali manual', async () => {
+  const app = createApp({
+    dbPath: ':memory:',
+    mailer: { enabled: false },
+    mailConfig: {},
+    logger: () => {},
+  });
+  try {
+    const owner = await seedManager(app, 'owner');
+    const admin = await seedManager(app, 'operator');
+    app.db.prepare('INSERT INTO store_owners VALUES(?,?)').run('owner', new Date().toISOString());
+    const read = await request(app, 'GET', '/api/admin/registration-settings', undefined, admin);
+    assert.equal(read.status, 200);
+    assert.equal(read.body.autoApprove, false, 'bawaan tetap manual');
+    assert.equal(read.body.canEdit, false, 'admin hanya melihat');
+    const denied = await request(
+      app,
+      'PUT',
+      '/api/admin/registration-settings',
+      { autoApprove: true, revision: read.body.revision },
+      admin,
+    );
+    assert.equal(denied.status, 403);
+    const saved = await request(
+      app,
+      'PUT',
+      '/api/admin/registration-settings',
+      { autoApprove: true, revision: read.body.revision },
+      owner,
+    );
+    assert.equal(saved.status, 200);
+    assert.equal(saved.body.autoApprove, true);
+    const stale = await request(
+      app,
+      'PUT',
+      '/api/admin/registration-settings',
+      { autoApprove: false, revision: read.body.revision },
+      owner,
+    );
+    assert.equal(stale.status, 409, 'revisi lama ditolak');
+
+    const email = 'langsung-aktif@fixture.test';
+    const signup = await register(app, email);
+    assert.equal(signup.status, 202);
+    assert.match(signup.body.message, /langsung aktif/);
+    const login = await request(app, 'POST', '/api/auth/login', { email, password: secret });
+    assert.equal(login.status, 200, 'tanpa menunggu persetujuan');
+    const list = await request(
+      app,
+      'GET',
+      '/api/admin/approvals?status=approved',
+      undefined,
+      owner,
+    );
+    const row = list.body.users.find((user) => user.email === email);
+    assert.equal(row.decidedByName, 'Otomatis', 'riwayat menunjukkan disetujui otomatis');
+
+    const back = await request(
+      app,
+      'PUT',
+      '/api/admin/registration-settings',
+      { autoApprove: false, revision: saved.body.revision },
+      owner,
+    );
+    assert.equal(back.body.autoApprove, false);
+    const later = 'menunggu-lagi@fixture.test';
+    await register(app, later);
+    const waiting = await request(app, 'POST', '/api/auth/login', {
+      email: later,
+      password: secret,
+    });
+    assert.equal(waiting.status, 403);
+    assert.equal(waiting.body.error, 'approval_required');
+    const first = await request(app, 'POST', '/api/auth/login', { email, password: secret });
+    assert.equal(first.status, 200, 'akun yang sudah aktif tidak terpengaruh');
+  } finally {
+    app.db.close();
+  }
+});

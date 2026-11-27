@@ -2,7 +2,14 @@ import { randomBytes, randomUUID, createHash, createCipheriv, createDecipheriv }
 import { CatalogError } from './catalog.js';
 import { logUnexpectedError } from './errorLogging.js';
 import { accountRateKey } from './authSecurity.js';
-import { accountIsActive, accountApprovalStatus, approvalSchema } from './accountAccess.js';
+import {
+  accountIsActive,
+  accountApprovalStatus,
+  approvalSchema,
+  registrationSettingsSchema,
+  registrationAutoApprove,
+  AUTO_APPROVER,
+} from './accountAccess.js';
 
 const fail = (message, status = 400, code = 'invalid_token') => {
   throw new CatalogError(message, status, code);
@@ -50,6 +57,7 @@ export class IdentityRepository {
     });
     this.configureMail(mailer, config);
     db.exec(approvalSchema);
+    db.exec(registrationSettingsSchema);
     db.exec(`CREATE TABLE IF NOT EXISTS auth_account_state(user_id TEXT PRIMARY KEY REFERENCES users(id),verified_at INTEGER,credential_revision INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE IF NOT EXISTS auth_tokens(token_hash TEXT PRIMARY KEY,purpose TEXT NOT NULL,user_id TEXT REFERENCES users(id),email TEXT NOT NULL,payload TEXT NOT NULL,credential_revision INTEGER NOT NULL,expires_at INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS auth_email_daily(address_hash TEXT NOT NULL,created_at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS auth_email_daily_lookup ON auth_email_daily(address_hash,created_at);
@@ -200,9 +208,16 @@ export class IdentityRepository {
             encoded,
             new Date(this.now()).toISOString(),
           );
-        this.db
-          .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
-          .run(user.id);
+        if (registrationAutoApprove(this.db))
+          this.db
+            .prepare(
+              "INSERT INTO account_approvals(user_id,status,decided_by,decided_at) VALUES(?,'approved',?,?)",
+            )
+            .run(user.id, AUTO_APPROVER, this.now());
+        else
+          this.db
+            .prepare("INSERT INTO account_approvals(user_id,status) VALUES(?,'pending')")
+            .run(user.id);
         if (fields.villageCode)
           this.db
             .prepare('INSERT INTO user_addresses(user_id,street,village_code) VALUES(?,?,?)')
@@ -225,6 +240,19 @@ export class IdentityRepository {
   }
   // The message depends only on what was submitted, never on whether an account was created.
   registrationMessage(email = 'legacy') {
+    if (registrationAutoApprove(this.db))
+      return {
+        ...generic,
+        message:
+          email && this.ready
+            ? 'Permintaan diterima. Jika akun baru berhasil dibuat, akun langsung aktif: silakan masuk. Konfirmasi email (periksa kotak masuk atau spam) dan nomor WhatsApp sebelum memesan.'
+            : email
+              ? 'Permintaan diterima. Jika akun baru berhasil dibuat, akun langsung aktif: silakan masuk, lalu konfirmasi nomor WhatsApp di Akun saya sebelum memesan.'
+              : 'Permintaan diterima. Akun baru langsung aktif: masuk dengan nomor HP dan kata sandi, lalu konfirmasi nomor WhatsApp di Akun saya sebelum memesan.',
+        emailReady: this.ready,
+        withEmail: Boolean(email),
+        autoApproved: true,
+      };
     return {
       ...generic,
       message:

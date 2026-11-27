@@ -7,6 +7,7 @@ import ConfirmDialog from '../components/shop/ConfirmDialog';
 import './AdminAccountsPage.css';
 import './AdminApprovalsPage.css';
 import { waitingLabel } from '../data/approvalWaiting';
+import RegistrationModeCard from '../components/admin/RegistrationModeCard';
 
 const statuses = {
   pending: 'Menunggu persetujuan',
@@ -284,6 +285,7 @@ export default function AdminApprovalsPage() {
         <span className="admin-result-pill">{data ? data.total : '…'} hasil</span>
       </div>
       <div className="accounts-content">
+        <RegistrationModeCard />
         <div className="approval-summary" aria-label="Ringkasan status pendaftaran">
           {['pending', 'approved', 'rejected', 'any'].map((key) => (
             <button
